@@ -14,13 +14,28 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Menu, MenuTrigger, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "../ui/menu";
 
+// The barcode mark of the previous app (orange bars on dark), kept as SwapTrack's default mark.
+// Bars follow the primary token, so a client's branding colour applies to it too.
+const MARK_BARS = [3, 1, 2, 1, 1, 4, 1, 2, 3, 1, 1, 2, 4, 1, 2, 1, 3, 1, 1, 2];
+export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
+  const unit = 328 / MARK_BARS.reduce((a, b) => a + b, 0);
+  let x = 92;
+  const rects = MARK_BARS.map((b, i) => { const r = { x, w: b * unit, bar: i % 2 === 0 }; x += b * unit; return r; }).filter((r) => r.bar);
+  return (
+    <svg viewBox="0 0 512 512" className={className} aria-hidden>
+      <rect width="512" height="512" rx="72" fill="#1E1E1E" />
+      {rects.map((r, i) => <rect key={i} x={r.x} y={123} width={r.w} height={266} fill="rgb(var(--primary))" />)}
+    </svg>
+  );
+}
+
 export function Logo() {
   const { branding } = useSession();
   const [url, setUrl] = React.useState<string | null>(null);
   React.useEffect(() => { void logoUrl(branding.logoPath).then(setUrl); }, [branding.logoPath]);
   return (
     <Link to="/" className="flex items-center gap-2 min-h-touch font-semibold" data-testid="topbar-logo">
-      {url ? <img src={url} alt="" className="h-7 w-auto" /> : <span className="rounded bg-primary text-primary-fg px-1.5 py-0.5 font-mono text-sm font-bold" aria-hidden>ST</span>}
+      {url ? <img src={url} alt="" className="h-7 w-auto" /> : <LogoMark />}
       <span className="truncate">{branding.appName}</span>
     </Link>
   );
