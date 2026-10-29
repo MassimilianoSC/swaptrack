@@ -19,7 +19,9 @@
     "test": "vitest run",
     "deploy": "yarn build && yarn build:functions && firebase deploy",
     "seed:full": "node scripts/fullSeed.mjs",
-    "build:demo": "tsc --noEmit -p tsconfig.json && vite build --mode demo"
+    "build:demo": "tsc --noEmit -p tsconfig.json && vite build --mode demo",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-swaptrack \"vitest run --config functions/test/vitest.config.ts\"",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "5.3.0",
@@ -45,6 +47,7 @@
     "zxing-wasm": "3.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/node": "22",
     "@types/react": "19",
     "@types/react-dom": "19",
