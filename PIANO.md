@@ -24,22 +24,21 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| — | — | — |
+| P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore prima, Storage poi); ha il turno degli emulatori | o2 |
+| P-20 | Raffica: solo la stima delle due opzioni, da far scegliere al committente | o3 |
+| P-23 | Prove end-to-end (Playwright): impostazione e primi percorsi (6 riservatezza, 5 ufficio cliente), da lanciare quando avrà il turno degli emulatori | o3 |
+| P-12 | Verifica della scelta D25 contro SPEC §9.2 (sola lettura, nelle attese) | o2 |
+| P-15 | Controllo degli indici (sola lettura, nelle attese) | o2 |
 
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
 |---|---|---|---|
-| P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore e Storage): isolamento fra ASP, eventi solo dell'autore, letture pubbliche solo branding e flag di accesso | o2 | 1 |
 | P-11 | Prove del trigger e del replay: stesso codice da due dispositivi offline, evento in ritardo, idempotenza, void, relabel | o2 | 2 |
-| P-12 | Verificare la scelta D25 di Emergent (evento vietato su codice sconosciuto non crea il pezzo) contro SPEC §9.2 e proporre | o2 → reg decide | 4 |
 | P-13 | Lavori programmati provati a mano sugli emulatori (dailyChecks, nightlyRecount, monthlyReports, graceExpiry) | o2 | 2 |
 | P-14 | Funzioni bloccanti (`beforeCreate`/`beforeSignIn`) con Identity Platform vero: preparare la prova, il committente la esegue | o2 + committente | 3 |
-| P-15 | Controllo che ogni ricerca con più filtri abbia un indice in `firestore.indexes.json` | o2 | 3 |
-| P-20 | Raffica: contatore ed elenco ben visibile delle letture appena fatte nella schermata di scansione (come nell'app vecchia); prima la stima | o3 | 3 |
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-22 | Foto con la coda senza rete, da capo a fondo, con l'emulatore Storage | o3 (schermata) + o2 (`attachPhotos`) | 2 |
-| P-23 | Prove end-to-end (Playwright) dei percorsi della demo sugli emulatori | o3 | 3 |
 | P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
 

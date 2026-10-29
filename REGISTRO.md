@@ -4,12 +4,12 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO — aggiornato il 29/10/2026, sera
 
-- **Stato:** metodo avviato. Documenti creati (CLAUDE, REGISTRO, PIANO, DA_FARE); copie di lavoro `o2` e `o3` create dalla punta di `main`. Le sessioni o2 e o3 sono aperte: devono entrare nel proprio worktree, installare le dipendenze e presentarsi alla memoria storica.
-- **Sessioni (nomi in ListAgents):** memoria storica = `swaptrack-81`; o2 = da annotare; o3 = da annotare.
-- **Chi fa cosa:** nessun incarico assegnato ancora. Primi incarichi previsti: o2 → prove sulle regole di sicurezza (P-10); o3 → stima della raffica (P-20) e prove end-to-end di base (P-23).
-- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO).
-- **Cosa è online:** https://swaptrack-demo.web.app sul progetto `kronos-caffe-sito` (lotto 0).
-- **Prossimo passo:** presentazione di o2 e o3; poi i primi incarichi.
+- **Stato:** metodo in funzione. o2 e o3 si sono presentate, sono nel proprio worktree con le dipendenze installate (`yarn test` verde per o2, `yarn build` verde per o3) e hanno il primo incarico.
+- **Sessioni (nomi in ListAgents):** memoria storica = `swaptrack-81`; o2 = `swaptrack-30`; o3 = `swaptrack-2b`.
+- **Chi fa cosa:** o2 → P-10 (prove sulle regole, Firestore prima e Storage poi), nell'attesa P-12 e P-15 in sola lettura; o3 → stima di P-20 (raffica, due opzioni da far scegliere al committente) e avvio di P-23 (Playwright, percorsi 6 e 5 per primi). **Turno degli emulatori: o2.**
+- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO); poi la scelta fra le due opzioni della raffica quando arriva la stima di o3.
+- **Cosa è online:** https://swaptrack-demo.web.app sul progetto `kronos-caffe-sito` (lotto 0). `main` è avanti di commit non ancora su GitHub: il push lo fa il committente.
+- **Prossimo passo:** stime di o2 (P-10) e o3 (P-20, P-23) da registrare; primi commit di o2 (con la rimozione di `functions/package-lock.json`, D-10).
 
 ## Obiettivo
 
@@ -40,6 +40,8 @@ Formato: numero, data, decisione, criterio o chi ha deciso, rivedibile. Le scelt
 | D-6 | 29/10/2026 | Lingue: documenti del metodo in italiano; codice, commenti, README e ARCHITECTURE in inglese (il prodotto si vende in inglese: risposta del cliente). | criterio 4 | sì |
 | D-7 | 29/10/2026 | Cartella di lavoro spostata dal committente da `C:\dev\swaptrack` a `C:\Users\mcracchiolo\Desktop\swaptrack` (il Desktop non è sotto OneDrive). Verificato: git integro, build dell'app e delle funzioni riuscite. L'unica cosa persa era l'account Firebase per cartella, reimpostato dal committente (`firebase login:use`). | committente | — |
 | D-8 | 29/10/2026 | Catena di controlli prima di ogni merge su `main`: `yarn build && yarn --cwd functions build && yarn test`; si allunga con le prove sulle regole quando esisteranno. | criterio 2 | sì |
+| D-9 | 29/10/2026 | Le prove che usano gli emulatori (regole P-10, trigger P-11) stanno in `functions/test/`, con le dipendenze in `functions/package.json` (devDependencies) e l'include di `vitest.config.ts` esteso da o2: tutto nei file di o2, nessuna attesa su o3. `tests/` resta per la logica pura. | criterio 5 | sì |
+| D-10 | 29/10/2026 | `functions/package-lock.json` è un residuo (lo strumento è yarn, DECISIONS b11): o2 lo toglie nel suo primo commit. | criterio 5 | sì |
 
 ## Commit (dal passaggio di consegne in poi)
 
@@ -47,7 +49,8 @@ I commit `[reg]` si registrano nell'aggiornamento successivo del registro (il pr
 
 | Hash | Sessione | Data | Cosa |
 |---|---|---|---|
-| (prossimo aggiornamento) | reg | 29/10/2026 | Documenti del metodo, worktree ignorati, nota sulla cartella spostata |
+| 7625662 | reg | 29/10/2026 | Documenti del metodo (CLAUDE, REGISTRO, PIANO, DA_FARE), worktree ignorati, nota sulla cartella spostata |
+| (prossimo aggiornamento) | reg | 29/10/2026 | DOVE SIAMO con i nomi delle sessioni e i primi incarichi; D-9, D-10 |
 
 Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazione demo (escamotage); f8c0288 fullSeed con la vera funzione d'identità; 7b0e470 gitignore; 1d468b4 indici Firestore mancanti; 587f1a6 pulsante «Installa l'app»; 5e66bb4 logo; ebbc40b passaggio di consegne.
 
