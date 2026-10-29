@@ -54,15 +54,23 @@ export async function pickLocation(page: Page, code: string): Promise<void> {
 
 // Scanning screen: type the digits under the barcode (source: manual) and wait for the confirmation flash.
 // Enter submits the form (the fixed "Scan" button of the field shell can never sit over a click).
-// An unknown piece in a removal or an arrival asks for the model first (SPEC §6.4): skipped.
-export async function scanManual(page: Page, code: string): Promise<void> {
+// An unknown piece in a removal or an arrival asks for the model first (SPEC §6.4): skipped, or the first
+// model of the catalog is chosen when `withModel` is set.
+export async function scanManual(page: Page, code: string, opts: { withModel?: boolean } = {}): Promise<void> {
   const input = page.getByTestId("scan-manual-input");
   await input.fill(code);
   await input.press("Enter");
   const skip = page.getByTestId("scan-modelpick-skip");
   const flash = page.getByTestId("scan-flash");
   await expect(skip.or(flash)).toBeVisible();
-  if (await skip.isVisible()) await skip.click();
+  if (await skip.isVisible()) {
+    if (opts.withModel) {
+      await page.getByTestId("scan-modelpick-select").selectOption({ index: 1 });
+      await page.getByTestId("scan-modelpick-save").click();
+    } else {
+      await skip.click();
+    }
+  }
   await expect(flash).toContainText(code);
   await expect(flash).toBeHidden();
 }
