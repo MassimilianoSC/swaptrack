@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "@/app/session";
 import { readAggregate } from "@/lib/data/documents";
 import { isClientRole } from "@shared/roles";
-import { listLocations, listModels, listOrganizations, type Row, type Location, type Model, type Organization } from "@/lib/data/db";
+import { listLocationsFor, listModels, listOrganizations, type Row, type Location, type Model, type Organization } from "@/lib/data/db";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, Field } from "@/components/ui/form";
@@ -30,9 +30,10 @@ export default function Dashboard() {
   React.useEffect(() => {
     if (!claims?.orgId) return;
     setScope(client ? "client" : claims.orgId);
-    void listOrganizations().then((xs) => setAsps(xs.filter((x) => x.type === "asp")));
-    void listLocations().then(setLocations);
-    void listModels().then(setModels);
+    // §3.3: only client roles read every organization and location; ASP roles their own (and the client warehouses).
+    if (client) void listOrganizations().then((xs) => setAsps(xs.filter((x) => x.type === "asp"))).catch(() => undefined);
+    void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined);
+    void listModels().then(setModels).catch(() => undefined);
   }, [claims, client]);
 
   React.useEffect(() => {

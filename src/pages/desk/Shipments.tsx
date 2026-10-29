@@ -6,7 +6,7 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchShipments, type Shipment } from "@/lib/data/shipments";
-import { listLocations, type Row, type Location } from "@/lib/data/db";
+import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
@@ -28,7 +28,7 @@ export default function Shipments() {
   const [toLoc, setToLoc] = React.useState("");
 
   React.useEffect(() => claims?.orgId ? watchShipments({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
-  React.useEffect(() => { void listLocations().then(setLocations).catch(() => undefined); }, []);
+  React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
 
   const role = claims?.role ?? "";
   const client = isClientRole(role);

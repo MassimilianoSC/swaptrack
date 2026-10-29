@@ -46,6 +46,8 @@ export function watchAnomalies(scope: { role: string; orgId: string }, cb: (v: R
   const client = scope.role === "client_admin" || scope.role === "client_office";
   const base = collection(db, "anomalies");
   if (client) return onSnapshot(query(base, orderBy("openedAt", "desc"), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Anomaly) }))));
+  // §3.3: the client warehouse and technicians do not read anomalies: no subscription (the rules would refuse it).
+  if (scope.role === "client_warehouse" || scope.role === "asp_technician") { cb([]); return () => undefined; }
   return onSnapshot(query(base, where("aspId", "==", scope.orgId), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Anomaly) }))));
 }
 

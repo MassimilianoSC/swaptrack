@@ -4,6 +4,7 @@ import {
   type DocumentData, type QueryConstraint,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { isClientRole } from "@shared/roles";
 
 export type Row<T = DocumentData> = T & { id: string };
 const rows = <T>(snap: { docs: { id: string; data(): DocumentData }[] }) => snap.docs.map((d) => ({ id: d.id, ...(d.data() as T) }));
@@ -39,6 +40,17 @@ export const watchUsers = (orgId: string | null, cb: (v: Row<UserProfile>[]) => 
   watchQuery<UserProfile>("users", orgId ? [where("orgId", "==", orgId)] : [], cb, err);
 export const watchProfile = (uid: string, cb: (v: Row<UserProfile> | null) => void) => watchDoc<UserProfile>(`users/${uid}`, cb);
 export const listLocations = () => listQuery<Location>("locations");
+// §3.3: client roles read every location; ASP roles only their own and the client warehouses. A query without
+// those filters is refused by the rules for ASP roles, so desk pages used by ASP roles go through here.
+export async function listLocationsFor(scope: { role: string; orgId: string }): Promise<Row<Location>[]> {
+  if (isClientRole(scope.role)) return listLocations();
+  const [own, client] = await Promise.all([
+    listQuery<Location>("locations", [where("aspId", "==", scope.orgId)]),
+    listQuery<Location>("locations", [where("type", "==", "client_warehouse")]),
+  ]);
+  const seen = new Set<string>();
+  return [...own, ...client].filter((l) => !seen.has(l.id) && seen.add(l.id));
+}
 export const listModels = () => listQuery<Model>("models");
 export const listAdminLog = () => listQuery<AdminLogEntry>("adminLog", [orderBy("at", "desc"), limit(300)]);
 

@@ -32,10 +32,15 @@ export function watchLines(id: string, cb: (v: Row<ShipmentLine>[]) => void) {
 
 // Shipments by sender or receiver ASP (own; client roles see all).
 export function watchShipments(scope: { role: string; orgId: string }, cb: (v: Row<Shipment>[]) => void) {
-  const client = scope.role === "client_admin" || scope.role === "client_office" || scope.role === "client_warehouse";
+  const client = scope.role === "client_admin" || scope.role === "client_office";
   const col = collection(db, "shipments");
   if (client) {
     const q = query(col, orderBy("createdAt", "desc"), limit(500));
+    return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Shipment) }))));
+  }
+  // §3.3: the client warehouse reads return shipments only (the rules refuse a wider query).
+  if (scope.role === "client_warehouse") {
+    const q = query(col, where("kind", "==", "return"), orderBy("createdAt", "desc"), limit(500));
     return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Shipment) }))));
   }
   // ASP: merge "from" and "to" subscriptions (Firestore has no OR query here).

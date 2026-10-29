@@ -6,7 +6,7 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
-import { listLocations, type Row, type Location } from "@/lib/data/db";
+import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export default function DocumentDetail() {
   const [rawLines, setRawLines] = React.useState("");
   const [compare, setCompare] = React.useState<Compare | null>(null);
 
-  React.useEffect(() => { void listLocations().then(setLocations).catch(() => undefined); }, []);
+  React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
   React.useEffect(() => {
     if (isNew || !id) return;
     void loadDocument(id).then((d) => {
