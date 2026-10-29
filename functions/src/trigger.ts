@@ -20,7 +20,8 @@ function anomaly(tx: Transaction | null, type: string, e: Doc, extra: Doc = {}) 
   // Detail texts never name another organization or its sites (R7).
   const doc = { type, eventId: e.id, codeId: e.codeId ?? null, itemId: extra.itemId ?? e.itemId ?? null, locationId: e.locationId ?? null,
     aspId: e.aspId ?? null, detail: extra.detail ?? type, openedAt: FieldValue.serverTimestamp(), resolution: null, resolvedAt: null, resolvedBy: null };
-  const ref = db.collection("anomalies").doc();
+  // One anomaly per (event, type): a retry of the trigger rewrites the same document instead of duplicating it (R5).
+  const ref = db.collection("anomalies").doc(`${e.id}_${type}`);
   return tx ? (tx.set(ref, doc), Promise.resolve()) : ref.set(doc).then(() => undefined);
 }
 
@@ -182,7 +183,9 @@ export async function processEvent(id: string): Promise<void> {
         if (!code) { await anomaly(tx, "unknown_code_where_known_expected", e); tx.update(ref, { processedAt: FieldValue.serverTimestamp(), scannedAtEffective: effective, outcome: "rejected" }); return null; }
         if (newCode?.active && newCode.itemId !== itemId) { await anomaly(tx, "conflicting_creation", e, { itemId }); tx.update(ref, { processedAt: FieldValue.serverTimestamp(), scannedAtEffective: effective, itemId, outcome: "rejected" }); return null; }
       }
-      if (code && code.active === false && e.type !== "relabel") await anomaly(tx, "old_label_used", e, { itemId });
+      // Anomalies met while reading are written after the last read: the Admin SDK refuses a read after a write (P-16).
+      const later: Array<[string, Doc]> = [];
+      if (code && code.active === false && e.type !== "relabel") later.push(["old_label_used", { itemId }]);
       // Follow mergedInto (§6.5).
       let hops = 0;
       while (itemId && hops < 5) {
@@ -190,13 +193,17 @@ export async function processEvent(id: string): Promise<void> {
         if (!it?.mergedInto) break;
         itemId = it.mergedInto; hops++;
       }
-      if (hops >= 5) await anomaly(tx, "merge_chain_suspicious", e, { itemId });
+      if (hops >= 5) later.push(["merge_chain_suspicious", { itemId }]);
       const isNew = !itemId;
       if (isNew && e.type === "force_state") throw new Permanent("malformed");
       const itemRef = isNew ? db.collection("items").doc() : db.collection("items").doc(itemId!);
       const current = { ...me, id, scannedAtEffective: effective, codeId: e.codeId };
       const locs = new Map<string, Doc>(), ships = new Map<string, ShipmentInfo | null>();
       const r = await replayItem(tx, itemRef, current, locs, ships);
+      // The shipment of a transfer_out / return_ship was read by the replay: no read from here on, only writes.
+      const sid = e.payload?.shipmentId as string | undefined;
+      const sh = sid && (e.type === "transfer_out" || e.type === "return_ship") ? ships.get(sid) ?? null : null;
+      for (const [type, extra] of later) await anomaly(tx, type, e, extra);
       if (!r.state) {
         // §9.2: a forbidden event with no previous state (e.g. classify at a site on an unknown code).
         // The event is kept, an anomaly is raised, no item or code is created.
@@ -212,12 +219,9 @@ export async function processEvent(id: string): Promise<void> {
         tx.update(codeRef, { ...codeFields, active: false, replacedBy: e.codeId });
         tx.set(newCodeRef, { raw: e.codeRaw, norm: normalizeBarcode(e.codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), ...codeFields });
       }
-      // Other codes of the same item follow aspId/pendingAspId (rules and offline queries use them).
-      const sid = e.payload?.shipmentId as string | undefined;
-      if (sid && (e.type === "transfer_out" || e.type === "return_ship")) {
-        const sh = (await tx.get(db.collection("shipments").doc(sid))).data();
-        if (sh) tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { codeRaw: e.codeRaw, model: r.before?.model ?? model?.model ?? null, addedAt: FieldValue.serverTimestamp(), fromAspId: sh.fromAspId, toAspId: sh.toAspId ?? null, kind: sh.kind }, { merge: true });
-        if (sh) tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
+      if (sh && sid) {
+        tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { codeRaw: e.codeRaw, model: r.before?.model ?? model?.model ?? null, addedAt: FieldValue.serverTimestamp(), fromAspId: sh.fromAspId, toAspId: sh.toAspId ?? null, kind: sh.kind }, { merge: true });
+        tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
       }
       if (sid && e.type === "arrive_at_warehouse") tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { arrivedAt: FieldValue.serverTimestamp() }, { merge: true });
       if (r.anomaly) await anomaly(tx, r.anomaly, e, { itemId: itemRef.id });
