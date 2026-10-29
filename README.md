@@ -46,6 +46,19 @@ Password for all: `SwapDemo2026`
 
 **Full demo seed (`yarn seed:full`)**: on top of the base seed, ~5,000 pieces across every state of both flows (installed / received / sorted / defective / leftover / removed_at_site / returned / in_transfer / in_return, with `previousFlow: new` on about 10%), 10 DDTs (3 checked), 5 return DDTs, 10 BOMs, 5 within-ASP transfers (3 received), 3 between-ASP transfers, 5 return shipments (2 confirmed, 1 complete), 6 alerts, 6 anomalies, two months of history, aggregate recount for `client` and each ASP across every dimension including status × region.
 
+## Progetto Firebase della demo / Firebase project of the demo installation
+
+⚠️ **Why "kronos-caffe-sito" appears.** The demo installation "SwapTrack Demo" runs on the Firebase project **`kronos-caffe-sito`** (project number 840240907477). It is a **workaround**, decided by the owner on 29/10/2026: the owner's Google account had reached the maximum number of Firebase projects (a deleted project keeps counting for 30 days), and the company account's organization may have policies that block public callables. So an unused old project of the owner (originally the site of a café, Kronos Caffè) was reused and renamed "SwapTrack Demo". **It has nothing to do with SwapTrack**: the project ID cannot be changed, which is why the name still appears in IDs, the Storage bucket and the default Hosting site.
+
+> In italiano: il nome «kronos-caffe-sito» è un **escamotage** per aggirare il limite di progetti Firebase dell'account del titolare. Il progetto è stato riusato e rinominato «SwapTrack Demo»; l'identificativo non si può cambiare. Non ha nessun legame con SwapTrack.
+
+- App URL: **https://swaptrack-demo.web.app** (a dedicated Hosting site, target `app` in `.firebaserc`). The default site `kronos-caffe-sito.web.app` hosts the old café site and is not used (it can be disabled: `firebase hosting:disable --site kronos-caffe-sito --project kronos-caffe-sito`).
+- Web configuration: `.env.demo` (public values), build with `yarn build:demo`. `VITE_FIREBASE_AUTH_DOMAIN` is `swaptrack-demo.web.app`, the domain the app is served from.
+- Functions configuration: `functions/.env.kronos-caffe-sito` (`APP_URL`).
+- Alias: `demo` → `kronos-caffe-sito` (`firebase deploy --project demo`).
+- Firestore and Storage in `europe-west1`; Identity Platform enabled; Blaze plan on the owner's personal billing account.
+- When a proper project is available (company workspace or quota increase), create it, deploy there and retire this one: nothing in the code depends on this project ID.
+
 ## Deployment (done by the owners, never from the build environment)
 ```bash
 cp .env.example .env.production   # fill VITE_FIREBASE_* of the installation
@@ -57,7 +70,7 @@ npm run deploy -- --project <projectId>     # or: yarn deploy --project <project
 - Scheduled jobs run in Europe/Rome: `graceExpiry` 03:00, `retention` 03:30, `nightlyRecount` 02:00, `dailyChecks` 04:00, `monthlyReports` 06:00 on the 1st.
 
 ## Preparing a new installation
-1. Create a Firebase project located in the EU (Firestore `eur3` or `europe-west1`; Storage in the EU).
+1. Create a Firebase project located in the EU: Firestore in **`europe-west1`** (the event trigger and the functions run in europe-west1 and must match the database location), Storage in the EU.
 2. Enable Authentication (e-mail/password), Firestore, Storage, Functions (Blaze plan).
 3. **Upgrade to Firebase Authentication with Identity Platform**: needed by the blocking functions `beforeCreate`/`beforeSignIn` and by TOTP MFA (enable TOTP in Identity Platform settings). Configure the password policy (min 10, letters and digits).
 4. Install the **Trigger Email** extension (collection `mail`) with the client's SMTP server, then set `settings/app.emailConfigured = true` from Settings → App.

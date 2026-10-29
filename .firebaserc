@@ -3,7 +3,16 @@
     "default": "demo-swaptrack",
     "demo-swaptrack": "demo-swaptrack",
     "dev": "REPLACE_WITH_DEV_PROJECT_ID",
-    "demo": "REPLACE_WITH_DEMO_PROJECT_ID",
+    "demo": "kronos-caffe-sito",
     "prod": "REPLACE_WITH_PROD_PROJECT_ID"
+  },
+  "targets": {
+    "kronos-caffe-sito": {
+      "hosting": {
+        "app": [
+          "swaptrack-demo"
+        ]
+      }
+    }
   }
 }
