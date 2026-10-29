@@ -42,5 +42,21 @@ Claims: `role`, `orgId`, `active`, `disabledAt` (ms or null), set only by functi
 ## Storage (step 2)
 `branding/logo.{ext}` public read, written by `settings.saveSettings`. Everything else denied (photos, documents `documents/{aspId|client}/{kind}/{documentId}/{n}.{ext}`, exports, reports arrive in steps 3–4).
 
+## Security rules: reads decided with a `get()`
+Rules use the claims only (§3.4), but three reads are decided on another document, so that the queries the app
+makes are provable: `shipments/{id}/lines` follows the parent shipment; `codes` and `anomalies` listed by `itemId`
+are allowed when that item is at (or in transfer towards) the caller's ASP (`ownsItem`). A `get` of a missing
+`codes/{codeId}` is allowed to every active user ("unknown code" is an answer the field needs). `exports` are
+readable only by their creator.
+
+## Tests
+- `yarn test` (root `vitest.config.ts`): pure logic only, no emulator (`tests/**`, `functions/src/**/*.test.ts`).
+- `node scripts/test-rules.mjs` (`functions/test/vitest.config.ts`, D-12): starts the Firestore and Storage emulators,
+  runs `functions/test/**/*.test.ts`, stops the emulators as a process tree (on Windows `emulators:exec` leaves the
+  Firestore Java process on its port). `functions/test/rules/` = security rules with `@firebase/rules-unit-testing`,
+  one project id per file (`demo-rules-<name>`); `functions/test/trigger/` = the trigger logic run in-process
+  (`processEvent`, what `onEventCreated` calls) against the emulator, project `demo-trigger-tests`. Neither touches
+  the seed of `demo-swaptrack`. `functions/tsconfig.json` includes only `src`, so `test/` never reaches the deploy.
+
 ## Session on the device
 `src/app/session.tsx`: cache owner check in IndexedDB (`swaptrack-device`), fail closed; shared-device clear (terminate + clearIndexedDbPersistence + reload); token refresh every 10 min and at resume; deactivation flow (flush pending writes, clear, sign out); gates for min version, privacy, MFA. Offline: Firestore `persistentLocalCache` + `persistentMultipleTabManager`; the service worker caches only the shell, fonts, icons and `zxing_reader.wasm`.

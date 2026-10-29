@@ -12,6 +12,13 @@ service cloud.firestore {
     function myOrg() { return tok().orgId; }
     function isClient() { return role() in ['client_admin', 'client_office', 'client_warehouse']; }
     function isAsp() { return role() in ['asp_admin', 'asp_warehouse', 'asp_technician']; }
+    // The piece is at (or in transfer towards) the caller's ASP. Used where the app queries by itemId
+    // (codes of an item, anomalies of an item): a query cannot prove aspId, but it fixes itemId, so one get decides.
+    function itemPath(itemId) { return /databases/$(database)/documents/items/$(itemId); }
+    function ownsItem(itemId) {
+      return itemId is string && exists(itemPath(itemId))
+        && (get(itemPath(itemId)).data.currentAspId == myOrg() || get(itemPath(itemId)).data.pendingAspId == myOrg());
+    }
 
     match /organizations/{orgId} {
       allow read: if active() && (isClient() || orgId == myOrg());
@@ -103,22 +110,27 @@ service cloud.firestore {
       allow read: if active() && (isClient() || resource.data.currentAspId == myOrg() || resource.data.pendingAspId == myOrg());
     }
     match /codes/{codeId} {
-      allow read: if active() && (isClient() || resource.data.aspId == myOrg() || resource.data.pendingAspId == myOrg());
+      // A get of a code that does not exist is allowed to every active user: "unknown code" is an answer the field needs.
+      allow read: if active() && (isClient() || resource == null
+        || resource.data.aspId == myOrg() || resource.data.pendingAspId == myOrg() || ownsItem(resource.data.itemId));
     }
     match /sortingCategories/{id} { allow read: if active(); }
     match /sortingRules/{id} { allow read: if active(); }
+    function canReadShipment(s) {
+      return role() in ['client_admin', 'client_office']
+        || (role() == 'client_warehouse' && s.kind == 'return')
+        || (role() in ['asp_admin', 'asp_warehouse'] && (s.fromAspId == myOrg() || s.toAspId == myOrg()));
+    }
     match /shipments/{id} {
-      allow read: if active() && (role() in ['client_admin', 'client_office']
-        || (role() == 'client_warehouse' && resource.data.kind == 'return')
-        || (role() in ['asp_admin', 'asp_warehouse'] && (resource.data.fromAspId == myOrg() || resource.data.toAspId == myOrg())));
+      allow read: if active() && canReadShipment(resource.data);
+      // Lines follow their shipment: decided on the parent document, so the app lists them without filters.
       match /lines/{itemId} {
-        allow read: if active() && (role() in ['client_admin', 'client_office']
-          || (role() == 'client_warehouse' && resource.data.kind == 'return')
-          || (role() in ['asp_admin', 'asp_warehouse'] && (resource.data.fromAspId == myOrg() || resource.data.toAspId == myOrg())));
+        allow read: if active() && canReadShipment(get(/databases/$(database)/documents/shipments/$(id)).data);
       }
     }
     match /anomalies/{id} {
-      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.aspId == myOrg()));
+      allow read: if active() && (role() in ['client_admin', 'client_office']
+        || (role() in ['asp_admin', 'asp_warehouse'] && (resource.data.aspId == myOrg() || ownsItem(resource.data.itemId))));
     }
     match /alerts/{id} {
       allow read: if active() && (role() in ['client_admin', 'client_office']
@@ -145,7 +157,8 @@ service cloud.firestore {
       allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() == 'asp_admin' && resource.data.scope == myOrg()));
     }
     match /exports/{id} {
-      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() == 'asp_admin' && resource.data.scope == myOrg())) && resource.data.createdBy == request.auth.uid;
+      // Only the person who created it (createExport already binds the scope to the role).
+      allow read: if active() && role() in ['client_admin', 'client_office', 'asp_admin'] && resource.data.createdBy == request.auth.uid;
     }
 
     // mail, accessLog, rateLimits and every other collection: no client access.
