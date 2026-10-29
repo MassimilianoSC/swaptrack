@@ -7,7 +7,7 @@ import { shellFor, isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Sidebar, SideNav, TopBar, ScanButton, LocationChip } from "./parts";
-import { IosInstallHint, UpdatePrompt } from "./banners";
+import { IosInstallHint, UpdatePrompt, InstallBanner } from "./banners";
 
 // §4.13: inactivity sign-out on desktop sessions only, never in the field shell.
 function useInactivity(enabled: boolean, minutes: number, signOut: () => Promise<unknown>) {
@@ -38,6 +38,7 @@ export function AppShell() {
       <TopBar onMenu={() => setDrawer(true)} />
       <UpdatePrompt />
       <IosInstallHint />
+      <InstallBanner />
       <div className="flex flex-1 min-h-0">
         <Sidebar />
         <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && "pb-28")} data-testid="main-content">

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { InstallAppButton } from "@/components/shell/banners";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import type { MultiFactorResolver, AuthCredential } from "firebase/auth";
@@ -12,7 +13,7 @@ import { Logo, LanguageSwitch } from "@/components/shell/parts";
 export function AuthLayout({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="theme-field min-h-full bg-bg text-fg flex flex-col">
-      <header className="flex items-center justify-between px-4 min-h-16 border-b border-border"><Logo /><LanguageSwitch /></header>
+      <header className="flex items-center justify-between px-4 min-h-16 border-b border-border"><Logo /><div className="flex items-center gap-2"><InstallAppButton /><LanguageSwitch /></div></header>
       <main className="flex-1 flex items-start md:items-center justify-center p-6">
         <div className="w-full max-w-md space-y-6">
           <h1 className="text-3xl font-semibold" data-testid="auth-title">{title}</h1>
