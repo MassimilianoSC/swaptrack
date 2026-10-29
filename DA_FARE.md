@@ -117,3 +117,10 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.
 **Misura:** il committente segue la lista senza chiedere nulla.
+
+## P-16 Riparazione del trigger (letture dopo scritture nella transazione)
+
+**Cosa:** in `functions/src/trigger.ts` la transazione principale scrive (anomalia o pezzo) e poi legge ancora; l'Admin SDK di Firestore lo vieta («all reads before all writes»), l'errore non è classificato come permanente e l'evento viene ritentato fino alla scadenza (circa 24 ore), mai elaborato, con anomalie duplicate a ogni tentativo. Tre percorsi: lettura di una vecchia etichetta dopo un `relabel` (`old_label_used`), catena di merge a 5 salti (`merge_chain_suspicious`) e ogni `transfer_out` o `return_ship` con `shipmentId` (lettura della spedizione dopo la scrittura del pezzo): spedizioni e resi non si riempiono mai di righe. Confermato da un aiutante in sola lettura il 29/10/2026.
+**Misura:** tre prove sull'emulatore delle funzioni, rosse sul codice di prima: (a) `return_ship` con `shipmentId` → riga della spedizione creata e `itemCount` aggiornato; (b) lettura di una vecchia etichetta dopo `relabel` → evento elaborato, una sola anomalia `old_label_used`; (c) catena di merge a 5 salti → evento elaborato con anomalia. Poi una rilettura dell'intero trigger per lo stesso schema.
+**Opzioni:** (1) tutte le letture prima di tutte le scritture: anticipare la lettura della spedizione (o usare la cache già riempita dal replay) e raccogliere le anomalie in una lista scritta alla fine; (2) scrivere le anomalie fuori dalla transazione dopo il commit. Decide o2 (file suoi).
+**Note:** fino alla pubblicazione della riparazione, la demo online non deve mostrare spedizioni o resi con scansioni vere.

@@ -24,7 +24,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore prima, Storage poi); ha il turno degli emulatori | o2 |
+| P-16 | **Riparazione del trigger:** letture dopo scritture nella transazione (`transfer_out`/`return_ship` con spedizione, `old_label_used`, `merge_chain_suspicious`), con tre prove rosse sull'emulatore delle funzioni; difetto confermato (REGISTRO, DOVE SIAMO) | o2 |
+| P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore prima, Storage poi), dopo P-16; ha il turno degli emulatori | o2 |
 | P-20 | Raffica: costruzione dell'opzione 1 (D-11), con la prova end-to-end da lanciare col turno degli emulatori | o3 |
 | P-23 | Prove end-to-end (Playwright): impostazione e primi percorsi (6 riservatezza, 5 ufficio cliente), da lanciare quando avrà il turno degli emulatori | o3 |
 | P-12 | Verifica della scelta D25 contro SPEC §9.2 (sola lettura, nelle attese) | o2 |
