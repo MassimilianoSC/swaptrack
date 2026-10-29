@@ -24,8 +24,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-16 | **Riparazione del trigger:** letture dopo scritture nella transazione (`transfer_out`/`return_ship` con spedizione, `old_label_used`, `merge_chain_suspicious`), con tre prove rosse sull'emulatore delle funzioni; difetto confermato (REGISTRO, DOVE SIAMO) | o2 |
-| P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore prima, Storage poi), dopo P-16; ha il turno degli emulatori | o2 |
+| P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); resta la parte Storage (dettaglio nelle consegne di o2, REGISTRO) | o2 |
 | P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
 | P-12 | Verifica della scelta D25 contro SPEC §9.2 (sola lettura, nelle attese) | o2 |
@@ -40,6 +39,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-14 | Funzioni bloccanti (`beforeCreate`/`beforeSignIn`) con Identity Platform vero: preparare la prova, il committente la esegue | o2 + committente | 3 |
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-22 | Foto con la coda senza rete, da capo a fondo, con l'emulatore Storage | o3 (schermata) + o2 (`attachPhotos`) | 2 |
+| P-44 | Letture dell'app che le regole negano a ragione (trovate dalle prove di o2): `watchShipments` per `client_warehouse` senza il filtro `kind == "return"`; `watchAnomalies` sottoscritta anche da `client_warehouse`, che non ha diritto di lettura; verificare che nessun ruolo ASP chiami `listLocations()`/`listOrganizations()` senza filtri. Difetti, niente via | o3 | 1 |
+| P-43 | Pagina del pezzo: la categoria di smistamento compare come id grezzo (`cat_refurbish`) invece dell'etichetta («Ricondizionamento»); difetto, niente via | o3 | 3 |
+| P-25 | Categoria suggerita anche in modalità «Arrivo» (SPEC §12.2: smistare nello stesso passaggio); oggi appare solo in «Smista»; stima da chiedere a o3 dopo P-24 | o3 | 4 |
+| P-45 | `ARCHITECTURE.md` elenca solo le collezioni del passo 2: completare con items, codes, anomalie, documenti, spedizioni, alert, aggregati, report, export, expectedCodes, documentMappings | o2 | 5 |
 | P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
 
@@ -47,6 +50,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
+| P-16 | Riparazione del trigger: tutte le letture prima delle scritture nella transazione; spedizioni e resi si riempiono di righe; anomalie senza duplicati. Quattro prove rosse prima, verdi dopo | o2 | 29/10/2026 (commit 0bda4f2) |
 | P-20 | Raffica: contatore ed elenco delle letture sotto la fotocamera (opzione 1, D-11); l'aspetto lo giudica il committente al prossimo lotto | o3 | 29/10/2026 (commit 097c115) |
 | P-42 | Riparazioni trovate strada facendo da o3: pagina del pezzo senza stato d'errore, ricerca silenziosa, lettura annullata nell'elenco di oggi, 18 traduzioni mancanti nelle Impostazioni | o3 | 29/10/2026 |
 | P-40 | Documenti del metodo (CLAUDE, REGISTRO, PIANO, DA_FARE), copie di lavoro o2 e o3, nota sulla cartella spostata | reg | 29/10/2026 |

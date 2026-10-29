@@ -131,3 +131,9 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 **Misura:** la parte DDT del percorso 2 in e2e: dalla schermata di lettura si sceglie un DDT aperto del proprio magazzino (dalla cache; mai scelto in silenzio; si può leggere anche senza DDT); tre letture di cui una fuori DDT → riquadro in diretta «2 arrivati, 1 mancante, 1 inatteso»; gli eventi portano `payload.ddtId`; «controllato» → gli stessi numeri dal server e l'avviso `ddt_in_difference`.
 **Opzioni:** calcolo in diretta sul dispositivo dai propri eventi più le righe del DDT in cache, come i tick della BOM (D38). Nessun file altrui.
 **Stima:** 4–6 ore, rischio medio (o3).
+
+## P-25 Categoria suggerita in modalità «Arrivo»
+
+**Cosa:** SPEC §12.2: all'arrivo di materiale smontato il magazziniere «può smistare nello stesso passaggio (la categoria suggerita appare a ogni lettura)». Oggi la categoria suggerita si calcola e si mostra solo in modalità «Smista / classifica»; in «Arrivo» no (segnalato da o3 il 29/10/2026). Lacuna piccola: il percorso 3 della demo funziona in due passaggi (arrivo, poi smistamento).
+**Misura:** in modalità «Arrivo» di un pezzo smontato, dopo la lettura compare la categoria suggerita in grande con conferma a un tocco; l'evento `arrive_at_warehouse` porta `categoryId` e `suggestedCategoryId` e il pezzo risulta `sorted` (SPEC §9.2, arrivo con categoria).
+**Stima:** da chiedere a o3 dopo P-24.
