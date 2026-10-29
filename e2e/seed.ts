@@ -32,4 +32,8 @@ export const SEED = {
     anomaly: "an_1",
   },
   clientWarehouse: "MAG-CLI-01",
+  // Catalog and sorting: the first model of the catalog (by id) is RX-100, a "Radio unit"; the only seeded
+  // sorting rule sends radio units to "Ricondizionamento" (cat_refurbish).
+  firstModel: { model: "RX-100", equipmentType: "Radio unit" },
+  sorting: { radioCategoryId: "cat_refurbish", radioCategoryLabelIt: "Ricondizionamento" },
 } as const;
