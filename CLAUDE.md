@@ -51,13 +51,14 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 
 - **Copie di lavoro:** o2 e o3 lavorano solo nel proprio worktree (si entra con lo strumento EnterWorktree, `path` = la cartella della tabella in §2). Nella copia principale non si modifica nulla: serve solo per il merge.
 - **Commit per percorsi:** `git add <file...>` (mai `-A`, mai `.`); messaggio scritto in un file fuori dal repository (la propria cartella temporanea) e `git commit -F <file>`; prima riga con l'etichetta: `[o2] …`, `[o3] …`, `[reg] …`.
-- **Portare il lavoro su main, dopo ogni commit:**
-  1. nel worktree: `git rebase main`;
-  2. la catena di controlli (§5), che si ferma alla prima rossa;
-  3. `git -C C:\Users\mcracchiolo\Desktop\swaptrack merge --ff-only o2` (oppure `o3`);
+- **Portare il lavoro su main, dopo ogni commit.** Lo fa la sessione stessa, dalla sua cartella, con SOLO questi due comandi git nella forma con `-C`, scritti esattamente così (barre `/`, non `\`: il terminale è Git Bash):
+  1. `git -C C:/Users/mcracchiolo/Desktop/swaptrack/.claude/worktrees/o2 rebase main` (o3: `.../worktrees/o3 rebase main`);
+  2. la catena di controlli (§5), in `&&`, che si ferma alla prima rossa;
+  3. `git -C C:/Users/mcracchiolo/Desktop/swaptrack merge --ff-only o2` (o3: `merge --ff-only o3`);
   4. riferire alla memoria storica (§7).
-  Un conflitto su un file altrui: `git rebase --abort` e si segnala, non si risolve da soli.
-- **Mai push, mai deploy, mai scritture sul cloud.** Li fa il committente. Online va solo ciò che è in git, a lotti, dopo un giro completo di prove lanciato da una sola sessione; in quel momento `main` è congelato (lo annuncia la memoria storica) e non si avviano altre prove pesanti; o2 e o3 continuano sui loro rami.
+  Se il merge è rifiutato perché `main` è avanzato: si rifà rebase e catena e si riprova. Un conflitto su un file dell'altra sessione: `git rebase --abort` e si segnala alla memoria storica, non si risolve da soli.
+  Il committente ha dato un permesso preventivo a questi due comandi, alle prove, a `git add` e `git commit`. Finché la memoria storica non dice che il permesso è attivo nelle impostazioni, dopo il commit e la catena si manda l'hash alla memoria storica, che lancia lei il `merge --ff-only` (solo quello).
+- **Mai push, mai deploy, mai migrazioni del database online, mai segreti, mai scritture sul cloud.** Li fa il committente. Online va solo ciò che è in git, a lotti, dopo un giro completo di prove lanciato da una sola sessione; in quel momento `main` è congelato (lo annuncia la memoria storica) e non si avviano altre prove pesanti; o2 e o3 continuano sui loro rami.
 
 ## 5. Comandi (PowerShell, dalla propria copia di lavoro)
 
