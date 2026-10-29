@@ -53,10 +53,12 @@ export async function pickLocation(page: Page, code: string): Promise<void> {
 }
 
 // Scanning screen: type the digits under the barcode (source: manual) and wait for the confirmation flash.
+// Enter submits the form (the fixed "Scan" button of the field shell can never sit over a click).
 // An unknown piece in a removal or an arrival asks for the model first (SPEC §6.4): skipped.
 export async function scanManual(page: Page, code: string): Promise<void> {
-  await page.getByTestId("scan-manual-input").fill(code);
-  await page.getByTestId("scan-manual-submit").click();
+  const input = page.getByTestId("scan-manual-input");
+  await input.fill(code);
+  await input.press("Enter");
   const skip = page.getByTestId("scan-modelpick-skip");
   const flash = page.getByTestId("scan-flash");
   await expect(skip.or(flash)).toBeVisible();

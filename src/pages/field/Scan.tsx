@@ -56,7 +56,8 @@ export default function Scan() {
   const [sorting, setSorting] = React.useState<{ categories: Category[]; rules: SortingRule[] }>({ categories: [], rules: [] });
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
-  const [session, setSession] = React.useState<{ id: string; code: string }[]>([]);
+  // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
+  const [session, setSession] = React.useState<{ id: string; code: string; type: string }[]>([]);
   const [today, setToday] = React.useState<{ id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean }[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
@@ -147,7 +148,7 @@ export default function Scan() {
       if (!shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
     }
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
-    setSession((s) => [{ id, code }, ...s]);
+    setSession((s) => [{ id, code, type: mode }, ...s]);
     setLastEventId(id);
     show(code, "ok");
   };
@@ -227,6 +228,8 @@ export default function Scan() {
   if (!location) return <Empty title={t("location.choose")} action={<Button asChild><Link to="/" data-testid="scan-choose-location">{t("location.choose")}</Link></Button>} />;
   const catLabel = (id: string | null) => sorting.categories.find((c) => c.id === id)?.labels[i18n.language as "it" | "en"] ?? "";
   const needPhotoForDefective = photoMandatoryDefective && mode === "classify" && newClass === "defective";
+  // "My scans of today": a void is shown on the reading it undid, not as a row of its own.
+  const todayRows = today.filter((s) => s.type !== "void");
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
@@ -270,7 +273,28 @@ export default function Scan() {
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : "bg-warning text-black")} role="status" data-testid="scan-flash">{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
       </div>
-      {camError && <p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
+      {/* §7.2 burst mode, P-20 (D-11): counter and running list of this session's readings, below the camera, never over it. */}
+      <section className="rounded border border-border p-3" data-testid="scan-session">
+        <p className="flex items-baseline gap-2">
+          <span className="text-3xl font-bold tabular" data-testid="scan-session-count">{session.length}</span>
+          <span className="text-sm text-muted">{t("scan.sessionCount", { count: session.length })}</span>
+        </p>
+        {session.length > 0 && (
+          <ul className="mt-2 max-h-36 overflow-y-auto text-sm" data-testid="scan-session-list">
+            {session.map((s) => {
+              const sent = today.some((r) => r.id === s.id && !r.pending);
+              return (
+                <li key={s.id} className="flex gap-3 border-b border-border py-1" data-testid="scan-session-row">
+                  <span className="font-mono truncate">{s.code}</span>
+                  <span className="text-muted">{t(`scan.modes.${s.type}`, { defaultValue: s.type })}</span>
+                  <span className="ml-auto shrink-0">{sent ? t("scan.sent") : t("scan.waiting")}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+      {camError &&<p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
       <div className="flex flex-wrap gap-2 items-center">
         {torch !== null && <Button variant="secondary" onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
         {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
@@ -291,14 +315,14 @@ export default function Scan() {
       </form>
       <section>
         <h2 className="font-semibold mb-2">{t("scan.today")}</h2>
-        {today.length === 0 ? <p className="text-sm text-muted">{t("scan.todayEmpty")}</p> : (
+        {todayRows.length === 0 ? <p className="text-sm text-muted">{t("scan.todayEmpty")}</p> : (
           <ul className="space-y-1 text-sm" data-testid="scan-today-list">
-            {today.map((s) => (
-              <li key={s.id} className="flex gap-3 border-b border-border py-1">
+            {todayRows.map((s) => (
+              <li key={s.id} className={cn("flex gap-3 border-b border-border py-1", s.voided && "text-muted")} data-testid="scan-today-row">
                 <span className="tabular text-muted">{formatInstant(s.at, i18n.language)}</span>
                 <span>{t(`scan.modes.${s.type}`, { defaultValue: s.type })}</span>
-                <span className="font-mono truncate">{s.codeRaw ?? ""}</span>
-                <span className="ml-auto">{s.pending ? t("scan.waiting") : t("scan.sent")}</span>
+                <span className={cn("font-mono truncate", s.voided && "line-through")}>{s.codeRaw ?? ""}</span>
+                <span className="ml-auto shrink-0">{s.voided ? <span data-testid="scan-today-voided">{t("scan.voided")}</span> : s.pending ? t("scan.waiting") : t("scan.sent")}</span>
               </li>
             ))}
           </ul>
