@@ -124,3 +124,10 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 **Misura:** tre prove sull'emulatore delle funzioni, rosse sul codice di prima: (a) `return_ship` con `shipmentId` → riga della spedizione creata e `itemCount` aggiornato; (b) lettura di una vecchia etichetta dopo `relabel` → evento elaborato, una sola anomalia `old_label_used`; (c) catena di merge a 5 salti → evento elaborato con anomalia. Poi una rilettura dell'intero trigger per lo stesso schema.
 **Opzioni:** (1) tutte le letture prima di tutte le scritture: anticipare la lettura della spedizione (o usare la cache già riempita dal replay) e raccogliere le anomalie in una lista scritta alla fine; (2) scrivere le anomalie fuori dalla transazione dopo il commit. Decide o2 (file suoi).
 **Note:** fino alla pubblicazione della riparazione, la demo online non deve mostrare spedizioni o resi con scansioni vere.
+
+## P-24 DDT nella schermata di lettura (lacuna della specifica)
+
+**Cosa:** SPEC §12.2: all'arrivo di materiale nuovo il magazziniere «sceglie o carica il DDT, legge in raffica, vede arrivati / mancanti / inattesi in diretta». Nel codice di Emergent la schermata di lettura non permette di scegliere il DDT e non manda mai `payload.ddtId` (il server lo legge già, `functions/src/routers/documents.ts`); gli «inattesi» non possono quindi esistere e il confronto si vede solo nella pagina del documento («Confronta» e «controllato»). Decisione D-15.
+**Misura:** la parte DDT del percorso 2 in e2e: dalla schermata di lettura si sceglie un DDT aperto del proprio magazzino (dalla cache; mai scelto in silenzio; si può leggere anche senza DDT); tre letture di cui una fuori DDT → riquadro in diretta «2 arrivati, 1 mancante, 1 inatteso»; gli eventi portano `payload.ddtId`; «controllato» → gli stessi numeri dal server e l'avviso `ddt_in_difference`.
+**Opzioni:** calcolo in diretta sul dispositivo dai propri eventi più le righe del DDT in cache, come i tick della BOM (D38). Nessun file altrui.
+**Stima:** 4–6 ore, rischio medio (o3).

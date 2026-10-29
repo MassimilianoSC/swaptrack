@@ -65,7 +65,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - Prima volta in una copia: `yarn install --frozen-lockfile` e `yarn --cwd functions install --frozen-lockfile`; `Copy-Item functions\.env.example functions\.env` (contiene `APP_URL=http://localhost:3000`).
 - Prove unitarie: `yarn test` (Vitest: `tests/**` e `functions/src/**/*.test.ts`); un file solo: `yarn test <percorso>`.
 - Compilazione: `yarn build` (app, con controllo dei tipi) e `yarn --cwd functions build` (funzioni).
-- **Catena prima di ogni merge:** `yarn build && yarn --cwd functions build && yarn test` (`&&` tra i passi, mai `;`, nessuna pipe che nasconda il codice d'uscita). Le prove sulle regole (`yarn test:rules`, D-12) entrano nella catena dal momento in cui o2 consegna `functions/test/vitest.config.ts`: lo annuncia la memoria storica.
+- **Catena prima di ogni merge:** `yarn build && yarn --cwd functions build && yarn test && yarn check:i18n` (`&&` tra i passi, mai `;`, nessuna pipe che nasconda il codice d'uscita; `check:i18n` confronta le chiavi di `it.json` e `en.json`, D-14). Le prove sulle regole (`yarn test:rules`, D-12) entrano nella catena dal momento in cui o2 consegna `functions/test/vitest.config.ts`: lo annuncia la memoria storica.
 - **Prove end-to-end** (`yarn e2e`, Playwright, cartella `e2e/`, di o3): NON entrano nella catena per commit (servono gli emulatori col seed); entrano nel giro completo prima di ogni lotto. Si lanciano solo col turno degli emulatori.
 - Emulatori: `yarn emulators` (compila le funzioni e avvia auth 9099, firestore 8180, functions 5001, storage 9199, pubsub 8085; progetto finto `demo-swaptrack`), poi `yarn seed` e, se serve, `yarn seed:full`; app di sviluppo: `yarn dev` (porta 3000). **Le porte sono fisse: sulla macchina gira una sola istanza degli emulatori alla volta.** Chi ne ha bisogno lo dice alla memoria storica, che dà il turno.
 - Durante il lavoro si lanciano solo le prove dei file toccati e di chi li usa; un giro intero solo col via della memoria storica.
@@ -87,7 +87,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 
 ## 7. Cosa riferire alla memoria storica dopo ogni commit (SendMessage)
 
-Prima riga: `[o2] commit <hash> — <titolo>`. Poi: cosa è stato fatto; prove (quante rosse prima, quante verdi dopo, con il comando); la riga per l'utente se cambia ciò che vede; decisioni prese e con quale criterio; domande. Per i dettagli tecnici o2 e o3 si scrivono direttamente, sempre con la memoria storica in copia (lo stesso messaggio anche a lei).
+Prima riga: `[o2] commit <hash> — <titolo>`. Poi: cosa è stato fatto; prove (quante rosse prima, quante verdi dopo, con il comando); la riga per l'utente se cambia ciò che vede; decisioni prese e con quale criterio; tempo impiegato (ore reali) per ogni voce stimata; domande. Per i dettagli tecnici o2 e o3 si scrivono direttamente, sempre con la memoria storica in copia (lo stesso messaggio anche a lei).
 
 ## 8. Memoria di contesto piena (compact)
 
