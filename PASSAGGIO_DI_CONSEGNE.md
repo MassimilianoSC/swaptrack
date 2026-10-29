@@ -1,5 +1,7 @@
 # Passaggio di consegne alla nuova MEMORIA STORICA
 
+> **Nota del 29/10/2026, sera (memoria storica nuova):** la cartella di lavoro è ora `C:\Users\mcracchiolo\Desktop\swaptrack` (il committente l'ha spostata da `C:\dev\swaptrack`; i comandi qui sotto vanno letti con la cartella nuova). I documenti vivi sono `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`: questo file resta come storia e non si aggiorna.
+
 Scritto il 29/10/2026 dalla memoria storica precedente (una sessione di Claude Code aperta nella cartella dell'app vecchia, `C:\Users\mcracchiolo\Desktop\APP_CANTIER_QRCODE`), che ha seguito il progetto dall'inizio. Leggilo per intero prima di qualunque altra cosa: contiene ciò che non si ricava dal codice.
 
 Il committente (Massimiliano, il titolare) non è un tecnico: parlagli in italiano semplice.
