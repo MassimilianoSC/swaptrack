@@ -39,9 +39,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-14 | Funzioni bloccanti (`beforeCreate`/`beforeSignIn`) con Identity Platform vero: preparare la prova, il committente la esegue | o2 + committente | 3 |
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-22 | Foto con la coda senza rete, da capo a fondo, con l'emulatore Storage | o3 (schermata) + o2 (`attachPhotos`) | 2 |
-| P-44 | Letture dell'app che le regole negano a ragione (trovate dalle prove di o2): `watchShipments` per `client_warehouse` senza il filtro `kind == "return"`; `watchAnomalies` sottoscritta anche da `client_warehouse`, che non ha diritto di lettura; verificare che nessun ruolo ASP chiami `listLocations()`/`listOrganizations()` senza filtri. Difetti, niente via | o3 | 1 |
+| P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
 | P-43 | Pagina del pezzo: la categoria di smistamento compare come id grezzo (`cat_refurbish`) invece dell'etichetta («Ricondizionamento»); difetto, niente via | o3 | 3 |
 | P-25 | Categoria suggerita anche in modalità «Arrivo» (SPEC §12.2: smistare nello stesso passaggio); oggi appare solo in «Smista»; stima da chiedere a o3 dopo P-24 | o3 | 4 |
+| P-46 | `yarn emulators` dietro uno script che chiude l'albero dei processi Java alla fine (come `scripts/test-rules.mjs`), per la trappola di Windows; da concordare fra o2 (script) e o3 (`package.json`) | o2 + o3 | 2 |
 | P-45 | `ARCHITECTURE.md` elenca solo le collezioni del passo 2: completare con items, codes, anomalie, documenti, spedizioni, alert, aggregati, report, export, expectedCodes, documentMappings | o2 | 5 |
 | P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
