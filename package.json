@@ -14,7 +14,7 @@
     "preview": "vite preview",
     "build:functions": "cd functions && yarn build",
     "watch:functions": "cd functions && yarn watch",
-    "emulators": "yarn build:functions && firebase emulators:start --project demo-swaptrack --import ./.emulator-data --export-on-exit ./.emulator-data",
+    "emulators": "yarn build:functions && firebase emulators:start --only auth,firestore,functions,storage,pubsub --project demo-swaptrack --import ./.emulator-data --export-on-exit ./.emulator-data",
     "seed": "node scripts/seed.mjs",
     "test": "vitest run",
     "deploy": "yarn build && yarn build:functions && firebase deploy",
