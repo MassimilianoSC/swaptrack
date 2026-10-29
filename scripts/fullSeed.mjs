@@ -4,17 +4,28 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID, createHash } from "node:crypto";
+import { createRequire } from "node:module";
+// The REAL barcode identity (SPEC R8), the same file the trigger uses: never a local formula,
+// otherwise scanning a seeded piece would not find it and would create a duplicate.
+const { computeCodeId, normalizeBarcode, NORM_VERSION } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
 
-process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8180";
-process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
-const PROJECT = "demo-swaptrack";
+// Target: the emulators by default. The real demo project only with BOTH
+//   SEED_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
+// (credentials: gcloud auth application-default login). See README, "Progetto Firebase della demo".
+const REAL = process.env.SEED_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
+if (!REAL) {
+  process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8180";
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+}
+const PROJECT = REAL ? "kronos-caffe-sito" : "demo-swaptrack";
+if (REAL) console.log("!! Writing to the REAL project kronos-caffe-sito");
 initializeApp({ projectId: PROJECT });
 const db = getFirestore();
 
 const DAY = 24 * 3600 * 1000;
 const now = Date.now();
-const normalize = (s) => String(s ?? "").trim().replace(/^0+(?=\d)/, "").toUpperCase();
-const codeId = (raw) => `cid_${createHash("sha1").update(`v1|${normalize(raw)}`).digest("hex").slice(0, 24)}`;
+const normalize = (s) => normalizeBarcode(s);
+const codeId = (raw) => computeCodeId(raw);
 const locId = (code) => `loc_${encodeURIComponent(code)}`;
 const mdlId = (code) => `mdl_${encodeURIComponent(code)}`;
 const SHARDS = 10;
@@ -48,7 +59,7 @@ const pick = (arr, i) => arr[i % arr.length];
 function eventDoc({ id, type, aspId, orgId, userId, locationId, scannedAt, codeRaw = null, payload = {}, source = "camera" }) {
   return [db.collection("events").doc(id), {
     type, source, engine: source === "camera" ? "fallback" : null,
-    codeRaw, codeId: codeRaw ? codeId(codeRaw) : null, normVersion: 1, secondCodeRaw: null,
+    codeRaw, codeId: codeRaw ? codeId(codeRaw) : null, normVersion: NORM_VERSION, secondCodeRaw: null,
     locationId, aspId: aspId ?? null, orgId, userId, scannedAt: Timestamp.fromMillis(scannedAt), clockOffsetMs: 0, offsetMeasuredAt: null,
     payload, createdAt: Timestamp.fromMillis(scannedAt + 1000),
     processedAt: Timestamp.fromMillis(scannedAt + 2000), scannedAtEffective: Timestamp.fromMillis(scannedAt), itemId: payload.targetItemId ?? null, outcome: "ok",
@@ -68,7 +79,7 @@ function itemDoc(id, { status, flow, previousFlow = null, previousStatus = null,
 }
 
 function codeDoc(raw, itemId, aspId, pendingAspId = null) {
-  return [db.collection("codes").doc(codeId(raw)), { raw, norm: normalize(raw), normVersion: 1, itemId, aspId, pendingAspId, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp() }];
+  return [db.collection("codes").doc(codeId(raw)), { raw, norm: normalize(raw), normVersion: NORM_VERSION, itemId, aspId, pendingAspId, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp() }];
 }
 
 async function main() {

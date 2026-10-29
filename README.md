@@ -58,6 +58,7 @@ Password for all: `SwapDemo2026`
 - Alias: `demo` → `kronos-caffe-sito` (`firebase deploy --project demo`).
 - Firestore and Storage in `europe-west1`; Identity Platform enabled; Blaze plan on the owner's personal billing account.
 - When a proper project is available (company workspace or quota increase), create it, deploy there and retire this one: nothing in the code depends on this project ID.
+- Demo data on the real project (invented data only): `gcloud auth application-default login`, then `SEED_REAL_PROJECT=kronos-caffe-sito node scripts/seed.mjs --yes-real-project` followed by the same for `scripts/fullSeed.mjs`. Without both the variable and the argument the scripts only touch the emulators.
 
 ## Deployment (done by the owners, never from the build environment)
 ```bash

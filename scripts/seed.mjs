@@ -4,10 +4,17 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
-process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8180";
-process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
-const PROJECT = "demo-swaptrack";
-if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST) throw new Error("Emulators only");
+// Target: the emulators by default. The real demo project only with BOTH
+//   SEED_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
+// (credentials: gcloud auth application-default login). See README, "Progetto Firebase della demo".
+const REAL = process.env.SEED_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
+if (!REAL) {
+  process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8180";
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+}
+const PROJECT = REAL ? "kronos-caffe-sito" : "demo-swaptrack";
+if (REAL) console.log("!! Writing to the REAL project kronos-caffe-sito");
+if (!REAL && (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_HOST)) throw new Error("Emulators only");
 
 initializeApp({ projectId: PROJECT });
 const db = getFirestore();
