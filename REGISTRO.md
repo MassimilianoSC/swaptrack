@@ -7,7 +7,8 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 - **Stato:** metodo in funzione. o2 e o3 si sono presentate, sono nel proprio worktree con le dipendenze installate (`yarn test` verde per o2, `yarn build` verde per o3) e hanno il primo incarico.
 - **Sessioni (nomi in ListAgents):** memoria storica = `swaptrack-81`; o2 = `swaptrack-30`; o3 = `swaptrack-2b`.
 - **Chi fa cosa:** o2 → P-10 (prove sulle regole, Firestore prima e Storage poi), nell'attesa P-12 e P-15 in sola lettura; o3 → costruzione di P-20 (raffica, opzione 1, via dato con D-11) e avvio di P-23 (Playwright, percorsi 6 e 5 per primi). **Turno degli emulatori: o2** (o3 lo aspetta per lanciare le sue prove).
-- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO); giudizio sull'aspetto della raffica quando o3 la consegna (D-11 è rivedibile).
+- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO); giudizio sull'aspetto della raffica quando o3 la consegna (D-11 è rivedibile); **chi fa il `merge --ff-only` nella copia principale** (lo strumento di o3 rifiuta di scrivere fuori dal suo worktree; proposta: lo fa la memoria storica).
+- **Difetti intravisti da o3 (da confermare con le prove):** la pagina del pezzo resta su «Caricamento» per sempre se il pezzo non è leggibile (nessuno stato d'errore, SPEC §15); la ricerca per codice di un codice non leggibile fallisce in silenzio. o3 li ripara strada facendo nel percorso 6.
 - **Cosa è online:** https://swaptrack-demo.web.app sul progetto `kronos-caffe-sito` (lotto 0). `main` è avanti di commit non ancora su GitHub: il push lo fa il committente.
 - **Prossimo passo:** stime di o2 (P-10) e o3 (P-20, P-23) da registrare; primi commit di o2 (con la rimozione di `functions/package-lock.json`, D-10).
 
@@ -61,3 +62,5 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 |---|---|---|---|---|
 | 29/10/2026 | o3 | P-20 raffica, opzione 1 (contatore + elenco sotto la fotocamera) | 2–3 ore, rischio basso | in corso |
 | 29/10/2026 | o3 | P-20 opzione 2 (tendina), non scelta | 3–4 ore, rischio medio | — |
+| 29/10/2026 | o3 | P-23 prove end-to-end, tutto (impianto 2 h; percorsi: 6 → 2 h, 5 → 2 h, 2 raffica → 1 h + DDT 2 h, 3 → 1,5 h, 4 → 3 h, 1 offline → 3 h, 7 → 1 h) | 17–18 ore, rischio medio (il più alto: percorso 1, Firestore offline in Chromium headless) | in corso |
+| 29/10/2026 | o3 | P-23 primo lotto: impianto + percorsi 6, 5 e raffica | circa 7 ore | in corso |
