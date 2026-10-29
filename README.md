@@ -21,6 +21,9 @@ In containers without a cloud metadata server, `scripts/emulators.sh` sets `GCE_
 ## Tests
 ```bash
 yarn test        # Vitest: tests/**/*.test.{mjs,ts} and functions/src/**/*.test.ts
+yarn e2e         # Playwright end-to-end tests of the demo paths (e2e/): needs the emulators with the seed
+                 # (yarn emulators, yarn seed, yarn seed:full) and starts yarn dev on port 3000 if not running.
+                 # yarn e2e --project=desk (or phone) for one profile. First time: npx playwright install chromium
 ```
 Covered pure logic: state machine (§9.2), sorting precedence (§10), document comparison (§11.3), code normalization parity. The owners write the security-rules tests and the end-to-end offline tests (SPEC §17).
 

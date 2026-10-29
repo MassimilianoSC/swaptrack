@@ -16,3 +16,6 @@ firebase-debug.log
 
 # copie di lavoro delle sessioni o2/o3 (git worktree)
 .claude/worktrees/
+
+# Playwright: tracce e rapporti delle prove end-to-end
+.playwright/
