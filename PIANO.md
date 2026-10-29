@@ -25,7 +25,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi |
 |---|---|---|
 | P-10 | Prove sulle regole di sicurezza con l'emulatore (Firestore prima, Storage poi); ha il turno degli emulatori | o2 |
-| P-20 | Raffica: solo la stima delle due opzioni, da far scegliere al committente | o3 |
+| P-20 | Raffica: costruzione dell'opzione 1 (D-11), con la prova end-to-end da lanciare col turno degli emulatori | o3 |
 | P-23 | Prove end-to-end (Playwright): impostazione e primi percorsi (6 riservatezza, 5 ufficio cliente), da lanciare quando avrà il turno degli emulatori | o3 |
 | P-12 | Verifica della scelta D25 contro SPEC §9.2 (sola lettura, nelle attese) | o2 |
 | P-15 | Controllo degli indici (sola lettura, nelle attese) | o2 |

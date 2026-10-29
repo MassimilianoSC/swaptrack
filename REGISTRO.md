@@ -6,8 +6,8 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 - **Stato:** metodo in funzione. o2 e o3 si sono presentate, sono nel proprio worktree con le dipendenze installate (`yarn test` verde per o2, `yarn build` verde per o3) e hanno il primo incarico.
 - **Sessioni (nomi in ListAgents):** memoria storica = `swaptrack-81`; o2 = `swaptrack-30`; o3 = `swaptrack-2b`.
-- **Chi fa cosa:** o2 → P-10 (prove sulle regole, Firestore prima e Storage poi), nell'attesa P-12 e P-15 in sola lettura; o3 → stima di P-20 (raffica, due opzioni da far scegliere al committente) e avvio di P-23 (Playwright, percorsi 6 e 5 per primi). **Turno degli emulatori: o2.**
-- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO); poi la scelta fra le due opzioni della raffica quando arriva la stima di o3.
+- **Chi fa cosa:** o2 → P-10 (prove sulle regole, Firestore prima e Storage poi), nell'attesa P-12 e P-15 in sola lettura; o3 → costruzione di P-20 (raffica, opzione 1, via dato con D-11) e avvio di P-23 (Playwright, percorsi 6 e 5 per primi). **Turno degli emulatori: o2** (o3 lo aspetta per lanciare le sue prove).
+- **Aspetta il committente:** P-1, P-2, P-3, P-4, P-6, P-7 (vedi PIANO); giudizio sull'aspetto della raffica quando o3 la consegna (D-11 è rivedibile).
 - **Cosa è online:** https://swaptrack-demo.web.app sul progetto `kronos-caffe-sito` (lotto 0). `main` è avanti di commit non ancora su GitHub: il push lo fa il committente.
 - **Prossimo passo:** stime di o2 (P-10) e o3 (P-20, P-23) da registrare; primi commit di o2 (con la rimozione di `functions/package-lock.json`, D-10).
 
@@ -42,6 +42,7 @@ Formato: numero, data, decisione, criterio o chi ha deciso, rivedibile. Le scelt
 | D-8 | 29/10/2026 | Catena di controlli prima di ogni merge su `main`: `yarn build && yarn --cwd functions build && yarn test`; si allunga con le prove sulle regole quando esisteranno. | criterio 2 | sì |
 | D-9 | 29/10/2026 | Le prove che usano gli emulatori (regole P-10, trigger P-11) stanno in `functions/test/`, con le dipendenze in `functions/package.json` (devDependencies) e l'include di `vitest.config.ts` esteso da o2: tutto nei file di o2, nessuna attesa su o3. `tests/` resta per la logica pura. | criterio 5 | sì |
 | D-10 | 29/10/2026 | `functions/package-lock.json` è un residuo (lo strumento è yarn, DECISIONS b11): o2 lo toglie nel suo primo commit. | criterio 5 | sì |
+| D-11 | 29/10/2026 | Raffica (P-20): si costruisce l'opzione 1, contatore grande ed elenco a scorrimento delle letture della sessione subito sotto la fotocamera (ultima in cima, circa tre righe visibili, codice + tipo + esito); «annulla l'ultima» toglie la riga e abbassa il numero. Il contatore conta dall'apertura della schermata; il cambio di modo non azzera. SPEC §7.2 chiede già una «running list»; l'opzione 2 (tendina) è più complessa e ferma la lettura con la pistola mentre è aperta. L'aspetto lo giudica il committente sul risultato. | criteri 4 e 5; aspetto: criterio 6 | sì |
 
 ## Commit (dal passaggio di consegne in poi)
 
@@ -58,4 +59,5 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 
 | Data | Chi | Cosa | Stima | Com'è andata |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| 29/10/2026 | o3 | P-20 raffica, opzione 1 (contatore + elenco sotto la fotocamera) | 2–3 ore, rischio basso | in corso |
+| 29/10/2026 | o3 | P-20 opzione 2 (tendina), non scelta | 3–4 ore, rischio medio | — |
