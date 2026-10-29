@@ -1,0 +1,42 @@
+/* SwapTrack design tokens (§15). The only place with raw colors. Values are "R G B" triplets. */
+:root {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --border-w: 1px;
+  --touch: 40px;
+
+  /* Desk shell: light, dense */
+  --bg: 246 246 244;
+  --surface: 255 255 255;
+  --surface-2: 238 238 235;
+  --border: 214 214 209;
+  --fg: 28 28 28;
+  --muted: 92 92 88;
+  --primary: 255 107 0; /* replaced at runtime by settings/branding.primaryColor */
+  --primary-fg: 20 20 20;
+  --danger: 176 0 32;
+  --success: 0 112 60;
+  --warning: 150 90 0;
+  --focus: 0 90 200;
+}
+
+/* Field shell: dark, high contrast, gloves (§15) */
+.theme-field {
+  --bg: 30 30 30;          /* #1E1E1E */
+  --surface: 45 45 45;     /* #2D2D2D */
+  --surface-2: 56 56 56;
+  --border: 64 64 64;      /* #404040 */
+  --border-w: 2px;
+  --fg: 255 255 255;
+  --muted: 176 176 176;    /* #B0B0B0 */
+  --primary-fg: 20 20 20;
+  --danger: 255 92 92;
+  --success: 80 220 120;
+  --warning: 255 200 0;
+  --focus: 255 255 255;
+  --touch: 56px;
+  --radius: 6px;
+}

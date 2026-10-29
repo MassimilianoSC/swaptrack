@@ -1,0 +1,46 @@
+# SwapTrack — Architecture
+
+## Layout
+- `/` Vite + React 19 + TypeScript PWA. `src/lib/data/` is the only code importing the Firebase SDK (R2); `src/lib/auth/providers.ts` holds Google/Microsoft (R16); `src/lib/data/call.ts` is the single call point for server operations (R20).
+- `functions/` TypeScript (CommonJS, `allowJs`), Node 22, europe-west1. `functions/src/shared/` holds pure modules shared with the app through the `@shared` alias (R19): `operations.ts` (op → router map), `roles.ts`, `policy.ts`, `settingsDefaults.ts`, `importDiff.ts`.
+- Delivered files (`consegna/`, R18): `src/lib/codeId.js`, `functions/src/codeId.node.js`, `tests/codeId.parity.test.mjs`, `src/lib/clockOffset.js`, `src/lib/imageCompress.js`, `src/lib/scanner/engine.js`, `src/lib/scanner/webEngine.js`, `scripts/copy-wasm.mjs`.
+
+## Exported Cloud Functions (step 2: 7)
+| Function | Kind | Started by |
+|---|---|---|
+| `users` | callable router | app |
+| `catalog` | callable router | app |
+| `settings` | callable router | app |
+| `beforeCreate` | blocking (Identity Platform) | any account creation outside the Admin SDK |
+| `beforeSignIn` | blocking (Identity Platform) | every sign-in |
+| `graceExpiry` | scheduled, daily 03:00 Europe/Rome | Cloud Scheduler |
+| `retention` | scheduled, daily 03:30 Europe/Rome (no-op unless enabled) | Cloud Scheduler |
+
+Planned (steps 3–4): routers `items`, `shipments`, `documents`, `alerts`, `desk`; trigger `onEventCreated`; scheduled `dailyChecks`, `nightlyRecount`, `monthlyReports` → total 16.
+
+**Public operation (no sign-in):** `users.requestPasswordReset` (rate-limited per IP and per e-mail, always the same answer).
+
+## Routers
+Every router receives `{op, data}` (`functions/src/core/router.ts`): unknown op or op of another area → `NOT_FOUND`; then sign-in, `active` claim, role, MFA (when on, admins need a second-factor token), rate limit (`rateLimits`, fixed windows), zod validation, structured logging (no payload). Ops present in the map but not built yet answer `UNIMPLEMENTED`. Errors are codes translated by the app (`errors.<code>`).
+
+## Collections (step 2)
+| Collection | Fields | Client access |
+|---|---|---|
+| `organizations/{orgId}` | name, type (client\|asp), language, active, createdAt | read: client roles all, ASP roles own |
+| `users/{uid}` | email, firstName, lastName, role, orgId, active, disabledAt (Timestamp), authDisabled, language, privacyNoticeVersion, privacyAcceptedAt, createdAt, deleted?, deletedAt? | read: self, client_admin all, asp_admin own ASP |
+| `locations/{loc_<code>}` | code, name, type, aspId, address, region, active, importId, createdAt, updatedAt | read: client roles all; ASP roles own ASP; asp_admin/asp_warehouse also client warehouses |
+| `models/{mdl_<materialCode>}` | materialCode (normalized), model, manufacturer, equipmentType, active, createdAt, updatedAt | read: active users |
+| `settings/{name}` | branding, auth, app (minVersion, emailConfigured), privacy (version, texts, retentionEnabled, retentionDays), importMappings | branding/auth public; importMappings client_admin; rest active users |
+| `events/{uuid}` | §8.1 (rules in place; written from step 3) | create per §8.1; read own only |
+| `adminLog/{id}` | actor, action, target, details, at | read client_admin |
+| `mail/{id}` | to, message {subject, text, html}, createdAt (Trigger Email format) | none |
+| `rateLimits/{key}` | count, expiresAt, updatedAt | none |
+| `accessLog/{id}` | (step 3, revealEventAuthor) | none |
+
+Claims: `role`, `orgId`, `active`, `disabledAt` (ms or null), set only by functions. Rules use claims only.
+
+## Storage (step 2)
+`branding/logo.{ext}` public read, written by `settings.saveSettings`. Everything else denied (photos, documents `documents/{aspId|client}/{kind}/{documentId}/{n}.{ext}`, exports, reports arrive in steps 3–4).
+
+## Session on the device
+`src/app/session.tsx`: cache owner check in IndexedDB (`swaptrack-device`), fail closed; shared-device clear (terminate + clearIndexedDbPersistence + reload); token refresh every 10 min and at resume; deactivation flow (flush pending writes, clear, sign out); gates for min version, privacy, MFA. Offline: Firestore `persistentLocalCache` + `persistentMultipleTabManager`; the service worker caches only the shell, fonts, icons and `zxing_reader.wasm`.

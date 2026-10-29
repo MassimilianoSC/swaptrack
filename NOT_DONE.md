@@ -1,0 +1,43 @@
+# Not done / not verified
+
+| What | Where | Why |
+|---|---|---|
+| Blocking functions `beforeCreate`/`beforeSignIn` | `functions/src/blocking.ts` | Loaded by the emulator; behaviour with real Identity Platform **not verified**. |
+| TOTP MFA for admins (enrollment, sign-in with second factor, server check) | `src/app/gates.tsx`, `src/lib/data/auth.ts`, `functions/src/core/router.ts` | Auth emulator does not support TOTP: **not verified**. |
+| Google and Microsoft sign-in, credential linking | `src/lib/auth/providers.ts` | Needs real providers: **not verified**. |
+| Trigger Email delivery | `functions/src/core/mail.ts` | Extension not run in the build environment: `mail` documents are written, nothing is sent. **not verified**. |
+| App Check | `src/lib/data/firebase.ts` | Off (monitoring) and disabled on the emulators: **not verified**. |
+| Scheduled jobs `graceExpiry`, `retention`, `dailyChecks`, `nightlyRecount`, `monthlyReports` | `functions/src/scheduled.ts` | Loaded by the emulator; the scheduler does not fire on the emulators: handlers are called directly by unit tests or manually. **not verified** at runtime. |
+| Inactivity sign-out, minimum version gate, update prompt | `AppShell.tsx`, `App.tsx`, `banners.tsx` | Built, off by default, not exercised. |
+| Camera scanning on a real phone (native/fallback engine, torch, exposure) | `src/pages/field/Scan.tsx`, `src/lib/scanner/engine.js` | Headless browser has no camera: only the manual-entry path was exercised. **not verified** on devices. |
+| Photos end to end with a running Storage emulator and real devices | `src/pages/field/Scan.tsx`, `src/lib/offline/photoQueue.ts`, `functions/src/routers/items.ts` | Code built and compiles; wasn't exercised against a running Storage emulator with real photo bytes. **not verified** end to end. |
+| Document files (DDT PDF/images uploaded via `saveDocument.files`) | `functions/src/routers/documents.ts`, `src/pages/desk/DocumentDetail.tsx`, `src/pages/desk/ShipmentDetail.tsx` | The server writes files to Storage; UI uploads a return DDT file from `ShipmentDetail`. Base64 round-trip not exercised in this environment. |
+| Automatic reading of documents (`features.aiDocumentExtraction`) | `src/lib/documents/extract.ts` | §14, §20 "by design not now": the extension point says "not available". |
+| **Report format: PDF with pdfmake and Excel with exceljs** | ✅ done — `functions/src/shared/reportBuilders.ts` writes a real PDF (pdfmake + PDFKit built-in Helvetica) and a real XLSX (exceljs); strings in the organization language (`functions/src/core/orgLang.ts`, `functions/src/shared/reportStrings.ts`), Italian and English (D30). |
+| **Export format: Excel with exceljs** | ✅ done — same `reportBuilders.ts`; `createExport` writes `exports/{scope}/{ts}.xlsx` with headers in the organization language (D30). |
+| Transfers between ASPs: dedicated "to send" / "incoming" split and the 7-day scheduled `transfer_difference` alert | `src/pages/desk/Shipments.tsx`, `functions/src/scheduled.ts` → `runDailyChecks` | Single list filterable by role (D26); the daily job writes the alert when `sentAt > N days` with missing lines. **Not exercised at runtime** by the emulator scheduler. |
+| `confirmReturn` second pass for pieces that arrive later | `routers/shipments.ts` | The op already accepts a second call (shipment stays `confirmed`); no dedicated UI button yet — the user re-opens the confirm dialog and ticks the missing lines that have now arrived. |
+| `markAlertSeen`, `closeAlert` on the client-warehouse inbox for `ddt_return_difference` | ✅ done — the `/alerts` inbox is filtered to `ddt_return_difference` for client_warehouse (`src/lib/data/documents.ts` `watchAlerts`), newest first; `closeAlert` is already restricted to this kind for client_warehouse in `functions/src/routers/alerts.ts`. |
+| `revealEventAuthor` with a real admin account on `code_of_another_asp` across ASPs | `functions/src/routers/items.ts` | Op built, logs to `accessLog`; cross-ASP end-to-end not exercised. |
+| Emergent preview runtime | `/etc/supervisor/conf.d/swaptrack.conf` | Environment-only: supervisor programs `swaptrack-emulators` and `swaptrack-web` replace the template frontend/backend. Emulator data is in memory unless the emulators exit cleanly: after a pod restart run `yarn seed:full` again. A copy of the config lives in `/app/scripts/supervisor/swaptrack.conf` (DECISIONS D21). |
+| Main bundle > 500 kB | `vite build` | Route-level code splitting not done (warning only). |
+| Pieces with no readable code at all | — | **Out of the system by design** (SPEC §20). |
+
+## Step 4 — what is now done
+
+- **Documents** (§11): `documents` router (`saveDocument`, `markDocumentChecked`, `closeDocument`, `saveDocumentMapping`, `compareDocument`). Pure `compareDocument` (`functions/src/shared/documents.ts`) for `ddt_in`, `ddt_return` and `bom`, unit-tested in `tests/documents.test.ts`. `expectedCodes/{codeId}_{documentId}` written on save; the trigger reads them in one lookup to find the model (`findModel`, §6.4). Document versions, duplicates (same number + kind + ASP → `duplicateOf` link, warning in the UI), per-ASP mappings and the `client` default mapping. DDT part on the arrival screen (§12.2) is reached through the `Compare` button on the document page; the arrival event carries `ddtId` through the scan screen (`?ddtId=...`). DDT file of return shipments attached from the shipment detail page.
+- **Alerts** (§11.4): `alerts` router (`markAlertSeen`, `closeAlert`, `resolveAnomaly`). Deterministic ids `stale-{locationId}-{flow}`, `bom-{documentId}`, `ddt-{documentId}`, `transfer-{shipmentId}`, `return-{shipmentId}`. Inbox at `/alerts` with the counter in the top bar (`AlertCounter`). `ddt_in_difference` and `bom_difference` raised by `markDocumentChecked`; `ddt_return_difference` raised by `confirmReturn`; `stale_material`, `transfer_difference` and the 24-48h BOM check raised by `runDailyChecks`.
+- **Anomalies** (§8.3): inbox at `/anomalies`; `resolveAnomaly({action: accept_move})` on `code_of_another_asp` from the item page.
+- **Desk views** (§13): `/dashboard` reads aggregates (never items) for the two scopes (client, own ASP); `/exports`, `/reports`; `desk` router (`listEvents`, `createExport`, `generateReport`). Status × region aggregate wired through `cells` and written on items (`currentRegion`).
+- **Scheduled jobs** (§13.1 / §13.4 / §11.4): `graceExpiry`, `retention`, `dailyChecks` (stale_material + transfer_difference + 24-48h BOM check), `nightlyRecount`, `monthlyReports` (`0 6 1 * *` Europe/Rome). The nightly recount reads every item and rewrites the aggregates on shard 0.
+- **Rest of §14**: `thresholds`, `photos`, `itemFields`, `fieldPolicy`, `features` added to `settingsDefaults.ts` and to the settings router schema; settings page has one tab per group.
+- **Sorting badge** (§10): "installed new material" label on the scan screen when the piece under classification has `previousFlow == "new"`.
+- **Full demo seed** (§18): `scripts/fullSeed.mjs`. 3 ASPs with 2 warehouses each, 1 client warehouse, 1,500 sites, 20 models, 5,000 pieces in every state of both flows (with `previousFlow: new` on about 10% of removed pieces), 10 DDTs (3 checked), 5 return DDTs, 10 BOMs, 5 within-ASP transfers (3 received), 3 between-ASP transfers, 5 return shipments (2 confirmed, 1 complete), 6 alerts, 6 anomalies, aggregate recount for `client` and each ASP across every dimension (statusByFlow, byModel, byEquipmentType, byManufacturer, byWarehouse, bySite, byRegion, sortingCategory, removedPreviouslyNew).
+
+## Handover — files a new agent reads first
+1. `SPEC.md` and `consegna/README.md`.
+2. This file (`NOT_DONE.md`), then `DECISIONS.md`, `ARCHITECTURE.md`, `README.md`.
+3. `memory/PRD.md`, `memory/test_credentials.md`.
+4. Code entry points: `functions/src/index.ts`, `functions/src/shared/operations.ts`, `functions/src/trigger.ts`, `functions/src/shared/stateMachine.ts`, `functions/src/shared/documents.ts`, `functions/src/routers/*.ts`, `functions/src/scheduled.ts`, `src/app/App.tsx`, `src/app/nav.ts`, `src/pages/field/Scan.tsx`, `src/pages/desk/*.tsx`, `tests/*.test.ts`, `scripts/seed.mjs`, `scripts/fullSeed.mjs`.
+5. Environment: Node 22 at `/root/toolchain/node22/bin`, JRE 21 under `/root/toolchain`; supervisor programs `swaptrack-emulators` and `swaptrack-web`; Firestore emulator on port 8180; emulator data is in memory: after a restart run `node scripts/seed.mjs` + `node scripts/fullSeed.mjs`.
+6. Owner rules: emulators only (`demo-swaptrack`), no testing agent, no mock backend, no deploy; one build + one test run per step; `TODO(SPEC §x)` + this file for what cannot be done; `DECISIONS.md` for unspecified choices.

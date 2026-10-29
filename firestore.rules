@@ -1,0 +1,156 @@
+rules_version = '2';
+
+// SPEC §3.3, §8.1, R6, R7, R11. Rules use the claims, never get() on users (§3.4).
+// Clients create only events; every other write goes through callables (R3).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function tok() { return request.auth.token; }
+    function active() { return signedIn() && tok().active == true; }
+    function role() { return tok().role; }
+    function myOrg() { return tok().orgId; }
+    function isClient() { return role() in ['client_admin', 'client_office', 'client_warehouse']; }
+    function isAsp() { return role() in ['asp_admin', 'asp_warehouse', 'asp_technician']; }
+
+    match /organizations/{orgId} {
+      allow read: if active() && (isClient() || orgId == myOrg());
+    }
+
+    match /users/{uid} {
+      allow read: if active() && (uid == request.auth.uid
+        || role() == 'client_admin'
+        || (role() == 'asp_admin' && resource.data.orgId == myOrg()));
+    }
+
+    // Technicians: own ASP only. ASP warehouse roles: own ASP + client warehouses.
+    match /locations/{locationId} {
+      allow read: if active() && (isClient()
+        || resource.data.aspId == myOrg()
+        || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.type == 'client_warehouse'));
+    }
+
+    match /models/{modelId} {
+      allow read: if active();
+    }
+
+    // DECISIONS b6: branding and auth public; importMappings client_admin only; the rest active users.
+    match /settings/{name} {
+      allow read: if name in ['branding', 'auth']
+        || (name == 'importMappings' && active() && role() == 'client_admin')
+        || (!(name in ['importMappings']) && active());
+    }
+
+    match /adminLog/{id} {
+      allow read: if active() && role() == 'client_admin';
+    }
+
+    // ---- Events (§8.1): create checks ONLY these (R6). ----
+    function evKeys() {
+      return ['type', 'codeRaw', 'codeId', 'normVersion', 'secondCodeRaw', 'locationId', 'aspId', 'scannedAt',
+              'clockOffsetMs', 'offsetMeasuredAt', 'userId', 'orgId', 'source', 'engine', 'payload', 'createdAt'];
+    }
+    function typeAllowed(t) {
+      return (role() in ['asp_admin', 'asp_warehouse']
+                && t in ['arrive_at_warehouse', 'classify', 'transfer_out', 'return_ship', 'relabel', 'void'])
+          || (role() == 'asp_technician'
+                && t in ['remove_at_site', 'install_at_site', 'site_done', 'relabel', 'void']);
+    }
+    function activeOrInGrace(d) {
+      return tok().active == true
+        || (tok().disabledAt is number && d.scannedAt is timestamp && d.scannedAt.toMillis() <= tok().disabledAt);
+    }
+    function hasCode(d) {
+      return d.codeRaw is string && d.codeRaw.size() > 0 && d.codeRaw.size() <= 2000
+        && d.codeId is string && d.codeId.size() > 0;
+    }
+    function payloadOk(d) {
+      return d.payload is map && (
+        d.type in ['site_done'] ? true :
+        d.type == 'void' ? d.payload.targetEventId is string :
+        d.type == 'relabel' ? hasCode(d) && d.payload.oldCodeRaw is string :
+        d.type == 'classify' ? hasCode(d) && (d.payload.categoryId is string || d.payload.newClass in ['defective', 'leftover']) :
+        d.type in ['transfer_out', 'return_ship'] ? hasCode(d) && d.payload.shipmentId is string :
+        hasCode(d));
+    }
+    function eventValid(eventId, d) {
+      return eventId.matches('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+        && d.keys().hasOnly(evKeys())
+        && d.keys().hasAll(['type', 'locationId', 'aspId', 'scannedAt', 'clockOffsetMs', 'userId', 'orgId', 'source', 'normVersion', 'payload', 'createdAt'])
+        && d.userId == request.auth.uid
+        && d.orgId == myOrg()
+        && (!isAsp() || d.aspId == myOrg())
+        && typeAllowed(d.type)
+        && d.source in ['camera', 'wedge', 'manual']
+        && (!('engine' in d) || d.engine == null || d.engine in ['native', 'fallback'])
+        && d.normVersion is int
+        && d.scannedAt is timestamp
+        && d.clockOffsetMs is number
+        && d.createdAt == request.time
+        && d.locationId is string
+        && exists(/databases/$(database)/documents/locations/$(d.locationId))
+        && payloadOk(d);
+    }
+
+    match /events/{eventId} {
+      allow create: if signedIn() && activeOrInGrace(request.resource.data) && eventValid(eventId, request.resource.data);
+      // R11: readable directly only by the author.
+      allow read: if active() && resource.data.userId == request.auth.uid;
+    }
+
+    // §3.3 / R7: "own ASP" for items and codes = currentAspId or pendingAspId (aspId/pendingAspId on codes).
+    match /items/{itemId} {
+      allow read: if active() && (isClient() || resource.data.currentAspId == myOrg() || resource.data.pendingAspId == myOrg());
+    }
+    match /codes/{codeId} {
+      allow read: if active() && (isClient() || resource.data.aspId == myOrg() || resource.data.pendingAspId == myOrg());
+    }
+    match /sortingCategories/{id} { allow read: if active(); }
+    match /sortingRules/{id} { allow read: if active(); }
+    match /shipments/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office']
+        || (role() == 'client_warehouse' && resource.data.kind == 'return')
+        || (role() in ['asp_admin', 'asp_warehouse'] && (resource.data.fromAspId == myOrg() || resource.data.toAspId == myOrg())));
+      match /lines/{itemId} {
+        allow read: if active() && (role() in ['client_admin', 'client_office']
+          || (role() == 'client_warehouse' && resource.data.kind == 'return')
+          || (role() in ['asp_admin', 'asp_warehouse'] && (resource.data.fromAspId == myOrg() || resource.data.toAspId == myOrg())));
+      }
+    }
+    match /anomalies/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.aspId == myOrg()));
+    }
+    match /alerts/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office']
+        || (role() == 'client_warehouse' && resource.data.kind == 'ddt_return_difference')
+        || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.aspId == myOrg()));
+    }
+    match /aggregates/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() == 'asp_admin' && resource.data.scope == myOrg()));
+    }
+    // §11: documents and expectedCodes.
+    match /documents/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office']
+        || (role() == 'client_warehouse' && resource.data.kind == 'ddt_return')
+        || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.aspId == myOrg())
+        || (role() == 'asp_technician' && resource.data.kind == 'bom' && resource.data.aspId == myOrg()));
+    }
+    match /documentMappings/{id} {
+      allow read: if active() && (role() == 'client_admin' || (role() in ['asp_admin', 'asp_warehouse'] && (id.matches('.*_' + myOrg()) || id.matches('.*_client'))));
+    }
+    match /expectedCodes/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() in ['asp_admin', 'asp_warehouse'] && resource.data.aspId == myOrg()));
+    }
+    match /reports/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() == 'asp_admin' && resource.data.scope == myOrg()));
+    }
+    match /exports/{id} {
+      allow read: if active() && (role() in ['client_admin', 'client_office'] || (role() == 'asp_admin' && resource.data.scope == myOrg())) && resource.data.createdBy == request.auth.uid;
+    }
+
+    // mail, accessLog, rateLimits and every other collection: no client access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

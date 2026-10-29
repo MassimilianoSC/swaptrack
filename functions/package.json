@@ -1,0 +1,23 @@
+{
+  "name": "swaptrack-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch --preserveWatchOutput"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "firebase-admin": "13",
+    "firebase-functions": "^7.4.0",
+    "pdfmake": "^0.2.10",
+    "zod": "3"
+  },
+  "devDependencies": {
+    "@types/node": "22",
+    "typescript": "5.8"
+  }
+}

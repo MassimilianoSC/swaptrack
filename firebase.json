@@ -1,0 +1,30 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", ".git", "src", "*.log"],
+      "predeploy": ["yarn --cwd \"$RESOURCE_DIR\" build"]
+    }
+  ],
+  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
+  "storage": { "rules": "storage.rules" },
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "emulators": {
+    "singleProjectMode": true,
+    "auth": { "host": "127.0.0.1", "port": 9099 },
+    "firestore": { "host": "127.0.0.1", "port": 8180 },
+    "functions": { "host": "127.0.0.1", "port": 5001 },
+    "storage": { "host": "127.0.0.1", "port": 9199 },
+    "pubsub": { "host": "127.0.0.1", "port": 8085 },
+    "ui": { "enabled": false }
+  }
+}

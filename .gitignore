@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dev-dist/
+functions/lib/
+functions/node_modules/
+.emulator-data/
+public/zxing_reader.wasm
+.env
+.env.local
+functions/.env
+*.log
+firebase-debug.log*
+firestore-debug.log*
+firebase-debug.log
