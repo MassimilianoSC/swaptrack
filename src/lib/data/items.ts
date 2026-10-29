@@ -22,8 +22,9 @@ export const loadItem = async (id: string): Promise<Row<Item> | null> => {
   return s.exists() ? ({ id: s.id, ...(s.data() as Item) }) : null;
 };
 
-export function watchItem(id: string, cb: (v: Row<Item> | null) => void) {
-  return onSnapshot(doc(db, "items", id), (s) => cb(s.exists() ? ({ id: s.id, ...(s.data() as Item) }) : null));
+// onError: a read the rules refuse (a piece of another ASP) reports an error instead of staying silent.
+export function watchItem(id: string, cb: (v: Row<Item> | null) => void, onError?: (e: Error) => void) {
+  return onSnapshot(doc(db, "items", id), (s) => cb(s.exists() ? ({ id: s.id, ...(s.data() as Item) }) : null), (e) => onError?.(e));
 }
 
 // Watches items scoped to the current ASP (own) or all (client).

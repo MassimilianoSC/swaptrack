@@ -21,7 +21,8 @@ export default function Items() {
   React.useEffect(() => claims?.orgId ? watchItems({ role: claims.role!, orgId: claims.orgId }, setItems) : undefined, [claims]);
   const codeSearch = async () => {
     if (!q.trim()) return;
-    const found = await searchItemByCode(q);
+    // A code the rules do not let this user read is "not found" for them (R7: existence is not revealed), never a silent failure.
+    const found = await searchItemByCode(q).catch(() => null);
     if (found) window.location.href = `/items/${found.id}`;
     else toast.error(t("items.notFound"));
   };

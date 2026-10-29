@@ -13,7 +13,7 @@ import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loading, Empty } from "@/components/states";
+import { Loading, Empty, ErrorState } from "@/components/states";
 import { toast } from "sonner";
 import { formatInstant } from "@/lib/utils";
 
@@ -26,6 +26,9 @@ export default function ItemDetail() {
   const { claims } = useSession();
   const { busy, run } = useAction();
   const [item, setItem] = React.useState<Row<Item> | null>(null);
+  // §15: a piece that cannot be read (rules) shows an error; an id that does not exist shows "not found".
+  const [loadError, setLoadError] = React.useState(false);
+  const [missing, setMissing] = React.useState(false);
   const [codes, setCodes] = React.useState<Row<Code>[]>([]);
   const [history, setHistory] = React.useState<HistoryEvent[] | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
@@ -63,12 +66,15 @@ export default function ItemDetail() {
 
   React.useEffect(() => {
     if (!id) return;
+    setLoadError(false); setMissing(false);
     void listModels().then(setModels).catch(() => undefined);
-    void reload();
-    return watchItem(id, setItem);
+    void reload().catch(() => setLoadError(true));
+    return watchItem(id, (v) => { setItem(v); setMissing(v === null); }, () => setLoadError(true));
   }, [id, reload]);
   React.useEffect(() => { if (item) { setEditModel(item.modelId ?? ""); setEditCondition(item.condition ?? ""); setForceStatus(item.status); } }, [item]);
 
+  if (loadError) return <ErrorState message={t("errors.load_failed")} />;
+  if (missing) return <Empty title={t("items.notFound")} />;
   if (!id || !item || history === null) return <Loading />;
 
   const label = (t: string) => (t ? t : "—");
