@@ -1,7 +1,7 @@
 // §11.3 BOM check: on site_done, and by the daily job for sites with scans and no site_done in the last 24h.
-import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../core/admin";
 import { alertId } from "./alertIds";
+import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 import { compareDocument, type Line, type EventFact } from "./documents";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -33,10 +33,9 @@ export async function bomCheckForSite(locationId: string, aspId: string): Promis
   const r = compareDocument("bom", bomSnap.id, lines, facts);
   const diffs = r.totals.missing + r.totals.unexpected + r.totals.arrivedModelUnknown + r.quantities.reduce((n, q) => n + Math.abs(q.expected - q.counted), 0);
   if (diffs > 0) {
-    await db.collection("alerts").doc(alertId.bom(bomSnap.id)).set({
-      kind: "bom_difference", aspId: bom.aspId ?? null, locationId, documentId: bomSnap.id, shipmentId: null,
-      detail: r.totals, count: diffs, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
-      seenAt: null, closedAt: null, closedNote: null,
-    }, { merge: true });
+    await upsertAlert(alertId.bom(bomSnap.id), { kind: "bom_difference", aspId: bom.aspId ?? null, locationId, documentId: bomSnap.id, shipmentId: null,
+      detail: r.totals, count: diffs });
+  } else {
+    await zeroAlertIfOpen(alertId.bom(bomSnap.id), r.totals);
   }
 }

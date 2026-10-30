@@ -7,6 +7,7 @@ import { makeRouter, op, Ctx } from "../core/router";
 import { adminLog } from "../core/adminLog";
 import { isClientRole } from "../shared/roles";
 import { alertId } from "../shared/alertIds";
+import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 import { compareDocument, type DocKind, type Line, type EventFact } from "../shared/documents";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { computeCodeId, normalizeBarcode } = require("../codeId.node.js");
@@ -110,9 +111,11 @@ export const documents = {
       // Documents saved before P-49 by a client role have aspId null and take the ASP of their location.
       if (prev && (prev.kind !== d.kind || (prev.aspId != null && prev.aspId !== aspId))) fail("permission-denied", "forbidden");
       if (d.shipmentId && (await db.collection("shipments").doc(d.shipmentId).get()).get("fromAspId") !== aspId) fail("permission-denied", "forbidden");
+      // A line without direction (DDT lines) gets no direction key: Firestore refuses undefined values.
+      const dir = (l: { direction?: "remove" | "install" }) => (l.direction ? { direction: l.direction } : {});
       const normalized = d.lines.map((l): Line => l.kind === "serial"
-        ? { kind: "serial", codeRaw: l.codeRaw, codeId: l.codeId || (computeCodeId(l.codeRaw) as string), materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, direction: l.direction }
-        : { kind: "quantity", materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, quantity: l.quantity, direction: l.direction });
+        ? { kind: "serial", codeRaw: l.codeRaw, codeId: l.codeId || (computeCodeId(l.codeRaw) as string), materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, ...dir(l) }
+        : { kind: "quantity", materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, quantity: l.quantity, ...dir(l) });
       // Duplicate number for the same kind + ASP (warn only, UI shows previous).
       const duplicates = await db.collection("documents").where("kind", "==", d.kind).where("aspId", "==", aspId).where("number", "==", d.number).limit(5).get();
       const dup = duplicates.docs.find((x) => x.id !== ref.id);
@@ -188,11 +191,10 @@ export const documents = {
         const id = kind === "ddt_in" ? alertId.ddt(d.documentId) : alertId.bom(d.documentId);
         const kindCode = kind === "ddt_in" ? "ddt_in_difference" : "bom_difference";
         if (diffs > 0) {
-          await db.collection("alerts").doc(id).set({
-            kind: kindCode, aspId: doc!.aspId ?? null, locationId: doc!.locationId, documentId: d.documentId, shipmentId: null,
-            detail: compared.totals, count: diffs, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
-            seenAt: null, closedAt: null, closedNote: null,
-          }, { merge: true });
+          await upsertAlert(id, { kind: kindCode, aspId: doc!.aspId ?? null, locationId: doc!.locationId, documentId: d.documentId, shipmentId: null,
+            detail: compared.totals, count: diffs });
+        } else {
+          await zeroAlertIfOpen(id, compared.totals);
         }
       }
     },

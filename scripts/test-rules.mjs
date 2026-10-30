@@ -1,4 +1,4 @@
-// Runs the emulator-backed tests of functions/test (security rules, trigger) and always stops the emulators.
+// Runs the emulator-backed tests of functions/test (security rules, trigger, scheduled jobs) and always stops the emulators.
 // Usage, from the repository root:   node scripts/test-rules.mjs [vitest args, e.g. functions/test/trigger]
 // Why not `firebase emulators:exec`: on Windows it leaves the Firestore Java process alive on its port, and the
 // next run fails with "port taken". Here the emulators' process tree is recorded while the CLI is alive and
@@ -9,9 +9,9 @@ import {
   sleep, waitPortsFree,
 } from "./emulatorPorts.mjs";
 
-const ONLY = ["firestore", "storage"];
+const ONLY = ["firestore", "storage", "auth"];
 const PORTS = portsOf(ONLY);
-const READY = [EMULATORS.firestore, EMULATORS.storage];
+const READY = [EMULATORS.firestore, EMULATORS.storage, EMULATORS.auth];
 const VITEST = `${ROOT}node_modules/vitest/vitest.mjs`;
 
 async function waitFor(predicate, timeoutMs, what) {
@@ -52,6 +52,7 @@ async function main() {
       ...process.env,
       FIRESTORE_EMULATOR_HOST: hostOf("firestore"),
       FIREBASE_STORAGE_EMULATOR_HOST: hostOf("storage"),
+      FIREBASE_AUTH_EMULATOR_HOST: hostOf("auth"),
       GCLOUD_PROJECT: PROJECT,
     };
     const test = spawnSync(process.execPath, [VITEST, "run", "--config", "functions/test/vitest.config.ts", ...process.argv.slice(2)], {

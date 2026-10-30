@@ -54,6 +54,22 @@ describe("a document belongs to the ASP of its location (§3.3, §11.2)", () => 
     expect(after).toMatchObject({ aspId: CENTRO, locationId: SITE_C, version: 1 });
   });
 
+  it("D-29: a DDT checked again after the missing piece arrived: the open ddt_in alert goes to count 0", async () => {
+    const WH = `loc_TT-MAG-DOCDDT-${RUN}`, a = `SN-${RUN}-DDA`, b = `SN-${RUN}-DDB`;
+    await t.db.collection("locations").doc(WH).set({ ...loc(`TT-MAG-DOCDDT-${RUN}`, NORD), type: "asp_warehouse" });
+    const nw = ctxOf("asp_warehouse", NORD);
+    const r = await documents.saveDocument.handler(nw, { kind: "ddt_in", number: `D-${RUN}`, locationId: WH, linesSource: "manual",
+      lines: [{ kind: "serial", codeRaw: a }, { kind: "serial", codeRaw: b }] }) as { documentId: string };
+    const model = { modelId: `mdl_TT_dd_${RUN}` };
+    await t.db.collection("models").doc(model.modelId).set({ materialCode: `MC-DD-${RUN}`, model: "TT", manufacturer: "Acme", equipmentType: "radio", active: true });
+    await t.fire(ev("arrive_at_warehouse", a, { locationId: WH, payload: { flow: "new", ddtId: r.documentId, ...model } }));
+    await documents.markDocumentChecked.handler(nw, { documentId: r.documentId });
+    expect((await t.db.collection("alerts").doc(`ddt-${r.documentId}`).get()).get("count")).toBe(1);
+    await t.fire(ev("arrive_at_warehouse", b, { locationId: WH, at: T0 + 1000, payload: { flow: "new", ddtId: r.documentId, ...model } }));
+    await documents.markDocumentChecked.handler(nw, { documentId: r.documentId });
+    expect((await t.db.collection("alerts").doc(`ddt-${r.documentId}`).get()).data()).toMatchObject({ count: 0, closedAt: null, detail: { missing: 0 } });
+  });
+
   it("a return DDT is attached only to a shipment of the same ASP", async () => {
     const WH = `loc_TT-MAG-DOCASP-${RUN}`, SH_C = `sh_TT_docasp_c_${RUN}`;
     await t.db.collection("locations").doc(WH).set({ ...loc(`TT-MAG-DOCASP-${RUN}`, NORD), type: "asp_warehouse" });

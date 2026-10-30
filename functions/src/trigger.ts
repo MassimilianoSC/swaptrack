@@ -11,6 +11,10 @@ const { computeCodeId, normalizeBarcode } = require("./codeId.node.js");
 const TYPES = ["remove_at_site", "install_at_site", "site_done", "arrive_at_warehouse", "classify", "transfer_out", "return_ship", "relabel", "void", "return_confirm", "force_state"];
 const CLOCK_MS = 3 * 60 * 1000;
 const DAY = 24 * 3600 * 1000;
+const SITE_DONE_WAITS = 10;
+const SITE_DONE_MAX_WAIT_MS = 10 * 60 * 1000;
+const SITE_DONE_POLLS = 5;
+const SITE_DONE_POLL_MS = 3000;
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 // Transient errors are rethrown (retries on); permanent problems become anomalies (R5).
@@ -116,9 +120,27 @@ export async function processEvent(id: string): Promise<void> {
     }
 
     if (e.type === "site_done") {
-      await mark({ scannedAtEffective: effective, outcome: "ok" });
-      // §11.3: BOM check at site_done. Run outside the trigger transaction (reads are unbounded).
+      // §11.3: BOM check at site_done. A phone back online sends its scans and the site_done together and their
+      // triggers run in parallel: checking before the scans are processed gives a false bom_difference (P-57).
+      // Wait for them here first (they usually take seconds; the emulator does not retry triggers), then by failing
+      // transiently (the trigger retries), at most SITE_DONE_WAITS times or SITE_DONE_MAX_WAIT_MS after the event
+      // reached the server; then check with what is there (R5: no endless retries).
+      const pendingAt = async () => (await db.collection("events").where("locationId", "==", e.locationId).get()).docs
+        .filter((x) => x.id !== id && x.get("type") !== "site_done" && !x.get("processedAt")).length;
+      const waits = Number(first.bomCheckWaits ?? 0);
+      const mayWait = waits < SITE_DONE_WAITS && Date.now() - created < SITE_DONE_MAX_WAIT_MS;
+      let pending = await pendingAt();
+      for (let i = 0; pending && mayWait && i < SITE_DONE_POLLS; i++) {
+        await new Promise((r) => setTimeout(r, SITE_DONE_POLL_MS));
+        pending = await pendingAt();
+      }
+      if (pending && mayWait) {
+        await ref.update({ bomCheckWaits: waits + 1 });
+        throw new Error(`site_done: ${pending} scans of the site still being processed`);
+      }
+      // Run outside the trigger transaction (reads are unbounded).
       await bomCheckForSite(String(e.locationId), String(e.aspId ?? "")).catch((err) => logger.warn("bomCheck", { e: String(err) }));
+      await mark({ scannedAtEffective: effective, outcome: "ok" });
       return;
     }
 
@@ -224,6 +246,10 @@ export async function processEvent(id: string): Promise<void> {
         tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
       }
       if (sid && e.type === "arrive_at_warehouse") tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { arrivedAt: FieldValue.serverTimestamp() }, { merge: true });
+      // §9.2 (D-30): a piece confirmed at the client as extra of one return shipment while it was in another one:
+      // the line of that other shipment is "confirmed elsewhere" (its confirmation then skips it).
+      const elsewhere = e.type === "return_confirm" && r.before?.status === "in_return" && r.before.shipmentId && r.before.shipmentId !== sid ? r.before.shipmentId as string : null;
+      if (elsewhere) tx.set(db.collection("shipments").doc(elsewhere).collection("lines").doc(itemRef.id), { confirmedElsewhere: sid ?? true }, { merge: true });
       if (r.anomaly) await anomaly(tx, r.anomaly, e, { itemId: itemRef.id });
       tx.update(ref, { itemId: itemRef.id, codeId: e.codeId ?? null, processedAt: FieldValue.serverTimestamp(), scannedAtEffective: effective, outcome: r.anomaly ?? "ok" });
       return { before: r.before, state: r.state, itemId: itemRef.id, cat: catalogFrom(e, model) };

@@ -4,6 +4,8 @@ import { db } from "../core/admin";
 import { fail } from "../core/errors";
 import { makeRouter, op } from "../core/router";
 import { serverEvent } from "./items";
+import { alertId } from "../shared/alertIds";
+import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 const ASP_WH = ["asp_admin", "asp_warehouse"] as const;
@@ -14,7 +16,8 @@ async function loc(id: string): Promise<Doc> {
   return l!;
 }
 
-const shipments = {
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const shipments = {
   // §9.3 return drafts (ASP warehouse roles); §9.4 transfers: within the ASP by ASP roles, between ASPs by client_admin only.
   createShipment: op({
     roles: ["asp_admin", "asp_warehouse", "client_admin"],
@@ -77,22 +80,30 @@ const shipments = {
       if (!s || s.kind !== "return") fail("not-found", "shipment_not_found");
       if (s!.status !== "sent" && s!.status !== "confirmed") fail("failed-precondition", "shipment_not_sent");
       const at = Timestamp.now();
+      // A second confirmation (late pieces, §9.3), a double click or a retry sends the lines again: a line already
+      // confirmed gets no second return_confirm (it would raise event_after_end_of_flow on a returned piece, R5).
       for (const itemId of d.confirmed) {
         const line = (await ref.collection("lines").doc(itemId).get()).data();
-        if (!line) continue;
+        if (!line || line.confirmedAt || line.confirmedElsewhere) continue;
         await serverEvent(ctx, "return_confirm", s!.toLocationId, null, { shipmentId: d.shipmentId, targetItemId: itemId }, at, line.codeRaw);
         await ref.collection("lines").doc(itemId).update({ confirmedAt: FieldValue.serverTimestamp(), missing: false });
       }
-      for (const itemId of d.missing) await ref.collection("lines").doc(itemId).set({ missing: true }, { merge: true });
+      // Only lines of this shipment can be missing; an unknown id must not create a line.
+      let missing = 0;
+      for (const itemId of d.missing) {
+        const line = await ref.collection("lines").doc(itemId).get();
+        if (line.exists && !line.get("confirmedAt") && !line.get("confirmedElsewhere")) { await line.ref.update({ missing: true }); missing++; }
+      }
       for (const codeRaw of d.extra) await serverEvent(ctx, "return_confirm", s!.toLocationId, null, { shipmentId: d.shipmentId, extra: true }, at, codeRaw);
-      const complete = d.missing.length === 0 && d.extra.length === 0;
+      const complete = missing === 0 && d.extra.length === 0;
       await ref.update({ status: "confirmed", confirmedAt: FieldValue.serverTimestamp(), confirmedComplete: complete });
       if (!complete) {
-        await db.collection("alerts").doc(`return-${d.shipmentId}`).set({
+        await upsertAlert(alertId.returnShipment(d.shipmentId), {
           kind: "ddt_return_difference", aspId: s!.fromAspId, locationId: s!.toLocationId, documentId: s!.documentId ?? null, shipmentId: d.shipmentId,
-          detail: { missing: d.missing.length, extra: d.extra.length }, count: d.missing.length + d.extra.length,
-          createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), seenAt: null, closedAt: null, closedNote: null,
-        }, { merge: true });
+          detail: { missing, extra: d.extra.length }, count: missing + d.extra.length,
+        });
+      } else {
+        await zeroAlertIfOpen(alertId.returnShipment(d.shipmentId), { missing: 0, extra: 0 });
       }
     },
   }),

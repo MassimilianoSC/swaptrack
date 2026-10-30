@@ -9,23 +9,26 @@ import { bomCheckForSite } from "./shared/bomCheck";
 import { cells, SHARDS } from "./aggregates";
 import { buildReportPdf, buildReportXlsx } from "./shared/reportBuilders";
 import { previousReportMonth } from "./shared/reportMonth";
+import { authDisableDone } from "./shared/graceExpiry";
+import { upsertAlert, zeroAlertIfOpen } from "./core/alerts";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 export const GRACE_DAYS = 7;
 const DAY = 24 * 3600 * 1000;
 
 // §4.8: after the grace period the Auth account of a deactivated user is disabled.
-export async function runGraceExpiry(now = Date.now()) {
+export async function runGraceExpiry(now = Date.now(), authApi: Pick<typeof auth, "updateUser"> = auth) {
   const cutoff = Timestamp.fromMillis(now - GRACE_DAYS * DAY);
   const snap = await db.collection("users").where("active", "==", false).where("disabledAt", "<=", cutoff).get();
-  let n = 0;
+  let n = 0, retry = 0;
   for (const d of snap.docs) {
     if (d.get("authDisabled") === true || d.get("deleted")) continue;
-    await auth.updateUser(d.id, { disabled: true }).catch(() => undefined);
+    const err = await authApi.updateUser(d.id, { disabled: true }).then(() => null, (e: unknown) => e);
+    if (!authDisableDone(err)) { retry++; continue; }
     await d.ref.update({ authDisabled: true });
     n++;
   }
-  logger.info("graceExpiry", { disabled: n });
+  logger.info("graceExpiry", { disabled: n, retryTomorrow: retry });
 }
 
 // R11 / §14: removes userId from old events. Off by default.
@@ -74,26 +77,35 @@ export async function runDailyChecks(now = Date.now()) {
   }
   for (const [key, v] of grouped) {
     const [locationId, flow] = key.split("|") as [string, "new" | "removed"];
-    await db.collection("alerts").doc(alertId.stale(locationId, flow)).set({
+    await upsertAlert(alertId.stale(locationId, flow), {
       kind: "stale_material", aspId: v.aspId, locationId, documentId: null, shipmentId: null, flow,
-      detail: { thresholdDays: staleDays, flow }, count: v.count, createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(), seenAt: null, closedAt: null, closedNote: null,
-    }, { merge: true });
+      detail: { thresholdDays: staleDays, flow }, count: v.count,
+    });
+  }
+  // D-29: an open stale alert whose warehouse has no stale piece any more goes to count 0.
+  const openStale = await db.collection("alerts").where("kind", "==", "stale_material").where("closedAt", "==", null).get();
+  for (const a of openStale.docs) {
+    if (!grouped.has(`${a.get("locationId")}|${a.get("flow")}`)) await zeroAlertIfOpen(a.id, { thresholdDays: staleDays, flow: a.get("flow") });
   }
   // Transfer difference: shipments sent 7+ days ago with lines not arrived.
   const transferDays = thresholds.transferDays;
   const since = Timestamp.fromMillis(now - transferDays * DAY);
   const ships = await db.collection("shipments").where("kind", "==", "transfer").where("status", "==", "sent").where("sentAt", "<=", since).get();
+  const notArrived = async (shipmentId: string) =>
+    (await db.collection("shipments").doc(shipmentId).collection("lines").get()).docs.filter((l) => !l.get("arrivedAt")).length;
   for (const s of ships.docs) {
-    const linesS = await s.ref.collection("lines").get();
-    const missing = linesS.docs.filter((l) => !l.get("arrivedAt")).length;
+    const missing = await notArrived(s.id);
     if (missing > 0) {
-      await db.collection("alerts").doc(alertId.transfer(s.id)).set({
+      await upsertAlert(alertId.transfer(s.id), {
         kind: "transfer_difference", aspId: s.get("fromAspId"), locationId: s.get("toLocationId"), documentId: null, shipmentId: s.id,
-        detail: { missing }, count: missing, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
-        seenAt: null, closedAt: null, closedNote: null,
-      }, { merge: true });
+        detail: { missing }, count: missing,
+      });
     }
+  }
+  // D-29: an open transfer alert whose lines have all arrived since (the shipment may be received by now) goes to 0.
+  const openTransfers = await db.collection("alerts").where("kind", "==", "transfer_difference").where("closedAt", "==", null).get();
+  for (const a of openTransfers.docs) {
+    if (a.get("count") !== 0 && !(await notArrived(String(a.get("shipmentId"))))) await zeroAlertIfOpen(a.id, { missing: 0 });
   }
   // BOM check for sites with scans in the last 24-48h and no site_done in the last 24h.
   const windowStart = Timestamp.fromMillis(now - 48 * 3600 * 1000);
@@ -171,22 +183,28 @@ export async function runNightlyRecount() {
       }
     }
   }
-  // Clear old aggregates: write 10 shards summing to the computed total.
-  const batch = db.batch();
+  // Every (scope, dimension) that exists today or held counts before: a pair with no piece any more (an ASP left
+  // with nothing, a category no longer used) is cleared, not left with its old counts.
+  const pairs = new Set(total.keys());
+  for (const d of (await db.collection("aggregates").get()).docs) {
+    if (d.get("scope") && d.get("dimension")) pairs.add(`${d.get("scope")}\u0000${d.get("dimension")}`);
+  }
+  // Write 10 shards summing to the computed total: the whole total in shard 0, the others cleared.
+  let batch = db.batch();
   let n = 0;
-  for (const [k, m] of total) {
+  for (const k of pairs) {
     const [scope, dimension] = k.split("\u0000");
+    const m = total.get(k) ?? new Map<string, number>();
     for (let shard = 0; shard < SHARDS; shard++) {
       const counts: Record<string, number> = {};
-      // put the whole total in shard 0; others cleared.
       if (shard === 0) for (const [key, v] of m) counts[key] = v;
       batch.set(db.collection("aggregates").doc(`${scope}_${dimension}_${shard}`), { scope, dimension, shard, counts, recountedAt: FieldValue.serverTimestamp() });
-      n++;
-      if (n >= 400) { await batch.commit(); n = 0; }
+      // A committed batch cannot take more writes: start a new one.
+      if (++n >= 400) { await batch.commit(); batch = db.batch(); n = 0; }
     }
   }
   if (n) await batch.commit();
-  logger.info("nightlyRecount", { items: items.size, aggregates: total.size * SHARDS });
+  logger.info("nightlyRecount", { items: items.size, aggregates: pairs.size * SHARDS });
 }
 
 const opts = { region: REGION, timeZone: "Europe/Rome" };
