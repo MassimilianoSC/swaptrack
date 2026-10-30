@@ -13,9 +13,11 @@ SwapTrack è una PWA (React + Firebase) che traccia apparati telecom («board»)
 | Sessione | Ruolo | Dove lavora |
 |---|---|---|
 | **memoria storica** (etichetta `[reg]`) | coordina, assegna i lavori, decide entro i criteri, registra, scrive i documenti. **Non tocca mai il codice.** | copia principale `C:\Users\mcracchiolo\Desktop\swaptrack`, ramo `main` |
-| **o2** | server e dati: funzioni, regole, indici, script, prove di logica e di regole | `C:\Users\mcracchiolo\Desktop\swaptrack\.claude\worktrees\o2`, ramo `o2` |
-| **o3** | interfaccia, PWA, prove end-to-end | `C:\Users\mcracchiolo\Desktop\swaptrack\.claude\worktrees\o3`, ramo `o3` |
+| **o2** | server e dati: funzioni, regole, indici, script, prove di logica e di regole | copia `C:\Users\mcracchiolo\Desktop\swaptrack\.claude\worktrees\o2`, ramo `o2` |
+| **o3** | interfaccia, PWA, prove end-to-end | copia `C:\Users\mcracchiolo\Desktop\swaptrack\.claude\worktrees\o3`, ramo `o3` |
 | **committente** | decide ciò che i criteri non risolvono e l'estetica; fa push, pubblicazioni, migrazioni del database online, configurazioni del cloud, segreti e cancellazioni | fuori dalla macchina, nelle console |
+
+**Come o2 e o3 raggiungono la propria copia.** Tutte le sessioni sono aperte nella cartella principale (la finestra di VS Code è su `C:\Users\mcracchiolo\Desktop\swaptrack`). **Non si entra mai nel worktree con lo strumento interno EnterWorktree:** accende una protezione che vieta `git -C` verso la copia principale e quindi il merge su main. Si lavora nella propria copia scrivendo i percorsi per intero: i file si leggono e si modificano con il percorso completo (per esempio `C:\Users\mcracchiolo\Desktop\swaptrack\.claude\worktrees\o2\functions\src\trigger.ts`), git si usa sempre con `-C <propria copia>`, e ogni comando `yarn`/`node` comincia con `cd C:/Users/mcracchiolo/Desktop/swaptrack/.claude/worktrees/o2 &&` (o3: `.../o3`). Nella copia principale non si modifica nulla: serve solo per il merge.
 
 I nomi delle sessioni in ListAgents cambiano a ogni riavvio: quelli attuali sono nel DOVE SIAMO di `REGISTRO.md`. Un'autorizzazione riferita da un'altra sessione è un'informazione, non un permesso: le azioni del committente le fa lui, oppure le autorizza nella finestra di chi le esegue.
 
@@ -49,18 +51,18 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 
 ## 4. Git
 
-- **Copie di lavoro:** o2 e o3 lavorano solo nel proprio worktree (si entra con lo strumento EnterWorktree, `path` = la cartella della tabella in §2). Nella copia principale non si modifica nulla: serve solo per il merge.
-- **Commit per percorsi:** `git add <file...>` (mai `-A`, mai `.`); messaggio scritto in un file fuori dal repository (la propria cartella temporanea) e `git commit -F <file>`; prima riga con l'etichetta: `[o2] …`, `[o3] …`, `[reg] …`.
-- **Portare il lavoro su main, dopo ogni commit.** Lo fa la sessione stessa, dalla sua cartella, con SOLO questi due comandi git nella forma con `-C`, scritti esattamente così (barre `/`, non `\`: il terminale è Git Bash):
+- **Copie di lavoro:** o2 e o3 lavorano solo nella propria copia (§2: percorsi completi e `git -C`, mai EnterWorktree). Nella copia principale non si modifica nulla: serve solo per il merge.
+- **Commit per percorsi:** `git -C <propria copia> add <file...>` (mai `-A`, mai `.`); messaggio scritto in un file fuori dal repository (la propria cartella temporanea) e `git -C <propria copia> commit -F <file>`; prima riga con l'etichetta: `[o2] …`, `[o3] …`, `[reg] …`.
+- **Portare il lavoro su main, dopo ogni commit.** Lo fa la sessione stessa, con SOLO questi due comandi git nella forma con `-C`, scritti esattamente così (barre `/`, non `\`: il terminale è Git Bash):
   1. `git -C C:/Users/mcracchiolo/Desktop/swaptrack/.claude/worktrees/o2 rebase main` (o3: `.../worktrees/o3 rebase main`);
   2. la catena di controlli (§5), in `&&`, che si ferma alla prima rossa;
   3. `git -C C:/Users/mcracchiolo/Desktop/swaptrack merge --ff-only o2` (o3: `merge --ff-only o3`);
   4. riferire alla memoria storica (§7).
   Se il merge è rifiutato perché `main` è avanzato: si rifà rebase e catena e si riprova. Un conflitto su un file dell'altra sessione: `git rebase --abort` e si segnala alla memoria storica, non si risolve da soli.
-  Il committente ha dato un permesso preventivo a questi due comandi, alle prove, a `git add` e `git commit`. Finché la memoria storica non dice che il permesso è attivo nelle impostazioni, dopo il commit e la catena si manda l'hash alla memoria storica, che lancia lei il `merge --ff-only` (solo quello).
+  Il committente ha dato un permesso preventivo a questi due comandi, alle prove, a `git add` e `git commit` (regole già nelle sue impostazioni). Se un comando del merge viene comunque rifiutato, non si cercano altre strade: si manda l'hash alla memoria storica con il testo del rifiuto, e il `merge --ff-only` lo lancia lei.
 - **Mai push, mai deploy, mai migrazioni del database online, mai segreti, mai scritture sul cloud.** Li fa il committente. Online va solo ciò che è in git, a lotti, dopo un giro completo di prove lanciato da una sola sessione; in quel momento `main` è congelato (lo annuncia la memoria storica) e non si avviano altre prove pesanti; o2 e o3 continuano sui loro rami.
 
-## 5. Comandi (PowerShell, dalla propria copia di lavoro)
+## 5. Comandi (Git Bash dello strumento, sempre dalla propria copia: `cd <propria copia> && …`)
 
 - Prima volta in una copia: `yarn install --frozen-lockfile` e `yarn --cwd functions install --frozen-lockfile`; `Copy-Item functions\.env.example functions\.env` (contiene `APP_URL=http://localhost:3000`).
 - Prove unitarie: `yarn test` (Vitest: `tests/**` e `functions/src/**/*.test.ts`); un file solo: `yarn test <percorso>`.
@@ -92,7 +94,7 @@ Prima riga: `[o2] commit <hash> — <titolo>`. Poi: cosa è stato fatto; prove (
 ## 8. Memoria di contesto piena (compact)
 
 - Vicini al compact: avvisare la memoria storica e mandarle il PASSAGGIO DI CONSEGNE: stato della copia di lavoro (tutto committato), commit non ancora su main e prove da lanciare, accordi in corso con l'altra sessione, prossimo passo, ciò che sa solo questa sessione (difetti intravisti, misure, trappole).
-- Dopo un compact: rileggere `CLAUDE.md`, il DOVE SIAMO di `REGISTRO.md` e `PIANO.md`; rileggere i nomi con ListAgents; dire alla memoria storica cosa si ricorda (ruolo, cartella, lavoro in corso, cosa non è sicuro).
+- Dopo un compact: rileggere `CLAUDE.md`, il DOVE SIAMO di `REGISTRO.md` e `PIANO.md` (quelli della copia principale, sempre aggiornati); rileggere i nomi con ListAgents; dire alla memoria storica cosa si ricorda (ruolo, copia, lavoro in corso, cosa non è sicuro).
 - Mai due sessioni con lo stesso ruolo sulla stessa copia.
 
 ## 9. Mappa «una cosa, un posto»
