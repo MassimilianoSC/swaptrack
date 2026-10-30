@@ -34,6 +34,8 @@ export default function DocumentDetail() {
   const [locationId, setLocationId] = React.useState("");
   const [rawLines, setRawLines] = React.useState("");
   const [compare, setCompare] = React.useState<Compare | null>(null);
+  // Bumped after every write, so status and lines on screen follow the server (the button "mark checked" disappears).
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
   React.useEffect(() => {
@@ -43,7 +45,7 @@ export default function DocumentDetail() {
       setDoc(d); setKind(d.kind); setNumber(d.number); setLocationId(d.locationId);
       setRawLines((d.lines as Line[]).map((l) => l.kind === "serial" ? l.codeRaw : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}${l.direction ? ` [${l.direction}]` : ""}`).join("\n"));
     });
-  }, [id, isNew]);
+  }, [id, isNew, reloadKey]);
 
   const parseLines = (text: string): Line[] => text.split("\n").map((s) => s.trim()).filter(Boolean).map((s) => {
     const m = s.match(/^#(\d+)(?:\s+(\S+))?(?:\s+\[(remove|install)\])?/);
@@ -66,9 +68,16 @@ export default function DocumentDetail() {
     }), t("common.saved"));
     if (r?.duplicateOf) toast.message(t("documents.duplicateWarning"));
     if (r?.documentId && isNew) nav(`/documents/${r.documentId}`);
+    else if (r) setReloadKey((k) => k + 1);
   };
-  const mark = async () => { await run(() => call("markDocumentChecked", { documentId: id }), t("documents.marked")); void doCompare(); };
-  const close = async () => { if (!confirm(t("documents.closeConfirm"))) return; await run(() => call("closeDocument", { documentId: id }), t("documents.closed")); };
+  const mark = async () => {
+    if (await run(() => call("markDocumentChecked", { documentId: id }), t("documents.marked")) !== undefined) setReloadKey((k) => k + 1);
+    void doCompare();
+  };
+  const close = async () => {
+    if (!confirm(t("documents.closeConfirm"))) return;
+    if (await run(() => call("closeDocument", { documentId: id }), t("documents.closed")) !== undefined) setReloadKey((k) => k + 1);
+  };
   const doCompare = async () => { const r = await run(() => call<Compare>("compareDocument", { documentId: id })); if (r) setCompare(r); };
 
   if (!isNew && !doc) return <Loading />;
