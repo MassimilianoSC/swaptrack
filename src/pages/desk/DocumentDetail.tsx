@@ -55,6 +55,8 @@ export default function DocumentDetail() {
   const canWrite = isClientRole(claims?.role ?? "") || ["asp_admin", "asp_warehouse"].includes(claims?.role ?? "");
   const canCheck = canWrite;
   const canClose = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
+  // §3.3 (P-65): a BOM is uploaded only by client_admin and asp_admin; the server refuses it to the others.
+  const canUploadBom = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
 
   const save = async () => {
     if (!number.trim() || !locationId) { toast.error(t("errors.invalid_data")); return; }
@@ -86,7 +88,7 @@ export default function DocumentDetail() {
       <Card>
         <div className="grid gap-3 md:grid-cols-3">
           <Field label={t("documents.kind")} htmlFor="d-k"><Select id="d-k" value={kind} onChange={(e) => setKind(e.target.value as never)} disabled={!isNew} data-testid="document-kind">
-            <option value="ddt_in">{t("documents.kinds.ddt_in")}</option><option value="ddt_return">{t("documents.kinds.ddt_return")}</option><option value="bom">{t("documents.kinds.bom")}</option>
+            <option value="ddt_in">{t("documents.kinds.ddt_in")}</option><option value="ddt_return">{t("documents.kinds.ddt_return")}</option>{(canUploadBom || !isNew) && <option value="bom">{t("documents.kinds.bom")}</option>}
           </Select></Field>
           <Field label={t("documents.number")} htmlFor="d-n"><Input id="d-n" value={number} onChange={(e) => setNumber(e.target.value)} className="font-mono" data-testid="document-number" /></Field>
           <Field label={t("items.location")} htmlFor="d-l"><Select id="d-l" value={locationId} onChange={(e) => setLocationId(e.target.value)} data-testid="document-location">

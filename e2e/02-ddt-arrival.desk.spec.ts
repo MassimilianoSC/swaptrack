@@ -16,6 +16,7 @@ test.describe("Percorso 2 — arrivo di materiale nuovo con DDT (scrivania)", ()
     // 1. The DDT, typed next to the (absent) file: three serial lines.
     await page.goto("/documents/new");
     await expect(page.getByTestId("document-kind")).toHaveValue("ddt_in");
+    await expect(page.getByTestId("document-kind").locator('option[value="bom"]')).toHaveCount(0); // §3.3: BOM not for the warehouse (P-65)
     await page.getByTestId("document-number").fill(ddtNumber);
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
     await page.getByTestId("document-lines").fill(codes.join("\n"));
