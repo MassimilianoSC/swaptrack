@@ -48,6 +48,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - I codici d'errore del server (o2) sono tradotti dall'app in `src/i18n/*.json` (o3): un codice nuovo va comunicato.
 - `firebase.json` (o2) contiene anche hosting e intestazioni del service worker, che servono a o3.
 - `package.json` della radice (o3): se o2 ha bisogno di una dipendenza di prova alla radice, la chiede tramite la memoria storica.
+- Una ricerca Firestore nuova con filtri più ordinamento o intervallo (in `src/lib/data/`, o3, o nelle funzioni, o2) richiede un indice in `firestore.indexes.json` (o2) e una riga nella prova degli indici in `tests/` (o2): gli emulatori non li chiedono, il progetto vero sì. o3 avvisa o2 prima di committare la ricerca.
 
 ## 4. Git
 
