@@ -28,7 +28,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27): costruita (commit e04467c sul ramo `o3-wip-p24`), da portare su main col giro e2e | o3 |
 | P-53 | Difetto riparato da o3 (commit b916c1b sul ramo, criterio 2): in «Smista» l'evento usava la categoria suggerita del pezzo PRECEDENTE (prima lettura senza evento, dalla seconda categoria sbagliata); prova: e2e del percorso 3, rossa sul codice di prima, da dimostrare col giro | o3 |
 | P-63 | **Falle del criterio 1 nelle funzioni (P-62), riparate e da provare al turno:** `listEvents` con filtri di un'altra ASP (confermata da un aiutante); `forceState` poteva risolvere l'anomalia di un'altra ASP e spostare un pezzo in un luogo altrui, stato libero; `correctEventLocation` verso luoghi altrui; `client_warehouse` oltre la matrice in `listEvents` (D-31), `markAlertSeen`, `compareDocument`; `asp_warehouse` poteva caricare BOM | o2 |
-| P-64 | Resoconto PDF di un'ASP: mostrare il nome della propria organizzazione invece dell'id | o2 |
+| P-64 | Resoconto PDF di un'ASP: mostrare il nome della propria organizzazione invece dell'id (preparato, da provare al turno) | o2 |
+| P-67 | `scripts/checkOnline.mjs` in sola lettura (eventi mai elaborati, documenti senza ASP) da far lanciare al committente prima del lotto 1 | o2 |
 | P-65 | Pagina Documenti: togliere «BOM» dai tipi caricabili dal magazzino ASP; controllo che nessuna vista da campo mostri uid di persone (R11) | o3 |
 | P-61 | Difetto da Emergent (criterio 3), trovato dal giro e2e: le chiamate al server con campi facoltativi vuoti venivano rifiutate («invalid_data»: il client converte `undefined` in `null` e gli schemi lo rifiutano). Creare un DDT dalla scrivania e l'export Excel non hanno mai funzionato, probabilmente anche online. Colpite: `saveDocument` (creare o modificare DDT e BOM dalla scrivania: sempre rifiutato), `createExport` (rifiutato senza entrambi i filtri), `saveSortingCategory` e `saveSortingRule` (creazione di categorie e regole nuove). Riparato in `src/lib/data/call.ts` con `dropUndefined.ts` (pulizia ricorsiva); prova pura scritta da o3, committata da o2 in `tests/`; prova vera: e2e 02 desk e 05 export | o3 + o2 |
 | P-60 | Pagina degli avvisi e contatore: un avviso aperto con `count: 0` si mostra «nessuna differenza ora», neutro, fuori dal conteggio | o3 |
@@ -50,6 +51,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
 | P-62 | Revisione della riservatezza delle 42 operazioni dei router e dei lavori programmati: 36 ok, i difetti in P-63 | o2 | 30/10/2026 |
 | P-13 | Lavori programmati provati sull'emulatore (graceExpiry, retention, dailyChecks, nightlyRecount, monthlyReports) | o2 | 30/10/2026 (commit 3f26623) |
 | P-54 | Ricalcolo notturno: regge con dieci ASP (lotto riusato) e corregge gli ambiti svuotati | o2 | 30/10/2026 (commit 3f26623) |

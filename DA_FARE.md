@@ -112,6 +112,21 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 **Cosa:** uno script unico che, dalla copia principale su `main` pulita: controlla il ramo e che non ci siano modifiche; lancia la catena completa di prove; compila app e funzioni; pubblica regole e indici, funzioni (`--force`), hosting (`hosting:app`) sul progetto scelto; verifica dopo il deploy che gli otto router abbiano `allUsers → roles/run.invoker`; si ferma al primo errore. Prima di ogni lotto la memoria storica scrive i risultati attesi (per esempio le modifiche agli indici).
 **Misura:** una pubblicazione di prova fatta dal committente con lo script, senza passi a mano.
 **Note:** lo script lo lancia solo il committente, con l'account personale (`firebase login:use` già fatto nella cartella).
+**Script:** `scripts/deployBatch.mjs` (o2). `node scripts/deployBatch.mjs` = solo controlli e giro completo di prove, nulla online; `node scripts/deployBatch.mjs --yes` = poi pubblica e verifica gli invoker. Prima va fatto il push: lo script rifiuta un `main` diverso da GitHub.
+
+### Lotto 1: risultati attesi (ricavati da o2 il 30/10, confronto 5e66bb4 → main)
+- **Indici:** uno aggiunto (`shipments`: `kind`, `createdAt desc`), nessuno tolto. Se la CLI chiede di cancellare indici non presenti nel file: rispondere **no**. L'indice nuovo si costruisce in qualche minuto: le prove a mano si fanno quando in console (Firestore → Indici) risulta «Abilitato».
+- **Regole Firestore:** solo letture rese possibili dove l'app ne aveva diritto (codici e anomalie di un proprio pezzo; codice inesistente; righe delle spedizioni decise sulla spedizione madre; export «creati da me»). Nessuna scrittura nuova dei client.
+- **Regole Storage:** nessuna ASP legge più `documents/client/…`; foto caricate solo da ruoli ASP; ri-caricamento della stessa foto dalla propria ASP.
+- **Funzioni:** le stesse 16 (nessuna nuova, nessuna rimossa); il trigger chiede `--force` (già nello script); dopo il deploy, controllo degli invoker degli otto router (nello script).
+- **Dati online, prima di pubblicare:** lanciare `scripts/checkOnline.mjs` (sola lettura, P-67): conta gli eventi mai elaborati (se ci sono, serve uno script di rielaborazione) e i documenti senza ASP (se ci sono, `scripts/fixDocumentAsp.mjs`, P-50).
+- **Dopo la prima notte:** gli avvisi del seed «materiale fermo» e «trasferimento» vengono ricalcolati sui dati veri e possono cambiare numero o andare a 0 (D-29): non è un errore. Il ricalcolo dei contatori delle 02:00 riscrive tutto.
+- **Prova rapida a mano dopo il lotto** (account del seed):
+  1. Magazzino cliente: Spedizioni mostra i resi senza errori; aprendo un reso si vedono le righe.
+  2. Ufficio cliente: crea una BOM per un sito di ASP Nord; il tecnico di Nord la vede nella schermata di lettura di quel sito.
+  3. Ufficio cliente: Esportazioni → crea un export senza filtri → il file Excel si scarica.
+  4. Ufficio cliente: Resoconti → genera ottobre 2026 → il file si chiama 2026-10; il resoconto di ASP Nord dice «ASP Nord».
+  5. Magazzino Nord: in arrivo con un DDT legge un pezzo sbagliato, «annulla l'ultima», poi «Confronta»: il pezzo annullato non è fra gli inattesi.
 
 ## P-31 Documentazione per l'utente e il collaudo
 
