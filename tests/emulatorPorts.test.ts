@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { EMULATORS, portsOf, portHolderPids } from "../scripts/emulatorPorts.mjs";
+import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import {
+  EMULATORS, portsOf, cliEnv, parseTable, descendantsOf, stillOurs, processTable,
+} from "../scripts/emulatorPorts.mjs";
 
 type Port = { host: string; port: number };
+const script = (name: string) => readFileSync(new URL(`../scripts/${name}`, import.meta.url), "utf8");
 
 describe("emulator ports (D-21)", () => {
   it("every emulator has its own explicit port, none of them a Firebase default", () => {
@@ -23,24 +28,48 @@ describe("emulator ports (D-21)", () => {
   });
 });
 
-describe("portHolderPids", () => {
-  const ports = [{ host: "127.0.0.1", port: 8190 }, { host: "127.0.0.1", port: 4410 }];
-  it("reads an Italian netstat (IN ASCOLTO / STABILITA), only server-side sockets, never PID 0 or UDP", () => {
-    const out = [
-      "Connessioni attive",
-      "",
-      "  Proto  Indirizzo locale       Indirizzo esterno      Stato           PID",
-      "  TCP    127.0.0.1:8190         0.0.0.0:0              IN ASCOLTO      213544",
-      "  TCP    127.0.0.1:8190         127.0.0.1:53211        STABILITA       213544",
-      "  TCP    127.0.0.1:53211        127.0.0.1:8190         STABILITA       4242",
-      "  TCP    127.0.0.1:8190         127.0.0.1:53000        TIME_WAIT       0",
-      "  TCP    [::1]:4410             [::]:0                 IN ASCOLTO      777",
-      "  TCP    127.0.0.1:9099         0.0.0.0:0              IN ASCOLTO      555",
-      "  UDP    0.0.0.0:8190           *:*                                    999",
-    ].join("\r\n");
-    expect((portHolderPids(out, ports) as string[]).sort()).toEqual(["213544", "777"]);
+describe("the CLI gets 60 s to load the functions (D-26)", () => {
+  it("cliEnv sets FUNCTIONS_DISCOVERY_TIMEOUT and keeps the rest", () => {
+    expect(cliEnv({ PATH: "x" })).toEqual({ PATH: "x", FUNCTIONS_DISCOVERY_TIMEOUT: "60" });
   });
-  it("reads an English netstat too", () => {
-    expect(portHolderPids("  TCP    127.0.0.1:4410         0.0.0.0:0              LISTENING       31337\n", ports)).toEqual(["31337"]);
+  it("both scripts start the CLI with cliEnv() and stop it with killPids", () => {
+    for (const name of ["emulators.mjs", "test-rules.mjs"]) {
+      const src = script(name);
+      expect(src, name).toMatch(/emulators:start[\s\S]*env: cliEnv\(\)/);
+      expect(src, name).toContain("killPids(emu.pid, recorded)");
+      expect(src, name).not.toContain("netstat");
+    }
   });
+});
+
+describe("stop by PID (P-51)", () => {
+  const table = parseTable([
+    "  4 0", "100 4", // the session
+    "200 100", // node scripts/emulators.mjs
+    "300 200", // firebase CLI
+    "310 300", "311 310", // Java Firestore started through a shell
+    "320 300", // Java Pub/Sub
+    "400 100", // something else of the session
+    "",
+  ].join("\r\n"));
+  it("parses the process table", () => {
+    expect(table).toHaveLength(8);
+    expect(table[2]).toEqual({ pid: 200, ppid: 100 });
+  });
+  it("records the whole tree of the CLI, nothing else", () => {
+    expect(descendantsOf(table, 300).sort()).toEqual([300, 310, 311, 320]);
+  });
+  it("after the CLI exits, kills only recorded PIDs still parented by our tree (no reused PID)", () => {
+    const later = parseTable("311 310\n320 300\n310 999\n");
+    expect(stillOurs(later, 300, [300, 310, 311, 320]).sort()).toEqual([311, 320]);
+  });
+  it("the real process table of this machine sees a child of this process", async () => {
+    const child = spawn(process.execPath, ["-e", "setTimeout(() => {}, 20000)"], { stdio: "ignore" });
+    try {
+      const mine = descendantsOf(processTable(), process.pid);
+      expect(mine).toContain(child.pid);
+    } finally {
+      child.kill();
+    }
+  }, 30_000);
 });
