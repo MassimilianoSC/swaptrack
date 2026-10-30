@@ -54,9 +54,10 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     expect(fontSize).toBeGreaterThanOrEqual(24);
     await expect(page.getByTestId("scan-session-count")).toHaveText("2");
 
-    // 4. The piece is sorted into the suggested category.
+    // 4. The piece is sorted into the suggested category, shown by its label, never the raw id (P-43).
     await page.goto(`/items/${itemId}`);
     await expect(page.getByTestId("item-status")).toContainText(tr("items.statuses.sorted"), { timeout: 60_000 });
-    await expect(page.getByTestId("main-content")).toContainText(SEED.sorting.radioCategoryId);
+    await expect(page.getByTestId("item-sorting-category")).toHaveText(SEED.sorting.radioCategoryLabelIt);
+    await expect(page.getByTestId("main-content")).not.toContainText(SEED.sorting.radioCategoryId);
   });
 });

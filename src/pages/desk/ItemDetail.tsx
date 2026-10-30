@@ -7,6 +7,7 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
 import { listModels, type Model } from "@/lib/data/db";
+import { loadSorting, type Category } from "@/lib/data/events";
 import type { Row } from "@/lib/data/db";
 import { isAdminRole, isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -33,6 +34,7 @@ export default function ItemDetail() {
   const [history, setHistory] = React.useState<HistoryEvent[] | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [editing, setEditing] = React.useState(false);
   const [editModel, setEditModel] = React.useState<string>("");
   const [editCondition, setEditCondition] = React.useState("");
@@ -68,6 +70,7 @@ export default function ItemDetail() {
     if (!id) return;
     setLoadError(false); setMissing(false);
     void listModels().then(setModels).catch(() => undefined);
+    void loadSorting().then((s) => setCategories(s.categories)).catch(() => undefined);
     void reload().catch(() => setLoadError(true));
     return watchItem(id, (v) => { setItem(v); setMissing(v === null); }, () => setLoadError(true));
   }, [id, reload]);
@@ -78,6 +81,8 @@ export default function ItemDetail() {
   if (!id || !item || history === null) return <Loading />;
 
   const label = (t: string) => (t ? t : "—");
+  // P-43: the sorting category by its label in the user's language, never the raw id.
+  const categoryLabel = (id?: string | null) => (id ? categories.find((c) => c.id === id)?.labels[i18n.language as "it" | "en"] ?? id : "—");
 
   const saveEdit = async () => {
     if (await run(() => call("editItem", { itemId: id, modelId: editModel || null, condition: editCondition || null }), t("common.saved"))) {
@@ -131,7 +136,7 @@ export default function ItemDetail() {
             <dt className="text-muted">{t("items.flow")}</dt><dd>{t(`items.flows.${item.flow}`, { defaultValue: item.flow })}{item.previousFlow && ` (${t("items.previously")} ${t(`items.flows.${item.previousFlow}`, { defaultValue: item.previousFlow })})`}</dd>
             <dt className="text-muted">{t("items.location")}</dt><dd className="font-mono text-xs" data-testid="item-location">{item.currentLocationId ?? "—"}</dd>
             <dt className="text-muted">{t("items.aspOwner")}</dt><dd className="font-mono text-xs">{item.currentAspId ?? "—"}{item.pendingAspId && ` → ${item.pendingAspId}`}</dd>
-            <dt className="text-muted">{t("items.sortingCategory")}</dt><dd>{label(item.sortingCategoryId ?? "")}</dd>
+            <dt className="text-muted">{t("items.sortingCategory")}</dt><dd data-testid="item-sorting-category">{categoryLabel(item.sortingCategoryId)}</dd>
             <dt className="text-muted">{t("items.lastScanned")}</dt><dd>{formatInstant(item.lastScannedAt?.toDate?.() ?? null, i18n.language)}</dd>
             {item.mergedInto && (<><dt className="text-muted">{t("items.mergedInto")}</dt><dd className="font-mono text-xs"><Link to={`/items/${item.mergedInto}`} className="hover:underline">{item.mergedInto}</Link></dd></>)}
           </dl>
