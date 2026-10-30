@@ -10,19 +10,19 @@ Progressive Web App that tracks telecom equipment by barcode through the new-mat
 ```bash
 yarn install && (cd functions && yarn install)
 cp functions/.env.example functions/.env        # APP_URL = the URL the app is served from (invitation/reset links)
-yarn emulators                                  # builds functions, starts auth, firestore(8180), functions, storage, pubsub
+yarn emulators                                  # builds functions, starts auth, firestore, functions, storage, pubsub on the ports of firebase.json; Ctrl+C stops them and removes leftover Java processes
 yarn seed                                       # base seed: organizations, users, locations, models, settings
 yarn seed:full                                  # full §18 demo: ~5,000 items, documents, shipments, alerts, aggregates
-yarn dev                                        # http://localhost:3000
+yarn dev                                        # http://localhost:3010
 ```
-`.env.development` holds demo values for `demo-swaptrack` (`VITE_USE_EMULATORS=true`). The dev server forwards the emulator endpoints on the same origin (see `vite.config.ts`, development only), so the app also works behind an HTTPS preview URL. Firestore runs on port **8180** (8080 is often taken).
+`.env.development` holds demo values for `demo-swaptrack` (`VITE_USE_EMULATORS=true`). The dev server forwards the emulator endpoints on the same origin (see `vite.config.ts`, development only), so the app also works behind an HTTPS preview URL. Emulator ports are defined only in `firebase.json` (dedicated to SwapTrack, so another Firebase project on the same machine can run its emulators at the same time); the dev server port (3010) is defined only in `vite.config.ts`.
 In containers without a cloud metadata server, `scripts/emulators.sh` sets `GCE_METADATA_HOST=127.0.0.1:1` so the CLI does not hang.
 
 ## Tests
 ```bash
 yarn test        # Vitest: tests/**/*.test.{mjs,ts} and functions/src/**/*.test.ts
 yarn e2e         # Playwright end-to-end tests of the demo paths (e2e/): needs the emulators with the seed
-                 # (yarn emulators, yarn seed, yarn seed:full) and starts yarn dev on port 3000 if not running.
+                 # (yarn emulators, yarn seed, yarn seed:full) and starts its own yarn dev on port 3010; it stops if the port is already in use (stop any running yarn dev first).
                  # yarn e2e --project=desk (or phone) for one profile. First time: npx playwright install chromium
 ```
 Covered pure logic: state machine (§9.2), sorting precedence (§10), document comparison (§11.3), code normalization parity. The owners write the security-rules tests and the end-to-end offline tests (SPEC §17).

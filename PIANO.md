@@ -27,7 +27,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); resta la parte Storage (dettaglio nelle consegne di o2, REGISTRO) | o2 |
 | P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
-| P-47 | Porte dedicate degli emulatori (D-21) in `firebase.json` e script di avvio che chiude i Java (P-46); poi `vite.config.ts` legge le porte da `firebase.json` | o2, poi o3 |
+| P-48 | Probabile difetto (o3, da confermare con una prova rossa di o2): `compareDocument` conta anche gli eventi annullati (`voided`) per `ddt_in` e `bom`: un arrivo annullato resta «arrivato» o «inatteso» e l'avviso del DDT è sbagliato; rimedio: filtrare `voided` come fa il replay | o2 |
+| P-47 | Porte dedicate (D-21) e server di sviluppo sulla 3010 (D-22): parte di o2 su main (9e2a728, con P-46); parte di o3 (`vite.config.ts`, Playwright) pronta sul ramo, da portare su main | o3 |
 
 ## Da fare
 
@@ -41,7 +42,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
 | P-43 | Pagina del pezzo: la categoria di smistamento compare come id grezzo (`cat_refurbish`) invece dell'etichetta («Ricondizionamento»); difetto, niente via | o3 | 3 |
 | P-25 | Categoria suggerita anche in modalità «Arrivo» (SPEC §12.2: smistare nello stesso passaggio); oggi appare solo in «Smista»; stima da chiedere a o3 dopo P-24 | o3 | 4 |
-| P-46 | `yarn emulators` dietro uno script che chiude l'albero dei processi Java alla fine (come `scripts/test-rules.mjs`), per la trappola di Windows; da concordare fra o2 (script) e o3 (`package.json`) | o2 + o3 | 2 |
 | P-45 | `ARCHITECTURE.md` elenca solo le collezioni del passo 2: completare con items, codes, anomalie, documenti, spedizioni, alert, aggregati, report, export, expectedCodes, documentMappings | o2 | 5 |
 | P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
@@ -51,6 +51,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-46 | `scripts/emulators.mjs`: avvio degli emulatori con `--only` e chiusura dei Java orfani (netstat italiano compreso); porte lette da `firebase.json` da tutti gli script | o2 | 30/10/2026 (commit 9e2a728) |
 | P-15 | Indici: una ricerca senza indice (resi del magazzino cliente) corretta; prova pura sugli indici che fissa la trappola (D-20); l'indice va pubblicato col lotto 1 | o2 | 30/10/2026 (commit e1c32c7) |
 | P-16 | Riparazione del trigger: tutte le letture prima delle scritture nella transazione; spedizioni e resi si riempiono di righe; anomalie senza duplicati. Quattro prove rosse prima, verdi dopo | o2 | 29/10/2026 (commit 0bda4f2) |
 | P-20 | Raffica: contatore ed elenco delle letture sotto la fotocamera (opzione 1, D-11); l'aspetto lo giudica il committente al prossimo lotto | o3 | 29/10/2026 (commit 097c115) |
