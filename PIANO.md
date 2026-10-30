@@ -30,6 +30,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-13 | Lavori programmati: prove scritte (commit locale a33d9e4), da lanciare al prossimo turno | o2 |
 | P-54 | Difetti di `runNightlyRecount` (criterio 2, produzione): lotto riusato dopo il commit (con circa dieci ASP il ricalcolo notturno si fermerebbe ogni notte) e ambiti svuotati con conteggi vecchi; riparati, da dimostrare al turno | o2 |
 | P-55 | `runGraceExpiry` segna `authDisabled` anche se la disattivazione dell'account fallisce, e non ci riprova più (criterio 1); riparazione con prova pura (Auth finto) | o2 |
+| P-56 | Reso (percorso 4): una seconda conferma (o un doppio clic) riconferma anche le righe già confermate e apre un'anomalia per ogni pezzo già reso; `missing` accetta id che non sono righe. Riparazione lato server | o2 |
+| P-57 | Percorso 1: il `site_done` fa il controllo BOM prima che le letture offline arrivate insieme siano elaborate → avviso BOM falso. Il controllo aspetta gli eventi del sito, con ripetizione limitata | o2 |
+| P-58 | Avvisi aggiornati anche al ribasso: un controllo con zero differenze porta l'avviso aperto a count 0, senza chiuderlo (D-29) | o2 |
+| P-59 | Pezzo extra trovato in un altro reso: la riga di quel reso marcata «confermata altrove» (SPEC §9.2, D-30, stima 1 ora); poi o3 la mostra | o2, poi o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 
