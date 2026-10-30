@@ -23,18 +23,13 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
+| P-23 | Prove end-to-end (Playwright): primo giro completo il 30/10 (9,7 min): 14 verdi, 5 rosse. Verdi: riservatezza (percorso 6) tutta, ufficio cliente 5 su 6. Rosse in analisi: creazione del DDT, export Excel, prova della raffica sbagliata, arrivo in magazzino di un pezzo esistente che non reagisce (percorso 3) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27): costruita (commit e04467c sul ramo `o3-wip-p24`), da portare su main col giro e2e | o3 |
 | P-53 | Difetto riparato da o3 (commit b916c1b sul ramo, criterio 2): in «Smista» l'evento usava la categoria suggerita del pezzo PRECEDENTE (prima lettura senza evento, dalla seconda categoria sbagliata); prova: e2e del percorso 3, rossa sul codice di prima, da dimostrare col giro | o3 |
-| P-13 | Lavori programmati: prove scritte (commit locale a33d9e4), da lanciare al prossimo turno | o2 |
-| P-54 | Difetti di `runNightlyRecount` (criterio 2, produzione): lotto riusato dopo il commit (con circa dieci ASP il ricalcolo notturno si fermerebbe ogni notte) e ambiti svuotati con conteggi vecchi; riparati, da dimostrare al turno | o2 |
-| P-55 | `runGraceExpiry` segna `authDisabled` anche se la disattivazione dell'account fallisce, e non ci riprova più (criterio 1); riparazione con prova pura (Auth finto) | o2 |
-| P-56 | (scritto, da lanciare al turno) Reso (percorso 4): una seconda conferma (o un doppio clic) riconferma anche le righe già confermate e apre un'anomalia per ogni pezzo già reso; `missing` accetta id che non sono righe. Riparazione lato server | o2 |
-| P-57 | (scritto, da lanciare al turno) Percorso 1: il `site_done` fa il controllo BOM prima che le letture offline arrivate insieme siano elaborate → avviso BOM falso. Il controllo aspetta gli eventi del sito, con ripetizione limitata | o2 |
-| P-58 | Avvisi aggiornati anche al ribasso (D-29, BOM, fermo, reso, trasferimento, DDT d'arrivo); data di creazione dell'avviso di materiale fermo conservata. Scritti, da lanciare al turno | o2 |
+| P-61 | Difetto da Emergent (criterio 3), trovato dal giro e2e: le chiamate al server con campi facoltativi vuoti venivano rifiutate («invalid_data»: il client converte `undefined` in `null` e gli schemi lo rifiutano). Creare un DDT dalla scrivania e l'export Excel non hanno mai funzionato, probabilmente anche online. Colpite: `saveDocument` (creare o modificare DDT e BOM dalla scrivania: sempre rifiutato), `createExport` (rifiutato senza entrambi i filtri), `saveSortingCategory` e `saveSortingRule` (creazione di categorie e regole nuove). Riparato in `src/lib/data/call.ts` con `dropUndefined.ts` (pulizia ricorsiva); prova pura scritta da o3, committata da o2 in `tests/`; prova vera: e2e 02 desk e 05 export | o3 + o2 |
 | P-60 | Pagina degli avvisi e contatore: un avviso aperto con `count: 0` si mostra «nessuna differenza ora», neutro, fuori dal conteggio | o3 |
-| P-59 | Pezzo extra trovato in un altro reso: riga marcata `confirmedElsewhere` (D-30): lato server scritto da o2 (25 min su 1 ora), da lanciare al turno; poi o3 la mostra nella pagina della spedizione | o2, poi o3 |
+| P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 
@@ -52,6 +47,12 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-13 | Lavori programmati provati sull'emulatore (graceExpiry, retention, dailyChecks, nightlyRecount, monthlyReports) | o2 | 30/10/2026 (commit 3f26623) |
+| P-54 | Ricalcolo notturno: regge con dieci ASP (lotto riusato) e corregge gli ambiti svuotati | o2 | 30/10/2026 (commit 3f26623) |
+| P-55 | Scadenza della grazia: l'account viene segnato disattivato solo se Auth conferma | o2 | 30/10/2026 (commit 3f26623) |
+| P-56 | Reso: seconda conferma senza anomalie, niente righe fantasma | o2 | 30/10/2026 (commit 3f26623) |
+| P-57 | «Sito finito» offline senza avvisi BOM falsi (attesa limitata) | o2 | 30/10/2026 (commit 3f26623) |
+| P-58 | Avvisi aggiornati al ribasso (D-29) con data di creazione conservata; righe DDT senza direzione scritte correttamente | o2 | 30/10/2026 (commit 3f26623) |
 | P-10 | Prove sulle regole di sicurezza Firestore e Storage: tutte verdi; nessuna falla nelle regole Firestore; due strette su Storage (D-25, D-28) | o2 | 30/10/2026 (commit 17e4a88, 3e24041) |
 | P-11 | Prove del trigger e del replay (due telefoni, ritardo, doppia consegna, void, relabel, altra ASP): verdi anche sul codice di prima, nessun difetto | o2 | 30/10/2026 (commit 3e24041) |
 | P-48 | Eventi annullati esclusi dai confronti DDT e BOM | o2 | 30/10/2026 (commit 3e24041) |

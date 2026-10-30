@@ -21,11 +21,16 @@ In containers without a cloud metadata server, `scripts/emulators.sh` sets `GCE_
 ## Tests
 ```bash
 yarn test        # Vitest: tests/**/*.test.{mjs,ts} and functions/src/**/*.test.ts
-yarn e2e         # Playwright end-to-end tests of the demo paths (e2e/): needs the emulators with the seed
-                 # (yarn emulators, yarn seed, yarn seed:full) and starts its own yarn dev on port 3010; it stops if the port is already in use (stop any running yarn dev first).
-                 # yarn e2e --project=desk (or phone) for one profile. First time: npx playwright install chromium
+yarn test:rules  # security rules, trigger and scheduled-job tests on the emulators (functions/test/): starts and stops the emulators itself
+yarn check:i18n  # it.json and en.json have the same keys
+yarn e2e         # end-to-end tests of the demo paths (e2e/): builds functions, starts the emulators on empty data, seeds,
+                 # runs Playwright (its own yarn dev on port 3010), then stops everything. Needs all emulator ports and 3010 free.
+# One profile or one file (build functions first with yarn build:functions):
+#   node scripts/emulators.mjs --run "yarn seed && yarn seed:full && yarn e2e:only --project=desk"
+#   node scripts/emulators.mjs --run "yarn seed && yarn seed:full && yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
+# (yarn e2e --project=desk does NOT filter.) First time: npx playwright install chromium
 ```
-Covered pure logic: state machine (§9.2), sorting precedence (§10), document comparison (§11.3), code normalization parity. The owners write the security-rules tests and the end-to-end offline tests (SPEC §17).
+Unit tests cover pure logic (state machine, sorting precedence, document comparison, code parity, report month, Firestore indexes, emulator ports). The tests on the emulators cover the security rules (Firestore and Storage), the trigger and replay, the scheduled jobs.
 
 ## Seeded accounts (emulators only, invented)
 Password for all: `SwapDemo2026`

@@ -101,6 +101,7 @@ I commit `[reg]` si registrano nell'aggiornamento successivo del registro (il pr
 | 595524e | reg | 30/10/2026 | D-21, trappola dell'altro progetto, CLAUDE.md §5, P-15 fatta |
 | 9e050cd, 52b0871 | reg | 30/10/2026 | D-22, D-23, D-24, P-46 fatta, P-48, lotto 0 = 5e66bb4, README e CLAUDE.md §5 (porte, 3010) |
 | e5f3279, 9599193 | reg | 30/10/2026 | D-25, D-26, P-47 fatta, P-49…P-52, falle del criterio 1 nel DOVE SIAMO, AI in «più avanti» |
+| a33d9e4, 3f26623 | o2 | 30/10/2026 | P-14 (`scripts/checkBlocking.mjs`), P-30 (`scripts/deployBatch.mjs`), P-13 (prove dei lavori programmati), P-54, P-55, P-56, P-57, D-29, D-30 lato server; difetto trovato nel giro verde: righe dei DDT scritte con `direction: undefined` (Firestore lo rifiuta: con P-61 la creazione del DDT avrebbe dato errore interno). 12 rosse prima, verdi dopo; prove con emulatori 164 verdi. |
 | 8963bd9 | o2 | 30/10/2026 | P-52 (mese dei resoconti), P-51/D-26 (`emulators.mjs --run`, timeout delle funzioni, chiusura per PID), caricamento a richiesta di pdfmake ed exceljs (avvio delle funzioni circa 3 s più veloce). Prova dal vero di `--run` riuscita. |
 | 3e24041 | o2 | 30/10/2026 | P-48 (eventi annullati esclusi dai confronti DDT e BOM), P-49 (`aspId` dei documenti sempre dal luogo) con le due falle del criterio 1 riparate (riscrittura di un documento altrui, DDT agganciato alla spedizione altrui), D-25 e D-28 su Storage, P-11 (8 prove del replay, verdi anche prima: nessun difetto), P-45 (ARCHITECTURE.md completo), P-50 (`scripts/fixDocumentAsp.mjs`, provato sull'emulatore). 9 rosse prima, tutte verdi dopo; suite con emulatori 142 verdi. |
 | ac804e5 | o3 | 30/10/2026 | **P-43:** la pagina del pezzo mostra la categoria di smistamento col nome nella lingua dell'utente (l'id resta solo se la categoria non esiste più). La e2e del percorso 3 confermava il difetto (controllava l'id grezzo): corretta, ora pretende «Ricondizionamento». Merge fatto dalla sessione. |
@@ -155,6 +156,7 @@ Se le funzioni bloccanti non sono registrate (Identity Platform → Impostazioni
 | 30/10/2026 | o2 | P-13 (con P-54), P-14, P-30 | nessuna stima | 1 h 10, 25 min, 30 min |
 | 30/10/2026 | o2 | P-55 | nessuna stima (difetto) | 15 min |
 | 30/10/2026 | o2 | P-56, P-57, D-29 | nessuna stima (difetti) | 30 min, 45 min, 30 min |
+| 30/10/2026 | o2 | D-30 lato server; estensione D-29 e data di creazione; giri e merge | 1 ora (D-30) | 25 min; 25 min; 25 min |
 | 30/10/2026 | o2 | P-59 confermata altrove (D-30) | 1 ora | da fare |
 | 30/10/2026 | o3 | P-43 etichetta della categoria nella pagina del pezzo | 30 min | circa 25 min |
 | 30/10/2026 | o3 | P-25 categoria suggerita in «Arrivo» con interruttore (D-27) | 1,5–2,5 ore, rischio basso | circa 40 min (più 15 min per il difetto P-53 trovato strada facendo) |
