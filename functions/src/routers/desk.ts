@@ -7,6 +7,7 @@ import { isClientRole } from "../shared/roles";
 import { produceReport } from "../scheduled";
 import { getOrgLanguage } from "../core/orgLang";
 import { buildExportXlsx } from "../shared/reportBuilders";
+import { reportMonth } from "../shared/reportMonth";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -104,9 +105,7 @@ const desk = {
     schema: z.object({ scope: z.string().min(1), year: z.number().int().min(2024).max(2100), month: z.number().int().min(1).max(12) }),
     handler: async (ctx, d) => {
       assertScope(ctx, d.scope);
-      const start = new Date(Date.UTC(d.year, d.month - 1, 1));
-      const end = new Date(Date.UTC(d.year, d.month, 1));
-      const monthStr = `${d.year}-${String(d.month - 1).padStart(2, "0")}`;
+      const { label: monthStr, start, end } = reportMonth(d.year, d.month);
       await produceReport(d.scope, monthStr, start, end);
       return { ok: true, scope: d.scope, month: monthStr };
     },

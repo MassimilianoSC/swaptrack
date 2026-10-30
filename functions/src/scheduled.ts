@@ -8,6 +8,7 @@ import { alertId } from "./shared/alertIds";
 import { bomCheckForSite } from "./shared/bomCheck";
 import { cells, SHARDS } from "./aggregates";
 import { buildReportPdf, buildReportXlsx } from "./shared/reportBuilders";
+import { previousReportMonth } from "./shared/reportMonth";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 export const GRACE_DAYS = 7;
@@ -115,9 +116,7 @@ export async function runDailyChecks(now = Date.now()) {
 
 // §13.4: 1st of every month at 06:00 Europe/Rome; one PDF+Excel per scope.
 export async function runMonthlyReports(now = new Date()) {
-  const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth()).padStart(2, "0")}`;
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const { label: month, start, end } = previousReportMonth(now);
   await produceReport("client", month, start, end).catch((e) => logger.warn("report:client", { e: String(e) }));
   const asps = await db.collection("organizations").where("type", "==", "asp").get();
   for (const a of asps.docs) {
