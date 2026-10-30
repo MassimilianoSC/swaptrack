@@ -27,9 +27,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27): costruita (commit e04467c sul ramo `o3-wip-p24`), da portare su main col giro e2e | o3 |
 | P-53 | Difetto riparato da o3 (commit b916c1b sul ramo, criterio 2): in «Smista» l'evento usava la categoria suggerita del pezzo PRECEDENTE (prima lettura senza evento, dalla seconda categoria sbagliata); prova: e2e del percorso 3, rossa sul codice di prima, da dimostrare col giro | o3 |
-| P-13 | Lavori programmati provati a mano sugli emulatori: prove in scrittura, da lanciare al prossimo turno | o2 |
-| P-14 | Funzioni bloccanti con Identity Platform vero: o2 prepara i passi, il committente li esegue | o2 + committente |
-| P-30 | Script di pubblicazione a lotti (o2) e procedura (reg); lo lancia solo il committente | o2 + reg |
+| P-13 | Lavori programmati: prove scritte (commit locale a33d9e4), da lanciare al prossimo turno | o2 |
+| P-54 | Difetti di `runNightlyRecount` (criterio 2, produzione): lotto riusato dopo il commit (con circa dieci ASP il ricalcolo notturno si fermerebbe ogni notte) e ambiti svuotati con conteggi vecchi; riparati, da dimostrare al turno | o2 |
+| P-55 | `runGraceExpiry` segna `authDisabled` anche se la disattivazione dell'account fallisce, e non ci riprova più (criterio 1); riparazione con prova pura (Auth finto) | o2 |
+| P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
+| P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 
 ## Da fare
 

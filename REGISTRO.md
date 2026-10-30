@@ -126,6 +126,15 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 - **Prossimo passo, in ordine:** (a) il committente chiude i Java orfani; (b) turno degli emulatori: giro e2e completo con le dimostrazioni, resoconto per file (verdi/rosse e causa); (c) P-24 da `o3-wip-p24`: codice completo e compilante (`events.ts`: `watchMyScansToday` con `locationId` e `payload.ddtId`, `primeFieldCache` carica i DDT aperti, `cachedOpenDdtsForWarehouse`; `Scan.tsx`: tendina DDT solo in Arrivo + materiale nuovo + magazzino ASP, predefinito «Nessun DDT», `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi; i18n `scan.ddt.*`), mai eseguito: provarlo col percorso 2, correggere, rebase, catena, commit vero (circa 1 ora spesa su 4–6); (d) stima di P-25 (a occhio 1–2 ore, rischio basso: riusare il calcolo di `onCode` in classify e mostrare il riquadro anche in arrivo con flusso smontato); (e) P-43 (circa 30 min); (f) percorsi 4 (ora possibile: trigger e luoghi riparati), 1 (tecnico offline: `context.setOffline` di Playwright, rischio più alto), 7 (installazione: `beforeinstallprompt` simulato e user agent iPhone).
 - **Ciò che sa solo lei:** `netstat` in italiano scrive «IN ASCOLTO» (un filtro su LISTENING non trova nulla): per sapere se una porta è libera usare `node -e` con `net.createServer().listen(porta,'127.0.0.1')` (EADDRINUSE); il classificatore nega `taskkill`, `Get-Process`, `Get-NetTCPConnection`; `tasklist`/`taskkill` in Git Bash vogliono le opzioni con doppia barra (`//FI`, `//PID`); il guardiano del worktree rifiuta `git -C` e i comandi composti lunghi (scrivere i file con Write/Edit, un comando per chiamata). La raffica e il DDT in lettura dipendono da `today` (eventi propri di oggi con `includeMetadataChanges`): «Inviata» è l'ack del server, non l'elaborazione del trigger; per aspettare il trigger le prove cercano il codice in `/items` (`waitForPiece` in 03) o rilanciano «Confronta» (02 desk). Il pulsante «Leggi» fisso della shell da campo può coprire i clic in basso a destra sul telefono: gli aiuti usano Invio nel campo manuale. La ricerca per codice in Items fa un ricaricamento completo (`window.location.href`): nelle prove si aspetta l'URL. I download si verificano intercettando `window.open` (`captureOpenedUrl`) e controllando l'inizio del file (PK = xlsx, %PDF). `DataTable` pagina a 25 righe: `collectRows` scorre tutte le pagine. In `Scan.tsx` la riga `{camError && <p` era diventata `{camError &&<p` per uno spazio perso nel commit C: sistemata nel WIP. Tempi: P-23 primo lotto circa 4,5 ore sulle 7 stimate, prove ancora da far girare.
 
+### Passi di P-14 per il committente (preparati da o2, da eseguire dopo il lotto 1)
+1. Apri l'app demo come `client_admin` e disattiva un utente di prova, per esempio `asp.technician.sud@swaptrack-demo.test` (Utenti → Disattiva).
+2. In un terminale: `cd C:\Users\mcracchiolo\Desktop\swaptrack`
+3. `node scripts/checkBlocking.mjs asp.admin.nord@swaptrack-demo.test asp.technician.sud@swaptrack-demo.test`
+4. Quando lo chiede, scrivi la password di ciascun account (non si vede) e premi Invio.
+5. Devono comparire tre righe «OK» e «All three checks passed». Se compare «FAIL», manda tutto il testo alla memoria storica (non contiene password); se la terza riga dice che un account è stato creato, cancellalo dalla console (Authentication → Utenti).
+6. Riattiva l'utente di prova dall'app (Utenti → Riattiva).
+Se le funzioni bloccanti non sono registrate (Identity Platform → Impostazioni → Funzioni di blocco), il controllo 2 o 3 dà FAIL: è proprio ciò che serve sapere prima della demo.
+
 ## Stime date (per controllarle dopo)
 
 | Data | Chi | Cosa | Stima | Com'è andata |
@@ -141,6 +150,7 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 | 30/10/2026 | o2 | D-21 porte dedicate + P-46 script degli emulatori | nessuna stima | circa 40 min |
 | 30/10/2026 | o2 | P-10 Storage (resto della stima 1–2 h), P-48, P-49, P-11, P-45, P-50, P-51, P-52 | P-10 Storage 1–2 h; il resto difetti | scrittura circa 3 h; giri, prove dal vero e merge 50 min |
 | 30/10/2026 | o3 | D-21/D-22 lato app, P-46 in package.json | 15 min (stima per D-22) | circa 40 min, di cui tre giri di catena per i rebase |
+| 30/10/2026 | o2 | P-13 (con P-54), P-14, P-30 | nessuna stima | 1 h 10, 25 min, 30 min |
 | 30/10/2026 | o3 | P-43 etichetta della categoria nella pagina del pezzo | 30 min | circa 25 min |
 | 30/10/2026 | o3 | P-25 categoria suggerita in «Arrivo» con interruttore (D-27) | 1,5–2,5 ore, rischio basso | circa 40 min (più 15 min per il difetto P-53 trovato strada facendo) |
 | 29/10/2026 | o3 | P-24 DDT nella schermata di lettura (scelta, `ddtId`, riquadro in diretta) | 4–6 ore, rischio medio | in corso |
