@@ -9,7 +9,10 @@ export default defineConfig({
   test: {
     include: ["functions/test/**/*.test.ts"],
     environment: "node",
-    testTimeout: 30_000,
+    // Every file talks to the same emulators: with all files at once (17) single tests waited over 30 s on a loaded
+    // machine and failed by timeout, not by defect. At most 4 files in parallel, and more room per test.
+    maxWorkers: 4,
+    testTimeout: 60_000,
     hookTimeout: 120_000,
   },
 });
