@@ -51,23 +51,40 @@
     "singleProjectMode": true,
     "auth": {
       "host": "127.0.0.1",
-      "port": 9099
+      "port": 9109
     },
     "firestore": {
       "host": "127.0.0.1",
-      "port": 8180
+      "port": 8190,
+      "websocketPort": 9160
     },
     "functions": {
       "host": "127.0.0.1",
-      "port": 5001
+      "port": 5011
     },
     "storage": {
       "host": "127.0.0.1",
-      "port": 9199
+      "port": 9209
     },
     "pubsub": {
       "host": "127.0.0.1",
-      "port": 8085
+      "port": 8095
+    },
+    "eventarc": {
+      "host": "127.0.0.1",
+      "port": 9309
+    },
+    "tasks": {
+      "host": "127.0.0.1",
+      "port": 9509
+    },
+    "hub": {
+      "host": "127.0.0.1",
+      "port": 4410
+    },
+    "logging": {
+      "host": "127.0.0.1",
+      "port": 4510
     },
     "ui": {
       "enabled": false

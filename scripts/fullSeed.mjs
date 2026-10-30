@@ -2,6 +2,7 @@
 // Invented data only. Emulators only (`demo-swaptrack`).
 // Reuses the base seed (organizations, users, locations, models, settings) via scripts/seed.mjs.
 import { initializeApp } from "firebase-admin/app";
+import { hostOf } from "./emulatorPorts.mjs";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID, createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -14,8 +15,8 @@ const { computeCodeId, normalizeBarcode, NORM_VERSION } = createRequire(import.m
 // (credentials: gcloud auth application-default login). See README, "Progetto Firebase della demo".
 const REAL = process.env.SEED_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
 if (!REAL) {
-  process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8180";
-  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+  process.env.FIRESTORE_EMULATOR_HOST ??= hostOf("firestore");
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= hostOf("auth");
 }
 const PROJECT = REAL ? "kronos-caffe-sito" : "demo-swaptrack";
 if (REAL) console.log("!! Writing to the REAL project kronos-caffe-sito");
