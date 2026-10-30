@@ -25,12 +25,15 @@ async function loadAlert(ctx: Ctx, id: string): Promise<Doc> {
   return { id, ...a };
 }
 
-const alerts = {
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const alerts = {
   markAlertSeen: op({
     roles: ["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"],
     schema: z.object({ alertId: z.string() }),
     handler: async (ctx, d) => {
-      await loadAlert(ctx, d.alertId);
+      const a = await loadAlert(ctx, d.alertId);
+      // client_warehouse: return-shipment alerts only, the only ones it can read (§3.3, P-62).
+      if (ctx.role === "client_warehouse" && a.kind !== "ddt_return_difference") fail("not-found", "alert_not_found");
       await db.collection("alerts").doc(d.alertId).update({ seenAt: FieldValue.serverTimestamp() });
     },
   }),

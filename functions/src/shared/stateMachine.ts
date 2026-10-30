@@ -1,5 +1,6 @@
 // State machine of a piece (SPEC §9.2). Pure, no Firebase imports (R19).
-export type Status = "removed_at_site" | "received_at_asp" | "sorted" | "installed" | "defective" | "leftover" | "in_transfer" | "in_return" | "returned";
+export const STATUSES = ["removed_at_site", "received_at_asp", "sorted", "installed", "defective", "leftover", "in_transfer", "in_return", "returned"] as const;
+export type Status = (typeof STATUSES)[number];
 export type Flow = "new" | "removed";
 
 export interface ItemState {

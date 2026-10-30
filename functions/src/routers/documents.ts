@@ -24,6 +24,8 @@ const FILE_MAX = 5 * 1024 * 1024; // 5 MB per file (§7.3)
 // §3.3: a document belongs to the ASP of its location, whoever uploads it (client_admin uploads BOMs and DDTs
 // for an ASP). Returns that aspId; an ASP role writes only at its own locations.
 async function ensureCanWrite(ctx: Ctx, kind: DocKind, locationId: string): Promise<string> {
+  // §3.3 "Upload BOM": client_admin and asp_admin only; asp_warehouse uploads DDTs (P-62).
+  if (kind === "bom" && ctx.role === "asp_warehouse") fail("permission-denied", "forbidden");
   const loc = (await db.collection("locations").doc(locationId).get()).data();
   if (!loc) fail("not-found", "location_not_found");
   const expectType = kind === "bom" ? "site" : "asp_warehouse";
@@ -149,6 +151,8 @@ export const documents = {
       const doc = (await db.collection("documents").doc(d.documentId).get()).data();
       if (!doc) fail("not-found", "document_not_found");
       if (!isClientRole(ctx.role) && doc!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
+      // client_warehouse reads return DDTs only (§3.3, P-62).
+      if (ctx.role === "client_warehouse" && doc!.kind !== "ddt_return") fail("permission-denied", "forbidden");
       const kind = doc!.kind as DocKind;
       const lines = (doc!.lines as Line[]) ?? [];
       let evs: FirebaseFirestore.QueryDocumentSnapshot[];

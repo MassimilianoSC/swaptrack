@@ -18,10 +18,13 @@ function assertScope(ctx: Ctx, scope: string) {
   fail("permission-denied", "forbidden");
 }
 
-const desk = {
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const desk = {
   // §13.2 projection: never userId; events of other organizations shown as "another organization" (ASP roles).
+  // R7 (P-62): for ASP roles every filter must be their own (ASP, location, piece); client_warehouse has no event
+  // list (D-31: §3.3 gives it return shipments only, and the app does not use this for it).
   listEvents: op({
-    roles: ["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"],
+    roles: ["client_admin", "client_office", "asp_admin", "asp_warehouse"],
     rate: [120, 60],
     schema: z.object({
       itemId: z.string().optional(),
@@ -32,6 +35,14 @@ const desk = {
       max: z.number().int().min(1).max(500).default(200),
     }),
     handler: async (ctx, d) => {
+      if (!isClientRole(ctx.role)) {
+        if (d.aspId && d.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
+        if (d.locationId && (await db.collection("locations").doc(d.locationId).get()).get("aspId") !== ctx.orgId) fail("permission-denied", "forbidden");
+        if (d.itemId) {
+          const it = (await db.collection("items").doc(d.itemId).get()).data();
+          if (!it || (it.currentAspId !== ctx.orgId && it.pendingAspId !== ctx.orgId)) fail("not-found", "item_not_found");
+        }
+      }
       let q: FirebaseFirestore.Query = db.collection("events");
       if (d.itemId) q = q.where("itemId", "==", d.itemId);
       else if (d.locationId) q = q.where("locationId", "==", d.locationId);

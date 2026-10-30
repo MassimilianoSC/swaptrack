@@ -6,6 +6,7 @@ import { fail } from "../core/errors";
 import { makeRouter, op, Ctx } from "../core/router";
 import { adminLog } from "../core/adminLog";
 import { isClientRole } from "../shared/roles";
+import { STATUSES } from "../shared/stateMachine";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { NORM_VERSION } = require("../codeId.node.js");
 
@@ -19,6 +20,13 @@ async function loadItem(ctx: Ctx, itemId: string, tx?: Transaction): Promise<Doc
   // R7: own ASP means currentAspId or pendingAspId.
   if (!isClientRole(ctx.role) && it.currentAspId !== ctx.orgId && it.pendingAspId !== ctx.orgId) fail("not-found", "item_not_found");
   return it;
+}
+
+// A location an ASP role may act on: one of its own ASP (client roles: any existing location).
+async function assertLocationFor(ctx: Ctx, locationId: string): Promise<void> {
+  const loc = (await db.collection("locations").doc(locationId).get()).data();
+  if (!loc) fail("not-found", "location_not_found");
+  if (!isClientRole(ctx.role) && loc!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
 }
 
 // Server events (source "server"), applied by the replay (§8.2).
@@ -40,7 +48,8 @@ async function commitInBatches(refs: Array<[FirebaseFirestore.DocumentReference,
   }
 }
 
-const items = {
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const items = {
   editItem: op({
     roles: ["client_admin", "asp_admin", "asp_warehouse"],
     schema: z.object({ itemId: z.string(), modelId: z.string().nullable().optional(), condition: z.string().max(200).nullable().optional(), extra: z.record(z.unknown()).optional() }),
@@ -59,11 +68,18 @@ const items = {
   }),
   forceState: op({
     roles: ["client_admin", "asp_admin"],
-    schema: z.object({ itemId: z.string(), status: z.string().optional(), aspId: z.string().optional(), locationId: z.string().optional(), reason: z.string().min(1).max(300), anomalyId: z.string().optional() }),
+    schema: z.object({ itemId: z.string(), status: z.enum(STATUSES).optional(), aspId: z.string().optional(), locationId: z.string().optional(), reason: z.string().min(1).max(300), anomalyId: z.string().optional() }),
     handler: async (ctx, d) => {
       const it = await loadItem(ctx, d.itemId);
       if (d.aspId && ctx.role !== "client_admin") fail("permission-denied", "forbidden");
       if (ctx.role === "asp_admin" && it.currentAspId !== ctx.orgId) fail("permission-denied", "forbidden");
+      // P-62: asp_admin corrects only towards its own locations; the anomaly resolved must be of this piece and,
+      // for asp_admin, of its ASP (never another ASP's data through an id).
+      if (d.locationId) await assertLocationFor(ctx, d.locationId);
+      if (d.anomalyId) {
+        const a = (await db.collection("anomalies").doc(d.anomalyId).get()).data();
+        if (!a || a.itemId !== d.itemId || (ctx.role === "asp_admin" && a.aspId !== ctx.orgId)) fail("not-found", "anomaly_not_found");
+      }
       await serverEvent(ctx, "force_state", d.locationId ?? it.currentLocationId, d.aspId ?? it.currentAspId, { targetItemId: d.itemId, status: d.status ?? null, aspId: d.aspId ?? null, locationId: d.locationId ?? null, reason: d.reason });
       if (d.anomalyId) await db.collection("anomalies").doc(d.anomalyId).update({ resolution: "forced", resolvedAt: FieldValue.serverTimestamp(), resolvedBy: ctx.uid });
     },
@@ -106,6 +122,7 @@ const items = {
         if (ctx.role === "asp_admin" && e!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
         const newLoc = (await tx.get(db.collection("locations").doc(d.locationId))).data();
         if (!newLoc) fail("not-found", "location_not_found");
+        if (ctx.role === "asp_admin" && newLoc!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
         if (e!.locationId === d.locationId) fail("invalid-argument", "invalid_data");
         const correction = { previousLocationId: e!.locationId, correctedBy: ctx.uid, correctedAt: FieldValue.serverTimestamp(), reason: d.reason };
         tx.update(db.collection("events").doc(d.eventId), { locationId: d.locationId, correction });
