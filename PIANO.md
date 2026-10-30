@@ -34,7 +34,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-57 | (scritto, da lanciare al turno) Percorso 1: il `site_done` fa il controllo BOM prima che le letture offline arrivate insieme siano elaborate → avviso BOM falso. Il controllo aspetta gli eventi del sito, con ripetizione limitata | o2 |
 | P-58 | Avvisi aggiornati anche al ribasso (D-29, BOM, fermo, reso, trasferimento, DDT d'arrivo); data di creazione dell'avviso di materiale fermo conservata. Scritti, da lanciare al turno | o2 |
 | P-60 | Pagina degli avvisi e contatore: un avviso aperto con `count: 0` si mostra «nessuna differenza ora», neutro, fuori dal conteggio | o3 |
-| P-59 | Pezzo extra trovato in un altro reso: la riga di quel reso marcata «confermata altrove» (SPEC §9.2, D-30, stima 1 ora); poi o3 la mostra | o2, poi o3 |
+| P-59 | Pezzo extra trovato in un altro reso: riga marcata `confirmedElsewhere` (D-30): lato server scritto da o2 (25 min su 1 ora), da lanciare al turno; poi o3 la mostra nella pagina della spedizione | o2, poi o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 
