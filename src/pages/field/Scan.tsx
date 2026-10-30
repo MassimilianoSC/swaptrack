@@ -53,6 +53,9 @@ export default function Scan() {
   const [newClass, setNewClass] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [suggested, setSuggested] = React.useState<string | null>(null);
+  // The suggestion of the piece being recorded: the state only shows it; the payload reads the ref, set before
+  // recording (the state seen by onCode is the one of the previous reading).
+  const suggestedRef = React.useRef<string | null>(null);
   const [sorting, setSorting] = React.useState<{ categories: Category[]; rules: SortingRule[] }>({ categories: [], rules: [] });
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
@@ -188,13 +191,14 @@ export default function Scan() {
     const payload: Record<string, unknown> = {};
     if (mode === "arrive_at_warehouse") { payload.flow = flow; if (category) payload.categoryId = category; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId; }
     if (mode === "classify") {
-      if (newClass) payload.newClass = newClass; else payload.categoryId = category || suggested;
-      if (suggested) payload.suggestedCategoryId = suggested;
+      const sug = suggestedRef.current;
+      if (newClass) payload.newClass = newClass; else payload.categoryId = category || sug;
+      if (sug) payload.suggestedCategoryId = sug;
     }
     if ((mode === "return_ship" || mode === "transfer_out") && shipmentId) payload.shipmentId = shipmentId;
     return payload;
   };
-  const needsCategory = () => mode === "classify" && !newClass && !category && !suggested;
+  const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string) => {
     if (!location || !user || !claims?.orgId) return;
@@ -218,6 +222,7 @@ export default function Scan() {
     if (mode === "classify") {
       const it = await cachedItemForCode(code);
       const s = it ? suggestCategory(sorting.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }) : null;
+      suggestedRef.current = s;
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
     }
