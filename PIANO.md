@@ -7,7 +7,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | Lotto | Data | Cosa | Commit |
 |---|---|---|---|
-| 0 | 29/10/2026 | Codice di Emergent più le correzioni locali (indici, installazione, logo), su https://swaptrack-demo.web.app (progetto `kronos-caffe-sito`) | non registrato con precisione (vedi P-7); da ora ogni lotto riporta il commit |
+| 0 | 29/10/2026 | Codice di Emergent più le correzioni locali (indici, installazione, logo), su https://swaptrack-demo.web.app (progetto `kronos-caffe-sito`) | 5e66bb4 (confermato dal committente il 30/10: logo e pulsante «Installa» sono online) |
 
 ## Aspetta il committente
 
@@ -17,8 +17,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel repository: README e `memory/test_credentials.md`) | committente in console; poi reg toglie la password dai documenti |
 | P-3 | Via alla pulizia dei residui di Emergent: `memory/`, `test_result.md`, `test_reports/`, `tests/__init__.py` | reg (documenti) e o2 (`tests/__init__.py`) |
 | P-4 | Elenco delle differenze notate rispetto all'app vecchia («la raffica» e «altre cose») | reg le divide in errori / specifica non fatta / scelte da valutare |
-| P-6 | Approvare l'elenco dei percorsi della demo (proposta in DA_FARE) | o3, o2 |
-| P-7 | Dire quale codice è online: il lotto 0 include il pulsante «Installa l'app» e il logo (commit 587f1a6 e 5e66bb4)? | reg aggiorna il lotto 0 |
 
 ## In corso
 
@@ -51,6 +49,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-6 | Percorsi della demo approvati dal committente (D-24): i sette di DA_FARE | committente | 30/10/2026 |
+| P-7 | Il lotto 0 online corrisponde al commit 5e66bb4 (logo e pulsante «Installa» presenti) | committente | 30/10/2026 |
 | P-46 | `scripts/emulators.mjs`: avvio degli emulatori con `--only` e chiusura dei Java orfani (netstat italiano compreso); porte lette da `firebase.json` da tutti gli script | o2 | 30/10/2026 (commit 9e2a728) |
 | P-15 | Indici: una ricerca senza indice (resi del magazzino cliente) corretta; prova pura sugli indici che fissa la trappola (D-20); l'indice va pubblicato col lotto 1 | o2 | 30/10/2026 (commit e1c32c7) |
 | P-16 | Riparazione del trigger: tutte le letture prima delle scritture nella transazione; spedizioni e resi si riempiono di righe; anomalie senza duplicati. Quattro prove rosse prima, verdi dopo | o2 | 29/10/2026 (commit 0bda4f2) |
