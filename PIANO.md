@@ -17,33 +17,27 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel repository: README e `memory/test_credentials.md`) | committente in console; poi reg toglie la password dai documenti |
 | P-3 | Via alla pulizia dei residui di Emergent: `memory/`, `test_result.md`, `test_reports/`, `tests/__init__.py` | reg (documenti) e o2 (`tests/__init__.py`) |
 | P-4 | Elenco delle differenze notate rispetto all'app vecchia («la raffica» e «altre cose») | reg le divide in errori / specifica non fatta / scelte da valutare |
-| P-50 | Dire se nella demo online ha caricato documenti (BOM o DDT) come `client_admin`: nascevano senza ASP (P-49) e restano invisibili alle ASP; se sì, o2 prepara uno script che li elenca e li sistema dal luogo (lo lancia il committente) | o2 |
+| P-50 | Dire se nella demo online ha caricato documenti (BOM o DDT) come `client_admin`: nascevano senza ASP (P-49). Se sì, lo script `scripts/fixDocumentAsp.mjs` è pronto (solo elenco di default, `--apply` dopo aver visto l'elenco; comandi in REGISTRO) | committente |
 
 ## In corso
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); parte Storage in scrittura, con le due strette di D-25, da lanciare al turno degli emulatori | o2 |
 | P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
-| P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27); via dato, costruzione mentre aspetta il turno | o3 |
-| P-52 | Difetto riparato da o2 (commit locale 96f4363, da portare su main col turno): il resoconto chiesto dal cliente usciva sempre col mese precedente (ottobre → «2026-09», sovrascrivendo il file di settembre); il lavoro mensile sbagliava solo a gennaio («2027-00»). Funzione pura `reportMonth.ts` con prove | o2 |
-| P-51 | Script degli emulatori: `FUNCTIONS_DISCOVERY_TIMEOUT=60` (D-26) e modalità `--run "<comando>"` che avvia, esegue, chiude per PID e verifica le porte; poi le e2e e le prove con emulatori girano solo così | o2 |
-| P-49 | Difetto (o2, da confermare con una prova rossa): i documenti caricati dai ruoli cliente nascono con `aspId` nullo (l'app non lo manda, il server non lo ricava dal luogo): l'ASP non vede la BOM del suo sito né il DDT del suo magazzino, niente avviso BOM, `expectedCodes` senza ASP, file sotto `documents/client/…`. Rimedio: `aspId` sempre dal luogo, per tutti i ruoli | o2 |
-| P-48 | Probabile difetto (o3, da confermare con una prova rossa di o2): `compareDocument` conta anche gli eventi annullati (`voided`) per `ddt_in` e `bom`: un arrivo annullato resta «arrivato» o «inatteso» e l'avviso del DDT è sbagliato; rimedio: filtrare `voided` come fa il replay | o2 |
+| P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27): costruita (commit e04467c sul ramo `o3-wip-p24`), da portare su main col giro e2e | o3 |
+| P-53 | Difetto riparato da o3 (commit b916c1b sul ramo, criterio 2): in «Smista» l'evento usava la categoria suggerita del pezzo PRECEDENTE (prima lettura senza evento, dalla seconda categoria sbagliata); prova: e2e del percorso 3, rossa sul codice di prima, da dimostrare col giro | o3 |
+| P-13 | Lavori programmati provati a mano sugli emulatori: prove in scrittura, da lanciare al prossimo turno | o2 |
+| P-14 | Funzioni bloccanti con Identity Platform vero: o2 prepara i passi, il committente li esegue | o2 + committente |
+| P-30 | Script di pubblicazione a lotti (o2) e procedura (reg); lo lancia solo il committente | o2 + reg |
 
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
 |---|---|---|---|
-| P-11 | Prove del trigger e del replay: stesso codice da due dispositivi offline, evento in ritardo, idempotenza, void, relabel | o2 | 2 |
-| P-13 | Lavori programmati provati a mano sugli emulatori (dailyChecks, nightlyRecount, monthlyReports, graceExpiry) | o2 | 2 |
-| P-14 | Funzioni bloccanti (`beforeCreate`/`beforeSignIn`) con Identity Platform vero: preparare la prova, il committente la esegue | o2 + committente | 3 |
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-22 | Foto con la coda senza rete, da capo a fondo, con l'emulatore Storage | o3 (schermata) + o2 (`attachPhotos`) | 2 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-45 | `ARCHITECTURE.md` elenca solo le collezioni del passo 2: completare con items, codes, anomalie, documenti, spedizioni, alert, aggregati, report, export, expectedCodes, documentMappings | o2 | 5 |
-| P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
 
 ## Fatto
@@ -51,6 +45,13 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-10 | Prove sulle regole di sicurezza Firestore e Storage: tutte verdi; nessuna falla nelle regole Firestore; due strette su Storage (D-25, D-28) | o2 | 30/10/2026 (commit 17e4a88, 3e24041) |
+| P-11 | Prove del trigger e del replay (due telefoni, ritardo, doppia consegna, void, relabel, altra ASP): verdi anche sul codice di prima, nessun difetto | o2 | 30/10/2026 (commit 3e24041) |
+| P-48 | Eventi annullati esclusi dai confronti DDT e BOM | o2 | 30/10/2026 (commit 3e24041) |
+| P-49 | `aspId` dei documenti sempre dal luogo; riparate anche due falle del criterio 1 (documento altrui riscrivibile, DDT agganciato a spedizione altrui) | o2 | 30/10/2026 (commit 3e24041) |
+| P-45 | ARCHITECTURE.md completo (funzioni, collezioni, Storage, indici) | o2 | 30/10/2026 (commit 3e24041) |
+| P-51 | `emulators.mjs --run`, timeout delle funzioni (D-26), chiusura per PID; avvio delle funzioni più veloce | o2 | 30/10/2026 (commit 8963bd9) |
+| P-52 | Mese giusto nei resoconti (prima ottobre usciva come settembre e lo sovrascriveva) | o2 | 30/10/2026 (commit 8963bd9) |
 | P-43 | Pagina del pezzo: categoria di smistamento col nome invece dell'id (la e2e del percorso 3 confermava il difetto: corretta) | o3 | 30/10/2026 (commit ac804e5) |
 | P-6 | Percorsi della demo approvati dal committente (D-24): i sette di DA_FARE | committente | 30/10/2026 |
 | P-7 | Il lotto 0 online corrisponde al commit 5e66bb4 (logo e pulsante «Installa» presenti) | committente | 30/10/2026 |
