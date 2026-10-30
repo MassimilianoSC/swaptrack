@@ -22,11 +22,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); resta la parte Storage (dettaglio nelle consegne di o2, REGISTRO) | o2 |
+| P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); parte Storage in scrittura, con le due strette di D-25, da lanciare al turno degli emulatori | o2 |
 | P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
+| P-49 | Difetto (o2, da confermare con una prova rossa): i documenti caricati dai ruoli cliente nascono con `aspId` nullo (l'app non lo manda, il server non lo ricava dal luogo): l'ASP non vede la BOM del suo sito né il DDT del suo magazzino, niente avviso BOM, `expectedCodes` senza ASP, file sotto `documents/client/…`. Rimedio: `aspId` sempre dal luogo, per tutti i ruoli | o2 |
 | P-48 | Probabile difetto (o3, da confermare con una prova rossa di o2): `compareDocument` conta anche gli eventi annullati (`voided`) per `ddt_in` e `bom`: un arrivo annullato resta «arrivato» o «inatteso» e l'avviso del DDT è sbagliato; rimedio: filtrare `voided` come fa il replay | o2 |
-| P-47 | Porte dedicate (D-21) e server di sviluppo sulla 3010 (D-22): parte di o2 su main (9e2a728, con P-46); parte di o3 (`vite.config.ts`, Playwright) pronta sul ramo, da portare su main | o3 |
 
 ## Da fare
 
@@ -51,6 +51,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
 | P-6 | Percorsi della demo approvati dal committente (D-24): i sette di DA_FARE | committente | 30/10/2026 |
 | P-7 | Il lotto 0 online corrisponde al commit 5e66bb4 (logo e pulsante «Installa» presenti) | committente | 30/10/2026 |
+| P-47 | Porte dedicate degli emulatori (D-21) e server di sviluppo sulla 3010 (D-22), una sola fonte per ciascuna (`firebase.json`, `vite.config.ts`) | o2 + o3 | 30/10/2026 (commit 9e2a728, d21fb8f, cf2eefe, f8ec635) |
 | P-46 | `scripts/emulators.mjs`: avvio degli emulatori con `--only` e chiusura dei Java orfani (netstat italiano compreso); porte lette da `firebase.json` da tutti gli script | o2 | 30/10/2026 (commit 9e2a728) |
 | P-15 | Indici: una ricerca senza indice (resi del magazzino cliente) corretta; prova pura sugli indici che fissa la trappola (D-20); l'indice va pubblicato col lotto 1 | o2 | 30/10/2026 (commit e1c32c7) |
 | P-16 | Riparazione del trigger: tutte le letture prima delle scritture nella transazione; spedizioni e resi si riempiono di righe; anomalie senza duplicati. Quattro prove rosse prima, verdi dopo | o2 | 29/10/2026 (commit 0bda4f2) |
