@@ -1,13 +1,16 @@
 // Pure helpers to build the monthly report (PDF + Excel) and the on-demand export (Excel).
 // Real file formats via pdfmake and exceljs (D30 removed). Fonts: pdfmake uses PDFKit built-in Helvetica,
 // so no external TTF files are needed in the Cloud Function runtime.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const PdfPrinter = require("pdfmake") as new (fonts: Record<string, Record<string, string>>) => {
+// pdfmake and exceljs are loaded on first use, not with the module: every function that imports this file
+// (desk router, scheduled jobs) would otherwise pay about 4 s at each cold start and emulator start (D-26).
+type PdfPrinterCtor = new (fonts: Record<string, Record<string, string>>) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createPdfKitDocument: (def: any) => NodeJS.ReadableStream & { end: () => void };
 };
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const ExcelJS = require("exceljs");
+const pdfPrinter = (): PdfPrinterCtor => require("pdfmake");
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
+const excel = (): any => require("exceljs");
 import { reportT, Lang } from "../shared/reportStrings";
 
 const HELVETICA_FONTS = {
@@ -20,7 +23,7 @@ const HELVETICA_FONTS = {
 };
 
 function makePrinter() {
-  return new PdfPrinter(HELVETICA_FONTS);
+  return new (pdfPrinter())(HELVETICA_FONTS);
 }
 
 export interface ReportSummary {
@@ -111,7 +114,7 @@ export async function buildReportXlsx(opts: {
   const { lang, scope, month, summary, byType } = opts;
   const scopeLabel = scope === "client" ? reportT(lang, "report.allAsps") : scope;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wb = new (ExcelJS as any).Workbook();
+  const wb = new (excel()).Workbook();
   wb.creator = "SwapTrack";
   wb.created = new Date();
   const sum = wb.addWorksheet(reportT(lang, "report.sheet.summary"));
@@ -146,7 +149,7 @@ export async function buildExportXlsx(opts: {
   const { lang, rows } = opts;
   const h = (k: string) => reportT(lang, `exports.header.${k}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wb = new (ExcelJS as any).Workbook();
+  const wb = new (excel()).Workbook();
   wb.creator = "SwapTrack";
   wb.created = new Date();
   const ws = wb.addWorksheet(reportT(lang, "exports.sheet.items"));
