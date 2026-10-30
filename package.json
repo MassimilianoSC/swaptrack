@@ -21,7 +21,8 @@
     "seed:full": "node scripts/fullSeed.mjs",
     "build:demo": "tsc --noEmit -p tsconfig.json && vite build --mode demo",
     "test:rules": "node scripts/test-rules.mjs",
-    "e2e": "playwright test",
+    "e2e": "yarn build:functions && node scripts/emulators.mjs --run \"yarn seed && yarn seed:full && playwright test\"",
+    "e2e:only": "playwright test",
     "check:i18n": "node -e \"const f=(p)=>{const o=require(p);const out=[];const walk=(x,pre)=>{for(const k of Object.keys(x)){const v=x[k];const kk=pre?pre+'.'+k:k;if(v&&typeof v==='object')walk(v,kk);else out.push(kk);}};walk(o,'');return new Set(out);};const it=f('./src/i18n/it.json'),en=f('./src/i18n/en.json');const a=[...it].filter(k=>!en.has(k)),b=[...en].filter(k=>!it.has(k));if(a.length||b.length){console.error('i18n keys differ',{onlyIt:a,onlyEn:b});process.exit(1);}console.log('i18n keys: it and en match ('+it.size+')');\""
   },
   "dependencies": {

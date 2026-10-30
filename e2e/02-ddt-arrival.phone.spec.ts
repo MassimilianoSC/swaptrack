@@ -36,7 +36,8 @@ test.describe("Percorso 2 — raffica in magazzino (telefono)", () => {
     await expect(page.getByTestId("scan-session")).not.toContainText(codes[2]);
     const undone = page.getByTestId("scan-today-row").filter({ hasText: codes[2] });
     await expect(undone.getByTestId("scan-today-voided")).toBeVisible({ timeout: 60_000 });
-    // All three readings reached the server.
-    for (const c of codes) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    // The two readings kept reached the server; the undone one shows "undone" in place of its outcome (097c115).
+    for (const c of codes.slice(0, 2)) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    await expect(undone).not.toContainText(tr("scan.sent"));
   });
 });

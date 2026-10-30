@@ -3,8 +3,9 @@ import { DEV_PORT } from "./vite.config";
 
 // End-to-end tests of the demo paths (DA_FARE P-6 / P-23).
 // They run against the dev server (`yarn dev`, port DEV_PORT of vite.config.ts, REGISTRO D-22) and the Firebase
-// emulators with the seed (`yarn emulators`, then `yarn seed` and `yarn seed:full`). The emulators are NEVER started from here:
-// one instance per machine (REGISTRO D-4), start them first. `yarn e2e`, or `yarn e2e --project=desk`.
+// emulators with the seed. The emulators are NEVER started from here (one instance per machine, REGISTRO D-4):
+// `yarn e2e` builds the functions and runs everything through `node scripts/emulators.mjs --run` (start, seed, tests,
+// stop). For a subset: `node scripts/emulators.mjs --run "yarn seed && yarn seed:full && yarn e2e:only --project=desk"`.
 export default defineConfig({
   testDir: "e2e",
   outputDir: ".playwright/test-results",
