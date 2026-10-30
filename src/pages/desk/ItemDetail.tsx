@@ -8,6 +8,7 @@ import { call } from "@/lib/data/call";
 import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
 import { listModels, type Model } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
+import { fileUrl } from "@/lib/data/storage";
 import type { Row } from "@/lib/data/db";
 import { isAdminRole, isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -35,6 +36,9 @@ export default function ItemDetail() {
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
+  // SPEC §13.2 / P-70 (D-32): the piece's photos. A photo of another ASP (piece transferred, §9.4) is not readable:
+  // its URL comes back null and it is skipped silently.
+  const [photoUrls, setPhotoUrls] = React.useState<string[]>([]);
   const [editing, setEditing] = React.useState(false);
   const [editModel, setEditModel] = React.useState<string>("");
   const [editCondition, setEditCondition] = React.useState("");
@@ -74,6 +78,13 @@ export default function ItemDetail() {
     void reload().catch(() => setLoadError(true));
     return watchItem(id, (v) => { setItem(v); setMissing(v === null); }, () => setLoadError(true));
   }, [id, reload]);
+  const photoKey = (item?.photoPaths ?? []).join("|");
+  React.useEffect(() => {
+    const paths = photoKey ? photoKey.split("|") : [];
+    let aborted = false;
+    void Promise.all(paths.map(fileUrl)).then((urls) => { if (!aborted) setPhotoUrls(urls.filter((u): u is string => !!u)); });
+    return () => { aborted = true; };
+  }, [photoKey]);
   React.useEffect(() => { if (item) { setEditModel(item.modelId ?? ""); setEditCondition(item.condition ?? ""); setForceStatus(item.status); } }, [item]);
 
   if (loadError) return <ErrorState message={t("errors.load_failed")} />;
@@ -166,6 +177,21 @@ export default function ItemDetail() {
           </ul>
         </Card>
       )}
+
+      <Card data-testid="item-photos">
+        <h2 className="font-semibold mb-3">{t("items.photos")}</h2>
+        {photoUrls.length === 0 ? <p className="text-sm text-muted">{t("items.photosEmpty")}</p> : (
+          <ul className="flex flex-wrap gap-2">
+            {photoUrls.map((u, i) => (
+              <li key={u}>
+                <a href={u} target="_blank" rel="noreferrer" aria-label={t("items.photoOpen", { n: i + 1 })} data-testid="item-photo">
+                  <img src={u} alt="" loading="lazy" className="h-24 w-24 rounded border border-border object-cover" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <Card>
         <h2 className="font-semibold mb-3">{t("items.history")}</h2>
