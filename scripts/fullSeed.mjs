@@ -12,6 +12,7 @@ const { computeCodeId, normalizeBarcode, NORM_VERSION } = createRequire(import.m
 
 // Target: the emulators by default. The real demo project only with BOTH
 //   SEED_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
+// (PowerShell: $env:SEED_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: SEED_REAL_PROJECT=kronos-caffe-sito node ...)
 // (credentials: gcloud auth application-default login). See README, "Progetto Firebase della demo".
 const REAL = process.env.SEED_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
 if (!REAL) {

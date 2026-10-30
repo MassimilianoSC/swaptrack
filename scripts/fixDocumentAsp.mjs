@@ -6,6 +6,7 @@
 //
 // Target: the emulators by default (project demo-swaptrack). The real demo project only with BOTH
 //   FIX_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
+// (PowerShell: $env:FIX_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: FIX_REAL_PROJECT=kronos-caffe-sito node ...)
 // (credentials: gcloud auth application-default login). Without --apply nothing is written.
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
