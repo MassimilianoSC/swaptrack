@@ -5,6 +5,7 @@ import { ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/lib/data/firebase";
 import { compressImage } from "@/lib/imageCompress.js";
 import { call } from "@/lib/data/call";
+import { isPermanentPhotoError, MAX_PERMANENT_FAILURES } from "./photoErrors";
 
 const DB_NAME = "swaptrack-device";
 const STORE = "photos";
@@ -58,7 +59,15 @@ export async function listQueued(): Promise<Array<QueuedPhoto & { key: string }>
 export const deleteQueued = (key: string) => tx("readwrite", (s) => s.delete(key));
 
 // Upload the queue: one photo at a time, grouped by eventId. Returns {uploaded, lost}.
-export async function flushQueue(signal?: AbortSignal): Promise<{ uploaded: number; lost: number }> {
+// P-69: one flush at a time (the 30 s timer, the "online" event and the scan screen share the running one), so the
+// same photo is never uploaded twice.
+let running: Promise<{ uploaded: number; lost: number }> | null = null;
+export function flushQueue(signal?: AbortSignal): Promise<{ uploaded: number; lost: number }> {
+  if (!running) running = doFlush(signal).finally(() => { running = null; });
+  return running;
+}
+
+async function doFlush(signal?: AbortSignal): Promise<{ uploaded: number; lost: number }> {
   const rows = await listQueued();
   let uploaded = 0, lost = 0;
   const groups = new Map<string, Array<QueuedPhoto & { key: string }>>();
@@ -69,18 +78,21 @@ export async function flushQueue(signal?: AbortSignal): Promise<{ uploaded: numb
     const okKeys: string[] = [];
     for (const it of items) {
       if (it.lost) { lost++; continue; }
+      // An unreadable stored photo can never be sent.
+      const readable = it.blob instanceof Blob && it.blob.size > 0;
       try {
+        if (!readable) throw Object.assign(new Error("unreadable"), { code: "storage/invalid-argument" });
         const path = `photos/${it.aspId}/${eventId}/${it.n}.jpg`;
         await uploadBytes(ref(storage, path), it.blob, { contentType: "image/jpeg" });
         paths.push(path);
         okKeys.push(it.key);
-      } catch {
-        if (it.tries >= 5) {
-          await tx("readwrite", (s) => s.put({ ...it, lost: true, tries: it.tries + 1 }, it.key));
-          lost++;
-        } else {
-          await tx("readwrite", (s) => s.put({ ...it, tries: it.tries + 1 }, it.key));
-        }
+      } catch (e) {
+        // Network and other transient errors: the photo stays queued as it is, for the next flush.
+        if (!isPermanentPhotoError((e as { code?: string }).code)) continue;
+        const tries = it.tries + 1;
+        const isLost = !readable || tries >= MAX_PERMANENT_FAILURES;
+        await tx("readwrite", (s) => s.put({ ...it, tries, ...(isLost ? { lost: true } : {}) }, it.key));
+        if (isLost) lost++;
       }
     }
     if (paths.length) {
