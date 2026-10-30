@@ -5,7 +5,7 @@ import { ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/lib/data/firebase";
 import { compressImage } from "@/lib/imageCompress.js";
 import { call } from "@/lib/data/call";
-import { isPermanentPhotoError, MAX_PERMANENT_FAILURES } from "./photoErrors";
+import { isPermanentPhotoError, MAX_PERMANENT_FAILURES, countsAsPermanentFailure } from "./photoErrors";
 
 const DB_NAME = "swaptrack-device";
 const STORE = "photos";
@@ -22,7 +22,7 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-interface QueuedPhoto { eventId: string; aspId: string; n: number; blob: Blob; createdAt: number; tries: number; lost?: boolean }
+interface QueuedPhoto { eventId: string; aspId: string; n: number; blob: Blob; createdAt: number; tries: number; lastFailAt?: number; lost?: boolean }
 
 async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T> | void): Promise<T> {
   const d = await open();
@@ -89,9 +89,11 @@ async function doFlush(signal?: AbortSignal): Promise<{ uploaded: number; lost: 
       } catch (e) {
         // Network and other transient errors: the photo stays queued as it is, for the next flush.
         if (!isPermanentPhotoError((e as { code?: string }).code)) continue;
+        const now = Date.now();
+        if (readable && !countsAsPermanentFailure(it.lastFailAt, now)) continue;
         const tries = it.tries + 1;
         const isLost = !readable || tries >= MAX_PERMANENT_FAILURES;
-        await tx("readwrite", (s) => s.put({ ...it, tries, ...(isLost ? { lost: true } : {}) }, it.key));
+        await tx("readwrite", (s) => s.put({ ...it, tries, lastFailAt: now, ...(isLost ? { lost: true } : {}) }, it.key));
         if (isLost) lost++;
       }
     }
