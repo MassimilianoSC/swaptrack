@@ -22,7 +22,9 @@ export async function bomCheckForSite(locationId: string, aspId: string): Promis
   const bomStart = (bom.createdAt?.toMillis?.() ?? 0) as number;
   const lines = (bom.lines as Line[]) ?? [];
   const evSnap = await db.collection("events").where("locationId", "==", locationId).get();
-  const relevantEvs = evSnap.docs.filter((e) => ["remove_at_site", "install_at_site"].includes(e.get("type") as string) && (e.get("scannedAt")?.toMillis?.() ?? 0) >= bomStart);
+  // §8.2: voided scans are out of the replay, so they are out of the comparison too.
+  const relevantEvs = evSnap.docs.filter((e) => ["remove_at_site", "install_at_site"].includes(e.get("type") as string) && !e.get("voided")
+    && (e.get("scannedAt")?.toMillis?.() ?? 0) >= bomStart);
   const facts: EventFact[] = await Promise.all(relevantEvs.map(async (x) => {
     const e = x.data() as Doc;
     const item = e.itemId ? (await db.collection("items").doc(e.itemId).get()).data() : null;

@@ -20,18 +20,18 @@ const DOC_FILE_TYPES: Record<string, string> = {
 };
 const FILE_MAX = 5 * 1024 * 1024; // 5 MB per file (§7.3)
 
-async function ensureCanWrite(ctx: Ctx, kind: DocKind, aspId: string | null, locationId: string): Promise<void> {
+// §3.3: a document belongs to the ASP of its location, whoever uploads it (client_admin uploads BOMs and DDTs
+// for an ASP). Returns that aspId; an ASP role writes only at its own locations.
+async function ensureCanWrite(ctx: Ctx, kind: DocKind, locationId: string): Promise<string> {
   const loc = (await db.collection("locations").doc(locationId).get()).data();
   if (!loc) fail("not-found", "location_not_found");
-  const expectType = kind === "bom" ? "site" : kind === "ddt_in" ? "asp_warehouse" : "asp_warehouse";
-  if (loc!.type !== expectType) fail("invalid-argument", "invalid_data");
-  if (!isClientRole(ctx.role)) {
-    if (aspId && aspId !== ctx.orgId) fail("permission-denied", "forbidden");
-    if (loc!.aspId && loc!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
-  }
+  const expectType = kind === "bom" ? "site" : "asp_warehouse";
+  if (loc!.type !== expectType || !loc!.aspId) fail("invalid-argument", "invalid_data");
+  if (!isClientRole(ctx.role) && loc!.aspId !== ctx.orgId) fail("permission-denied", "forbidden");
+  return loc!.aspId as string;
 }
 
-async function storeFiles(aspId: string | null, kind: DocKind, documentId: string, files: Array<{ base64: string; contentType: string }>): Promise<string[]> {
+async function storeFiles(aspId: string, kind: DocKind, documentId: string, files: Array<{ base64: string; contentType: string }>): Promise<string[]> {
   const paths: string[] = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
@@ -39,9 +39,8 @@ async function storeFiles(aspId: string | null, kind: DocKind, documentId: strin
     if (!ext) fail("invalid-argument", "unsupported_file_type");
     const bytes = Buffer.from(f.base64, "base64");
     if (bytes.length > FILE_MAX) fail("invalid-argument", "file_too_large");
-    const scope = aspId ?? "client";
     // DECISIONS b5 / D29 (step 4 revision): kind is in the path so storage.rules gate reads by kind.
-    const path = `documents/${scope}/${kind}/${documentId}/${i + 1}.${ext}`;
+    const path = `documents/${aspId}/${kind}/${documentId}/${i + 1}.${ext}`;
     await bucket().file(path).save(bytes, { contentType: f.contentType, resumable: false });
     paths.push(path);
   }
@@ -88,7 +87,8 @@ const lineSchema = z.union([
 
 const fileSchema = z.object({ base64: z.string().max(8_000_000), contentType: z.string().max(100) });
 
-const documents = {
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const documents = {
   // §11.2: creates or replaces a document (new version). Writes expectedCodes and fills models for pieces of that ASP.
   saveDocument: op({
     roles: ["asp_admin", "asp_warehouse", "client_admin"],
@@ -96,7 +96,6 @@ const documents = {
       documentId: z.string().optional(),
       kind: z.enum(DOC_KINDS),
       number: z.string().trim().min(1).max(120),
-      aspId: z.string().nullable().optional(),
       locationId: z.string().min(1),
       linesSource: z.enum(["excel", "manual"]),
       lines: z.array(lineSchema).max(5000),
@@ -104,20 +103,21 @@ const documents = {
       shipmentId: z.string().optional(),
     }),
     handler: async (ctx, d) => {
-      const aspId = isClientRole(ctx.role) ? (d.aspId ?? null) : ctx.orgId!;
-      await ensureCanWrite(ctx, d.kind, aspId, d.locationId);
+      const aspId = await ensureCanWrite(ctx, d.kind, d.locationId);
+      const ref = d.documentId ? db.collection("documents").doc(d.documentId) : db.collection("documents").doc();
+      const prev = (await ref.get()).data();
+      // A new version never moves a document to another ASP or kind: its history would become readable there.
+      // Documents saved before P-49 by a client role have aspId null and take the ASP of their location.
+      if (prev && (prev.kind !== d.kind || (prev.aspId != null && prev.aspId !== aspId))) fail("permission-denied", "forbidden");
+      if (d.shipmentId && (await db.collection("shipments").doc(d.shipmentId).get()).get("fromAspId") !== aspId) fail("permission-denied", "forbidden");
       const normalized = d.lines.map((l): Line => l.kind === "serial"
         ? { kind: "serial", codeRaw: l.codeRaw, codeId: l.codeId || (computeCodeId(l.codeRaw) as string), materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, direction: l.direction }
         : { kind: "quantity", materialCode: l.materialCode ?? null, modelId: l.modelId ?? null, quantity: l.quantity, direction: l.direction });
       // Duplicate number for the same kind + ASP (warn only, UI shows previous).
-      const duplicates = aspId
-        ? await db.collection("documents").where("kind", "==", d.kind).where("aspId", "==", aspId).where("number", "==", d.number).limit(5).get()
-        : await db.collection("documents").where("kind", "==", d.kind).where("number", "==", d.number).limit(5).get();
-      const dup = duplicates.docs.find((x) => x.id !== (d.documentId ?? ""));
-      const ref = d.documentId ? db.collection("documents").doc(d.documentId) : db.collection("documents").doc();
+      const duplicates = await db.collection("documents").where("kind", "==", d.kind).where("aspId", "==", aspId).where("number", "==", d.number).limit(5).get();
+      const dup = duplicates.docs.find((x) => x.id !== ref.id);
       let paths: string[] = [];
       if (d.files && d.files.length) paths = await storeFiles(aspId, d.kind, ref.id, d.files);
-      const prev = (await ref.get()).data();
       const history = Array.isArray(prev?.history) ? prev!.history : [];
       if (prev) history.push({ at: Timestamp.now(), by: ctx.uid, lines: prev.lines, files: prev.files });
       await db.runTransaction(async (tx) => {
@@ -157,6 +157,8 @@ const documents = {
       } else {
         evs = (await db.collection("events").where("locationId", "==", doc!.locationId).get()).docs.filter((x) => ["remove_at_site", "install_at_site"].includes(x.get("type") as string));
       }
+      // §8.2: a voided scan ("undo last") is out of the replay, so it is out of the comparison too.
+      evs = evs.filter((x) => !x.get("voided"));
       const facts: EventFact[] = await Promise.all(evs.map(async (x) => {
         const e = x.data();
         const item = e.itemId ? (await db.collection("items").doc(e.itemId).get()).data() : null;
