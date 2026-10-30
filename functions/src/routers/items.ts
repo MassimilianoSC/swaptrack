@@ -168,16 +168,24 @@ export const items = {
       return { name: u && !u.deleted ? `${u.firstName} ${u.lastName}` : null };
     },
   }),
+  // §7.3, §4.8 (P-22): also for a user in the grace period, for scans made before the deactivation. In one
+  // transaction with the trigger's: if the event is not processed yet, the trigger copies its photos to the item.
   attachPhotos: op({
     roles: ["asp_admin", "asp_warehouse", "asp_technician"],
+    grace: true,
     schema: z.object({ eventId: z.string(), paths: z.array(z.string().max(300)).min(1).max(5) }),
     handler: async (ctx, d) => {
-      const e = (await db.collection("events").doc(d.eventId).get()).data();
-      if (!e || e.userId !== ctx.uid) fail("not-found", "event_not_found");
       const prefix = `photos/${ctx.orgId}/${d.eventId}/`;
       if (d.paths.some((p) => !p.startsWith(prefix))) fail("invalid-argument", "invalid_data");
-      if (e!.itemId) await db.collection("items").doc(e!.itemId).update({ photoPaths: FieldValue.arrayUnion(...d.paths) });
-      await db.collection("events").doc(d.eventId).update({ photoPaths: d.paths });
+      const ref = db.collection("events").doc(d.eventId);
+      await db.runTransaction(async (tx) => {
+        const e = (await tx.get(ref)).data();
+        if (!e || e.userId !== ctx.uid) fail("not-found", "event_not_found");
+        if (ctx.token.active !== true && !((e!.scannedAt?.toMillis?.() ?? Infinity) <= Number(ctx.token.disabledAt))) fail("permission-denied", "account_inactive");
+        // A later batch of photos of the same event adds to the earlier ones.
+        tx.update(ref, { photoPaths: FieldValue.arrayUnion(...d.paths) });
+        if (e!.itemId) tx.update(db.collection("items").doc(e!.itemId), { photoPaths: FieldValue.arrayUnion(...d.paths) });
+      });
     },
   }),
 };

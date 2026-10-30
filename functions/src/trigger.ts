@@ -234,6 +234,8 @@ export async function processEvent(id: string): Promise<void> {
         return null;
       }
       writeItem(tx, itemRef, r.before, r.state, catalogFrom(e, model), (locs.get(String(r.state.currentLocationId))?.region ?? null) as string | null);
+      // §7.3 (P-22): photos attached before the event was processed (attachPhotos found no item yet) join the item now.
+      if (Array.isArray(me.photoPaths) && me.photoPaths.length) tx.update(itemRef, { photoPaths: FieldValue.arrayUnion(...me.photoPaths) });
       const codeFields = { itemId: itemRef.id, aspId: r.state.currentAspId, pendingAspId: r.state.pendingAspId };
       if (codeRef && !code) tx.set(codeRef, { raw: codeRaw, norm: normalizeBarcode(codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), ...codeFields });
       else if (codeRef && e.type !== "relabel") tx.update(codeRef, codeFields);

@@ -20,6 +20,9 @@ export interface OpDef<S extends ZodTypeAny> {
   roles: readonly Role[] | "public";
   schema: S;
   rate?: [limit: number, windowSec: number];
+  // §4.8: a deactivated user in the grace period (claims active false, disabledAt set) may still call this op;
+  // the handler then checks that the data predates the deactivation.
+  grace?: boolean;
   handler: (ctx: Ctx, data: z.infer<S>) => Promise<unknown>;
 }
 
@@ -43,7 +46,7 @@ export function makeRouter(area: Area, handlers: Partial<Record<OpName, OpDef<an
     } else {
       const token = req.auth?.token as Record<string, unknown> | undefined;
       if (!req.auth || !token) fail("unauthenticated", "not_signed_in");
-      if (token!.active !== true) fail("permission-denied", "account_inactive");
+      if (token!.active !== true && !(def!.grace && typeof token!.disabledAt === "number")) fail("permission-denied", "account_inactive");
       const role = token!.role as Role;
       if (!(def!.roles as readonly string[]).includes(role)) fail("permission-denied", "forbidden");
       if (isAdminRole(role) && (await getSettings("auth")).mfaAdmins) {
