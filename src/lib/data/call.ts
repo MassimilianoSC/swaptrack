@@ -2,6 +2,7 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
 import { OPERATIONS, type OpName } from "@shared/operations";
+import { dropUndefined } from "./dropUndefined";
 
 export class OpError extends Error {
   constructor(public code: string) { super(code); }
@@ -9,7 +10,7 @@ export class OpError extends Error {
 
 export async function call<T = unknown>(op: OpName, data: unknown = {}): Promise<T> {
   try {
-    const res = await httpsCallable(functions, OPERATIONS[op])({ op, data });
+    const res = await httpsCallable(functions, OPERATIONS[op])({ op, data: dropUndefined(data) });
     return res.data as T;
   } catch (e) {
     const err = e as { code?: string; message?: string };
