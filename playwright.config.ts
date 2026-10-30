@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { DEV_PORT } from "./vite.config";
 
 // End-to-end tests of the demo paths (DA_FARE P-6 / P-23).
-// They run against the dev server (`yarn dev`, port 3000) and the Firebase emulators with the seed
-// (`yarn emulators`, then `yarn seed` and `yarn seed:full`). The emulators are NEVER started from here:
+// They run against the dev server (`yarn dev`, port DEV_PORT of vite.config.ts, REGISTRO D-22) and the Firebase
+// emulators with the seed (`yarn emulators`, then `yarn seed` and `yarn seed:full`). The emulators are NEVER started from here:
 // one instance per machine (REGISTRO D-4), start them first. `yarn e2e`, or `yarn e2e --project=desk`.
 export default defineConfig({
   testDir: "e2e",
@@ -15,7 +16,7 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [["list"], ["html", { outputFolder: ".playwright/report", open: "never" }]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${DEV_PORT}`,
     locale: "it-IT",
     timezoneId: "Europe/Rome",
     trace: "retain-on-failure",
@@ -32,8 +33,10 @@ export default defineConfig({
   ],
   webServer: {
     command: "yarn dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
+    url: `http://localhost:${DEV_PORT}`,
+    // Always our own dev server, started from this copy: if anything already answers on the port (another
+    // project, another copy of SwapTrack) Playwright stops at once instead of testing the wrong app (D-22).
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

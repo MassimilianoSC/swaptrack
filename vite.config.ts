@@ -6,17 +6,21 @@ import { readFileSync } from "node:fs";
 
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 const projectId = "demo-swaptrack";
+// Dev server port, dedicated to SwapTrack (REGISTRO D-22); playwright.config.ts reads it from here.
+export const DEV_PORT = 3010;
+// The emulator ports come from firebase.json only (REGISTRO D-21): one source of truth.
+const emulators = JSON.parse(readFileSync(new URL("./firebase.json", import.meta.url), "utf8")).emulators as Record<string, { port: number }>;
 
 // DEVELOPMENT ONLY (DECISIONS c3): the emulators are reached through the dev server, same origin.
-const to = (port: number, extra: ProxyOptions = {}): ProxyOptions => ({ target: `http://127.0.0.1:${port}`, changeOrigin: true, ...extra });
+const to = (emulator: string, extra: ProxyOptions = {}): ProxyOptions => ({ target: `http://127.0.0.1:${emulators[emulator].port}`, changeOrigin: true, ...extra });
 const emulatorProxy: Record<string, ProxyOptions> = {
-  "/identitytoolkit.googleapis.com": to(9099),
-  "/securetoken.googleapis.com": to(9099),
-  "/emulator": to(9099),
-  "/google.firestore.v1.Firestore": to(8180, { ws: true }),
-  "/v1/projects": to(8180),
-  "/v0/b": to(9199),
-  "/__functions": to(5001, { rewrite: (p) => p.replace(/^\/__functions/, `/${projectId}/europe-west1`) }),
+  "/identitytoolkit.googleapis.com": to("auth"),
+  "/securetoken.googleapis.com": to("auth"),
+  "/emulator": to("auth"),
+  "/google.firestore.v1.Firestore": to("firestore", { ws: true }),
+  "/v1/projects": to("firestore"),
+  "/v0/b": to("storage"),
+  "/__functions": to("functions", { rewrite: (p) => p.replace(/^\/__functions/, `/${projectId}/europe-west1`) }),
 };
 
 export default defineConfig({
@@ -56,7 +60,7 @@ export default defineConfig({
   ],
   server: {
     host: "0.0.0.0",
-    port: 3000,
+    port: DEV_PORT,
     strictPort: true,
     allowedHosts: true,
     hmr: process.env.VITE_HMR_CLIENT_PORT ? { clientPort: Number(process.env.VITE_HMR_CLIENT_PORT) } : undefined,
