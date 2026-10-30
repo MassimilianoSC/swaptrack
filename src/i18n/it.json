@@ -116,6 +116,7 @@
     "empty": "Nessun avviso aperto.",
     "kind": "Tipo",
     "count": "Conteggio",
+    "noDifferenceNow": "Nessuna differenza ora",
     "object": "Oggetto",
     "updated": "Aggiornato",
     "seen": "Visto",

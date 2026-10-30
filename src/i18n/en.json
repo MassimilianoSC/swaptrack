@@ -116,6 +116,7 @@
     "empty": "No open alerts.",
     "kind": "Kind",
     "count": "Count",
+    "noDifferenceNow": "No difference now",
     "object": "Object",
     "updated": "Updated",
     "seen": "Seen",

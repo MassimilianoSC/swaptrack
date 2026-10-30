@@ -6,6 +6,7 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchAlerts, type Alert } from "@/lib/data/documents";
+import { hasNoDifferenceNow, isAlertToWatch } from "@/lib/alertState";
 import type { Row } from "@/lib/data/db";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,8 +34,9 @@ export default function Alerts() {
         actions={<Button variant="ghost" onClick={() => setShowClosed(!showClosed)} data-testid="alerts-toggle-closed">{showClosed ? t("alerts.hideClosed") : t("alerts.showClosed")}</Button>} />
       {list.length === 0 ? <Empty title={t("alerts.empty")} /> : (
         <DataTable testId="alerts-table" rows={list} columns={[
-          { key: "kind", header: t("alerts.kind"), render: (a) => <Badge tone={a.closedAt ? "neutral" : "warning"}>{t(`alerts.kinds.${a.kind}`, { defaultValue: a.kind })}</Badge> },
-          { key: "n", header: t("alerts.count"), value: (a) => a.count, className: "tabular" },
+          { key: "kind", header: t("alerts.kind"), render: (a) => <Badge tone={isAlertToWatch(a) ? "warning" : "neutral"}>{t(`alerts.kinds.${a.kind}`, { defaultValue: a.kind })}</Badge> },
+          { key: "n", header: t("alerts.count"), value: (a) => hasNoDifferenceNow(a) ? t("alerts.noDifferenceNow") : a.count, className: "tabular",
+            render: (a) => hasNoDifferenceNow(a) ? <span className="text-muted" data-testid={`alerts-no-difference-${a.id}`}>{t("alerts.noDifferenceNow")}</span> : <>{a.count}</> },
           { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{a.documentId ?? a.shipmentId ?? a.locationId ?? "—"}</Link> },
           { key: "at", header: t("alerts.updated"), value: (a) => formatInstant(a.updatedAt?.toDate?.() ?? null, i18n.language) },
           { key: "seen", header: "", render: (a) => <Button size="sm" variant="ghost" onClick={() => seen(a.id)} disabled={busy || !!a.seenAt} data-testid={`alerts-seen-${a.id}`}><Eye className="h-4 w-4" />{a.seenAt ? t("alerts.seen") : t("alerts.markSeen")}</Button> },

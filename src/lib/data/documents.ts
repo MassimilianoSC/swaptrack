@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, Timestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Row } from "./db";
+import { isAlertToWatch } from "@/lib/alertState";
 
 export interface SwDocument {
   kind: "ddt_in" | "ddt_return" | "bom"; number: string; aspId: string | null; locationId: string;
@@ -37,7 +38,7 @@ export function watchAlerts(scope: { role: string; orgId: string }, cb: (v: Row<
 }
 
 export function watchOpenAlertCount(scope: { role: string; orgId: string }, cb: (n: number) => void) {
-  return watchAlerts(scope, (xs) => cb(xs.filter((a) => !a.closedAt).length));
+  return watchAlerts(scope, (xs) => cb(xs.filter(isAlertToWatch).length));
 }
 
 export interface Anomaly { type: string; eventId: string | null; itemId: string | null; locationId: string | null; aspId: string | null; detail: unknown; openedAt: Timestamp; resolution: string | null }

@@ -10,6 +10,7 @@ import { logoUrl } from "@/lib/data/storage";
 import { watchOpenAlertCount } from "@/lib/data/documents";
 import { isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
+import { ALERT_READER_ROLES } from "@/lib/alertState";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Menu, MenuTrigger, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "../ui/menu";
@@ -153,8 +154,10 @@ function AlertCounter() {
   const { t } = useTranslation();
   const { claims } = useSession();
   const [n, setN] = React.useState(0);
-  React.useEffect(() => claims?.orgId ? watchOpenAlertCount({ role: claims.role!, orgId: claims.orgId }, setN) : undefined, [claims]);
-  if (!claims?.role || !["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"].includes(claims.role)) return null;
+  // Only the roles that read alerts subscribe (the rules refuse them to the technician).
+  const reads = !!claims?.role && ALERT_READER_ROLES.includes(claims.role);
+  React.useEffect(() => reads && claims?.orgId ? watchOpenAlertCount({ role: claims.role!, orgId: claims.orgId }, setN) : undefined, [claims, reads]);
+  if (!reads) return null;
   return (
     <Link to="/alerts" className="relative inline-flex items-center min-h-touch px-2" aria-label={t("nav.alerts")} data-testid="topbar-alert-counter">
       <Bell className="h-5 w-5" aria-hidden />
