@@ -156,8 +156,10 @@ export async function produceReport(scope: string, month: string, start: Date, e
   };
   const lang = await getOrgLanguage(scope);
   const byTypeArr: Array<[string, number]> = [...byType.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  const pdfBuf = await buildReportPdf({ lang, scope, month, summary, byType: byTypeArr });
-  const xlsxBuf = await buildReportXlsx({ lang, scope, month, summary, byType: byTypeArr });
+  // P-64: an ASP's report shows its own name (the client's covers all ASPs and names none).
+  const scopeName = scope === "client" ? null : ((await db.collection("organizations").doc(scope).get()).get("name") as string | undefined) ?? null;
+  const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, summary, byType: byTypeArr });
+  const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, summary, byType: byTypeArr });
   const pdfPath = `reports/${scope}/${month}.pdf`;
   const xlsxPath = `reports/${scope}/${month}.xlsx`;
   await bucket().file(pdfPath).save(pdfBuf, { contentType: "application/pdf", resumable: false });

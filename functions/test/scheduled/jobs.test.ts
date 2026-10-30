@@ -202,5 +202,12 @@ describe("monthlyReports (§13.4)", () => {
     const [xlsx] = await bucket.file(`reports/${NORD}/2026-10.xlsx`).download();
     expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     expect(xlsx.subarray(0, 2).toString()).toBe("PK");
+    // P-64: an ASP's report shows its own name, not its id.
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(xlsx);
+    const cells = wb.worksheets[0].getSheetValues().flat().map(String);
+    expect(cells).toContain("ASP Nord");
+    expect(cells).not.toContain(NORD);
   });
 });

@@ -38,12 +38,14 @@ export interface ReportSummary {
 export async function buildReportPdf(opts: {
   lang: Lang;
   scope: string;
+  // Name of the ASP of the report (its own organization); the id is shown only if the name is missing.
+  scopeName?: string | null;
   month: string;
   summary: ReportSummary;
   byType: Array<[string, number]>;
 }): Promise<Buffer> {
-  const { lang, scope, month, summary, byType } = opts;
-  const scopeLabel = scope === "client" ? reportT(lang, "report.allAsps") : scope;
+  const { lang, scope, scopeName, month, summary, byType } = opts;
+  const scopeLabel = scope === "client" ? reportT(lang, "report.allAsps") : scopeName || scope;
   const now = new Date();
   const dateStr = now.toISOString().replace("T", " ").slice(0, 16);
   const indicator = reportT(lang, "report.indicator");
@@ -107,12 +109,14 @@ export async function buildReportPdf(opts: {
 export async function buildReportXlsx(opts: {
   lang: Lang;
   scope: string;
+  // Name of the ASP of the report (its own organization); the id is shown only if the name is missing.
+  scopeName?: string | null;
   month: string;
   summary: ReportSummary;
   byType: Array<[string, number]>;
 }): Promise<Buffer> {
-  const { lang, scope, month, summary, byType } = opts;
-  const scopeLabel = scope === "client" ? reportT(lang, "report.allAsps") : scope;
+  const { lang, scope, scopeName, month, summary, byType } = opts;
+  const scopeLabel = scope === "client" ? reportT(lang, "report.allAsps") : scopeName || scope;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wb = new (excel()).Workbook();
   wb.creator = "SwapTrack";
