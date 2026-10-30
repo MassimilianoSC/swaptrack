@@ -26,6 +26,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-10 | Prove sulle regole di sicurezza: parte Firestore fatta (tutte verdi, nessuna falla, quattro regole troppo strette corrette); parte Storage in scrittura, con le due strette di D-25, da lanciare al turno degli emulatori | o2 |
 | P-23 | Prove end-to-end (Playwright): impianto e percorsi 6, 5, raffica e parte DDT del 2 scritti; primo giro da lanciare col turno degli emulatori (rosse/verdi da dimostrare) | o3 |
 | P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
+| P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27); via dato, costruzione mentre aspetta il turno | o3 |
 | P-52 | Difetto riparato da o2 (commit locale 96f4363, da portare su main col turno): il resoconto chiesto dal cliente usciva sempre col mese precedente (ottobre → «2026-09», sovrascrivendo il file di settembre); il lavoro mensile sbagliava solo a gennaio («2027-00»). Funzione pura `reportMonth.ts` con prove | o2 |
 | P-51 | Script degli emulatori: `FUNCTIONS_DISCOVERY_TIMEOUT=60` (D-26) e modalità `--run "<comando>"` che avvia, esegue, chiude per PID e verifica le porte; poi le e2e e le prove con emulatori girano solo così | o2 |
 | P-49 | Difetto (o2, da confermare con una prova rossa): i documenti caricati dai ruoli cliente nascono con `aspId` nullo (l'app non lo manda, il server non lo ricava dal luogo): l'ASP non vede la BOM del suo sito né il DDT del suo magazzino, niente avviso BOM, `expectedCodes` senza ASP, file sotto `documents/client/…`. Rimedio: `aspId` sempre dal luogo, per tutti i ruoli | o2 |
@@ -41,8 +42,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-22 | Foto con la coda senza rete, da capo a fondo, con l'emulatore Storage | o3 (schermata) + o2 (`attachPhotos`) | 2 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-43 | Pagina del pezzo: la categoria di smistamento compare come id grezzo (`cat_refurbish`) invece dell'etichetta («Ricondizionamento»); difetto, niente via | o3 | 3 |
-| P-25 | Categoria suggerita anche in modalità «Arrivo» (SPEC §12.2: smistare nello stesso passaggio); oggi appare solo in «Smista»; stima da chiedere a o3 dopo P-24 | o3 | 4 |
 | P-45 | `ARCHITECTURE.md` elenca solo le collezioni del passo 2: completare con items, codes, anomalie, documenti, spedizioni, alert, aggregati, report, export, expectedCodes, documentMappings | o2 | 5 |
 | P-30 | Procedura di pubblicazione a lotti per il committente, con uno script che controlla ogni passo | reg (procedura) + o2 (script in `scripts/`) | 2 |
 | P-31 | Documentazione per l'utente e per il collaudo della demo | reg | 3 |
@@ -52,6 +51,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi | Quando |
 |---|---|---|---|
 | P-12 | Scelta D25 verificata contro SPEC §9.2: si tiene (D-19), nessuna modifica | o2 | 30/10/2026 |
+| P-43 | Pagina del pezzo: categoria di smistamento col nome invece dell'id (la e2e del percorso 3 confermava il difetto: corretta) | o3 | 30/10/2026 (commit ac804e5) |
 | P-6 | Percorsi della demo approvati dal committente (D-24): i sette di DA_FARE | committente | 30/10/2026 |
 | P-7 | Il lotto 0 online corrisponde al commit 5e66bb4 (logo e pulsante «Installa» presenti) | committente | 30/10/2026 |
 | P-47 | Porte dedicate degli emulatori (D-21) e server di sviluppo sulla 3010 (D-22), una sola fonte per ciascuna (`firebase.json`, `vite.config.ts`) | o2 + o3 | 30/10/2026 (commit 9e2a728, d21fb8f, cf2eefe, f8ec635) |

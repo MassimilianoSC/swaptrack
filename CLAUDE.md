@@ -80,6 +80,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - Prima di una funzione nuova: stima (ore, rischio) alla memoria storica e attesa del via. Le riparazioni di difetti non hanno bisogno del via.
 - Ogni difetto riparato ha una prova che è rossa sul codice di prima. Un difetto trovato strada facendo si ripara subito e si dichiara.
 - Una prova che scrive usa dati propri, mai dati condivisi che altre prove contano.
+- L'atteso di una prova viene dalla specifica o dalla misura scritta in DA_FARE, mai da ciò che l'app fa oggi: una prova che «passa» sul comportamento sbagliato non è una prova (è successo il 30/10 con la categoria mostrata come id).
 - Quando cambia la firma di un'operazione o la forma di una risposta, si cercano nel repository tutti i punti e le prove che la usano.
 - Una frase che dichiara una garanzia («nessuno lo usa», «non si può») si verifica sul codice. Una misura assurda: il primo sospettato è lo strumento.
 - I numeri (quante prove, quanti file) non si scrivono nei documenti: si rilanciano i comandi.
