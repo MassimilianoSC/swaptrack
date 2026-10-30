@@ -60,4 +60,34 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     await expect(page.getByTestId("item-sorting-category")).toHaveText(SEED.sorting.radioCategoryLabelIt);
     await expect(page.getByTestId("main-content")).not.toContainText(SEED.sorting.radioCategoryId);
   });
+
+  // SPEC §12.2 / P-25 (D-27): "can sort in the same pass (the suggested category appears at each reading)".
+  test("arrivo con «Smista nello stesso passaggio»: categoria suggerita alla lettura, pezzo smistato senza passare da «Smista»", async ({ page }) => {
+    test.setTimeout(240_000);
+    const code = uniqueCode("S");
+
+    await signIn(page, ACCOUNTS.aspTechnicianNord);
+    await pickLocation(page, SEED.nord.site);
+    await page.goto("/scan?mode=remove_at_site");
+    await scanManual(page, code, { withModel: true });
+    await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    await signOut(page);
+
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    const itemId = await waitForPiece(page, code);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=arrive_at_warehouse");
+    await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
+    const sortNow = page.getByTestId("scan-sort-now");
+    await expect(sortNow).not.toBeChecked(); // arrival only unless the worker chooses otherwise
+    await sortNow.check();
+    await scanManual(page, code);
+    await expect(page.getByTestId("scan-suggested-category")).toContainText(SEED.sorting.radioCategoryLabelIt);
+    await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    await expect(page.getByTestId("scan-session-count")).toHaveText("1");
+
+    await page.goto(`/items/${itemId}`);
+    await expect(page.getByTestId("item-status")).toContainText(tr("items.statuses.sorted"), { timeout: 60_000 });
+    await expect(page.getByTestId("item-sorting-category")).toHaveText(SEED.sorting.radioCategoryLabelIt);
+  });
 });

@@ -266,6 +266,8 @@
     "category": "Categoria",
     "useSuggested": "Usa la categoria suggerita",
     "sortLater": "Solo arrivo (smisto dopo)",
+    "sortNow": "Smista nello stesso passaggio",
+    "toSortLater": "{{code}}: nessuna categoria suggerita, da smistare dopo",
     "newClass": "Materiale nuovo",
     "removedMaterial": "Materiale smontato (categoria)",
     "defective": "Difettoso",

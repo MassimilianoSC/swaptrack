@@ -50,6 +50,10 @@ export default function Scan() {
   const [wedge, setWedge] = React.useState("");
   const [manual, setManual] = React.useState("");
   const [flow, setFlow] = React.useState("removed");
+  // §12.2 / P-25 (D-27): arrival of removed material can sort in the same pass; off by default (arrival only).
+  const [sortNow, setSortNow] = React.useState(false);
+  const sortsOnArrival = mode === "arrive_at_warehouse" && flow === "removed" && sortNow;
+  const suggests = mode === "classify" || sortsOnArrival;
   const [newClass, setNewClass] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [suggested, setSuggested] = React.useState<string | null>(null);
@@ -188,7 +192,13 @@ export default function Scan() {
 
   const buildPayload = (): Record<string, unknown> => {
     const payload: Record<string, unknown> = {};
-    if (mode === "arrive_at_warehouse") { payload.flow = flow; if (category) payload.categoryId = category; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId; }
+    if (mode === "arrive_at_warehouse") {
+      payload.flow = flow; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId;
+      // Sorting in the same pass: the category chosen in the list, otherwise the piece's suggestion; none = arrival only.
+      const sug = sortsOnArrival ? suggestedRef.current : null;
+      if (category || sug) payload.categoryId = category || sug;
+      if (sug) payload.suggestedCategoryId = sug;
+    }
     if (mode === "classify") {
       const sug = suggestedRef.current;
       if (newClass) payload.newClass = newClass; else payload.categoryId = category || sug;
@@ -210,7 +220,7 @@ export default function Scan() {
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
     setSession((s) => [{ id, code, type: mode }, ...s]);
     setLastEventId(id);
-    show(code, "ok");
+    if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
   };
 
   const onCode = async (raw: string, source: Source) => {
@@ -218,7 +228,7 @@ export default function Scan() {
     if (!code) return;
     if (pendingSerial) { const p = pendingSerial; setPendingSerial(null); return record(p.code, p.source, code); }
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
-    if (mode === "classify") {
+    if (suggests) {
       const it = await cachedItemForCode(code);
       const s = it ? suggestCategory(sorting.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }) : null;
       suggestedRef.current = s;
@@ -315,7 +325,8 @@ export default function Scan() {
       )}
       {(mode === "classify" || (mode === "arrive_at_warehouse" && flow === "removed")) && (
         <div className="space-y-2">
-          {mode === "classify" && suggested && (
+          {mode === "arrive_at_warehouse" && <Checkbox id="scan-sort-now" label={t("scan.sortNow")} checked={sortNow} onChange={setSortNow} testId="scan-sort-now" />}
+          {suggests && suggested && (
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-3xl font-bold text-primary" data-testid="scan-suggested-category">{t("scan.suggested")}: {catLabel(suggested)}</p>
               {/* §10: for previousFlow=new pieces, also say "installed new material". */}
@@ -323,7 +334,7 @@ export default function Scan() {
             </div>
           )}
           <Select aria-label={t("scan.category")} value={category} onChange={(e) => { setCategory(e.target.value); setNewClass(""); }} data-testid="scan-category-select">
-            <option value="">{mode === "classify" ? t("scan.useSuggested") : t("scan.sortLater")}</option>
+            <option value="">{suggests ? t("scan.useSuggested") : t("scan.sortLater")}</option>
             {sorting.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{c.labels[i18n.language as "it" | "en"]}</option>)}
           </Select>
           {mode === "classify" && (

@@ -266,6 +266,8 @@
     "category": "Category",
     "useSuggested": "Use the suggested category",
     "sortLater": "Arrival only (sort later)",
+    "sortNow": "Sort in the same pass",
+    "toSortLater": "{{code}}: no suggested category, sort later",
     "newClass": "New material",
     "removedMaterial": "Removed material (category)",
     "defective": "Defective",
