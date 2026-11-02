@@ -43,7 +43,8 @@ export default function DocumentDetail() {
     void loadDocument(id).then((d) => {
       if (!d) return;
       setDoc(d); setKind(d.kind); setNumber(d.number); setLocationId(d.locationId);
-      setRawLines((d.lines as Line[]).map((l) => l.kind === "serial" ? l.codeRaw : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}${l.direction ? ` [${l.direction}]` : ""}`).join("\n"));
+      // A serial line keeps its direction too (P-74): saving again must not drop "[remove]" / "[install]" from a BOM.
+      setRawLines((d.lines as Line[]).map((l) => l.kind === "serial" ? `${l.codeRaw}${l.direction ? ` [${l.direction}]` : ""}` : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}${l.direction ? ` [${l.direction}]` : ""}`).join("\n"));
     });
   }, [id, isNew, reloadKey]);
 
