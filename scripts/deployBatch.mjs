@@ -41,7 +41,11 @@ step("Emulator ports free (the tests start their own emulators)");
 const busy = await busyPorts(portsOf(["auth", "firestore", "functions", "storage", "pubsub"]));
 if (busy.length) fail(`port(s) ${busy.join(", ")} in use: close the emulators first`);
 
-step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end");
+step("Dependencies exactly as in the lockfiles (a dependency added since the last install, e.g. Playwright, would fail later)");
+run("yarn", ["install", "--frozen-lockfile"]);
+run("yarn", ["--cwd", "functions", "install", "--frozen-lockfile"]);
+
+step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end (seeded data imported, P-71)");
 run("yarn", ["build:functions"]);
 run("yarn", ["test"]);
 run("yarn", ["check:i18n"]);
