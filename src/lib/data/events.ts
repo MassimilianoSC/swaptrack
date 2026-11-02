@@ -1,5 +1,5 @@
 // Field events (R3): the only documents the client creates. Written without awaiting the server (offline queue).
-import { collection, doc, setDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDocFromCache, getDocsFromCache, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDoc, getDocFromCache, getDocsFromCache, getDocs, Timestamp, documentId, startAfter, limit, type Query, type DocumentReference, type DocumentSnapshot, type QuerySnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { computeCodeId, NORM_VERSION, normalizeBarcode } from "@/lib/codeId.js";
 import { scanInstant } from "@/lib/clockOffset.js";
@@ -41,13 +41,20 @@ export function isProductCode(raw: string, materialCodes: string[]): boolean {
   return materialCodes.some((m) => normalizeBarcode(m) === n);
 }
 
-// Item of a code from the offline cache (codes/items of the ASP loaded at sign-in, DECISIONS b7).
+// P-78: online first, briefly (a piece created after the cache was loaded is found), else the offline cache
+// (no network or weak signal: the answer never waits more than QUICK_MS).
+const QUICK_MS = 2000;
+const late = <T,>(): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), QUICK_MS));
+const quickDoc = (ref: DocumentReference): Promise<DocumentSnapshot> => Promise.race([getDoc(ref), late<DocumentSnapshot>()]).catch(() => getDocFromCache(ref));
+const quickDocs = (q: Query): Promise<QuerySnapshot> => Promise.race([getDocs(q), late<QuerySnapshot>()]).catch(() => getDocsFromCache(q));
+
+// Item of a code (codes/items of the ASP, DECISIONS b7): from the server when it answers at once, else from the cache.
 export async function cachedItemForCode(raw: string): Promise<Record<string, unknown> | null> {
   try {
-    const code = await getDocFromCache(doc(db, "codes", await computeCodeId(raw)));
+    const code = await quickDoc(doc(db, "codes", await computeCodeId(raw)));
     const itemId = code.get("itemId");
     if (!itemId) return null;
-    const it = await getDocFromCache(doc(db, "items", itemId));
+    const it = await quickDoc(doc(db, "items", itemId));
     return it.exists() ? it.data() : null;
   } catch { return null; }
 }
@@ -66,27 +73,46 @@ export async function primeFieldCache(orgId: string, role: string): Promise<bool
     query(collection(db, "models"), where("active", "==", true)),
   ];
   if (role === "asp_warehouse" || role === "asp_admin") qs.push(query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("status", "==", "open")));
-  const fresh = await Promise.all(qs.map((q) => getDocs(q).then((s) => !s.metadata.fromCache).catch(() => getDocsFromCache(q).then(() => false, () => false))));
-  return fresh.every(Boolean);
+  // P-78: the big collections (items, codes: thousands of documents) are loaded in pages, one after the other, so the
+  // writes of a whole collection into the local cache never hold up the scans in the meantime.
+  let ok = true;
+  for (const q of qs.slice(0, 3)) ok = (await loadInPages(q)) && ok;
+  const rest = await Promise.all(qs.slice(3).map((q) => getDocs(q).then((s) => !s.metadata.fromCache).catch(() => getDocsFromCache(q).then(() => false, () => false))));
+  return ok && rest.every(Boolean);
 }
 
-// §12.2 / P-24: the open DDTs of a warehouse, from the local cache (never chosen by themselves: the user picks one).
+const PAGE = 300;
+async function loadInPages(q: Query): Promise<boolean> {
+  let last: DocumentSnapshot | null = null;
+  for (;;) {
+    const page = last ? query(q, orderBy(documentId()), startAfter(last), limit(PAGE)) : query(q, orderBy(documentId()), limit(PAGE));
+    let s: QuerySnapshot;
+    try { s = await getDocs(page); } catch { return false; }
+    if (s.metadata.fromCache) return false;
+    if (s.size < PAGE) return true;
+    last = s.docs[s.docs.length - 1];
+    await new Promise((r) => setTimeout(r, 0)); // let the scans queued meanwhile run
+  }
+}
+
+// §12.2 / P-24: the open DDTs of a warehouse (never chosen by themselves: the user picks one); P-78: a DDT created
+// after the cache was loaded is offered too. The aspId filter lets the rules accept the query.
 export interface CachedDdt { id: string; number: string; lines: Array<Record<string, unknown>> }
-export async function cachedOpenDdtsForWarehouse(locationId: string): Promise<CachedDdt[]> {
+export async function cachedOpenDdtsForWarehouse(locationId: string, orgId: string): Promise<CachedDdt[]> {
   try {
-    const q = query(collection(db, "documents"), where("kind", "==", "ddt_in"), where("locationId", "==", locationId));
-    const snap = await getDocsFromCache(q);
+    const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("locationId", "==", locationId));
+    const snap = await quickDocs(q);
     return snap.docs.filter((d) => d.get("status") === "open")
       .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [] }))
       .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
   } catch { return []; }
 }
 
-// §12.1: BOM for a site read from the local cache. Open or checked, highest version.
-export async function cachedBomForSite(locationId: string): Promise<{ id: string; lines: Array<Record<string, unknown>>; createdAtMs: number } | null> {
+// §12.1: BOM for a site, open or checked, highest version (server first, briefly, else the cache: P-78).
+export async function cachedBomForSite(locationId: string, orgId: string): Promise<{ id: string; lines: Array<Record<string, unknown>>; createdAtMs: number } | null> {
   try {
-    const q = query(collection(db, "documents"), where("kind", "==", "bom"), where("locationId", "==", locationId));
-    const snap = await getDocsFromCache(q);
+    const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "bom"), where("locationId", "==", locationId));
+    const snap = await quickDocs(q);
     const docs = snap.docs.filter((d) => ["open", "checked"].includes(d.get("status") as string));
     if (!docs.length) return null;
     docs.sort((a, b) => (b.get("version") ?? 0) - (a.get("version") ?? 0));

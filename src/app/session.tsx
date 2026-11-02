@@ -139,14 +139,22 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role)) return;
     // One load at a time; at resume only if the last complete load is older than 10 minutes (D-36: thousands of reads).
     // A load cut halfway by the network leaves the time where it was: the technician can see it is not ready.
+    // The time survives a page reload of this tab (P-78), so a reload does not load thousands of documents again.
+    const key = `swaptrack.fieldCacheAt.${user.uid}`;
     let running = false;
     let lastOk = 0;
+    try { lastOk = Number(sessionStorage.getItem(key) ?? 0) || 0; } catch { /* storage unavailable */ }
     const prime = () => {
       if (running) return;
       running = true;
-      void primeFieldCache(orgId, role).then((ok) => { if (ok) { lastOk = Date.now(); setFieldCacheAt(lastOk); } }, () => undefined).finally(() => { running = false; });
+      void primeFieldCache(orgId, role).then((ok) => {
+        if (!ok) return;
+        lastOk = Date.now();
+        setFieldCacheAt(lastOk);
+        try { sessionStorage.setItem(key, String(lastOk)); } catch { /* storage unavailable */ }
+      }, () => undefined).finally(() => { running = false; });
     };
-    prime();
+    if (Date.now() - lastOk > PRIME_RESUME_MS) prime(); else setFieldCacheAt(lastOk);
     const onVis = () => { if (document.visibilityState === "visible" && Date.now() - lastOk > PRIME_RESUME_MS) prime(); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);

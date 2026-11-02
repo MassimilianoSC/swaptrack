@@ -44,7 +44,8 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await expect(topbar).toBeVisible({ timeout: 30_000 });
 }
 
-// Field roles: choose a site or a warehouse by its code in the site picker (home).
+// Field roles: choose a site or a warehouse by its code in the site picker (home), right after the sign-in, while the
+// ASP's offline cache may still be loading (the real case, P-78): nothing waits for it.
 export async function pickLocation(page: Page, code: string): Promise<void> {
   await page.goto("/");
   await page.getByTestId("site-picker-search").fill(code);

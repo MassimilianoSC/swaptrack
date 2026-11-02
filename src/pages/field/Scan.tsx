@@ -95,11 +95,11 @@ export default function Scan() {
   // The list comes from the cache the session loads at sign-in (P-73); it is read again when that load completes.
   React.useEffect(() => { setDdtId(""); }, [ddtApplies, location]);
   React.useEffect(() => {
-    if (!ddtApplies || !location) { setDdts([]); return; }
+    if (!ddtApplies || !location || !claims?.orgId) { setDdts([]); return; }
     let aborted = false;
-    void cachedOpenDdtsForWarehouse(location.id).then((list) => { if (!aborted) setDdts(list); });
+    void cachedOpenDdtsForWarehouse(location.id, claims.orgId).then((list) => { if (!aborted) setDdts(list); });
     return () => { aborted = true; };
-  }, [ddtApplies, location, fieldCacheAt]);
+  }, [ddtApplies, location, fieldCacheAt, claims?.orgId]);
 
   // The serial lines of the chosen DDT, by codeId (the same identity the trigger uses, R8).
   React.useEffect(() => {
@@ -143,8 +143,8 @@ export default function Scan() {
 
   // §12.1: load the BOM of the current site (if any) from the ASP cache; direction filters the lines shown.
   React.useEffect(() => {
-    if (!location || !bomDirection || location.type !== "site") { setBom(null); return; }
-    void cachedBomForSite(location.id).then(async (b) => {
+    if (!location || !bomDirection || location.type !== "site" || !claims?.orgId) { setBom(null); return; }
+    void cachedBomForSite(location.id, claims.orgId).then(async (b) => {
       if (!b) { setBom(null); return; }
       const expected: Array<{ codeRaw: string; codeId: string }> = [];
       for (const raw of b.lines) {
@@ -155,7 +155,7 @@ export default function Scan() {
       }
       setBom({ id: b.id, expected, createdAtMs: b.createdAtMs });
     });
-  }, [location, bomDirection, fieldCacheAt]);
+  }, [location, bomDirection, fieldCacheAt, claims?.orgId]);
 
   // §12.1: ticks are computed on the device from the user's own events (local, including pending writes).
   // Joined with the BOM's expected codeIds; anything not expected goes to the unexpected list.
