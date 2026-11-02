@@ -35,8 +35,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
 | P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
 
-| P-84 | Script per cambiare la password di tutti gli account demo sul progetto vero (P-2), richiesta nascosta, solo dominio di prova | o2 |
-| P-85 | **Difetto (criterio 3):** dopo l'accesso del magazziniere Nord col seed completo l'app resta su «Caricamento…» (la porta della privacy aspetta un documento che arriva in fila dietro il caricamento della cache). Rimedio di o3: la porta non blocca, il caricamento della cache parte dopo profilo e privacy; e2e: schermata principale entro 10 s. Da verificare subito anche online | o3 |
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
@@ -57,6 +55,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-85 | Accesso non più fermo su «Caricamento…»: la cache parte dopo profilo e informativa, e dopo 8 s la schermata si apre comunque (informativa obbligatoria rispettata) | o3 | 02/11/2026 (3ef1bbb) |
+| P-84 | `scripts/setDemoPassword.mjs` (password nuova a tutti gli account demo, nascosta, mai salvata) e seed che non la rimette sul progetto vero | o2 | 02/11/2026 (3e54adf) |
 | P-82 | `deployBatch.mjs --yes` salta il giro delle prove già superato sullo stesso commit (24 ore); git, installazione e build sempre | o2 | 02/11/2026 (893679a) |
 | P-69 | Foto non più «perse» per la rete: solo errori permanenti, contati al più uno ogni 15 minuti; una sola coda alla volta | o3 | 02/11/2026 (5bd81f6, 2aa2968) |
 | P-81 | Pagina Esportazioni con tutti i filtri della specifica (sito/magazzino, modello, ASP, categoria, periodo) | o3 | 02/11/2026 (9ce5040) |

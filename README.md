@@ -34,7 +34,7 @@ yarn e2e         # end-to-end tests of the demo paths (e2e/): builds functions, 
 Unit tests cover pure logic (state machine, sorting precedence, document comparison, code parity, report month, Firestore indexes, emulator ports). The tests on the emulators cover the security rules (Firestore and Storage), the trigger and replay, the scheduled jobs.
 
 ## Seeded accounts (emulators only, invented)
-Password for all: `SwapDemo2026`
+Password for all, on the emulators only: `SwapDemo2026`. The demo project online has its own password, set by the owner with `scripts/setDemoPassword.mjs` and never written in the repository.
 
 | E-mail | Role | Organization |
 |---|---|---|
@@ -67,7 +67,7 @@ Password for all: `SwapDemo2026`
 - Alias: `demo` → `kronos-caffe-sito` (`firebase deploy --project demo`).
 - Firestore and Storage in `europe-west1`; Identity Platform enabled; Blaze plan on the owner's personal billing account.
 - When a proper project is available (company workspace or quota increase), create it, deploy there and retire this one: nothing in the code depends on this project ID.
-- Demo data on the real project (invented data only): `gcloud auth application-default login`, then `SEED_REAL_PROJECT=kronos-caffe-sito node scripts/seed.mjs --yes-real-project` followed by the same for `scripts/fullSeed.mjs` (PowerShell: first `$env:SEED_REAL_PROJECT="kronos-caffe-sito"`, then `node scripts/seed.mjs --yes-real-project`). Without both the variable and the argument the scripts only touch the emulators. The same pattern (`CHECK_REAL_PROJECT`, `FIX_REAL_PROJECT`) protects `scripts/checkOnline.mjs` (read-only counts) and `scripts/fixDocumentAsp.mjs`.
+- Demo data on the real project (invented data only): `gcloud auth application-default login`, then `SEED_REAL_PROJECT=kronos-caffe-sito node scripts/seed.mjs --yes-real-project` followed by the same for `scripts/fullSeed.mjs` (PowerShell: first `$env:SEED_REAL_PROJECT="kronos-caffe-sito"`, then `node scripts/seed.mjs --yes-real-project`). Without both the variable and the argument the scripts only touch the emulators. The same pattern (`CHECK_REAL_PROJECT`, `FIX_REAL_PROJECT`) protects `scripts/checkOnline.mjs` (read-only counts) and `scripts/fixDocumentAsp.mjs`. On the real project `scripts/seed.mjs` never changes the password of an existing account and asks one (hidden) only for new accounts. To change the password of every demo account: `$env:DEMO_PASSWORD_REAL_PROJECT="kronos-caffe-sito"`, then `node scripts/setDemoPassword.mjs --yes-real-project` (it counts the accounts, asks for confirmation, then the new password twice; nothing is printed or stored).
 
 ## Deployment (done by the owners, never from the build environment)
 ```bash
