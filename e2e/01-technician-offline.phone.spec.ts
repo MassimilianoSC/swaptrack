@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, scanManual, uniqueCode, tr } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 1 (DA_FARE P-6): the ASP technician on the phone, without network. Sign-in, site chosen from the offline
@@ -33,14 +33,13 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
     await signOut(page);
 
-    // 1. The technician signs in online and opens the scanning screen once: site list, ASP cache and catalog
-    //    (needed to pick the model of an unknown piece offline) are in the local cache.
+    // 1. The technician signs in online and never opens the scanning screen: site list, ASP cache and model catalog
+    //    must reach the offline cache at sign-in all the same (SPEC §6.1, §6.4; P-73). The app shows no signal for
+    //    the end of that load: a short wait stands in for the minutes a technician spends before losing signal.
     await signIn(page, ACCOUNTS.aspTechnicianNord);
-    await pickLocation(page, SEED.nord.site);
-    await page.goto("/scan?mode=remove_at_site");
-    await expect(page.getByTestId("scan-screen")).toBeVisible();
-    await page.getByTestId("topbar-location").click(); // back to the site picker inside the app
+    await page.goto("/");
     await expect(page.getByTestId("site-picker-offline-info")).toBeVisible();
+    await page.waitForTimeout(8000);
 
     // 2. Airplane mode: the site is found in the offline list, the scanning screen opens inside the app.
     await context.setOffline(true);
@@ -49,6 +48,7 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await expect(page.getByTestId("site-picker-selected")).toContainText(SEED.nord.site);
     await page.getByTestId("scan-fab").click();
     await expect(page.getByTestId("scan-screen")).toBeVisible();
+    // Unknown pieces: the model is picked from the catalog in the offline cache (before P-73 the list was empty).
     for (const c of codes) await scanManual(page, c, { withModel: true });
     for (const c of codes) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.waiting"));
     await page.getByTestId("scan-site-done").click();

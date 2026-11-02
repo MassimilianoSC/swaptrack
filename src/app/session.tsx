@@ -5,6 +5,8 @@ import { watchDoc, watchProfile, watchPendingEvents, type Row, type UserProfile 
 import { readCacheOwner, writeCacheOwner, countQueuedPhotos } from "@/lib/offline/deviceStore";
 import { clearDevice, requestPersistentStorage } from "@/lib/offline/device";
 import { flushQueue } from "@/lib/offline/photoQueue";
+import { primeFieldCache } from "@/lib/data/events";
+import { isAspRole } from "@shared/roles";
 import { measureOffset } from "@/lib/clockOffset.js";
 import { SETTINGS_DEFAULTS } from "@shared/settingsDefaults";
 
@@ -124,6 +126,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const c = watchDoc<Privacy>("settings/privacy", (v) => setPrivacy({ ...SETTINGS_DEFAULTS.privacy, ...(v ?? {}) }), () => setPrivacy(SETTINGS_DEFAULTS.privacy));
     return () => { a(); b(); c(); };
   }, [user, phase]);
+
+  // b7 / SPEC §6.1, §16 (P-73): the ASP's items, codes, documents and the model catalog go to the offline cache at
+  // sign-in and at every resume, not only when the scanning screen is opened.
+  const orgId = claims?.orgId;
+  const role = claims?.role;
+  React.useEffect(() => {
+    if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role)) return;
+    const prime = () => { void primeFieldCache(orgId, role).catch(() => undefined); };
+    prime();
+    const onVis = () => { if (document.visibilityState === "visible") prime(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [user, phase, orgId, role]);
 
   React.useEffect(() => {
     if (!user) return;
