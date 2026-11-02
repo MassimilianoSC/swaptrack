@@ -8,7 +8,7 @@ import { call } from "@/lib/data/call";
 import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
 import { listModels, type Model } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
-import { fileUrl } from "@/lib/data/storage";
+import { fileBlobUrl } from "@/lib/data/storage";
 import type { Row } from "@/lib/data/db";
 import { isAdminRole, isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -36,8 +36,8 @@ export default function ItemDetail() {
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
-  // SPEC §13.2 / P-70 (D-32): the piece's photos. A photo of another ASP (piece transferred, §9.4) is not readable:
-  // its URL comes back null and it is skipped silently.
+  // SPEC §13.2 / P-70 (D-32): the piece's photos, read with getBlob (D-35). A photo of another ASP (piece
+  // transferred, §9.4) is refused by the rules: it comes back null and is skipped silently.
   const [photoUrls, setPhotoUrls] = React.useState<string[]>([]);
   const [editing, setEditing] = React.useState(false);
   const [editModel, setEditModel] = React.useState<string>("");
@@ -82,8 +82,13 @@ export default function ItemDetail() {
   React.useEffect(() => {
     const paths = photoKey ? photoKey.split("|") : [];
     let aborted = false;
-    void Promise.all(paths.map(fileUrl)).then((urls) => { if (!aborted) setPhotoUrls(urls.filter((u): u is string => !!u)); });
-    return () => { aborted = true; };
+    let urls: string[] = [];
+    void Promise.all(paths.map(fileBlobUrl)).then((got) => {
+      urls = got.filter((u): u is string => !!u);
+      if (aborted) urls.forEach((u) => URL.revokeObjectURL(u)); else setPhotoUrls(urls);
+    });
+    // D-35: the local URLs are freed when the photos change or the page closes.
+    return () => { aborted = true; urls.forEach((u) => URL.revokeObjectURL(u)); };
   }, [photoKey]);
   React.useEffect(() => { if (item) { setEditModel(item.modelId ?? ""); setEditCondition(item.condition ?? ""); setForceStatus(item.status); } }, [item]);
 
