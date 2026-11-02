@@ -7,9 +7,28 @@ import { isClientRole } from "../shared/roles";
 import { produceReport } from "../scheduled";
 import { getOrgLanguage } from "../core/orgLang";
 import { buildExportXlsx } from "../shared/reportBuilders";
+import { exportRow, inPeriod, type ExportItem } from "../shared/reportData";
+import { placesByIds, orgNames, categoryLabels } from "../core/lookup";
 import { reportMonth } from "../shared/reportMonth";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+const EXPORT_MAX_ROWS = 10000;
+
+// itemId -> the label printed on the piece (active code), for the export's first column.
+async function activeCodes(itemIds: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  for (let i = 0; i < itemIds.length; i += 30 * 10) {
+    const batches = [];
+    for (let j = i; j < Math.min(i + 300, itemIds.length); j += 30) {
+      batches.push(db.collection("codes").where("itemId", "in", itemIds.slice(j, j + 30)).get());
+    }
+    for (const snap of await Promise.all(batches)) {
+      for (const c of snap.docs) if (c.get("active") !== false || !out[c.get("itemId")]) out[c.get("itemId")] = c.get("raw");
+    }
+  }
+  return out;
+}
 
 function assertScope(ctx: Ctx, scope: string) {
   if (scope === "client") { if (!isClientRole(ctx.role)) fail("permission-denied", "forbidden"); return; }
@@ -67,7 +86,9 @@ export const desk = {
     },
   }),
 
-  // §13.3 Excel export, headers in the organization's language (R14, D30).
+  // §13.3 Excel export, headers and values in the user's language (R14). Filters: site or warehouse (locationId),
+  // model, period (D-37: last scan of the piece within [from, to]), ASP, status, sorting category. Only equality
+  // filters go to Firestore (no composite index needed); the period is applied on the result.
   createExport: op({
     roles: ["client_admin", "client_office", "asp_admin"],
     rate: [10, 300],
@@ -77,6 +98,7 @@ export const desk = {
       aspId: z.string().optional(),
       locationId: z.string().optional(),
       modelId: z.string().optional(),
+      sortingCategoryId: z.string().optional(),
       from: z.number().int().optional(),
       to: z.number().int().optional(),
       language: z.enum(["it", "en"]).optional(),
@@ -88,24 +110,23 @@ export const desk = {
       if (d.status) q = q.where("status", "==", d.status);
       if (d.locationId) q = q.where("currentLocationId", "==", d.locationId);
       if (d.modelId) q = q.where("modelId", "==", d.modelId);
+      if (d.sortingCategoryId) q = q.where("sortingCategoryId", "==", d.sortingCategoryId);
       if (d.aspId && d.scope === "client") q = q.where("currentAspId", "==", d.aspId);
-      const snap = await q.limit(10000).get();
+      const items: ExportItem[] = (await q.get()).docs.map((x) => ({ id: x.id, ...x.data(), lastScannedAt: x.get("lastScannedAt")?.toMillis?.() ?? null }) as ExportItem)
+        .filter((it) => inPeriod(it.lastScannedAt, d.from, d.to)).slice(0, EXPORT_MAX_ROWS);
       const lang = d.language ?? (await getOrgLanguage(d.scope));
-      const rows = snap.docs.map((d2) => {
-        const it = d2.data();
-        const last = it.lastScannedAt?.toMillis?.() ? new Date(it.lastScannedAt.toMillis()).toISOString() : "";
-        return {
-          id: d2.id,
-          status: it.status ?? null, flow: it.flow ?? null, model: it.model ?? null, materialCode: it.materialCode ?? null,
-          manufacturer: it.manufacturer ?? null, equipmentType: it.equipmentType ?? null, location: it.currentLocationId ?? null,
-          asp: it.currentAspId ?? null, sortingCategory: it.sortingCategoryId ?? null, lastScanned: last,
-        };
-      });
+      const maps = {
+        codes: await activeCodes(items.map((it) => it.id)),
+        places: await placesByIds(items.map((it) => it.currentLocationId ?? "")),
+        orgNames: await orgNames(),
+        categories: await categoryLabels(lang),
+      };
+      const rows = items.map((it) => exportRow(it, lang, maps));
       const buf = await buildExportXlsx({ lang, rows });
       const path = `exports/${d.scope}/${Date.now()}.xlsx`;
       await bucket().file(path).save(buf, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", resumable: false });
-      const ref = await db.collection("exports").add({ scope: d.scope, filter: d, language: lang, path, rowCount: snap.size, createdAt: FieldValue.serverTimestamp(), createdBy: ctx.uid });
-      return { exportId: ref.id, path, rowCount: snap.size };
+      const ref = await db.collection("exports").add({ scope: d.scope, filter: d, language: lang, path, rowCount: rows.length, createdAt: FieldValue.serverTimestamp(), createdBy: ctx.uid });
+      return { exportId: ref.id, path, rowCount: rows.length };
     },
   }),
 

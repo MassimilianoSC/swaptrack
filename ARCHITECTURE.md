@@ -16,7 +16,7 @@
 | `graceExpiry` | scheduled, daily 03:00 Europe/Rome | Cloud Scheduler: ends the grace period of deactivated users |
 | `retention` | scheduled, daily 03:30 Europe/Rome (no-op unless enabled) | Cloud Scheduler |
 | `dailyChecks` | scheduled, daily 04:00 Europe/Rome | Cloud Scheduler: `stale_material` and transfer alerts, BOM check of sites with no `site_done` |
-| `monthlyReports` | scheduled, 1st of the month 06:00 Europe/Rome | Cloud Scheduler: PDF + Excel of the previous month per scope (`shared/reportMonth.ts`) |
+| `monthlyReports` | scheduled, 1st of the month 06:00 Europe/Rome | Cloud Scheduler: PDF + Excel of the previous month per scope (`shared/reportMonth.ts`); contents of §13.4 computed by `shared/reportData.ts` (distinct pieces, sorted per category, waiting beyond the threshold, alerts opened and closed, top models and sites, movements of the month), the Excel export of §13.3 by the same module |
 
 **Public operation (no sign-in):** `users.requestPasswordReset` (rate-limited per IP and per e-mail, always the same answer).
 

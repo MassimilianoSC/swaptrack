@@ -210,4 +210,35 @@ describe("monthlyReports (§13.4)", () => {
     expect(cells).toContain("ASP Nord");
     expect(cells).not.toContain(NORD);
   });
+
+  it("D-38 / P-79: distinct pieces, no voided scans, the ASP's returns, sorted per category, waiting, alerts, top models and sites", async () => {
+    await set(`organizations/${NORD}`, { name: "ASP Nord", type: "asp", language: "it" });
+    await set("sortingCategories/cat_ref", { labels: { it: "Ricondizionamento", en: "Refurbish" }, active: true, order: 1 });
+    await set(`locations/${SITE}`, { code: "S-NORD-1", name: "Sito Nord Uno", type: "site", aspId: NORD });
+    await set("shipments/sh_ret_n", { kind: "return", fromAspId: NORD, toAspId: null, status: "confirmed" });
+    const oct = (d: number) => ts(Date.UTC(2026, 9, d, 10));
+    for (const [id, model] of [["p1", "RX-100"], ["p2", "RX-100"], ["p3", "TX-200"]]) await item(id, { model });
+    await event("m1", { type: "arrive_at_warehouse", itemId: "p1", scannedAt: oct(2) });
+    await event("m2", { type: "arrive_at_warehouse", itemId: "p1", scannedAt: oct(3) }); // the same piece read again
+    await event("m3", { type: "arrive_at_warehouse", itemId: "p2", scannedAt: oct(4), voided: true }); // undone
+    await event("m4", { type: "arrive_at_warehouse", itemId: "p3", scannedAt: oct(5), payload: { categoryId: "cat_ref" } });
+    await event("m5", { type: "install_at_site", itemId: "p2", locationId: SITE, scannedAt: oct(6) });
+    await event("m6", { type: "return_confirm", itemId: "p1", aspId: null, locationId: "loc_S-MAG-CLI", scannedAt: oct(7), payload: { shipmentId: "sh_ret_n" } });
+    await item("p_stale", { lastScannedAt: ts(Date.UTC(2026, 8, 1)) }); // waiting since September, more than 30 days
+    await set("alerts/a_open", { kind: "bom_difference", aspId: NORD, createdAt: oct(8), closedAt: null });
+    await set("alerts/a_closed", { kind: "bom_difference", aspId: NORD, createdAt: ts(Date.UTC(2026, 8, 20)), closedAt: oct(9) });
+    await set("alerts/a_centro", { kind: "bom_difference", aspId: CENTRO, createdAt: oct(8), closedAt: null });
+    await t.jobs.produceReport(NORD, "2026-10", new Date(Date.UTC(2026, 9, 1)), new Date(Date.UTC(2026, 10, 1)));
+    const nord = (await db().collection("reports").where("scope", "==", NORD).get()).docs[0].data();
+    expect(nord.summary).toEqual({ received: 2, installed: 1, removed: 0, sorted: 1, returned: 1, waitingNew: 1, waitingRemoved: 0, alertsOpened: 1, alertsClosed: 1 });
+    const [xlsx] = await t.admin.bucket().file(`reports/${NORD}/2026-10.xlsx`).download();
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(xlsx);
+    const values = (i: number) => wb.worksheets[i].getSheetValues().flat().map(String);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(["Riepilogo", "Movimenti del mese"]);
+    expect(values(0)).toEqual(expect.arrayContaining(["Ricondizionamento", "RX-100", "S-NORD-1 Sito Nord Uno", "Arrivo in magazzino"]));
+    expect(values(1)).toEqual(expect.arrayContaining(["Reso confermato dal cliente", "Installazione al sito"]));
+    expect(values(1).join(" ")).not.toMatch(/arrive_at_warehouse|u1/);
+  });
 });

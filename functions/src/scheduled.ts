@@ -11,10 +11,13 @@ import { buildReportPdf, buildReportXlsx } from "./shared/reportBuilders";
 import { previousReportMonth } from "./shared/reportMonth";
 import { authDisableDone } from "./shared/graceExpiry";
 import { upsertAlert, zeroAlertIfOpen } from "./core/alerts";
+import { docsByIds, placesByIds, orgNames, categoryLabels } from "./core/lookup";
+import { computeReport, inScope, type ReportEvent } from "./shared/reportData";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 export const GRACE_DAYS = 7;
 const DAY = 24 * 3600 * 1000;
+const ms = (t: unknown) => (t instanceof Timestamp ? t.toMillis() : 0);
 
 // §4.8: after the grace period the Auth account of a deactivated user is disabled.
 export async function runGraceExpiry(now = Date.now(), authApi: Pick<typeof auth, "updateUser"> = auth) {
@@ -48,6 +51,17 @@ export async function runRetention(now = Date.now()) {
   logger.info("retention", { cleared: total });
 }
 
+// Pieces waiting since before `cutoff`: new material at ASP warehouses (received_at_asp, flow new) and removed
+// material waiting to be returned (sorted, defective, leftover). Used by the daily check and the monthly report.
+async function staleItems(cutoff: Timestamp) {
+  const newer = await db.collection("items").where("status", "==", "received_at_asp").where("flow", "==", "new").where("lastScannedAt", "<=", cutoff).get();
+  const removed = [];
+  for (const status of ["sorted", "defective", "leftover"]) {
+    removed.push(...(await db.collection("items").where("status", "==", status).where("lastScannedAt", "<=", cutoff).get()).docs);
+  }
+  return { new: newer.docs, removed };
+}
+
 // §11.4 daily: stale_material (new material in ASP warehouses, removed material waiting to be returned);
 // BOM check for sites with scans and no site_done in the last 24h (so between 24 and 48h after the last scan).
 export async function runDailyChecks(now = Date.now()) {
@@ -55,24 +69,13 @@ export async function runDailyChecks(now = Date.now()) {
   const staleDays = thresholds.staleDays;
   const stale = Timestamp.fromMillis(now - staleDays * DAY);
   const grouped = new Map<string, { aspId: string | null; flow: "new" | "removed"; count: number }>();
-  // New material (received_at_asp, flow=new) at ASP warehouses.
-  const newQ = await db.collection("items").where("status", "==", "received_at_asp").where("flow", "==", "new").where("lastScannedAt", "<=", stale).get();
-  for (const d of newQ.docs) {
-    const loc = d.get("currentLocationId") as string | null;
-    if (!loc) continue;
-    const key = `${loc}|new`;
-    const prev = grouped.get(key);
-    grouped.set(key, { aspId: d.get("currentAspId") ?? null, flow: "new", count: (prev?.count ?? 0) + 1 });
-  }
-  // Removed material (sorted/defective/leftover) waiting to be returned.
-  for (const status of ["sorted", "defective", "leftover"]) {
-    const q = await db.collection("items").where("status", "==", status).where("lastScannedAt", "<=", stale).get();
-    for (const d of q.docs) {
+  for (const [flow, docs] of Object.entries(await staleItems(stale)) as Array<["new" | "removed", FirebaseFirestore.QueryDocumentSnapshot[]]>) {
+    for (const d of docs) {
       const loc = d.get("currentLocationId") as string | null;
       if (!loc) continue;
-      const key = `${loc}|removed`;
+      const key = `${loc}|${flow}`;
       const prev = grouped.get(key);
-      grouped.set(key, { aspId: d.get("currentAspId") ?? null, flow: "removed", count: (prev?.count ?? 0) + 1 });
+      grouped.set(key, { aspId: d.get("currentAspId") ?? null, flow, count: (prev?.count ?? 0) + 1 });
     }
   }
   for (const [key, v] of grouped) {
@@ -137,29 +140,41 @@ export async function runMonthlyReports(now = new Date()) {
   logger.info("monthlyReports", { month, aspCount: asps.size });
 }
 
+// §13.4 (D-38): the report of one scope, each ASP only with its own data (R7). The numbers are computed by
+// shared/reportData.ts from the events of the month; here only the data is loaded.
 export async function produceReport(scope: string, month: string, start: Date, end: Date) {
-  // Collect numbers from events in the month (R7: filter by aspId for an ASP scope).
-  const q = db.collection("events").where("scannedAt", ">=", Timestamp.fromDate(start)).where("scannedAt", "<", Timestamp.fromDate(end));
-  const snap = await q.get();
-  const byType = new Map<string, number>();
-  for (const d of snap.docs) {
+  const range = (field: string) => db.collection(field === "scannedAt" ? "events" : "alerts")
+    .where(field, ">=", Timestamp.fromDate(start)).where(field, "<", Timestamp.fromDate(end)).get();
+  const events: ReportEvent[] = (await range("scannedAt")).docs.map((d) => {
     const e = d.data();
-    if (scope !== "client" && e.aspId !== scope) continue;
-    byType.set(e.type, (byType.get(e.type) ?? 0) + 1);
-  }
-  const summary = {
-    received: byType.get("arrive_at_warehouse") ?? 0,
-    installed: byType.get("install_at_site") ?? 0,
-    removed: byType.get("remove_at_site") ?? 0,
-    sorted: byType.get("classify") ?? 0,
-    returned: byType.get("return_confirm") ?? 0,
-  };
+    return { id: d.id, type: e.type, at: ms(e.scannedAtEffective ?? e.scannedAt), itemId: e.itemId ?? null, aspId: e.aspId ?? null,
+      locationId: e.locationId ?? null, codeRaw: e.codeRaw ?? null, voided: !!e.voided, payload: e.payload ?? {} };
+  });
+  // return_confirm is written by the server with aspId null: its ASP is the sender of the return shipment.
+  const shipments = await docsByIds("shipments", events.filter((e) => e.type === "return_confirm").map((e) => e.payload.shipmentId ?? ""));
+  const returnShipmentAsp = Object.fromEntries(Object.entries(shipments).map(([id, s]) => [id, s.fromAspId as string]));
+  const own = events.filter((e) => inScope(e, scope, returnShipmentAsp));
   const lang = await getOrgLanguage(scope);
-  const byTypeArr: Array<[string, number]> = [...byType.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  const items = await docsByIds("items", own.map((e) => e.itemId ?? ""));
+  const ofScope = (aspId: unknown) => scope === "client" || aspId === scope;
+  const { staleDays } = await getSettings("thresholds");
+  const stale = await staleItems(Timestamp.fromMillis(end.getTime() - staleDays * DAY));
+  const alertsIn = async (field: string) => (await range(field)).docs.filter((d) => ofScope(d.get("aspId"))).length;
+  const data = computeReport({
+    scope, events, returnShipmentAsp,
+    itemModels: Object.fromEntries(Object.entries(items).map(([id, it]) => [id, (it.model as string) ?? null])),
+    places: await placesByIds(own.map((e) => e.locationId ?? "")),
+    categories: await categoryLabels(lang),
+    orgNames: await orgNames(),
+    waiting: { newPieces: stale.new.filter((d) => ofScope(d.get("currentAspId"))).length,
+      removedPieces: stale.removed.filter((d) => ofScope(d.get("currentAspId"))).length, thresholdDays: staleDays },
+    alerts: { opened: await alertsIn("createdAt"), closed: await alertsIn("closedAt") },
+  }, lang);
+  const summary = data.summary;
   // P-64: an ASP's report shows its own name (the client's covers all ASPs and names none).
   const scopeName = scope === "client" ? null : ((await db.collection("organizations").doc(scope).get()).get("name") as string | undefined) ?? null;
-  const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, summary, byType: byTypeArr });
-  const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, summary, byType: byTypeArr });
+  const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, data });
+  const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, data });
   const pdfPath = `reports/${scope}/${month}.pdf`;
   const xlsxPath = `reports/${scope}/${month}.xlsx`;
   await bucket().file(pdfPath).save(pdfBuf, { contentType: "application/pdf", resumable: false });
