@@ -7,7 +7,7 @@ import { SEED } from "./seed";
 // The DDT part of the path (document, arrived / missing / unexpected, "checked") comes in a later commit.
 test.describe("Percorso 2 — raffica in magazzino (telefono)", () => {
   test("tre letture: «3» e tre righe sotto la fotocamera; annulla l'ultima: «2» e un void", async ({ page }) => {
-    test.setTimeout(150_000);
+    test.setTimeout(240_000);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
@@ -28,6 +28,19 @@ test.describe("Percorso 2 — raffica in magazzino (telefono)", () => {
     const video = await page.getByTestId("scan-video").boundingBox();
     const list = await page.getByTestId("scan-session").boundingBox();
     expect(video && list && list.y >= video.y + video.height).toBe(true);
+
+    // Before undoing, the trigger has processed the readings: the last piece exists (searched in a second tab, so the
+    // scanning screen and its session list stay as they are).
+    const other = await page.context().newPage();
+    await expect.poll(async () => {
+      await other.goto("/items");
+      await other.getByTestId("items-search-input").fill(codes[2]);
+      await other.getByTestId("items-search-submit").click();
+      await other.waitForTimeout(1500);
+      return other.url();
+    }, { timeout: 90_000 }).toMatch(/\/items\/[^/]+$/);
+    await other.close();
+    await page.bringToFront();
 
     // Undo the last reading: its row goes, the counter drops, a void is written and the server marks the reading as undone.
     await page.getByTestId("scan-undo").click();

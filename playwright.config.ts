@@ -24,8 +24,10 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
-    // A fake camera, so the scanning screen never waits for a permission; codes are typed in the manual field.
-    launchOptions: { args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] },
+    // No camera at all: codes are typed in the manual field, so the scanning screen gets "camera not available" at
+    // once and never runs the decoder on a fake video (it saturated the machine during the phone tests). The fake UI
+    // flag only answers the permission prompt. The app for real users does not change.
+    launchOptions: { args: ["--use-fake-ui-for-media-stream"] },
   },
   projects: [
     // Desk shell: client roles and ASP office on a wide screen (*.desk.spec.ts).
