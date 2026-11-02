@@ -4,6 +4,8 @@ import { initializeApp } from "firebase-admin/app";
 import { hostOf } from "./emulatorPorts.mjs";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
+import { askHidden } from "./prompt.mjs";
+import { DEMO_DOMAIN, passwordProblem } from "./demoAccounts.mjs";
 
 // Target: the emulators by default. The real demo project only with BOTH
 //   SEED_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
@@ -22,8 +24,23 @@ initializeApp({ projectId: PROJECT });
 const db = getFirestore();
 const auth = getAuth();
 
+// Password of the demo accounts ON THE EMULATORS ONLY (the e2e tests sign in with it). On the real project the seed
+// never sets or prints a password of an existing account (P-84: the owner changes them with setDemoPassword.mjs);
+// a new account gets one typed at a hidden prompt.
 export const DEMO_PASSWORD = "SwapDemo2026";
-const DOMAIN = "swaptrack-demo.test";
+let realPassword = null;
+async function newAccountPassword() {
+  if (!REAL) return DEMO_PASSWORD;
+  while (!realPassword) {
+    const p = await askHidden("Password for the NEW demo accounts on the real project (not shown): ");
+    const problem = passwordProblem(p);
+    if (problem) { console.log(`The password needs ${problem}.`); continue; }
+    if ((await askHidden("Same password again: ")) !== p) { console.log("The two passwords differ."); continue; }
+    realPassword = p;
+  }
+  return realPassword;
+}
+const DOMAIN = DEMO_DOMAIN;
 const ORGS = [
   { id: "org_client", name: "Telco Demo", type: "client", slug: "telco" },
   { id: "org_asp_nord", name: "ASP Nord", type: "asp", slug: "nord" },
@@ -49,8 +66,13 @@ async function commitAll(writes) {
 
 async function upsertUser(email, firstName, lastName, role, orgId) {
   let uid;
-  try { uid = (await auth.getUserByEmail(email)).uid; await auth.updateUser(uid, { password: DEMO_PASSWORD, disabled: false }); }
-  catch { uid = (await auth.createUser({ email, password: DEMO_PASSWORD, emailVerified: true })).uid; }
+  const existing = await auth.getUserByEmail(email).catch(() => null);
+  if (existing) {
+    uid = existing.uid;
+    await auth.updateUser(uid, REAL ? { disabled: false } : { password: DEMO_PASSWORD, disabled: false });
+  } else {
+    uid = (await auth.createUser({ email, password: await newAccountPassword(), emailVerified: true })).uid;
+  }
   await auth.setCustomUserClaims(uid, { role, orgId, active: true, disabledAt: null });
   await db.collection("users").doc(uid).set({
     email, firstName, lastName, role, orgId, active: true, disabledAt: null, language: "it",
@@ -114,7 +136,8 @@ async function main() {
   await commitAll([[db.collection("sortingRules").doc("rule_type_radio"), { siteId: null, modelId: null, equipmentType: "Radio unit", categoryId: "cat_refurbish", active: true }]]);
 
   console.log(`Seeded ${ORGS.length} organizations, ${accounts.length} users, ${locations.length} locations, ${models.length} models.`);
-  console.table(accounts.map(([email, role, org]) => ({ email, role, org, password: DEMO_PASSWORD })));
+  console.table(accounts.map(([email, role, org]) => ({ email, role, org })));
+  if (!REAL) console.log(`Password of every account on the emulators: ${DEMO_PASSWORD}`);
 }
 
 main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });

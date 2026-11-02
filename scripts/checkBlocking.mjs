@@ -6,7 +6,7 @@
 // The password of each account is typed at the prompt (not shown, not stored, never in the repository).
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { stdin, stdout } from "node:process";
+import { askHidden } from "./prompt.mjs";
 
 const env = Object.fromEntries(readFileSync(new URL("../.env.demo", import.meta.url), "utf8").split(/\r?\n/)
   .filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]));
@@ -17,24 +17,6 @@ if (!KEY || !activeEmail || !inactiveEmail) {
   process.exit(2);
 }
 
-// Reads a line without echoing it.
-function askHidden(question) {
-  return new Promise((resolve) => {
-    stdout.write(question);
-    let value = "";
-    stdin.setRawMode?.(true);
-    stdin.resume();
-    stdin.setEncoding("utf8");
-    const onData = (ch) => {
-      if (ch === "\r" || ch === "\n" || ch === "\u0004") {
-        stdin.setRawMode?.(false); stdin.pause(); stdin.off("data", onData); stdout.write("\n"); resolve(value);
-      } else if (ch === "\u0003") { process.exit(130); }
-      else if (ch === "\u007f" || ch === "\b") value = value.slice(0, -1);
-      else value += ch;
-    };
-    stdin.on("data", onData);
-  });
-}
 
 const call = async (method, body) => {
   const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${method}?key=${KEY}`, {
