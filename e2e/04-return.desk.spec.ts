@@ -12,6 +12,10 @@ async function signOut(page: Page): Promise<void> {
   await expect(page.getByTestId("signin-submit-button")).toBeVisible({ timeout: 30_000 });
 }
 
+// "My readings of today" lists the same code once per reading: pick the row of one mode.
+const todayRow = (page: Page, code: string, mode: string) =>
+  page.getByTestId("scan-today-row").filter({ hasText: code }).filter({ hasText: tr(`scan.modes.${mode}`) });
+
 test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
   test("reso di tre pezzi, conferma con un mancante: avviso; seconda conferma completa: nessuna anomalia", async ({ page }) => {
     test.setTimeout(300_000);
@@ -25,7 +29,7 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
     await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
     await page.getByTestId("scan-category-select").selectOption(SEED.sorting.radioCategoryId);
     for (const c of codes) await scanManual(page, c, { withModel: true });
-    for (const c of codes) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    for (const c of codes) await expect(todayRow(page, c, "arrive_at_warehouse")).toContainText(tr("scan.sent"), { timeout: 60_000 });
 
     // 2. A return from the own warehouse to the client warehouse.
     await page.goto("/shipments");
@@ -40,7 +44,7 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
     await page.getByTestId("shipment-scan").click();
     await expect(page).toHaveURL(/mode=return_ship/);
     for (const c of codes) await scanManual(page, c);
-    for (const c of codes) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    for (const c of codes) await expect(todayRow(page, c, "return_ship")).toContainText(tr("scan.sent"), { timeout: 60_000 });
     await page.goto(`/shipments/${shipmentId}`);
     const lines = page.getByTestId("shipment-lines").locator("li");
     await expect(lines).toHaveCount(3, { timeout: 90_000 });
