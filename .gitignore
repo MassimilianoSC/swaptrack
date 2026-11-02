@@ -19,3 +19,6 @@ firebase-debug.log
 
 # Playwright: tracce e rapporti delle prove end-to-end
 .playwright/
+
+# strumento browser delle sessioni (Playwright MCP): registri e istantanee
+.playwright-mcp/

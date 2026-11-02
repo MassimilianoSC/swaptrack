@@ -32,10 +32,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
 | P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
-| P-78 | Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
+| P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
 | P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
 
 | P-84 | Script per cambiare la password di tutti gli account demo sul progetto vero (P-2), richiesta nascosta, solo dominio di prova | o2 |
+| P-85 | **Difetto (criterio 3):** dopo l'accesso del magazziniere Nord col seed completo l'app resta su «Caricamento…» (la porta della privacy aspetta un documento che arriva in fila dietro il caricamento della cache). Rimedio di o3: la porta non blocca, il caricamento della cache parte dopo profilo e privacy; e2e: schermata principale entro 10 s. Da verificare subito anche online | o3 |
 ## Da fare
 
 | # | Cosa | Chi | Criterio |

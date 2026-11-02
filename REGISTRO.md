@@ -160,6 +160,15 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 Significato dei FAIL: riga 1 = l'account attivo non entra (grave: la demo non si apre); riga 2 = un disattivato entra (`beforeSignIn` non registrata); riga 3 = chiunque si registra da solo (`beforeCreate` non registrata).
 Se le funzioni bloccanti non sono registrate (Identity Platform → Impostazioni → Funzioni di blocco), il controllo 2 o 3 dà FAIL: è proprio ciò che serve sapere prima della demo.
 
+### Passi di P-2 / P-84 per il committente (dopo il merge di P-84)
+1. In PowerShell: `gcloud auth application-default login`
+2. `cd C:\Users\mcracchiolo\Desktop\swaptrack`
+3. `$env:DEMO_PASSWORD_REAL_PROJECT="kronos-caffe-sito"`
+4. `node scripts/setDemoPassword.mjs --yes-real-project`
+5. Controllare il numero di account indicato (dovrebbe essere 12) e scrivere `yes`.
+6. Scrivere due volte la password nuova (non si vede; almeno 10 caratteri con lettere e cifre) e conservarla fuori dal progetto.
+7. Deve comparire «Updated 12 accounts.»; poi provare l'accesso all'app demo con un account e la password nuova.
+
 ## Stime date (per controllarle dopo)
 
 | Data | Chi | Cosa | Stima | Com'è andata |
@@ -179,6 +188,7 @@ Se le funzioni bloccanti non sono registrate (Identity Platform → Impostazioni
 | 30/10/2026 | o2 | P-55 | nessuna stima (difetto) | 15 min |
 | 30/10/2026 | o2 | P-56, P-57, D-29 | nessuna stima (difetti) | 30 min, 45 min, 30 min |
 | 30/10/2026 | o3 | P-69 foto «perse» per errori di rete + P-70 foto nella pagina del pezzo (una sola e2e) | 1–1,5 h + 1–1,5 h (insieme 2–2,5 h), rischio medio e basso | da fare |
+| 02/11/2026 | o2 | P-84 script della password demo e seed che non la rimette | 1 h più prova | 50 min; prova al turno |
 | 02/11/2026 | o3 | Turno: giro completo, quattro rilanci, P-76, P-78, ricostruzione del ramo | P-78 45–60 min | circa 3 ore (P-78 50 min) |
 | 02/11/2026 | o2 | P-79 (piccole) + D-38 (resoconto completo) | 1 h 30 + 3–4 h | 2 h 15 di scrittura; prove al turno |
 | 02/11/2026 | o2 | P-71 seed in due fasi | 45 min più prova | 1 h 15 (installazione di Playwright mancante nella sua copia) |
