@@ -30,6 +30,9 @@ interface SessionValue {
   pending: { events: number; photos: number };
   // D-34: when the ASP's offline cache (items, codes, documents, models) was last loaded in full from the server.
   fieldCacheAt: number | null;
+  // P-85: profile, app settings or privacy notice still missing DOCS_LATE_MS after sign-in: the app opens anyway
+  // (the notice is shown as soon as it is known and newer than the accepted one, §4.15).
+  docsLate: boolean;
   location: SelectedLocation | null;
   setLocation: (l: SelectedLocation | null) => void;
   refreshClaims: () => Promise<void>;
@@ -43,6 +46,7 @@ export const useSession = () => React.useContext(Ctx)!;
 const LOC_KEY = "swaptrack.location";
 const REFRESH_MS = 10 * 60 * 1000;
 const PRIME_RESUME_MS = 10 * 60 * 1000;
+const DOCS_LATE_MS = 8000;
 
 function applyPrimary(hex: string) {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -133,10 +137,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   // b7 / SPEC §6.1, §16 (P-73): the ASP's items, codes, documents and the model catalog go to the offline cache at
   // sign-in and at every resume, not only when the scanning screen is opened.
+  // P-85: the session documents arrive first; a missing one stops blocking the screen after DOCS_LATE_MS.
+  const [docsLate, setDocsLate] = React.useState(false);
+  const docsReady = !!profile && !!privacy && !!appSettings;
+  const docsGate = docsReady || docsLate;
+  React.useEffect(() => {
+    setDocsLate(false);
+    if (!user || phase !== "ready") return;
+    const timer = setTimeout(() => setDocsLate(true), DOCS_LATE_MS);
+    return () => clearTimeout(timer);
+  }, [user, phase]);
+
   const orgId = claims?.orgId;
   const role = claims?.role;
   React.useEffect(() => {
-    if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role)) return;
+    // It starts once the session documents are in (or late), so their listeners are never queued behind thousands
+    // of documents of the cache (P-85: the app stayed on "Loading" after the sign-in).
+    if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role) || !docsGate) return;
     // One load at a time; at resume only if the last complete load is older than 10 minutes (D-36: thousands of reads).
     // A load cut halfway by the network leaves the time where it was: the technician can see it is not ready.
     // The time survives a page reload of this tab (P-78), so a reload does not load thousands of documents again.
@@ -158,7 +175,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const onVis = () => { if (document.visibilityState === "visible" && Date.now() - lastOk > PRIME_RESUME_MS) prime(); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
-  }, [user, phase, orgId, role]);
+  }, [user, phase, orgId, role, docsGate]);
 
   React.useEffect(() => {
     if (!user) return;
@@ -190,7 +207,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [pending.events, setLocation]);
 
   const value: SessionValue = {
-    phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, fieldCacheAt, location, setLocation, refreshClaims, safeSignOut,
+    phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, fieldCacheAt, docsLate, location, setLocation, refreshClaims, safeSignOut,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

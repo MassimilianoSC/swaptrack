@@ -58,9 +58,11 @@ function Gate() {
   }
   if (s.phase === "noAccount") return <NoAccountScreen />;
   if (s.phase === "deactivated") return <DeactivatedScreen />;
-  if (!s.appSettings || !s.privacy || !s.profile) return <Loading />;
-  if (s.appSettings.minVersion && compareVersions(APP_VERSION, s.appSettings.minVersion) < 0) return <UpdateRequiredScreen />;
-  if (s.profile.privacyNoticeVersion !== s.privacy.version) return <PrivacyGate />;
+  // P-85: the session documents never hold the screen beyond DOCS_LATE_MS; each check applies as soon as its documents
+  // are known (§4.15: the notice appears the moment profile and notice say the accepted version is not the current one).
+  if ((!s.appSettings || !s.privacy || !s.profile) && !s.docsLate) return <Loading />;
+  if (s.appSettings?.minVersion && compareVersions(APP_VERSION, s.appSettings.minVersion) < 0) return <UpdateRequiredScreen />;
+  if (s.profile && s.privacy && s.profile.privacyNoticeVersion !== s.privacy.version) return <PrivacyGate />;
   const mfaNeeded = s.authSettings.mfaAdmins && isAdminRole(s.claims?.role ?? "") && s.user && (!hasMfa(s.user) || !s.claims?.secondFactor);
   if (mfaNeeded) return <MfaEnrollGate />;
   const ca = ["client_admin"];
