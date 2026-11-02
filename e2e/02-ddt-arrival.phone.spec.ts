@@ -13,7 +13,11 @@ test.describe("Percorso 2 — raffica in magazzino (telefono)", () => {
     await page.goto("/scan?mode=arrive_at_warehouse");
     await page.getByTestId("scan-flow-select").selectOption("new");
     const codes = [uniqueCode("B"), uniqueCode("B"), uniqueCode("B")];
-    for (const c of codes) await scanManual(page, c);
+    // Right after the sign-in, while the ASP's offline cache is still loading: a reading reaches the server within a
+    // few seconds all the same (P-78; before, it waited behind the cache writes for tens of seconds).
+    await scanManual(page, codes[0]);
+    await expect(page.getByTestId("scan-today-row").filter({ hasText: codes[0] })).toContainText(tr("scan.sent"), { timeout: 10_000 });
+    for (const c of codes.slice(1)) await scanManual(page, c);
 
     const count = page.getByTestId("scan-session-count");
     const rows = page.getByTestId("scan-session-row");
