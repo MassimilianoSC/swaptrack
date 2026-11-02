@@ -24,20 +24,19 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi |
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
-| P-24 | DDT nella schermata di lettura (lacuna della specifica §12.2, D-15): scelta del DDT aperto, `payload.ddtId`, riquadro in diretta arrivati/mancanti/inattesi | o3 |
-| P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, con interruttore «Smista nello stesso passaggio» spento per difetto (D-27): costruita (commit e04467c sul ramo `o3-wip-p24`), da portare su main col giro e2e | o3 |
-| P-53 | Difetto riparato da o3 (commit b916c1b sul ramo, criterio 2): in «Smista» l'evento usava la categoria suggerita del pezzo PRECEDENTE (prima lettura senza evento, dalla seconda categoria sbagliata); prova: e2e del percorso 3, rossa sul codice di prima, da dimostrare col giro | o3 |
-| P-60 | Avvisi aperti con `count: 0` mostrati «Nessuna differenza ora», neutri e fuori dal contatore; il contatore non si iscrive più agli avvisi per il tecnico (difetto delle tracce). Fatto sul ramo `o3-avvisi` (311cbc8), da portare su main dopo il giro; aspetto da giudicare | o3 |
+| P-25 | Categoria suggerita anche in «Arrivo» (D-27, interruttore spento per difetto): sul ramo `o3-completo`, e2e rossa per la lentezza dopo l'accesso (P-78) | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-72 | Difetto (o3, riparato sul ramo, commit 7486d65): la pagina del documento non rileggeva lo stato dopo «Segna controllato» | o3 |
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
 | P-69 | Foto (app, o3): «persa» solo per errori permanenti, contati al più uno ogni 15 minuti (un cambio di ruolo può dare `unauthorized` finché il token non si aggiorna), mai per la rete; un solo svuotamento alla volta. Sul ramo `o3-foto` | o3 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
 
-| P-73 | Catalogo dei modelli nella cache offline (SPEC §6.1, §6.4): oggi il tecnico sceglie il modello di un pezzo sconosciuto senza rete solo se ha già aperto in rete la schermata di lettura; `primeFieldCache` deve caricarlo all'accesso | o3 |
-| P-74 | E2E dei percorsi 4 (reso con mancante e seconda conferma), 1 (tecnico offline, «ho finito», nessun avviso BOM falso) e 7 (installazione Android/desktop e iPhone) scritte sul ramo `o3`, da far girare | o3 |
+| P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
+| P-78 | Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
+| P-79 | Resoconti ed export, difetti: letture annullate contate; resi delle ASP sempre 0 nel loro resoconto; filtro periodo ignorato dal server; filtro categoria assente; colonne dell'export con codici tecnici e senza codice a barre. Riparazioni di o2 (scritte ora, prove al turno), filtri nella pagina a o3. Lotto 2 | o2 + o3 |
+| P-80 | Resoconto mensile completo (D-38, SPEC §13.4). Lotto 2 | o2 |
+| P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
@@ -58,6 +57,13 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-24 | DDT nella schermata di lettura: scelta del DDT aperto, arrivati/mancanti/inattesi in diretta (SPEC §12.2, D-15) | o3 | 02/11/2026 (e57e0ed) |
+| P-53 | «Smista»: ogni pezzo riceve la propria categoria suggerita | o3 | 02/11/2026 |
+| P-60 | Avvisi aperti senza differenze «Nessuna differenza ora»; il tecnico non ascolta più gli avvisi | o3 | 02/11/2026 |
+| P-72 | Pagina del documento aggiornata dopo «Segna verificato» | o3 | 02/11/2026 |
+| P-73 | Cache offline caricata all'accesso e alla ripresa, con i modelli (D-34: «aggiornati» quando è pronta) | o3 | 02/11/2026 |
+| P-74 | E2E dei percorsi 4, 1, 7 (verdi sul ramo completo) | o3 | 02/11/2026 |
+| P-76 | Le direzioni delle righe BOM non si perdono al risalvataggio | o3 | 02/11/2026 |
 | P-71 | Seed in due fasi (`emulators.mjs --seed`): niente trigger in coda; giro e2e da 12,9 a 3,6 minuti, rosse instabili sparite | o2 | 02/11/2026 (commit f6c3a1b) |
 | P-62 | Revisione della riservatezza delle 42 operazioni dei router e dei lavori programmati: 36 ok, i difetti in P-63 | o2 | 30/10/2026 |
 | P-13 | Lavori programmati provati sull'emulatore (graceExpiry, retention, dailyChecks, nightlyRecount, monthlyReports) | o2 | 30/10/2026 (commit 3f26623) |

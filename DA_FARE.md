@@ -127,6 +127,10 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
   3. Ufficio cliente: Esportazioni → crea un export senza filtri → il file Excel si scarica.
   4. Ufficio cliente: Resoconti → genera ottobre 2026 → il file si chiama 2026-10; il resoconto di ASP Nord dice «ASP Nord».
   5. Magazzino Nord: in arrivo con un DDT legge un pezzo sbagliato, «annulla l'ultima», poi «Confronta»: il pezzo annullato non è fra gli inattesi.
+  6. Magazzino Nord, «Arrivo» di materiale nuovo: compare la scelta del DDT aperto e il riquadro arrivati/mancanti/inattesi si aggiorna a ogni lettura (P-24).
+  7. Tecnico o magazzino: una lettura con foto scattata in rete; poi l'ufficio cliente apre la pagina di quel pezzo e vede la foto (P-68, P-70).
+  8. Un avviso le cui differenze sono sparite compare «Nessuna differenza ora», non in rosso (P-60, D-29).
+- **Aggiornamento del 02/11 (o2):** nessun indice, regola o funzione nuova rispetto al quadro del 30/10; nessuna migrazione nuova. Le funzioni vanno ripubblicate perché il loro codice interno è cambiato (riservatezza, foto, resoconti). Le ricerche nuove dell'app sono solo uguaglianze.
 
 ## P-31 Documentazione per l'utente e il collaudo
 
