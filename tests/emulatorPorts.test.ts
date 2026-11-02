@@ -36,7 +36,7 @@ describe("the CLI gets 60 s to load the functions (D-26)", () => {
     for (const name of ["emulators.mjs", "test-rules.mjs"]) {
       const src = script(name);
       expect(src, name).toMatch(/emulators:start[\s\S]*env: cliEnv\(\)/);
-      expect(src, name).toContain("killPids(emu.pid, recorded)");
+      expect(src, name).toMatch(/killPids\(emu\.pid, (cli\.)?recorded\)/);
       expect(src, name).not.toContain("netstat");
     }
   });
