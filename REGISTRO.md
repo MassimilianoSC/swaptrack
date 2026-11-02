@@ -150,12 +150,14 @@ Storia precedente (in `git log`): 586abdc codice di Emergent; bc3986f installazi
 - **Ciò che sa solo lei:** `netstat` in italiano scrive «IN ASCOLTO» (un filtro su LISTENING non trova nulla): per sapere se una porta è libera usare `node -e` con `net.createServer().listen(porta,'127.0.0.1')` (EADDRINUSE); il classificatore nega `taskkill`, `Get-Process`, `Get-NetTCPConnection`; `tasklist`/`taskkill` in Git Bash vogliono le opzioni con doppia barra (`//FI`, `//PID`); il guardiano del worktree rifiuta `git -C` e i comandi composti lunghi (scrivere i file con Write/Edit, un comando per chiamata). La raffica e il DDT in lettura dipendono da `today` (eventi propri di oggi con `includeMetadataChanges`): «Inviata» è l'ack del server, non l'elaborazione del trigger; per aspettare il trigger le prove cercano il codice in `/items` (`waitForPiece` in 03) o rilanciano «Confronta» (02 desk). Il pulsante «Leggi» fisso della shell da campo può coprire i clic in basso a destra sul telefono: gli aiuti usano Invio nel campo manuale. La ricerca per codice in Items fa un ricaricamento completo (`window.location.href`): nelle prove si aspetta l'URL. I download si verificano intercettando `window.open` (`captureOpenedUrl`) e controllando l'inizio del file (PK = xlsx, %PDF). `DataTable` pagina a 25 righe: `collectRows` scorre tutte le pagine. In `Scan.tsx` la riga `{camError && <p` era diventata `{camError &&<p` per uno spazio perso nel commit C: sistemata nel WIP. Tempi: P-23 primo lotto circa 4,5 ore sulle 7 stimate, prove ancora da far girare.
 
 ### Passi di P-14 per il committente (preparati da o2, da eseguire dopo il lotto 1)
+0. Prima, nella console Firebase: Authentication → Impostazioni → «Funzioni di blocco»: devono comparire `beforeCreate` e `beforeSignIn`. Se mancano, fermarsi: il deploy non le ha registrate.
 1. Apri l'app demo come `client_admin` e disattiva un utente di prova, per esempio `asp.technician.sud@swaptrack-demo.test` (Utenti → Disattiva).
 2. In un terminale: `cd C:\Users\mcracchiolo\Desktop\swaptrack`
 3. `node scripts/checkBlocking.mjs asp.admin.nord@swaptrack-demo.test asp.technician.sud@swaptrack-demo.test`
 4. Quando lo chiede, scrivi la password di ciascun account (non si vede) e premi Invio.
 5. Devono comparire tre righe «OK» e «All three checks passed». Se compare «FAIL», manda tutto il testo alla memoria storica (non contiene password); se la terza riga dice che un account è stato creato, cancellalo dalla console (Authentication → Utenti).
-6. Riattiva l'utente di prova dall'app (Utenti → Riattiva).
+6. Riattiva l'utente di prova dall'app (Utenti → Riattiva), lo stesso giorno (dopo 7 giorni il lavoro notturno disattiva anche l'account di accesso).
+Significato dei FAIL: riga 1 = l'account attivo non entra (grave: la demo non si apre); riga 2 = un disattivato entra (`beforeSignIn` non registrata); riga 3 = chiunque si registra da solo (`beforeCreate` non registrata).
 Se le funzioni bloccanti non sono registrate (Identity Platform → Impostazioni → Funzioni di blocco), il controllo 2 o 3 dà FAIL: è proprio ciò che serve sapere prima della demo.
 
 ## Stime date (per controllarle dopo)
