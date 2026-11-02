@@ -164,7 +164,14 @@
     "created": "Esportazione creata",
     "created_at": "Creato",
     "rows": "Righe",
-    "empty": "Nessuna esportazione."
+    "empty": "Nessuna esportazione.",
+    "any": "Tutti",
+    "model": "Modello",
+    "location": "Sito o magazzino",
+    "asp": "ASP",
+    "category": "Categoria di smistamento",
+    "from": "Letti dal",
+    "to": "Letti fino al"
   },
   "reports": {
     "subtitle": "Rapporti mensili: automatici il 1°; su richiesta (ruoli cliente).",

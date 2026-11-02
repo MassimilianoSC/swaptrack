@@ -164,7 +164,14 @@
     "created": "Export created",
     "created_at": "Created",
     "rows": "Rows",
-    "empty": "No exports yet."
+    "empty": "No exports yet.",
+    "any": "All",
+    "model": "Model",
+    "location": "Site or warehouse",
+    "asp": "ASP",
+    "category": "Sorting category",
+    "from": "Scanned from",
+    "to": "Scanned until"
   },
   "reports": {
     "subtitle": "Monthly reports: automatic on the 1st; on demand (client roles).",

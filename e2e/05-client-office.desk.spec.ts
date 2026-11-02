@@ -63,6 +63,30 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     expect((await fileStart(file, 2))).toBe("PK"); // an .xlsx file is a zip
   });
 
+  // §13.3 (P-81): the filters of the specification reach the server. The pieces of ASP Nord in its warehouse are some,
+  // and fewer than the export of everything.
+  test("export Excel con filtri: ASP Nord nel suo magazzino", async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.goto("/exports");
+    const rowsOf = async (i: number) => Number(await page.getByTestId("exports-table-row").nth(i).locator("td").nth(2).textContent());
+    await page.getByTestId("exports-create").click();
+    await expect(page.getByText(tr("exports.created")).first()).toBeVisible({ timeout: 120_000 });
+    await expect.poll(() => page.getByTestId("exports-table-row").count(), { timeout: 30_000 }).toBeGreaterThan(0);
+    const all = await rowsOf(0);
+    const before = await page.getByTestId("exports-table-row").count();
+
+    await page.getByTestId("exports-asp").selectOption(SEED.nord.orgId);
+    await page.getByTestId("exports-location").selectOption(`loc_${SEED.nord.warehouse}`);
+    await page.getByTestId("exports-create").click();
+    await expect.poll(() => page.getByTestId("exports-table-row").count(), { timeout: 120_000 }).toBe(before + 1);
+    const filtered = await rowsOf(0);
+    expect(filtered).toBeGreaterThan(0);
+    expect(filtered).toBeLessThan(all);
+    const download = page.getByTestId("exports-table-row").first().locator("[data-testid^='exports-download-']");
+    const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
+    expect((await fileStart(file, 2))).toBe("PK");
+  });
+
   test("resoconto mensile in PDF", async ({ page }) => {
     test.setTimeout(180_000);
     await page.goto("/reports");
