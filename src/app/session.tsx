@@ -28,6 +28,8 @@ interface SessionValue {
   appSettings: AppSettings | null;
   privacy: Privacy | null;
   pending: { events: number; photos: number };
+  // D-34: when the ASP's offline cache (items, codes, documents, models) was last loaded in full from the server.
+  fieldCacheAt: number | null;
   location: SelectedLocation | null;
   setLocation: (l: SelectedLocation | null) => void;
   refreshClaims: () => Promise<void>;
@@ -57,6 +59,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [appSettings, setAppSettings] = React.useState<AppSettings | null>(null);
   const [privacy, setPrivacy] = React.useState<Privacy | null>(null);
   const [pending, setPending] = React.useState({ events: 0, photos: 0 });
+  const [fieldCacheAt, setFieldCacheAt] = React.useState<number | null>(null);
   const [location, setLocationState] = React.useState<SelectedLocation | null>(() => {
     try { return JSON.parse(sessionStorage.getItem(LOC_KEY) ?? "null"); } catch { return null; }
   });
@@ -133,7 +136,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const role = claims?.role;
   React.useEffect(() => {
     if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role)) return;
-    const prime = () => { void primeFieldCache(orgId, role).catch(() => undefined); };
+    // A load cut halfway by the network leaves the time where it was: the technician can see it is not ready.
+    const prime = () => { void primeFieldCache(orgId, role).then((ok) => { if (ok) setFieldCacheAt(Date.now()); }, () => undefined); };
     prime();
     const onVis = () => { if (document.visibilityState === "visible") prime(); };
     document.addEventListener("visibilitychange", onVis);
@@ -170,7 +174,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [pending.events, setLocation]);
 
   const value: SessionValue = {
-    phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, location, setLocation, refreshClaims, safeSignOut,
+    phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, fieldCacheAt, location, setLocation, refreshClaims, safeSignOut,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

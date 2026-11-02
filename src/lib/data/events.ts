@@ -57,7 +57,8 @@ export async function cachedItemForCode(raw: string): Promise<Record<string, unk
 // and its open DDTs so the warehouse scan screen can offer them and compare live (§12.2, P-24).
 // DDTs only for the warehouse roles: the rules refuse them to the technician.
 // The active model catalog too (SPEC §6.1, §6.4, P-73): picking the model of an unknown piece works offline.
-export async function primeFieldCache(orgId: string, role: string): Promise<void> {
+// Returns true only if every query was answered by the server (D-34: the site picker's "updated" time moves only then).
+export async function primeFieldCache(orgId: string, role: string): Promise<boolean> {
   const qs = [
     query(collection(db, "items"), where("currentAspId", "==", orgId)), query(collection(db, "items"), where("pendingAspId", "==", orgId)),
     query(collection(db, "codes"), where("aspId", "==", orgId)),
@@ -65,7 +66,8 @@ export async function primeFieldCache(orgId: string, role: string): Promise<void
     query(collection(db, "models"), where("active", "==", true)),
   ];
   if (role === "asp_warehouse" || role === "asp_admin") qs.push(query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("status", "==", "open")));
-  await Promise.all(qs.map((q) => getDocs(q).catch(() => getDocsFromCache(q))));
+  const fresh = await Promise.all(qs.map((q) => getDocs(q).then((s) => !s.metadata.fromCache).catch(() => getDocsFromCache(q).then(() => false, () => false))));
+  return fresh.every(Boolean);
 }
 
 // §12.2 / P-24: the open DDTs of a warehouse, from the local cache (never chosen by themselves: the user picks one).

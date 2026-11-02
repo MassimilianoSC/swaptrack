@@ -13,7 +13,10 @@ const META_KEY = "swaptrack.fieldLocationsMeta";
 // §5 site picker: one query at sign-in and resume, offline from the cache, instant search. Never pre-selects.
 export default function SitePicker() {
   const { t, i18n } = useTranslation();
-  const { claims, location, setLocation } = useSession();
+  const { claims, location, setLocation, fieldCacheAt } = useSession();
+  // D-34: "updated" is the older of the two loads of this session (sites, and the ASP's offline cache with the models):
+  // it moves only when both have reached the server, so a load cut by the network leaves the previous time.
+  const [sitesAt, setSitesAt] = React.useState<number | null>(null);
   const [list, setList] = React.useState<Row<Location>[] | null>(null);
   const [error, setError] = React.useState(false);
   const [q, setQ] = React.useState("");
@@ -28,13 +31,20 @@ export default function SitePicker() {
       const r = await loadFieldLocations(claims!.orgId!);
       const usable = r.list.filter((l) => l.active && l.type === wanted);
       setList(usable);
-      if (!r.fromCache) {
-        const m = { count: usable.length, at: Date.now() };
-        localStorage.setItem(META_KEY, JSON.stringify(m));
-        setMeta(m);
-      }
+      if (!r.fromCache) { setSitesAt(Date.now()); setMeta((m) => ({ count: usable.length, at: m?.at ?? 0 })); }
     } catch { setError(true); }
   }, [claims, wanted]);
+
+  React.useEffect(() => {
+    if (sitesAt === null || fieldCacheAt === null) return;
+    const at = Math.min(sitesAt, fieldCacheAt);
+    setMeta((m) => {
+      if (m && m.at >= at) return m;
+      const next = { count: m?.count ?? 0, at };
+      try { localStorage.setItem(META_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ }
+      return next;
+    });
+  }, [sitesAt, fieldCacheAt]);
 
   React.useEffect(() => {
     void load();
@@ -54,8 +64,8 @@ export default function SitePicker() {
   return (
     <div className="space-y-4 max-w-3xl">
       <h1 className="text-2xl font-semibold" data-testid="page-title">{t(wanted === "site" ? "location.pickSite" : "location.pickWarehouse")}</h1>
-      <p className="text-sm text-muted tabular" data-testid="site-picker-offline-info">
-        {t("location.offlineInfo", { count: meta?.count ?? list.length, when: formatInstant(meta ? new Date(meta.at) : null, i18n.language) })}
+      <p className="text-sm text-muted tabular" data-testid="site-picker-offline-info" data-updated-at={meta?.at || undefined}>
+        {t("location.offlineInfo", { count: meta?.count ?? list.length, when: formatInstant(meta?.at ? new Date(meta.at) : null, i18n.language) })}
       </p>
       {location && (
         <div className="rounded border-2 border-primary p-4 flex items-center gap-3" data-testid="site-picker-selected">

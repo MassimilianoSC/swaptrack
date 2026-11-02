@@ -34,12 +34,14 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await signOut(page);
 
     // 1. The technician signs in online and never opens the scanning screen: site list, ASP cache and model catalog
-    //    must reach the offline cache at sign-in all the same (SPEC §6.1, §6.4; P-73). The app shows no signal for
-    //    the end of that load: a short wait stands in for the minutes a technician spends before losing signal.
+    //    must reach the offline cache at sign-in all the same (SPEC §6.1, §6.4; P-73). The site picker's "updated"
+    //    time moves only when sites and that cache have both been loaded from the server (D-34): the technician waits
+    //    for it before losing signal, and so does the test.
+    const signInAt = Date.now();
     await signIn(page, ACCOUNTS.aspTechnicianNord);
     await page.goto("/");
-    await expect(page.getByTestId("site-picker-offline-info")).toBeVisible();
-    await page.waitForTimeout(8000);
+    const offlineInfo = page.getByTestId("site-picker-offline-info");
+    await expect.poll(async () => Number(await offlineInfo.getAttribute("data-updated-at") ?? 0), { timeout: 60_000 }).toBeGreaterThan(signInAt);
 
     // 2. Airplane mode: the site is found in the offline list, the scanning screen opens inside the app.
     await context.setOffline(true);
