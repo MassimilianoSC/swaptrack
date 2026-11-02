@@ -31,12 +31,13 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-71 | Seed completo sugli emulatori: spegnere i trigger durante la scrittura e riaccenderli dopo (causa delle rosse instabili delle e2e) | o2 |
 | P-72 | Difetto (o3, riparato sul ramo, commit 7486d65): la pagina del documento non rileggeva lo stato dopo «Segna controllato» | o3 |
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
 | P-69 | Foto (app, o3): «persa» solo per errori permanenti, contati al più uno ogni 15 minuti (un cambio di ruolo può dare `unauthorized` finché il token non si aggiorna), mai per la rete; un solo svuotamento alla volta. Sul ramo `o3-foto` | o3 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
 
+| P-73 | Catalogo dei modelli nella cache offline (SPEC §6.1, §6.4): oggi il tecnico sceglie il modello di un pezzo sconosciuto senza rete solo se ha già aperto in rete la schermata di lettura; `primeFieldCache` deve caricarlo all'accesso | o3 |
+| P-74 | E2E dei percorsi 4 (reso con mancante e seconda conferma), 1 (tecnico offline, «ho finito», nessun avviso BOM falso) e 7 (installazione Android/desktop e iPhone) scritte sul ramo `o3`, da far girare | o3 |
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
@@ -57,6 +58,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-71 | Seed in due fasi (`emulators.mjs --seed`): niente trigger in coda; giro e2e da 12,9 a 3,6 minuti, rosse instabili sparite | o2 | 02/11/2026 (commit f6c3a1b) |
 | P-62 | Revisione della riservatezza delle 42 operazioni dei router e dei lavori programmati: 36 ok, i difetti in P-63 | o2 | 30/10/2026 |
 | P-13 | Lavori programmati provati sull'emulatore (graceExpiry, retention, dailyChecks, nightlyRecount, monthlyReports) | o2 | 30/10/2026 (commit 3f26623) |
 | P-54 | Ricalcolo notturno: regge con dieci ASP (lotto riusato) e corregge gli ambiti svuotati | o2 | 30/10/2026 (commit 3f26623) |

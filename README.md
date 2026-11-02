@@ -26,8 +26,9 @@ yarn check:i18n  # it.json and en.json have the same keys
 yarn e2e         # end-to-end tests of the demo paths (e2e/): builds functions, starts the emulators on empty data, seeds,
                  # runs Playwright (its own yarn dev on port 3010), then stops everything. Needs all emulator ports and 3010 free.
 # One profile or one file (build functions first with yarn build:functions):
-#   node scripts/emulators.mjs --run "yarn seed && yarn seed:full && yarn e2e:only --project=desk"
-#   node scripts/emulators.mjs --run "yarn seed && yarn seed:full && yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
+#   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only --project=desk"
+#   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
+# --seed seeds without the functions emulator, exports and re-imports the data, so the seed queues no triggers.
 # (yarn e2e --project=desk does NOT filter.) First time: npx playwright install chromium
 ```
 Unit tests cover pure logic (state machine, sorting precedence, document comparison, code parity, report month, Firestore indexes, emulator ports). The tests on the emulators cover the security rules (Firestore and Storage), the trigger and replay, the scheduled jobs.
