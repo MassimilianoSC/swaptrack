@@ -30,13 +30,12 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
-| P-69 | Foto (app, o3): «persa» solo per errori permanenti, contati al più uno ogni 15 minuti (un cambio di ruolo può dare `unauthorized` finché il token non si aggiorna), mai per la rete; un solo svuotamento alla volta. Sul ramo `o3-foto` | o3 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
-| P-82 | `deployBatch.mjs`: ricordare il commit che ha superato i controlli; con `--yes` sullo stesso commit (e copia pulita) saltare le prove già fatte, così il committente fa un giro solo. Dopo il lotto 1 | o2 |
 | P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
 | P-78 | Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
 | P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
 
+| P-84 | Script per cambiare la password di tutti gli account demo sul progetto vero (P-2), richiesta nascosta, solo dominio di prova | o2 |
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
@@ -57,6 +56,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-82 | `deployBatch.mjs --yes` salta il giro delle prove già superato sullo stesso commit (24 ore); git, installazione e build sempre | o2 | 02/11/2026 (893679a) |
+| P-69 | Foto non più «perse» per la rete: solo errori permanenti, contati al più uno ogni 15 minuti; una sola coda alla volta | o3 | 02/11/2026 (5bd81f6, 2aa2968) |
 | P-81 | Pagina Esportazioni con tutti i filtri della specifica (sito/magazzino, modello, ASP, categoria, periodo) | o3 | 02/11/2026 (9ce5040) |
 | P-79 | Resoconti ed export: difetti riparati (letture annullate, resi delle ASP, periodo, categoria, colonne leggibili con il codice a barre); filtri nuovi nella pagina: o3 | o2 | 02/11/2026 (b0266df) |
 | P-80 | Resoconto mensile completo come SPEC §13.4 (D-38) | o2 | 02/11/2026 (b0266df) |
