@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
-import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, primeFieldCache, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, type Category, type Source, type MyScan, type CachedDdt } from "@/lib/data/events";
+import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, type Category, type Source, type MyScan, type CachedDdt } from "@/lib/data/events";
 import { listModels, type Row, type Model } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId } from "@/lib/codeId.js";
@@ -31,7 +31,7 @@ function beep(muted: boolean) {
 // optional photo (offline queue, §7.3), model pick for unknown pieces (§6.4), shipment-draft burst mode (§9.3 / §9.4).
 export default function Scan() {
   const { t, i18n } = useTranslation();
-  const { claims, user, location, appSettings } = useSession();
+  const { claims, user, location, appSettings, fieldCacheAt } = useSession();
   const [params, setParams] = useSearchParams();
   const role = claims?.role ?? "";
   const paramMode = params.get("mode");
@@ -63,7 +63,6 @@ export default function Scan() {
   const [session, setSession] = React.useState<{ id: string; code: string; type: string }[]>([]);
   const [today, setToday] = React.useState<MyScan[]>([]);
   // §12.2 / P-24 (D-15): the DDT chosen for an arrival of new material (never pre-selected) and the live comparison.
-  const [cacheReady, setCacheReady] = React.useState(false);
   const [ddts, setDdts] = React.useState<CachedDdt[]>([]);
   const [ddtId, setDdtId] = React.useState("");
   const [ddtExpected, setDdtExpected] = React.useState<Array<{ codeRaw: string; codeId: string }>>([]);
@@ -87,20 +86,20 @@ export default function Scan() {
   React.useEffect(() => {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined);
     void loadSorting().then((s) => setSorting(s as never)).catch(() => undefined);
-    if (claims?.orgId) void primeFieldCache(claims.orgId, role).finally(() => setCacheReady(true)); else setCacheReady(true);
     void listLost().then((l) => setLostCount(l.length));
     return user ? watchMyScansToday(user.uid, setToday) : undefined;
   }, [user, claims]);
 
   // P-24: the open DDTs of this warehouse are offered only for an arrival of new material; the choice is the user's.
   const ddtApplies = mode === "arrive_at_warehouse" && flow === "new" && location?.type === "asp_warehouse";
+  // The list comes from the cache the session loads at sign-in (P-73); it is read again when that load completes.
+  React.useEffect(() => { setDdtId(""); }, [ddtApplies, location]);
   React.useEffect(() => {
-    setDdtId("");
-    if (!ddtApplies || !location || !cacheReady) { setDdts([]); return; }
+    if (!ddtApplies || !location) { setDdts([]); return; }
     let aborted = false;
     void cachedOpenDdtsForWarehouse(location.id).then((list) => { if (!aborted) setDdts(list); });
     return () => { aborted = true; };
-  }, [ddtApplies, location, cacheReady]);
+  }, [ddtApplies, location, fieldCacheAt]);
 
   // The serial lines of the chosen DDT, by codeId (the same identity the trigger uses, R8).
   React.useEffect(() => {
@@ -156,7 +155,7 @@ export default function Scan() {
       }
       setBom({ id: b.id, expected, createdAtMs: b.createdAtMs });
     });
-  }, [location, bomDirection]);
+  }, [location, bomDirection, fieldCacheAt]);
 
   // §12.1: ticks are computed on the device from the user's own events (local, including pending writes).
   // Joined with the BOM's expected codeIds; anything not expected goes to the unexpected list.

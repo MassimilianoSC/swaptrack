@@ -42,6 +42,7 @@ export const useSession = () => React.useContext(Ctx)!;
 
 const LOC_KEY = "swaptrack.location";
 const REFRESH_MS = 10 * 60 * 1000;
+const PRIME_RESUME_MS = 10 * 60 * 1000;
 
 function applyPrimary(hex: string) {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -136,10 +137,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const role = claims?.role;
   React.useEffect(() => {
     if (!user || phase !== "ready" || !orgId || !role || !isAspRole(role)) return;
+    // One load at a time; at resume only if the last complete load is older than 10 minutes (D-36: thousands of reads).
     // A load cut halfway by the network leaves the time where it was: the technician can see it is not ready.
-    const prime = () => { void primeFieldCache(orgId, role).then((ok) => { if (ok) setFieldCacheAt(Date.now()); }, () => undefined); };
+    let running = false;
+    let lastOk = 0;
+    const prime = () => {
+      if (running) return;
+      running = true;
+      void primeFieldCache(orgId, role).then((ok) => { if (ok) { lastOk = Date.now(); setFieldCacheAt(lastOk); } }, () => undefined).finally(() => { running = false; });
+    };
     prime();
-    const onVis = () => { if (document.visibilityState === "visible") prime(); };
+    const onVis = () => { if (document.visibilityState === "visible" && Date.now() - lastOk > PRIME_RESUME_MS) prime(); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [user, phase, orgId, role]);
