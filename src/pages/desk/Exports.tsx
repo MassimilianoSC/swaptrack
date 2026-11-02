@@ -5,7 +5,8 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { listMyExports, type SwExport } from "@/lib/data/documents";
-import { getDownloadURL as getUrl } from "@/lib/data/storage";
+import { downloadFile } from "@/lib/data/storage";
+import { toast } from "sonner";
 import type { Row } from "@/lib/data/db";
 import { PageHeader, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,10 +29,7 @@ export default function Exports() {
   const create = async () => {
     await run(() => call("createExport", { scope, status: status || undefined, modelId: modelId || undefined, language: i18n.language as "it" | "en" }), t("exports.created"));
   };
-  const download = async (path: string) => {
-    const url = await getUrl(path);
-    if (url) window.open(url, "_blank");
-  };
+  const download = async (path: string) => { if (!(await downloadFile(path))) toast.error(t("errors.load_failed")); };
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">

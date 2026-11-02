@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type Download } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
 // Seeded accounts of the emulators (README, scripts/seed.mjs). Invented data.
@@ -93,14 +93,7 @@ export async function collectRows(page: Page, tableId: string): Promise<TableRow
   }
 }
 
-// Runs an action that calls window.open (downloads) and returns the URL instead of opening a tab.
-export async function captureOpenedUrl(page: Page, action: () => Promise<void>): Promise<string> {
-  await page.evaluate(() => {
-    const w = window as unknown as { __e2eOpened: string | null; open: (u?: string | URL) => Window | null };
-    w.__e2eOpened = null;
-    w.open = (u?: string | URL) => { w.__e2eOpened = String(u); return null; };
-  });
-  await action();
-  await expect.poll(() => page.evaluate(() => (window as unknown as { __e2eOpened: string | null }).__e2eOpened), { timeout: 30_000 }).not.toBeNull();
-  return page.evaluate(() => (window as unknown as { __e2eOpened: string }).__e2eOpened);
+// The first bytes of a file the browser saved (downloads read with the Storage rules, D-35): PK = xlsx, %PDF = pdf.
+export async function fileStart(download: Download, n: number): Promise<string> {
+  return readFileSync(await download.path()).subarray(0, n).toString("latin1");
 }

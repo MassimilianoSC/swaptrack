@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, tr, collectRows, captureOpenedUrl } from "./helpers";
+import { ACCOUNTS, signIn, tr, collectRows, fileStart } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 5 (DA_FARE P-6): the client's office on a computer. Reads only, plus an export and a report
@@ -57,10 +57,10 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     await expect(page.getByText(tr("exports.created")).first()).toBeVisible({ timeout: 120_000 });
     const download = page.getByTestId("exports-table-row").first().locator("[data-testid^='exports-download-']");
     await expect(download).toBeVisible();
-    const url = await captureOpenedUrl(page, () => download.click());
-    const res = await page.request.get(url);
-    expect(res.status()).toBe(200);
-    expect((await res.body()).subarray(0, 2).toString("latin1")).toBe("PK"); // an .xlsx file is a zip
+    // D-35: the file is read with the Storage rules (getBlob) and saved by the browser, never through a public URL.
+    const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
+    expect(file.suggestedFilename().endsWith(".xlsx")).toBe(true);
+    expect((await fileStart(file, 2))).toBe("PK"); // an .xlsx file is a zip
   });
 
   test("resoconto mensile in PDF", async ({ page }) => {
@@ -70,10 +70,9 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     await expect(page.getByText(tr("reports.generated")).first()).toBeVisible({ timeout: 120_000 });
     const pdf = page.getByTestId("reports-table-row").first().locator("[data-testid^='reports-pdf-']");
     await expect(pdf).toBeVisible();
-    const url = await captureOpenedUrl(page, () => pdf.click());
-    const res = await page.request.get(url);
-    expect(res.status()).toBe(200);
-    expect((await res.body()).subarray(0, 4).toString("latin1")).toBe("%PDF");
+    const [file] = await Promise.all([page.waitForEvent("download"), pdf.click()]);
+    expect(file.suggestedFilename().endsWith(".pdf")).toBe(true);
+    expect((await fileStart(file, 4))).toBe("%PDF");
   });
 
   test("nessuna voce di amministrazione", async ({ page }) => {

@@ -5,7 +5,8 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { listReports, type SwReport } from "@/lib/data/documents";
-import { getDownloadURL as getUrl } from "@/lib/data/storage";
+import { downloadFile } from "@/lib/data/storage";
+import { toast } from "sonner";
 import { isClientRole } from "@shared/roles";
 import type { Row } from "@/lib/data/db";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -28,7 +29,7 @@ export default function Reports() {
   const refresh = React.useCallback(async () => setList(await listReports(scope)), [scope]);
   React.useEffect(() => { void refresh(); }, [refresh, busy]);
   const generate = async () => { await run(() => call("generateReport", { scope, year, month }), t("reports.generated")); await refresh(); };
-  const download = async (path: string) => { const url = await getUrl(path); if (url) window.open(url, "_blank"); };
+  const download = async (path: string) => { if (!(await downloadFile(path))) toast.error(t("errors.load_failed")); };
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">
