@@ -4,7 +4,7 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO
 
-- **02/11, pomeriggio: MAIN CONGELATO per il lotto 1** (punta 82e2271 più i documenti). Il committente: push, `checkOnline.mjs` (sola lettura), `deployBatch.mjs` senza `--yes` (solo controlli e giro completo), poi con `--yes`. o2 e o3 lavorano sui rami senza emulatori fino al «main sbloccato».
+- **02/11: LOTTO 1 PUBBLICATO** (commit e4a053b, `deployBatch.mjs --yes`, tutti i controlli verdi, otto router raggiungibili). Prima: `checkOnline.mjs` sul progetto vero = 0 eventi non elaborati, 0 documenti senza ASP. Main sbloccato. Da fare ora: i controlli a mano dopo il lotto (DA_FARE P-30), poi P-14 (funzioni bloccanti) e P-21 (telefoni veri) col committente.
 
 - **02/11:** ripresa dopo la fermata del 30/10; niente è cambiato nel frattempo (main = GitHub). Si riaprono o2 e o3 e si segue l'ordine di ripresa scritto sotto («Domani per primo»). — aggiornato il 29/10/2026, sera
 

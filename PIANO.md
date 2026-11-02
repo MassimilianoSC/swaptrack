@@ -7,6 +7,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | Lotto | Data | Cosa | Commit |
 |---|---|---|---|
+| 1 | 02/11/2026 | Riparazioni di riservatezza (documenti riscrivibili, listEvents, forceState/correctEventLocation, ruoli oltre la matrice, Storage), trigger riparato (spedizioni e resi), chiamate con campi vuoti (DDT ed export), DDT nella schermata di lettura, «Smista» giusto, cache offline all'accesso, BOM, resoconto mensile completo ed export leggibile, file privati con getBlob, avvisi, indice dei resi. Pubblicato con `deployBatch.mjs --yes`: tutti i controlli verdi, otto router raggiungibili | e4a053b |
 | 0 | 29/10/2026 | Codice di Emergent più le correzioni locali (indici, installazione, logo), su https://swaptrack-demo.web.app (progetto `kronos-caffe-sito`) | 5e66bb4 (confermato dal committente il 30/10: logo e pulsante «Installa» sono online) |
 
 ## Aspetta il committente
