@@ -31,12 +31,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
 | P-69 | Foto (app, o3): «persa» solo per errori permanenti, contati al più uno ogni 15 minuti (un cambio di ruolo può dare `unauthorized` finché il token non si aggiorna), mai per la rete; un solo svuotamento alla volta. Sul ramo `o3-foto` | o3 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
-
+| P-81 | Pagina Esportazioni: filtri per sito, magazzino, ASP, periodo, categoria (server pronto) | o3 |
 | P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
 | P-78 | Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
-| P-79 | Resoconti ed export, difetti: letture annullate contate; resi delle ASP sempre 0 nel loro resoconto; filtro periodo ignorato dal server; filtro categoria assente; colonne dell'export con codici tecnici e senza codice a barre. Riparazioni di o2 (scritte ora, prove al turno), filtri nella pagina a o3. Lotto 2 | o2 + o3 |
-| P-80 | Resoconto mensile completo (D-38, SPEC §13.4). Lotto 2 | o2 |
 | P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
+
 ## Da fare
 
 | # | Cosa | Chi | Criterio |
@@ -57,6 +56,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-79 | Resoconti ed export: difetti riparati (letture annullate, resi delle ASP, periodo, categoria, colonne leggibili con il codice a barre); filtri nuovi nella pagina: o3 | o2 | 02/11/2026 (b0266df) |
+| P-80 | Resoconto mensile completo come SPEC §13.4 (D-38) | o2 | 02/11/2026 (b0266df) |
 | P-24 | DDT nella schermata di lettura: scelta del DDT aperto, arrivati/mancanti/inattesi in diretta (SPEC §12.2, D-15) | o3 | 02/11/2026 (e57e0ed) |
 | P-53 | «Smista»: ogni pezzo riceve la propria categoria suggerita | o3 | 02/11/2026 |
 | P-60 | Avvisi aperti senza differenze «Nessuna differenza ora»; il tecnico non ascolta più gli avvisi | o3 | 02/11/2026 |
