@@ -3,9 +3,13 @@
 //   node scripts/deployBatch.mjs            checks and the full test round only: nothing goes online
 //   node scripts/deployBatch.mjs --yes      the same, then the deploy (rules, indexes, Storage, functions, hosting)
 //                                           and the check of the routers' invoker permission
+// P-82: when the test round passed on the same commit less than 24 hours ago (recorded in a file in the user's
+// temporary folder), --yes skips only the test round and says so; git, the install and the demo build always run
+// (dist can have been rebuilt in between, even in development mode).
 // Prerequisites: firebase login (firebase login:use for this folder), gcloud auth login, the emulator ports free.
 import { spawnSync } from "node:child_process";
 import { ROOT, FIREBASE, portsOf, busyPorts } from "./emulatorPorts.mjs";
+import { isRecentPass, readPass, writePass } from "./deployCheck.mjs";
 
 const PROJECT_ALIAS = "demo";
 const PROJECT_ID = "kronos-caffe-sito";
@@ -37,23 +41,35 @@ const head = run("git", ["rev-parse", "HEAD"], { capture: true });
 if (head !== run("git", ["rev-parse", "origin/main"], { capture: true })) fail("main is not the same as GitHub: push (or pull) first");
 console.log(`commit ${head.slice(0, 7)}`);
 
-step("Emulator ports free (the tests start their own emulators)");
-const busy = await busyPorts(portsOf(["auth", "firestore", "functions", "storage", "pubsub"]));
-if (busy.length) fail(`port(s) ${busy.join(", ")} in use: close the emulators first`);
+const record = readPass();
+const passed = DEPLOY && isRecentPass(record, head, Date.now()) ? record : null;
 
 step("Dependencies exactly as in the lockfiles (a dependency added since the last install, e.g. Playwright, would fail later)");
 run("yarn", ["install", "--frozen-lockfile"]);
 run("yarn", ["--cwd", "functions", "install", "--frozen-lockfile"]);
 
-step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end (seeded data imported, P-71)");
-run("yarn", ["build:functions"]);
-run("yarn", ["test"]);
-run("yarn", ["check:i18n"]);
-run("node", ["scripts/test-rules.mjs"]);
-run("yarn", ["e2e"]);
+if (passed) {
+  step(`Test round: already passed on commit ${head.slice(0, 7)} at ${new Date(passed.at).toLocaleString()}: SKIPPED (P-82)`);
+} else {
+  step("Emulator ports free (the tests start their own emulators)");
+  const busy = await busyPorts(portsOf(["auth", "firestore", "functions", "storage", "pubsub"]));
+  if (busy.length) fail(`port(s) ${busy.join(", ")} in use: close the emulators first`);
+
+  step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end (seeded data imported, P-71)");
+  run("yarn", ["build:functions"]);
+  run("yarn", ["test"]);
+  run("yarn", ["check:i18n"]);
+  run("node", ["scripts/test-rules.mjs"]);
+  run("yarn", ["e2e"]);
+}
 
 step("App build for the demo (.env.demo, with type check)");
 run("yarn", ["build:demo"]);
+
+if (!passed) {
+  // Record the round that passed, so that the --yes run that follows does not repeat it (P-82).
+  if (!writePass(head)) console.warn("(the passed test round could not be recorded: the next --yes run repeats it)");
+}
 
 if (!DEPLOY) {
   console.log(`\nAll checks passed on commit ${head.slice(0, 7)}. Nothing was published. To publish: node scripts/deployBatch.mjs --yes`);
