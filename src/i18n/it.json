@@ -280,6 +280,16 @@
     "sessionCount_one": "lettura in questa sessione",
     "sessionCount_other": "letture in questa sessione",
     "voided": "annullata",
+    "ddt": {
+      "label": "DDT",
+      "none": "Nessun DDT (solo arrivo)",
+      "option": "DDT {{number}}",
+      "title": "Confronto con il DDT {{number}}",
+      "arrived": "arrivati",
+      "missing": "mancanti",
+      "unexpected": "inattesi",
+      "noLines": "Il DDT non ha righe con numero di serie."
+    },
     "photoReminder": "Foto: solo il pezzo, mai persone",
     "photo": "Foto",
     "photoQueued": "Foto in coda per l'invio",

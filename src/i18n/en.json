@@ -280,6 +280,16 @@
     "sessionCount_one": "reading in this session",
     "sessionCount_other": "readings in this session",
     "voided": "undone",
+    "ddt": {
+      "label": "DDT",
+      "none": "No DDT (arrival only)",
+      "option": "DDT {{number}}",
+      "title": "Comparison with DDT {{number}}",
+      "arrived": "arrived",
+      "missing": "missing",
+      "unexpected": "unexpected",
+      "noLines": "The DDT has no serial lines."
+    },
     "photoReminder": "Photos: only the piece, never people",
     "photo": "Photo",
     "photoQueued": "Photo queued for upload",

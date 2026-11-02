@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
-import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, primeFieldCache, loadSorting, cachedBomForSite, type Category, type Source } from "@/lib/data/events";
+import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, primeFieldCache, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, type Category, type Source, type MyScan, type CachedDdt } from "@/lib/data/events";
 import { listModels, type Row, type Model } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId } from "@/lib/codeId.js";
@@ -58,7 +58,14 @@ export default function Scan() {
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
   const [session, setSession] = React.useState<{ id: string; code: string; type: string }[]>([]);
-  const [today, setToday] = React.useState<{ id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean }[]>([]);
+  const [today, setToday] = React.useState<MyScan[]>([]);
+  // §12.2 / P-24 (D-15): the DDT chosen for an arrival of new material (never pre-selected) and the live comparison.
+  const [cacheReady, setCacheReady] = React.useState(false);
+  const [ddts, setDdts] = React.useState<CachedDdt[]>([]);
+  const [ddtId, setDdtId] = React.useState("");
+  const [ddtExpected, setDdtExpected] = React.useState<Array<{ codeRaw: string; codeId: string }>>([]);
+  const [ddtTicks, setDdtTicks] = React.useState<Set<string>>(new Set());
+  const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
   const [lastEventId, setLastEventId] = React.useState<string | null>(null);
@@ -77,10 +84,60 @@ export default function Scan() {
   React.useEffect(() => {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined);
     void loadSorting().then((s) => setSorting(s as never)).catch(() => undefined);
-    if (claims?.orgId) void primeFieldCache(claims.orgId);
+    if (claims?.orgId) void primeFieldCache(claims.orgId, role).finally(() => setCacheReady(true)); else setCacheReady(true);
     void listLost().then((l) => setLostCount(l.length));
     return user ? watchMyScansToday(user.uid, setToday) : undefined;
   }, [user, claims]);
+
+  // P-24: the open DDTs of this warehouse are offered only for an arrival of new material; the choice is the user's.
+  const ddtApplies = mode === "arrive_at_warehouse" && flow === "new" && location?.type === "asp_warehouse";
+  React.useEffect(() => {
+    setDdtId("");
+    if (!ddtApplies || !location || !cacheReady) { setDdts([]); return; }
+    let aborted = false;
+    void cachedOpenDdtsForWarehouse(location.id).then((list) => { if (!aborted) setDdts(list); });
+    return () => { aborted = true; };
+  }, [ddtApplies, location, cacheReady]);
+
+  // The serial lines of the chosen DDT, by codeId (the same identity the trigger uses, R8).
+  React.useEffect(() => {
+    const d = ddts.find((x) => x.id === ddtId);
+    if (!d) { setDdtExpected([]); return; }
+    let aborted = false;
+    (async () => {
+      const expected: Array<{ codeRaw: string; codeId: string }> = [];
+      for (const raw of d.lines) {
+        const l = raw as { kind?: string; codeRaw?: string; codeId?: string };
+        if (l.kind !== "serial" || !l.codeRaw) continue;
+        expected.push({ codeRaw: l.codeRaw, codeId: l.codeId || (await computeCodeId(l.codeRaw)) });
+      }
+      if (!aborted) setDdtExpected(expected);
+    })();
+    return () => { aborted = true; };
+  }, [ddts, ddtId]);
+
+  // Live arrived / missing / unexpected, computed on the device from the user's own arrivals of today at this
+  // warehouse joined with the DDT lines, with the server's rule (§11.3): an arrival counts for the DDT if it carries
+  // its ddtId or its code is one of its serial lines; unexpected = carries the ddtId but is not a line.
+  React.useEffect(() => {
+    if (!ddtId || !location) { setDdtTicks(new Set()); setDdtUnexpected([]); return; }
+    const expectedSet = new Set(ddtExpected.map((e) => e.codeId));
+    const relevant = today.filter((s) => !s.voided && s.type === "arrive_at_warehouse" && s.codeRaw && s.locationId === location.id);
+    let aborted = false;
+    (async () => {
+      const ticks = new Set<string>();
+      const unexpected: string[] = [];
+      const seen = new Set<string>();
+      for (const s of relevant) {
+        const cid = await computeCodeId(s.codeRaw!);
+        if (seen.has(cid)) continue; seen.add(cid);
+        if (expectedSet.has(cid)) ticks.add(cid); else if (s.ddtId === ddtId) unexpected.push(s.codeRaw!);
+      }
+      if (aborted) return;
+      setDdtTicks(ticks); setDdtUnexpected(unexpected);
+    })();
+    return () => { aborted = true; };
+  }, [ddtId, ddtExpected, today, location]);
 
   // §12.1: load the BOM of the current site (if any) from the ASP cache; direction filters the lines shown.
   React.useEffect(() => {
@@ -129,7 +186,7 @@ export default function Scan() {
 
   const buildPayload = (): Record<string, unknown> => {
     const payload: Record<string, unknown> = {};
-    if (mode === "arrive_at_warehouse") { payload.flow = flow; if (category) payload.categoryId = category; if (shipmentId) payload.shipmentId = shipmentId; }
+    if (mode === "arrive_at_warehouse") { payload.flow = flow; if (category) payload.categoryId = category; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId; }
     if (mode === "classify") {
       if (newClass) payload.newClass = newClass; else payload.categoryId = category || suggested;
       if (suggested) payload.suggestedCategoryId = suggested;
@@ -230,6 +287,7 @@ export default function Scan() {
   const needPhotoForDefective = photoMandatoryDefective && mode === "classify" && newClass === "defective";
   // "My scans of today": a void is shown on the reading it undid, not as a row of its own.
   const todayRows = today.filter((s) => s.type !== "void");
+  const selectedDdt = ddtApplies ? ddts.find((d) => d.id === ddtId) ?? null : null;
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
@@ -243,6 +301,12 @@ export default function Scan() {
       {mode === "arrive_at_warehouse" && (
         <Select aria-label={t("scan.flow")} value={flow} onChange={(e) => setFlow(e.target.value)} data-testid="scan-flow-select">
           <option value="removed">{t("scan.flowRemoved")}</option><option value="new">{t("scan.flowNew")}</option>
+        </Select>
+      )}
+      {ddtApplies && (
+        <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => setDdtId(e.target.value)} data-testid="scan-ddt-select">
+          <option value="">{t("scan.ddt.none")}</option>
+          {ddts.map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number })}</option>)}
         </Select>
       )}
       {(mode === "classify" || (mode === "arrive_at_warehouse" && flow === "removed")) && (
@@ -294,7 +358,37 @@ export default function Scan() {
           </ul>
         )}
       </section>
-      {camError &&<p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
+      {selectedDdt && (
+        <section className="rounded border border-border p-3" data-testid="scan-ddt-section">
+          <h2 className="font-semibold mb-1">{t("scan.ddt.title", { number: selectedDdt.number })}</h2>
+          <p className="flex flex-wrap gap-4 text-sm tabular">
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtTicks.size}</span> {t("scan.ddt.arrived")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtExpected.length - ddtTicks.size}</span> {t("scan.ddt.missing")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-unexpected">{ddtUnexpected.length}</span> {t("scan.ddt.unexpected")}</span>
+          </p>
+          {ddtExpected.length === 0 ? (
+            <p className="text-sm text-muted mt-2">{t("scan.ddt.noLines")}</p>
+          ) : (
+            <ul className="mt-2 max-h-36 overflow-y-auto space-y-1 text-xs font-mono" data-testid="scan-ddt-lines">
+              {ddtExpected.map((line) => {
+                const done = ddtTicks.has(line.codeId);
+                return (
+                  <li key={line.codeId} className={cn("flex items-center gap-2 border-b border-border py-1", done && "text-success")} data-testid={`scan-ddt-line-${done ? "done" : "todo"}`}>
+                    <Check className={cn("h-4 w-4", done ? "" : "opacity-30")} aria-hidden />
+                    <span className="truncate">{line.codeRaw}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {ddtUnexpected.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs font-mono text-warning" data-testid="scan-ddt-unexpected-list">
+              {ddtUnexpected.map((c) => <li key={c} className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" aria-hidden /><span className="truncate">{c}</span> {t("scan.ddt.unexpected")}</li>)}
+            </ul>
+          )}
+        </section>
+      )}
+      {camError && <p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
       <div className="flex flex-wrap gap-2 items-center">
         {torch !== null && <Button variant="secondary" onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
         {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}

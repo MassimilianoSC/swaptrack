@@ -24,12 +24,14 @@ export async function writeEvent(e: NewEvent): Promise<string> {
   return id;
 }
 
-// R11: only the author's own events of today.
-export function watchMyScansToday(uid: string, cb: (rows: { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean }[]) => void) {
+// R11: only the author's own events of today. `ddtId` (payload) serves the live DDT comparison on the device (§12.2).
+export interface MyScan { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null }
+export function watchMyScansToday(uid: string, cb: (rows: MyScan[]) => void) {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const q = query(collection(db, "events"), where("userId", "==", uid), where("scannedAt", ">=", Timestamp.fromDate(start)), orderBy("scannedAt", "desc"));
   return onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => ({
     id: d.id, type: d.get("type"), codeRaw: d.get("codeRaw"), at: (d.get("scannedAt") as Timestamp).toDate(), pending: d.metadata.hasPendingWrites, voided: d.get("voided"),
+    locationId: d.get("locationId"), ddtId: (d.get("payload") as { ddtId?: string } | undefined)?.ddtId ?? null,
   }))), () => cb([]));
 }
 
@@ -51,14 +53,29 @@ export async function cachedItemForCode(raw: string): Promise<Record<string, unk
 }
 
 // b7: one query per collection on the ASP's items and codes (current or pending ASP), at sign-in and resume.
-// Also pulls the ASP's BOM documents so the technician scan screen can compute the BOM tick list locally (§12.1).
-export async function primeFieldCache(orgId: string): Promise<void> {
+// Also pulls the ASP's BOM documents so the technician scan screen can compute the BOM tick list locally (§12.1),
+// and its open DDTs so the warehouse scan screen can offer them and compare live (§12.2, P-24).
+// DDTs only for the warehouse roles: the rules refuse them to the technician.
+export async function primeFieldCache(orgId: string, role: string): Promise<void> {
   const qs = [
     query(collection(db, "items"), where("currentAspId", "==", orgId)), query(collection(db, "items"), where("pendingAspId", "==", orgId)),
     query(collection(db, "codes"), where("aspId", "==", orgId)),
     query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "bom")),
   ];
+  if (role === "asp_warehouse" || role === "asp_admin") qs.push(query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("status", "==", "open")));
   await Promise.all(qs.map((q) => getDocs(q).catch(() => getDocsFromCache(q))));
+}
+
+// §12.2 / P-24: the open DDTs of a warehouse, from the local cache (never chosen by themselves: the user picks one).
+export interface CachedDdt { id: string; number: string; lines: Array<Record<string, unknown>> }
+export async function cachedOpenDdtsForWarehouse(locationId: string): Promise<CachedDdt[]> {
+  try {
+    const q = query(collection(db, "documents"), where("kind", "==", "ddt_in"), where("locationId", "==", locationId));
+    const snap = await getDocsFromCache(q);
+    return snap.docs.filter((d) => d.get("status") === "open")
+      .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [] }))
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+  } catch { return []; }
 }
 
 // §12.1: BOM for a site read from the local cache. Open or checked, highest version.
