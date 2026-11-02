@@ -34,6 +34,8 @@ export default defineConfig({
     { name: "desk", testMatch: /.*\.desk\.spec\.ts/, use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },
     // Field shell: phone width (*.phone.spec.ts).
     { name: "phone", testMatch: /.*\.phone\.spec\.ts/, use: { ...devices["Pixel 7"] } },
+    // Diagnostics (*.diag.ts), never in the normal round: only with E2E_DIAG=1.
+    ...(process.env.E2E_DIAG ? [{ name: "diag", testMatch: /.*\.diag\.ts/, use: { ...devices["Pixel 7"] } }] : []),
   ],
   webServer: {
     command: "yarn dev",
