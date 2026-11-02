@@ -103,6 +103,28 @@ async function seedPhase() {
   return dir;
 }
 
+// P-83: the first onEventCreated after a start waits for the functions emulator to start its worker (measured: up to
+// 50 s on a busy machine), and the emulator runs one trigger at a time, so the first scans of the tests queued behind
+// it. A malformed event (no such type) starts the worker without touching any data: the trigger marks it and writes
+// one malformed_event anomaly; both documents are then deleted, so the tests never see them.
+async function warmUpTrigger() {
+  const base = `http://${hostOf("firestore")}/v1/projects/${PROJECT}/databases/(default)/documents`;
+  const headers = { Authorization: "Bearer owner", "Content-Type": "application/json" }; // emulator admin access
+  const id = "warmup-0000-4000-8000-000000000000";
+  const started = Date.now();
+  const r = await fetch(`${base}/events?documentId=${id}`, { method: "POST", headers,
+    body: JSON.stringify({ fields: { type: { stringValue: "emulator_warmup" }, locationId: { stringValue: "none" } } }) }).catch(() => null);
+  if (!r?.ok) { console.error("emulators: warm-up event not written; continuing."); return; }
+  let done = false;
+  while (!done && Date.now() - started < READY_TIMEOUT_MS) {
+    await sleep(500);
+    const doc = await fetch(`${base}/events/${id}`, { headers }).then((x) => x.json()).catch(() => ({}));
+    done = !!doc.fields?.processedAt;
+  }
+  for (const path of [`events/${id}`, `anomalies/${id}_malformed_event`]) await fetch(`${base}/${path}`, { method: "DELETE", headers }).catch(() => null);
+  console.log(`emulators: onEventCreated ${done ? "warmed up" : "NOT warmed up"} in ${Date.now() - started} ms`);
+}
+
 async function main() {
   const busy = await busyPorts(PORTS);
   if (busy.length) {
@@ -117,6 +139,7 @@ async function main() {
 
   if (COMMAND) {
     if (seeded) console.log(`emulators: data imported; onEventCreated runs so far: ${(cli.log.match(TRIGGER_RUN) ?? []).length}`);
+    await warmUpTrigger();
     const code = await runCommand(COMMAND);
     const freed = await cli.stop("emulators --run");
     if (seeded) rmSync(seeded, { recursive: true, force: true });
