@@ -31,6 +31,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
 | P-69 | Foto (app, o3): «persa» solo per errori permanenti, contati al più uno ogni 15 minuti (un cambio di ruolo può dare `unauthorized` finché il token non si aggiorna), mai per la rete; un solo svuotamento alla volta. Sul ramo `o3-foto` | o3 |
 | P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
+| P-82 | `deployBatch.mjs`: ricordare il commit che ha superato i controlli; con `--yes` sullo stesso commit (e copia pulita) saltare le prove già fatte, così il committente fa un giro solo. Dopo il lotto 1 | o2 |
 | P-81 | Pagina Esportazioni: filtri per sito, magazzino, ASP, periodo, categoria (server pronto) | o3 |
 | P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
 | P-78 | Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
