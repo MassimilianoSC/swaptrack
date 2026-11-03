@@ -21,7 +21,7 @@
     "seed:full": "node scripts/fullSeed.mjs",
     "build:demo": "tsc --noEmit -p tsconfig.json && vite build --mode demo",
     "test:rules": "node scripts/test-rules.mjs",
-    "e2e": "yarn build:functions && node scripts/emulators.mjs --seed \"yarn seed && yarn seed:full\" --run \"playwright test\"",
+    "e2e": "yarn build:functions && node scripts/e2e-blocks.mjs",
     "e2e:only": "playwright test",
     "check:e2e-blocks": "node e2e/check-blocks.mjs",
     "check:i18n": "node src/i18n/check.mjs"
