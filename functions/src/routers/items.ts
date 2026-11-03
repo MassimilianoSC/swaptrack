@@ -39,6 +39,16 @@ export async function serverEvent(ctx: Ctx, type: string, locationId: string, as
   return id;
 }
 
+// id -> one field of the given documents, reading only that field (P-94: the role of a user, never its name).
+async function fieldOf(col: string, ids: string[], field: string): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  for (let i = 0; i < ids.length; i += 300) {
+    const snaps = await db.getAll(...ids.slice(i, i + 300).map((id) => db.collection(col).doc(id)), { fieldMask: [field] });
+    for (const s of snaps) if (s.exists && typeof s.get(field) === "string") out[s.id] = s.get(field);
+  }
+  return out;
+}
+
 // Batch commits for N docs (updates / sets). Firestore batch limit 500.
 async function commitInBatches(refs: Array<[FirebaseFirestore.DocumentReference, Doc, "set" | "update"]>) {
   for (let i = 0; i < refs.length; i += 450) {
@@ -144,13 +154,26 @@ export const items = {
       await loadItem(ctx, d.itemId);
       const evs = await db.collection("events").where("itemId", "==", d.itemId).get();
       const client = isClientRole(ctx.role);
+      const isOwn = (e: Doc) => client || e.aspId === ctx.orgId;
+      const own = evs.docs.map((x) => x.data()).filter(isOwn);
+      // §13.2 (P-94): organization and role of each own event, with names instead of ids. Never the person (R11):
+      // only the role is read from the user's profile.
+      const ids = (field: string) => [...new Set(own.map((e) => e[field]).filter((v): v is string => typeof v === "string" && !!v))];
+      const roles = await fieldOf("users", ids("userId"), "role");
+      const orgs = await fieldOf("organizations", [...ids("orgId"), ...ids("aspId")], "name");
+      const places = await fieldOf("locations", ids("locationId"), "name");
       return {
         events: evs.docs.map((x) => {
           const e = x.data();
-          const own = client || e.aspId === ctx.orgId;
+          const mine = isOwn(e);
+          // The organization of the person who scanned (orgId; server events by an office user carry the client's).
+          const orgId = (e.orgId ?? e.aspId ?? null) as string | null;
           return { id: x.id, type: e.type, scannedAt: (e.scannedAtEffective ?? e.scannedAt)?.toMillis?.() ?? null, source: e.source,
-            locationId: own ? e.locationId : null, aspId: own ? e.aspId ?? null : null, organization: own ? e.aspId ?? "client" : "another", voided: !!e.voided, corrected: !!e.correction,
-            payload: own ? e.payload ?? {} : {} };
+            locationId: mine ? e.locationId : null, aspId: mine ? e.aspId ?? null : null, organization: mine ? e.aspId ?? "client" : "another", voided: !!e.voided, corrected: !!e.correction,
+            payload: mine ? e.payload ?? {} : {},
+            locationName: mine ? places[e.locationId] ?? null : null,
+            organizationName: mine && orgId ? orgs[orgId] ?? null : null,
+            role: mine && e.userId ? roles[e.userId] ?? null : null };
         }).sort((a, b) => (a.scannedAt ?? 0) - (b.scannedAt ?? 0)),
       };
     },
