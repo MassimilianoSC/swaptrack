@@ -68,10 +68,10 @@ export default function Scan() {
   // The suggestion of the piece being recorded: the state only shows it; the payload reads the ref, set before
   // recording (the state seen by onCode is the one of the previous reading).
   const suggestedRef = React.useRef<string | null>(null);
-  const [sorting, setSorting] = React.useState<{ categories: Category[]; rules: SortingRule[] }>({ categories: [], rules: [] });
+  const [sorting, setSorting] = React.useState<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }>({ categories: [], rules: [] });
   // The sorting rules as loaded: a reading made right after the screen opens waits for them, so its suggestion is
   // never computed on an empty list (P-25).
-  const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[] }> | null>(null);
+  const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }> | null>(null);
   // P-98: the last code the camera read (or recorded) and when.
   // P-109: told shows that the user has been told once that this code was already read.
   const cameraLast = React.useRef<{ code: string; at: number; told?: boolean } | null>(null);
@@ -145,7 +145,7 @@ export default function Scan() {
 
   React.useEffect(() => {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined);
-    const load = loadSorting() as Promise<{ categories: Category[]; rules: SortingRule[] }>;
+    const load = loadSorting() as Promise<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }>;
     sortingLoad.current = load;
     void load.then(setSorting).catch(() => undefined);
     void listLost().then((l) => setLostCount(l.length));
@@ -505,6 +505,8 @@ export default function Scan() {
       )}
       {(mode === "classify" || (mode === "arrive_at_warehouse" && flow === "removed")) && (
         <div className="space-y-2">
+          {/* D-58: no categories on this phone yet (never downloaded and no network): said, never an empty list. */}
+          {sorting.fromCache && sorting.categories.length === 0 && <p className="text-sm text-warning" data-testid="scan-sorting-missing">{t("scan.sortingMissing")}</p>}
           {mode === "arrive_at_warehouse" && <Checkbox id="scan-sort-now" label={t("scan.sortNow")} checked={sortNow} onChange={setSortNow} testId="scan-sort-now" />}
           {suggests && suggested && (
             <div className="flex items-center gap-2 flex-wrap">

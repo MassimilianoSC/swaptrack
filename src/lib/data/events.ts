@@ -81,6 +81,7 @@ export async function cachedItemForCode(raw: string): Promise<Record<string, unk
 // and its open DDTs so the warehouse scan screen can offer them and compare live (§12.2, P-24).
 // DDTs only for the warehouse roles: the rules refuse them to the technician.
 // The active model catalog too (SPEC §6.1, §6.4, P-73): picking the model of an unknown piece works offline.
+// And the sorting categories and rules (D-58): "Sort" and the arrival of removed material work offline too.
 // Returns true only if every query was answered by the server (D-34: the site picker's "updated" time moves only then).
 export async function primeFieldCache(orgId: string, role: string): Promise<boolean> {
   const qs = [
@@ -89,7 +90,10 @@ export async function primeFieldCache(orgId: string, role: string): Promise<bool
     query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "bom")),
     query(collection(db, "models"), where("active", "==", true)),
   ];
-  if (role === "asp_warehouse" || role === "asp_admin") qs.push(query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("status", "==", "open")));
+  if (role === "asp_warehouse" || role === "asp_admin") {
+    qs.push(query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("status", "==", "open")));
+    qs.push(query(collection(db, "sortingCategories")), query(collection(db, "sortingRules")));
+  }
   // P-78: the big collections (items, codes: thousands of documents) are loaded in pages, one after the other, so the
   // writes of a whole collection into the local cache never hold up the scans in the meantime.
   let ok = true;
@@ -139,12 +143,13 @@ export async function cachedBomForSite(locationId: string, orgId: string): Promi
 }
 
 export interface Category { id: string; labels: { it: string; en: string }; active: boolean; order: number }
+// fromCache: the answer is the phone's copy, not the server's (D-58: an empty copy means "not downloaded yet").
 export async function loadSorting() {
   const read = async (c: string) => {
     const q = query(collection(db, c));
     const s = await getDocs(q).catch(() => getDocsFromCache(q));
-    return s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return { docs: s.docs.map((d) => ({ id: d.id, ...d.data() })), fromCache: s.metadata.fromCache };
   };
   const [cats, rules] = await Promise.all([read("sortingCategories"), read("sortingRules")]);
-  return { categories: (cats as Category[]).sort((a, b) => a.order - b.order), rules: rules as never[] };
+  return { categories: (cats.docs as Category[]).sort((a, b) => a.order - b.order), rules: rules.docs as never[], fromCache: cats.fromCache || rules.fromCache };
 }

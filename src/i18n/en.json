@@ -418,7 +418,8 @@
     "aiLabelWarn": {
       "ai_codes_dropped": "Some codes were not readable and are missing.",
       "ai_no_codes": "No readable code in the photo."
-    }
+    },
+    "sortingMissing": "The sorting categories are not on the phone yet: the network is needed to download them. Meanwhile record only the arrival and sort later."
   },
   "pwa": {
     "newVersion": "A new version is available.",
