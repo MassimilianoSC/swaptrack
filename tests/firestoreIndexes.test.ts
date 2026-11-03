@@ -11,6 +11,7 @@ const NEEDED: Array<{ query: string; collection: string; fields: Field[] }> = [
   { query: "db.ts recent own events: userId ==, orderBy scannedAt desc", collection: "events", fields: [["userId", "ASCENDING"], ["scannedAt", "DESCENDING"]] },
   { query: "events.ts today's own events: userId ==, scannedAt >=, orderBy scannedAt desc", collection: "events", fields: [["userId", "ASCENDING"], ["scannedAt", "DESCENDING"]] },
   { query: "documents.ts ASP documents: aspId ==, orderBy createdAt desc", collection: "documents", fields: [["aspId", "ASCENDING"], ["createdAt", "DESCENDING"]] },
+  { query: "documents.ts client_warehouse documents (P-97): kind ==, orderBy createdAt desc", collection: "documents", fields: [["kind", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   { query: "documents.ts client_warehouse alerts: kind ==, orderBy updatedAt desc", collection: "alerts", fields: [["kind", "ASCENDING"], ["updatedAt", "DESCENDING"]] },
   { query: "documents.ts ASP alerts: aspId ==, orderBy updatedAt desc", collection: "alerts", fields: [["aspId", "ASCENDING"], ["updatedAt", "DESCENDING"]] },
   { query: "documents.ts reports: scope ==, orderBy createdAt desc", collection: "reports", fields: [["scope", "ASCENDING"], ["createdAt", "DESCENDING"]] },
