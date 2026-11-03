@@ -115,6 +115,16 @@ export function compareDocument(kind: DocKind, documentId: string, lines: Line[]
 // §11.4 "updated with the count and the list" (P-95): the detail of a document alert, totals and the codes (at most
 // ALERT_LIST_MAX of each list, so the alert stays small).
 export const ALERT_LIST_MAX = 50;
+
+// The differences that make a document alert (§11.4) and the detail it shows. P-114 n.15: with the field policy
+// "accept silently" (§14, settings/fieldPolicy), pieces found at a BOM's site but not in the BOM are neither counted
+// nor listed; missing pieces still are.
+export function documentAlert(r: CompareResult, opts: { silentUnexpected?: boolean } = {}) {
+  const detail = alertDetail(r);
+  const shown = opts.silentUnexpected ? { ...detail, unexpected: 0, unexpectedCodes: [] as string[] } : detail;
+  const count = r.totals.missing + shown.unexpected + r.totals.arrivedModelUnknown + r.quantities.reduce((n, q) => n + Math.abs(q.expected - q.counted), 0);
+  return { count, detail: shown };
+}
 export function alertDetail(r: CompareResult) {
   return { ...r.totals, missingCodes: r.missing.slice(0, ALERT_LIST_MAX), unexpectedCodes: r.unexpected.slice(0, ALERT_LIST_MAX), modelUnknownCodes: r.arrivedModelUnknown.slice(0, ALERT_LIST_MAX) };
 }

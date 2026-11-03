@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compareDocument, alertDetail, type Line, type EventFact } from "../functions/src/shared/documents";
+import { compareDocument, alertDetail, documentAlert, type Line, type EventFact } from "../functions/src/shared/documents";
 
 const s = (codeRaw: string, modelId?: string, direction?: "remove" | "install"): Line =>
   ({ kind: "serial", codeRaw, codeId: `cid-${codeRaw}`, materialCode: null, modelId: modelId ?? null, direction });
@@ -105,5 +105,15 @@ describe("readable codes and the alert's lists (P-95)", () => {
     const d = alertDetail(r);
     expect(d).toMatchObject({ missing: 60, unexpected: 1, arrived: 0, arrivedModelUnknown: 0, unexpectedCodes: ["X"], modelUnknownCodes: [] });
     expect(d.missingCodes).toEqual(lines.slice(0, 50).map((l) => (l as { codeRaw: string }).codeRaw));
+  });
+});
+
+describe("documentAlert: count and detail of a document alert (P-114 n.15)", () => {
+  const r = compareDocument("bom", "B", [s("A", undefined, "install"), s("B", undefined, "install")], [ev("install_at_site", "A", null, { codeRaw: "A" }), ev("install_at_site", "X", null, { codeRaw: "X" })]);
+  it("by default missing and unexpected pieces both count", () => {
+    expect(documentAlert(r)).toMatchObject({ count: 2, detail: { missing: 1, unexpected: 1, unexpectedCodes: ["X"] } });
+  });
+  it("«accept silently»: the unexpected pieces neither count nor show; the missing ones do", () => {
+    expect(documentAlert(r, { silentUnexpected: true })).toMatchObject({ count: 1, detail: { missing: 1, missingCodes: ["B"], unexpected: 0, unexpectedCodes: [] } });
   });
 });

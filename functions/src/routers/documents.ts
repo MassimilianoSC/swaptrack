@@ -8,7 +8,8 @@ import { adminLog } from "../core/adminLog";
 import { isClientRole } from "../shared/roles";
 import { alertId } from "../shared/alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
-import { compareDocument, alertDetail, type DocKind, type Line, type EventFact } from "../shared/documents";
+import { compareDocument, documentAlert, type DocKind, type Line, type EventFact } from "../shared/documents";
+import { getSettings } from "../core/settings";
 import { askModel } from "../core/aiExtract";
 import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines, LABEL_RESPONSE_SCHEMA, LABEL_INSTRUCTION, normalizeLabelCodes } from "../core/aiOutput";
 import type { Part } from "@google/genai";
@@ -180,7 +181,10 @@ export const documents = {
       } else if (kind === "ddt_return") {
         evs = (await db.collection("events").where("payload.shipmentId", "==", doc!.shipmentId ?? "").get()).docs.filter((x) => x.get("type") === "return_confirm");
       } else {
-        evs = (await db.collection("events").where("locationId", "==", doc!.locationId).get()).docs.filter((x) => ["remove_at_site", "install_at_site"].includes(x.get("type") as string));
+        // P-114 n.19: only the readings since the BOM, as the automatic check (bomCheck.ts) counts them.
+        const bomStart = (doc!.createdAt?.toMillis?.() ?? 0) as number;
+        evs = (await db.collection("events").where("locationId", "==", doc!.locationId).get()).docs
+          .filter((x) => ["remove_at_site", "install_at_site"].includes(x.get("type") as string) && (x.get("scannedAt")?.toMillis?.() ?? 0) >= bomStart);
       }
       // §8.2: a voided scan ("undo last") is out of the replay, so it is out of the comparison too.
       evs = evs.filter((x) => !x.get("voided"));
@@ -209,14 +213,16 @@ export const documents = {
       const kind = doc!.kind as DocKind;
       if (kind === "ddt_in" || kind === "bom") {
         const compared = await (documents.compareDocument as unknown as { handler: (c: Ctx, d: Doc) => Promise<ReturnType<typeof compareDocument>> }).handler(ctx, { documentId: d.documentId } as Doc);
-        const diffs = compared.totals.missing + compared.totals.unexpected + compared.totals.arrivedModelUnknown + (compared.quantities.reduce((n, q) => n + Math.abs(q.expected - q.counted), 0));
+        // P-114 n.15: the field policy applies to a BOM checked by hand as to the automatic check.
+        const silentUnexpected = kind === "bom" && (await getSettings("fieldPolicy")).pieceAtSiteNotInBom === "accept_silently";
+        const { count, detail } = documentAlert(compared, { silentUnexpected });
         const id = kind === "ddt_in" ? alertId.ddt(d.documentId) : alertId.bom(d.documentId);
         const kindCode = kind === "ddt_in" ? "ddt_in_difference" : "bom_difference";
-        if (diffs > 0) {
+        if (count > 0) {
           await upsertAlert(id, { kind: kindCode, aspId: doc!.aspId ?? null, locationId: doc!.locationId, documentId: d.documentId, shipmentId: null,
-            detail: alertDetail(compared), count: diffs });
+            detail, count });
         } else {
-          await zeroAlertIfOpen(id, alertDetail(compared));
+          await zeroAlertIfOpen(id, detail);
         }
       }
     },
