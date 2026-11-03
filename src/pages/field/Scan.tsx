@@ -304,8 +304,10 @@ export default function Scan() {
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
     if (suggests) {
       const it = await cachedItemForCode(code);
-      const rules = (await sortingLoad.current?.catch(() => null))?.rules ?? sorting.rules;
-      const s = it ? suggestCategory(rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }) : null;
+      const loaded = (await sortingLoad.current?.catch(() => null)) ?? sorting;
+      // Censimento n.24: a rule leading to a category no longer active is skipped (the next rule applies).
+      const active = new Set(loaded.categories.filter((c) => c.active).map((c) => c.id));
+      const s = it ? suggestCategory(loaded.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }, active) : null;
       suggestedRef.current = s;
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
