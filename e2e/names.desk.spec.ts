@@ -57,6 +57,7 @@ test.describe("Nomi al posto degli id (scrivania)", () => {
     const row = page.getByTestId("exports-table-row").first();
     await expect(row).toBeVisible({ timeout: 120_000 });
     await expect(row).not.toContainText("…");
-    await expect(row).not.toContainText(RAW_ID);
+    // innerText, not textContent: textContent glues the cells ("…14:00org_asp_nord") and the word boundary never matches.
+    expect(await row.evaluate((el) => (el as HTMLElement).innerText)).not.toMatch(RAW_ID);
   });
 });

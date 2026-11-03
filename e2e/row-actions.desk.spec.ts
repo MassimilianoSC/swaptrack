@@ -24,7 +24,9 @@ test.describe("Azioni per riga (scrivania)", () => {
     });
     await page.getByTestId(`alerts-seen-${a}`).click();
     await expect(page.getByTestId(`alerts-seen-${a}`)).toBeDisabled();
-    await expect(page.getByTestId(`alerts-seen-${b}`)).toBeEnabled();
-    await expect(page.getByTestId(`alerts-close-${b}`)).toBeEnabled();
+    // At the same moment (no waiting: toBeEnabled would wait for the slow call to end): the other row is usable.
+    expect(await page.getByTestId(`alerts-seen-${b}`).isEnabled()).toBe(true);
+    expect(await page.getByTestId(`alerts-close-${b}`).isEnabled()).toBe(true);
+    await expect(page.getByTestId(`alerts-seen-${a}`)).toBeDisabled(); // still waiting: the call is not over yet
   });
 });
