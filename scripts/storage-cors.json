@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://swaptrack-demo.web.app", "https://swaptrack-demo.firebaseapp.com"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
