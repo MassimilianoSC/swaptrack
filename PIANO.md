@@ -30,9 +30,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 | P-92 | (S3) Righe BOM con direzione obbligatoria (SPEC §11.2): il server oggi le accetta senza, il tecnico vede la BOM vuota. Server pronto sul ramo o2-p92 (codice nuovo `bom_direction_required`), esce con la pagina di o3 | o2 + o3 |
-| P-96 | (A1, A2, A9) Testi grezzi nella Home dell'ufficio cliente, in Anomalie ed Esportazioni; tre errori del server senza traduzione; foto del DDT non compressa | o3 |
 | P-97 | (A3) Magazzino cliente: menu Documenti gira all'infinito (ricerca negata dalle regole); filtro per tipo (o3) e indice (o2) | o3 + o2 |
-| P-98 | (A4) Raffica col telefono vero: lo stesso pezzo può registrarsi due volte se la fotocamera resta sul codice | o3 |
 | P-99 | (A5) Resoconti: l'ufficio cliente non vede né genera il resoconto di un'ASP | o3 |
 | P-103 | (A10) L'avviso del reso apre il DDT invece della spedizione, con pulsanti che il server rifiuta | o3 |
 | P-100 | (A6) Nomi al posto degli id (luoghi, ASP, categorie, da/a) in varie pagine; da controllare anche per il criterio 1 (id di un'altra ASP visibile) | o3 |
@@ -69,6 +67,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, «Smista nello stesso passaggio» (D-27); suggerimento anche alla prima lettura (le regole di smistamento arrivavano dopo la lettura, anche in «Smista») | o3 | 03/11/2026 (40075fb, 40f0cc5) |
 | P-86 | Materiale nuovo mai «smistato» da un arrivo con categoria (D-39): server e app | o2 + o3 | 03/11/2026 (811f995, 40f0cc5) |
 | P-70 | Pagina del pezzo con le sue foto (SPEC §13.2, D-32), lette con getBlob (D-35) | o3 | 03/11/2026 (d155dc3, 540788e) |
+| P-98 | Raffica col telefono vero: lo stesso pezzo non si registra più due volte con la fotocamera ferma sul codice | o3 | 03/11/2026 (d01510b) |
+| P-96 | Niente testi grezzi (Home dell'ufficio cliente, Anomalie, Esportazioni); errori del server tradotti; foto del DDT compressa; controllo permanente delle chiavi in check:i18n | o3 | 03/11/2026 (8e3d5bc) |
 | P-90 | Il numero di pezzi della spedizione cresce solo alla prima lettura del pezzo (3 rosse prima) | o2 | 03/11/2026 (e50f90e) |
 | P-91 | «Annulla l'ultima» in un reso o trasferimento toglie la riga e fa scendere il conteggio; riga già confermata o arrivata resta | o2 | 03/11/2026 (9eeba8a) |
 | P-93 | Rilettura di un pezzo nella stessa spedizione senza anomalia (D-41) | o2 | 03/11/2026 (6bcee66) |
