@@ -175,8 +175,11 @@ export async function produceReport(scope: string, month: string, start: Date, e
   const scopeName = scope === "client" ? null : ((await db.collection("organizations").doc(scope).get()).get("name") as string | undefined) ?? null;
   const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, data });
   const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, data });
-  const pdfPath = `reports/${scope}/${month}.pdf`;
-  const xlsxPath = `reports/${scope}/${month}.xlsx`;
+  // P-114 n.26: every generation has its own files (a month generated again never overwrites the earlier report);
+  // the name the user sees when downloading is given by the app.
+  const stamp = `${month}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  const pdfPath = `reports/${scope}/${stamp}.pdf`;
+  const xlsxPath = `reports/${scope}/${stamp}.xlsx`;
   await bucket().file(pdfPath).save(pdfBuf, { contentType: "application/pdf", resumable: false });
   await bucket().file(xlsxPath).save(xlsxBuf, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", resumable: false });
   await db.collection("reports").add({ scope, month, language: lang, pdfPath, xlsxPath, summary, createdAt: FieldValue.serverTimestamp() });

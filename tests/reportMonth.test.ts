@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { reportMonth, previousReportMonth } from "../functions/src/shared/reportMonth";
 
-// §13.4: the label is the month the report covers (and its file name, reports/{scope}/{label}.pdf).
+// §13.4: the label is the month the report covers (and the start of its file name, reports/{scope}/{label}-{stamp}.pdf).
 // Before: the on-demand report of October was labelled "2026-09" (overwriting September's file) and the
 // January run of the monthly job wrote "2027-00".
 describe("reportMonth", () => {
