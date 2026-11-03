@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, openPiece } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, openPiece, emulatorFindOne } from "./helpers";
 import { SEED } from "./seed";
 
 // P-102 (SPEC §10): in "Sort" the suggested category is confirmed with one tap or another one is chosen; with a fixed
@@ -15,6 +15,8 @@ async function arrivedRadio(page: Page, code: string): Promise<void> {
   await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
   await scanManual(page, code, { withModel: true });
   await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+  // The piece exists once the trigger has processed the arrival (the suggestion needs its model).
+  await expect.poll(async () => !!(await emulatorFindOne("codes", { raw: code })), { timeout: 90_000 }).toBe(true);
 }
 const typeCode = async (page: Page, code: string) => {
   await page.getByTestId("scan-manual-input").fill(code);
