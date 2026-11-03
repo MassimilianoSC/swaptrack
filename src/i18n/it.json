@@ -303,7 +303,8 @@
     "change": "Cambia luogo",
     "search": "Cerca per codice o nome",
     "none": "Nessun luogo disponibile",
-    "noneHint": "La tua organizzazione non ha ancora luoghi attivi. Chiedi all'amministratore."
+    "noneHint": "La tua organizzazione non ha ancora luoghi attivi. Chiedi all'amministratore.",
+    "stale": "Elenco non ancora aggiornato dal server: è quello salvato sul telefono. Riprovo da solo quando torna la rete."
   },
   "scan": {
     "button": "Leggi",

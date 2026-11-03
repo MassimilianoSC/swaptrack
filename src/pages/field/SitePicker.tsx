@@ -11,6 +11,8 @@ import { Loading, Empty, ErrorState } from "@/components/states";
 const META_KEY = "swaptrack.fieldLocationsMeta";
 
 // §5 site picker: one query at sign-in and resume, offline from the cache, instant search. Never pre-selects.
+const STALE_RETRY_MS = 15_000;
+
 export default function SitePicker() {
   const { t, i18n } = useTranslation();
   const { claims, location, setLocation, fieldCacheAt } = useSession();
@@ -19,6 +21,8 @@ export default function SitePicker() {
   const [sitesAt, setSitesAt] = React.useState<number | null>(null);
   const [list, setList] = React.useState<Row<Location>[] | null>(null);
   const [error, setError] = React.useState(false);
+  // P-125: the list on screen is the device's copy (no answer from the server yet): said, and asked again by itself.
+  const [stale, setStale] = React.useState(false);
   const [q, setQ] = React.useState("");
   const [meta, setMeta] = React.useState<{ count: number; at: number } | null>(() => {
     try { return JSON.parse(localStorage.getItem(META_KEY) ?? "null"); } catch { return null; }
@@ -32,6 +36,7 @@ export default function SitePicker() {
       const r = await (again ? loadFieldLocations : firstFieldLocations)(claims!.orgId!);
       const usable = r.list.filter((l) => l.active && l.type === wanted);
       setList(usable);
+      setStale(r.fromCache);
       if (!r.fromCache) { setSitesAt(Date.now()); setMeta((m) => ({ count: usable.length, at: m?.at ?? 0 })); }
     } catch { setError(true); }
   }, [claims, wanted]);
@@ -54,6 +59,16 @@ export default function SitePicker() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [load]);
 
+  // P-125: while the list is the device's copy, ask the server again when the network comes back and every
+  // STALE_RETRY_MS while the page is visible; it stops at the first answer from the server.
+  React.useEffect(() => {
+    if (!stale) return;
+    const again = () => { if (document.visibilityState === "visible") void load(true); };
+    window.addEventListener("online", again);
+    const timer = setInterval(again, STALE_RETRY_MS);
+    return () => { window.removeEventListener("online", again); clearInterval(timer); };
+  }, [stale, load]);
+
   const results = React.useMemo(() => {
     const n = q.trim().toLowerCase();
     const all = list ?? [];
@@ -65,6 +80,12 @@ export default function SitePicker() {
   return (
     <div className="space-y-4 max-w-3xl">
       <h1 className="text-2xl font-semibold" data-testid="page-title">{t(wanted === "site" ? "location.pickSite" : "location.pickWarehouse")}</h1>
+      {stale && (
+        <div className="flex items-center gap-2 rounded border border-warning p-2 text-sm text-warning" data-testid="site-picker-stale">
+          <span className="flex-1">{t("location.stale")}</span>
+          <Button size="sm" variant="secondary" onClick={() => void load(true)} data-testid="site-picker-retry">{t("common.retry")}</Button>
+        </div>
+      )}
       <p className="text-sm text-muted tabular" data-testid="site-picker-offline-info" data-updated-at={meta?.at || undefined}>
         {t("location.offlineInfo", { count: meta?.count ?? list.length, when: formatInstant(meta?.at ? new Date(meta.at) : null, i18n.language) })}
       </p>

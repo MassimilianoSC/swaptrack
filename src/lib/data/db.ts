@@ -60,12 +60,18 @@ export const listModels = () => listQuery<Model>("models");
 export const listAdminLog = () => listQuery<AdminLogEntry>("adminLog", [orderBy("at", "desc"), limit(300)]);
 
 // §5: the field loads the locations of its ASP with ONE query at sign-in and at resume; offline it uses the cache.
+// P-125: the server has LOCATIONS_QUICK_MS to answer, then the device's copy is used; fromCache says which one it was
+// (getDocs itself answers from the cache without an error once Firestore decides it is offline: the list could be
+// empty and look like the server's answer).
+const LOCATIONS_QUICK_MS = 6000;
 export async function loadFieldLocations(orgId: string): Promise<{ list: Row<Location>[]; fromCache: boolean }> {
   const q = query(collection(db, "locations"), where("aspId", "==", orgId));
   try {
-    return { list: rows<Location>(await getDocs(q)), fromCache: false };
+    const s = await Promise.race([getDocs(q), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("slow")), LOCATIONS_QUICK_MS))]);
+    return { list: rows<Location>(s), fromCache: s.metadata.fromCache };
   } catch {
-    return { list: rows<Location>(await getDocsFromCache(q)), fromCache: true };
+    const s = await getDocsFromCache(q).catch(() => null);
+    return { list: s ? rows<Location>(s) : [], fromCache: true };
   }
 }
 
@@ -77,7 +83,8 @@ export function firstFieldLocations(orgId: string): ReturnType<typeof loadFieldL
   if (firstLocations?.orgId === orgId) return firstLocations.p;
   const p = loadFieldLocations(orgId);
   firstLocations = { orgId, p };
-  p.catch(() => { firstLocations = null; });
+  // Only the server's answer is kept for the session: the device's copy is asked again next time (P-125).
+  p.then((r) => { if (r.fromCache) firstLocations = null; }, () => { firstLocations = null; });
   return p;
 }
 

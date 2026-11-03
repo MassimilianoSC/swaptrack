@@ -303,7 +303,8 @@
     "change": "Change location",
     "search": "Search by code or name",
     "none": "No location available",
-    "noneHint": "Your organization has no active locations yet. Ask your administrator."
+    "noneHint": "Your organization has no active locations yet. Ask your administrator.",
+    "stale": "List not yet updated from the server: this is the copy saved on the phone. It is retried by itself when the network is back."
   },
   "scan": {
     "button": "Scan",
