@@ -30,6 +30,8 @@ export function watchLines(id: string, cb: (v: Row<ShipmentLine>[]) => void) {
   return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as ShipmentLine) }))));
 }
 
+const ASP_SHIPMENTS_MAX = 200;
+
 // Shipments by sender or receiver ASP (own; client roles see all).
 export function watchShipments(scope: { role: string; orgId: string }, cb: (v: Row<Shipment>[]) => void) {
   const client = scope.role === "client_admin" || scope.role === "client_office";
@@ -43,13 +45,16 @@ export function watchShipments(scope: { role: string; orgId: string }, cb: (v: R
     const q = query(col, where("kind", "==", "return"), orderBy("createdAt", "desc"), limit(500));
     return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Shipment) }))));
   }
-  // ASP: merge "from" and "to" subscriptions (Firestore has no OR query here).
-  const qa = query(col, where("fromAspId", "==", scope.orgId));
-  const qb = query(col, where("toAspId", "==", scope.orgId));
-  const map = new Map<string, Row<Shipment>>();
-  const push = () => cb([...map.values()].sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)));
-  const ua = onSnapshot(qa, (s) => { s.docs.forEach((d) => map.set(d.id, { id: d.id, ...(d.data() as Shipment) })); push(); });
-  const ub = onSnapshot(qb, (s) => { s.docs.forEach((d) => map.set(d.id, { id: d.id, ...(d.data() as Shipment) })); push(); });
+  // ASP: merge "from" and "to" subscriptions (Firestore has no OR query here), the latest ASP_SHIPMENTS_MAX of each
+  // (P-77). Each side keeps only what its last snapshot holds, so a shipment that leaves a query leaves the list.
+  const side = (field: "fromAspId" | "toAspId") => query(col, where(field, "==", scope.orgId), orderBy("createdAt", "desc"), limit(ASP_SHIPMENTS_MAX));
+  let from: Row<Shipment>[] = [], to: Row<Shipment>[] = [];
+  const push = () => {
+    const map = new Map<string, Row<Shipment>>([...from, ...to].map((s) => [s.id, s]));
+    cb([...map.values()].sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)));
+  };
+  const ua = onSnapshot(side("fromAspId"), (s) => { from = s.docs.map((d) => ({ id: d.id, ...(d.data() as Shipment) })); push(); });
+  const ub = onSnapshot(side("toAspId"), (s) => { to = s.docs.map((d) => ({ id: d.id, ...(d.data() as Shipment) })); push(); });
   return () => { ua(); ub(); };
 }
 

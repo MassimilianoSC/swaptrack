@@ -17,6 +17,8 @@ const NEEDED: Array<{ query: string; collection: string; fields: Field[] }> = [
   { query: "documents.ts own exports: createdBy ==, orderBy createdAt desc", collection: "exports", fields: [["createdBy", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   { query: "items.ts anomalies of a piece: itemId ==, orderBy openedAt desc", collection: "anomalies", fields: [["itemId", "ASCENDING"], ["openedAt", "DESCENDING"]] },
   { query: "shipments.ts client_warehouse returns: kind ==, orderBy createdAt desc", collection: "shipments", fields: [["kind", "ASCENDING"], ["createdAt", "DESCENDING"]] },
+  { query: "shipments.ts ASP sent (P-77): fromAspId ==, orderBy createdAt desc", collection: "shipments", fields: [["fromAspId", "ASCENDING"], ["createdAt", "DESCENDING"]] },
+  { query: "shipments.ts ASP received (P-77): toAspId ==, orderBy createdAt desc", collection: "shipments", fields: [["toAspId", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   // Functions (functions/src/)
   { query: "desk events by item: itemId ==, scannedAt range", collection: "events", fields: [["itemId", "ASCENDING"], ["scannedAt", "ASCENDING"]] },
   { query: "desk events by location: locationId ==, scannedAt range", collection: "events", fields: [["locationId", "ASCENDING"], ["scannedAt", "ASCENDING"]] },
