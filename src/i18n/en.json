@@ -343,7 +343,9 @@
       "unexpectedTitle": "{{count}} pieces not expected by the BOM"
     },
     "alreadyRead": "Already read. To read it again, move the phone away for 3 seconds.",
-    "photoHint": "Read a piece, then take the photo."
+    "photoHint": "Read a piece, then take the photo.",
+    "modelSearch": "Search model or code",
+    "modelSearchNone": "No model found: you can skip."
   },
   "pwa": {
     "newVersion": "A new version is available.",

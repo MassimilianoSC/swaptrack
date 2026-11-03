@@ -343,7 +343,9 @@
       "unexpectedTitle": "{{count}} pezzi non attesi dalla BOM"
     },
     "alreadyRead": "Già letto. Per rileggerlo allontana il telefono per 3 secondi.",
-    "photoHint": "Leggi un pezzo, poi scatta la foto."
+    "photoHint": "Leggi un pezzo, poi scatta la foto.",
+    "modelSearch": "Cerca modello o codice",
+    "modelSearchNone": "Nessun modello trovato: puoi saltare."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

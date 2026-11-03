@@ -84,6 +84,12 @@ export default function Scan() {
   const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
+  // P-113: the model search of the unknown-piece window (model, material code, manufacturer; case and accents ignored).
+  const [modelQuery, setModelQuery] = React.useState("");
+  const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const modelMatches = modelQuery.trim()
+    ? models.filter((m) => fold(`${m.model} ${m.materialCode} ${m.manufacturer ?? ""}`).includes(fold(modelQuery.trim()))).slice(0, 8)
+    : [];
   const [lastEventId, setLastEventId] = React.useState<string | null>(null);
   const [lostCount, setLostCount] = React.useState(0);
   const [lastPieceBadge, setLastPieceBadge] = React.useState<"previously_new" | null>(null);
@@ -278,7 +284,7 @@ export default function Scan() {
     if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !await cachedItemForCode(code)) {
-      setModelPick({ code, source }); setModelPickId(""); return "asked";
+      setModelPick({ code, source }); setModelPickId(""); setModelQuery(""); return "asked";
     }
     await record(code, source);
   };
@@ -525,6 +531,15 @@ export default function Scan() {
       <Dialog open={!!modelPick} onOpenChange={(o) => { if (!o) void skipModelPick(); }}>
         <DialogContent title={t("scan.unknownPieceTitle")} description={t("scan.unknownPieceHint", { code: modelPick?.code })}>
           <div className="space-y-3">
+            {/* §6.4 / P-113: search by code or name; the matches are big buttons, to tap with gloves. */}
+            <Input value={modelQuery} onChange={(e) => setModelQuery(e.target.value)} placeholder={t("scan.modelSearch")} aria-label={t("scan.modelSearch")} data-testid="scan-modelpick-search" />
+            {modelQuery.trim() && (modelMatches.length === 0 ? <p className="text-sm text-muted" data-testid="scan-modelpick-none">{t("scan.modelSearchNone")}</p> : (
+              <ul className="grid gap-2">
+                {modelMatches.map((m) => (
+                  <li key={m.id}><Button type="button" size="lg" variant={modelPickId === m.id ? "primary" : "secondary"} className="w-full justify-start" onClick={() => setModelPickId(m.id)} data-testid="scan-modelpick-result">{m.model} · {m.materialCode}</Button></li>
+                ))}
+              </ul>
+            ))}
             <Field label={t("items.model")} htmlFor="mp"><Select id="mp" value={modelPickId} onChange={(e) => setModelPickId(e.target.value)} data-testid="scan-modelpick-select">
               <option value="">{t("scan.skipModel")}</option>
               {models.map((m) => <option key={m.id} value={m.id}>{m.model} · {m.materialCode}</option>)}
