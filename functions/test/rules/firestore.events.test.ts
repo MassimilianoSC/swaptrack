@@ -56,6 +56,8 @@ describe("events/create: allowed (§3.3 types by role, §8.1 checks)", () => {
     await allow(create("nt", ev("nt", "relabel", { locationId: LOC.nordSite })));
     await allow(create("nt", ev("nt", "void", { locationId: LOC.nordSite })));
     await allow(create("mt", ev("mt", "remove_at_site")));
+    // D-49: a code read by the AI from a damaged label and confirmed by the worker is a manual reading, marked in the payload.
+    await allow(create("nt", ev("nt", "remove_at_site", { source: "manual", payload: { aiAssisted: true } })));
   });
   it("warehouse and asp_admin: arrive_at_warehouse, classify, transfer_out, return_ship, relabel, void", async () => {
     await allow(create("nw", ev("nw", "arrive_at_warehouse")));

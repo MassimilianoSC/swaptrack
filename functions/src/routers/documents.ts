@@ -10,7 +10,7 @@ import { alertId } from "../shared/alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 import { compareDocument, alertDetail, type DocKind, type Line, type EventFact } from "../shared/documents";
 import { askModel } from "../core/aiExtract";
-import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines } from "../core/aiOutput";
+import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines, LABEL_RESPONSE_SCHEMA, LABEL_INSTRUCTION, normalizeLabelCodes } from "../core/aiOutput";
 import type { Part } from "@google/genai";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { computeCodeId, normalizeBarcode } = require("../codeId.node.js");
@@ -27,6 +27,9 @@ const MAX_FILES = 10; // pages of one version (D-47: kept + new)
 // D-45: the pages the model can read (by file extension, as storeFiles names them), and their total size.
 const AI_FILE_TYPES: Record<string, string> = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
 const AI_BYTES_MAX = 20 * 1024 * 1024;
+// D-49: the label photo, already compressed by the app (at most 1200 px).
+const LABEL_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const LABEL_BYTES_MAX = 1024 * 1024;
 
 // §3.3: a document belongs to the ASP of its location, whoever uploads it (client_admin uploads BOMs and DDTs
 // for an ASP). Returns that aspId; an ASP role writes only at its own locations.
@@ -261,6 +264,25 @@ export const documents = {
       const r = normalizeDocumentLines(answer, kind);
       const warnings = [...(fake ? ["demo_extraction"] : []), ...(readable.length < files.length ? ["ai_file_skipped"] : []), ...r.warnings];
       return { lines: r.lines, warnings, pages: readable.length };
+    },
+  }),
+
+  // D-49: the photo of a damaged label (compressed by the app, not stored here) → the code(s) the model reads, with
+  // the doubtful characters. The worker confirms; the reading is then a manual one (payload.aiAssisted) and the photo
+  // follows through the photo queue. Same switch, daily counter and endpoint as extractDocument.
+  extractLabel: op({
+    roles: ["asp_technician", "asp_warehouse", "asp_admin"],
+    rate: [20, 60],
+    schema: z.object({ base64: z.string().min(1).max(Math.ceil(LABEL_BYTES_MAX * 4 / 3) + 4), contentType: z.string().max(100) }),
+    handler: async (ctx, d) => {
+      if (!LABEL_TYPES.includes(d.contentType)) fail("invalid-argument", "unsupported_file_type");
+      const bytes = Buffer.from(d.base64, "base64");
+      if (!bytes.length) fail("invalid-argument", "invalid_data");
+      if (bytes.length > LABEL_BYTES_MAX) fail("invalid-argument", "file_too_large");
+      const parts: Part[] = [{ inlineData: { mimeType: d.contentType, data: d.base64 } }, { text: "Read the code(s) on this label." }];
+      const { answer, fake } = await askModel(ctx.uid!, { parts, instruction: LABEL_INSTRUCTION, schema: LABEL_RESPONSE_SCHEMA, purpose: "label" });
+      const r = normalizeLabelCodes(answer);
+      return { codes: r.codes, warnings: [...(fake ? ["demo_extraction"] : []), ...r.warnings] };
     },
   }),
 

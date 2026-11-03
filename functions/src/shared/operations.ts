@@ -41,6 +41,7 @@ export const OPERATIONS = {
   closeDocument: "documents",
   saveDocumentMapping: "documents",
   extractDocument: "documents",
+  extractLabel: "documents",
 
   markAlertSeen: "alerts",
   closeAlert: "alerts",

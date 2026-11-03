@@ -90,3 +90,32 @@ describe("extractDocument (D-45, D-46)", () => {
     await expect(extract(nw, id)).rejects.toMatchObject({ code: "failed-precondition", message: "ai_unavailable" });
   });
 });
+
+// D-49: the label of a piece, photographed by the worker; the photo is not stored here (it follows the reading).
+describe("extractLabel (D-49)", () => {
+  const jpeg = (size = 64) => Buffer.alloc(size, 7).toString("base64");
+  const label = (ctx: Ctx, base64: string, contentType = "image/jpeg") =>
+    documents.extractLabel.handler(ctx, { base64, contentType }) as Promise<{ codes: Array<{ code: string; uncertainAt: number[] }>; warnings: string[] }>;
+  const nt = ctxOf("asp_technician", NORD, `tt_ai_label_${Date.now()}`);
+
+  it("only who records readings; proposes the fixed codes on the emulators, with the doubtful character", async () => {
+    expect([...documents.extractLabel.roles as readonly string[]].sort()).toEqual(["asp_admin", "asp_technician", "asp_warehouse"]);
+    expect(await label(nt, jpeg())).toEqual({ codes: [{ code: "AI-LABEL-0001", uncertainAt: [] }, { code: "AI-LABEL-0O01", uncertainAt: [10] }], warnings: ["demo_extraction"] });
+  });
+
+  it("refuses other file types and photos over 1 MB; off when the switch is off", async () => {
+    await expect(label(nt, jpeg(), "application/pdf")).rejects.toMatchObject({ code: "invalid-argument", message: "unsupported_file_type" });
+    await expect(label(nt, jpeg(1024 * 1024 + 1))).rejects.toMatchObject({ code: "invalid-argument", message: "file_too_large" });
+    await features({ aiDocumentExtraction: false });
+    await expect(label(nt, jpeg())).rejects.toMatchObject({ code: "failed-precondition", message: "feature_disabled" });
+  });
+
+  it("documents and labels share one daily counter per user", async () => {
+    await features({ aiDocumentExtraction: true, aiDailyLimit: 2 });
+    const user = ctxOf("asp_warehouse", NORD, `tt_ai_shared_${Date.now()}`);
+    const id = await save(user, "ddt_in", WH, [pdf]);
+    await extract(user, id);
+    await label(user, jpeg());
+    await expect(label(user, jpeg())).rejects.toMatchObject({ code: "resource-exhausted", message: "ai_daily_limit" });
+  });
+});
