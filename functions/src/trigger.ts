@@ -179,6 +179,10 @@ export async function processEvent(id: string): Promise<void> {
           const sid = target.shipmentId;
           const lineRef = sid && !r.readingsIn.get(sid) ? db.collection("shipments").doc(sid).collection("lines").doc(targetItem) : null;
           const line = lineRef ? (await tx.get(lineRef)).data() : undefined;
+          // D-53 (P-114 n.22): with no valid reading left the piece does not exist: item and codes are deleted, the
+          // counters go down; the undone event keeps its itemId in the history. Read before any write.
+          const gone = !r.state && !!r.before;
+          const codes = gone ? await tx.get(db.collection("codes").where("itemId", "==", targetItem)) : null;
           if (lineRef && line && !line.confirmedAt && !line.arrivedAt) {
             tx.delete(lineRef);
             tx.update(db.collection("shipments").doc(sid!), { itemCount: FieldValue.increment(-1) });
@@ -187,6 +191,11 @@ export async function processEvent(id: string): Promise<void> {
             const region = (locs.get(String(r.state.currentLocationId))?.region ?? null) as string | null;
             writeItem(tx, itemRef, r.before, r.state, null, region);
             bumpLater.push([r.before, r.state, targetItem]);
+          }
+          if (gone) {
+            tx.delete(itemRef);
+            codes!.docs.forEach((c) => tx.delete(c.ref));
+            bumpLater.push([r.before, null, targetItem]);
           }
         });
         await flushBumps();
@@ -302,7 +311,7 @@ async function markTransferReceived(shipmentId: string) {
   });
 }
 
-const bumpLater: [Doc | null, Doc, string][] = [];
+const bumpLater: [Doc | null, Doc | null, string][] = [];
 async function flushBumps() {
   while (bumpLater.length) { const [b, a] = bumpLater.shift()!; await bumpAggregates(b, a).catch((e) => logger.warn("aggregates", { e: String(e) })); }
 }
