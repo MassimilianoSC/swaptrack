@@ -241,7 +241,15 @@ export default function Scan() {
     if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
   };
 
+  // P-112: the camera pauses at every decode (webEngine.js) and restarts with the flash of the reading (show). Whatever
+  // way a camera reading ends (an error, a refused shipment, a message), it restarts here too; only while the model of
+  // an unknown piece is asked it stays paused, and closing that window records the reading (skipModelPick).
   const onCode = async (raw: string, source: Source) => {
+    let asked = false;
+    try { asked = (await handleCode(raw, source)) === "asked"; }
+    finally { if (source === "camera" && !asked) setTimeout(() => ctrl.current?.resume(), 950); }
+  };
+  const handleCode = async (raw: string, source: Source): Promise<"asked" | void> => {
     const code = raw.trim();
     if (!code) return;
     if (source === "camera") {
@@ -270,7 +278,7 @@ export default function Scan() {
     if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !await cachedItemForCode(code)) {
-      setModelPick({ code, source }); setModelPickId(""); return;
+      setModelPick({ code, source }); setModelPickId(""); return "asked";
     }
     await record(code, source);
   };
@@ -316,15 +324,20 @@ export default function Scan() {
       toast.error(t("scan.photoFailed"));
     }
   };
+  // The piece waiting for its model is taken first, so a double tap (or "Save" and then the X) records it once.
   const confirmModelPick = async () => {
-    if (!modelPick) return;
-    await record(modelPick.code, modelPick.source, modelPick.second, modelPickId || undefined);
+    const p = modelPick;
+    if (!p) return;
     setModelPick(null); setModelPickId("");
+    await record(p.code, p.source, p.second, modelPickId || undefined);
   };
+  // D-50 (P-112): closing the window (X, a tap outside, the back key) is "Skip": the reading is recorded without a model
+  // (needsModel, "To complete", §6.4) and the camera reads again. A wrong reading has "Undo last".
   const skipModelPick = async () => {
-    if (!modelPick) return;
-    await record(modelPick.code, modelPick.source, modelPick.second);
+    const p = modelPick;
+    if (!p) return;
     setModelPick(null); setModelPickId("");
+    await record(p.code, p.source, p.second);
   };
   const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared")); };
 
@@ -509,7 +522,7 @@ export default function Scan() {
         </section>
       )}
 
-      <Dialog open={!!modelPick} onOpenChange={(o) => { if (!o) setModelPick(null); }}>
+      <Dialog open={!!modelPick} onOpenChange={(o) => { if (!o) void skipModelPick(); }}>
         <DialogContent title={t("scan.unknownPieceTitle")} description={t("scan.unknownPieceHint", { code: modelPick?.code })}>
           <div className="space-y-3">
             <Field label={t("items.model")} htmlFor="mp"><Select id="mp" value={modelPickId} onChange={(e) => setModelPickId(e.target.value)} data-testid="scan-modelpick-select">
