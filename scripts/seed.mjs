@@ -6,6 +6,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { askHidden } from "./prompt.mjs";
 import { DEMO_DOMAIN, passwordProblem } from "./demoAccounts.mjs";
+import { ORGS, CLIENT_WAREHOUSE, SITE_COUNT, aspWarehouses, site, seedModels } from "./seedCatalog.mjs";
 
 // Target: the emulators by default. The real demo project only with BOTH
 //   SEED_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
@@ -41,17 +42,8 @@ async function newAccountPassword() {
   return realPassword;
 }
 const DOMAIN = DEMO_DOMAIN;
-const ORGS = [
-  { id: "org_client", name: "Telco Demo", type: "client", slug: "telco" },
-  { id: "org_asp_nord", name: "ASP Nord", type: "asp", slug: "nord" },
-  { id: "org_asp_centro", name: "ASP Centro", type: "asp", slug: "centro" },
-  { id: "org_asp_sud", name: "ASP Sud", type: "asp", slug: "sud" },
-];
 const PEOPLE = [["Giulia", "Ferri"], ["Marco", "Lunardi"], ["Elena", "Corsini"], ["Paolo", "Brambati"], ["Sara", "Velluti"], ["Luca", "Rinaldetti"],
   ["Chiara", "Montesi"], ["Davide", "Orlandini"], ["Irene", "Castaldo"], ["Fabio", "Serafini"], ["Marta", "Ghidoni"], ["Tommaso", "Pellizza"]];
-const REGIONS = { nord: ["Lombardia", "Piemonte", "Veneto"], centro: ["Toscana", "Lazio", "Marche"], sud: ["Campania", "Puglia", "Sicilia"] };
-const MANUFACTURERS = ["Nordwave", "Altira Systems", "Kestrel Networks", "Volta Telecom"];
-const TYPES = ["Radio unit", "Baseband", "Power supply", "Transmission card", "Antenna module"];
 
 const locId = (code) => `loc_${encodeURIComponent(code)}`;
 const mdlId = (code) => `mdl_${encodeURIComponent(code)}`;
@@ -95,25 +87,11 @@ async function main() {
     }
   }
 
-  const locations = [[locId("MAG-CLI-01"), { code: "MAG-CLI-01", name: "Magazzino centrale Telco Demo", type: "client_warehouse", aspId: null, address: "Via dei Ricambi 1, Bologna", region: "Emilia-Romagna" }]];
-  const asps = ORGS.filter((o) => o.type === "asp");
-  asps.forEach((a) => [1, 2].forEach((n) => {
-    const code = `MAG-${a.slug.toUpperCase()}-0${n}`;
-    locations.push([locId(code), { code, name: `Magazzino ${a.name} ${n}`, type: "asp_warehouse", aspId: a.id, address: `Via Logistica ${n}`, region: REGIONS[a.slug][n - 1] }]);
-  }));
-  for (let i = 1; i <= 1500; i++) {
-    const a = asps[(i - 1) % 3];
-    const code = `SITO-${String(i).padStart(5, "0")}`;
-    const region = REGIONS[a.slug][i % 3];
-    locations.push([locId(code), { code, name: `Stazione ${region} ${i}`, type: "site", aspId: a.id, address: `Località ${i}`, region }]);
-  }
+  const places = [CLIENT_WAREHOUSE, ...aspWarehouses(), ...Array.from({ length: SITE_COUNT }, (_, i) => site(i + 1))];
+  const locations = places.map((l) => [locId(l.code), l]);
   await commitAll(locations.map(([id, d]) => [db.collection("locations").doc(id), { ...d, active: true, importId: "seed", createdAt: now, updatedAt: now }]));
 
-  const models = [];
-  for (let i = 0; i < 20; i++) {
-    const code = `MC${String(400100 + i * 7)}`;
-    models.push([mdlId(code), { materialCode: code, model: `${["RX", "BB", "PSU", "TRX", "AM"][i % 5]}-${100 + i}`, manufacturer: MANUFACTURERS[i % 4], equipmentType: TYPES[i % 5], active: true }]);
-  }
+  const models = seedModels().map((m) => [mdlId(m.materialCode), { ...m, active: true }]);
   await commitAll(models.map(([id, d]) => [db.collection("models").doc(id), { ...d, createdAt: now, updatedAt: now }]));
 
   await commitAll([

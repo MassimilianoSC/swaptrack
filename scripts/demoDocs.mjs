@@ -1,0 +1,233 @@
+// P-124: invented documents for the demo and for tuning the automatic reading (D-45, D-49), consistent with the seed:
+// the warehouse and a site of ASP Nord, the material codes of the seed catalog, NEW serials ("TD26..."): saving the DDT
+// creates the expected pieces, reading the labels shows arrived / missing / unexpected.
+//   node scripts/demoDocs.mjs        -> demo-docs/ (git-ignored), then checks what it wrote
+// Needs only what the project already has: Chromium of Playwright (PDF and pictures), exceljs, zxing-wasm (barcodes,
+// written and read back offline). Every document says "DOCUMENTO DI PROVA". Invented data only.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { chromium } from "@playwright/test";
+import ExcelJS from "exceljs";
+import { prepareZXingModule, writeBarcode, readBarcodes } from "zxing-wasm/full";
+import { ORGS, CLIENT_WAREHOUSE, aspWarehouses, site, seedModels } from "./seedCatalog.mjs";
+
+const OUT = fileURLToPath(new URL("../demo-docs/", import.meta.url));
+const require = createRequire(import.meta.url);
+const TEST_MARK = "DOCUMENTO DI PROVA";
+
+// ---- Data, from the seed ----
+const MODELS = seedModels();
+const CLIENT = ORGS.find((o) => o.type === "client");
+const NORD = ORGS.find((o) => o.slug === "nord");
+const WAREHOUSE = aspWarehouses().find((w) => w.code === "MAG-NORD-01");
+// A Nord site without a seeded BOM (the full seed puts Nord's BOMs at sites 1, 10, 19 and 28; the e2e tests use 1 and 7).
+const SITE = site(13);
+if (SITE.aspId !== NORD.id) throw new Error("site 13 is not a Nord site any more: choose another one");
+const DATE = "04/11/2026";
+const KIND_IT = { "Radio unit": "Unità radio", Baseband: "Unità banda base", "Power supply": "Alimentatore", "Transmission card": "Scheda di trasmissione", "Antenna module": "Modulo d'antenna" };
+const describe = (m) => `${KIND_IT[m.equipmentType]} ${m.model} - ${m.manufacturer}`;
+
+const serialLine = (code, m) => ({ serial: code, materialCode: m.materialCode, description: describe(m), quantity: 1 });
+const quantityLine = (m, quantity) => ({ serial: "", materialCode: m.materialCode, description: describe(m), quantity });
+const DDT = [
+  { number: "TD-2026-0412", lines: [...Array.from({ length: 8 }, (_, i) => serialLine(`TD260412${String(i + 1).padStart(3, "0")}`, MODELS[i])), quantityLine(MODELS[10], 3), quantityLine(MODELS[15], 2)] },
+  { number: "TD-2026-0413", lines: [...Array.from({ length: 44 }, (_, i) => serialLine(`TD260413${String(i + 1).padStart(3, "0")}`, MODELS[i % 20])), quantityLine(MODELS[12], 4), quantityLine(MODELS[17], 6)] },
+];
+const BOM = [
+  ...Array.from({ length: 5 }, (_, i) => ({ op: "SMONTARE", ...serialLine(`TD26R13${String(i + 1).padStart(3, "0")}`, MODELS[i]) })),
+  ...Array.from({ length: 4 }, (_, i) => ({ op: "INSTALLARE", ...serialLine(`TD26I13${String(i + 1).padStart(3, "0")}`, MODELS[i + 5]) })),
+  { op: "INSTALLARE", ...quantityLine(MODELS[11], 2) },
+];
+// Labels: three clean ones of DDT 0412, two damaged ones of the same DDT, one piece that is not in it ("unexpected").
+const LABELS = [
+  { file: "etichetta-1-pulita-TD260412001.png", serial: "TD260412001", model: MODELS[0], damage: null },
+  { file: "etichetta-2-pulita-TD260412002.png", serial: "TD260412002", model: MODELS[1], damage: null },
+  { file: "etichetta-3-pulita-TD260412003.png", serial: "TD260412003", model: MODELS[2], damage: null },
+  { file: "etichetta-4-sfocata-TD260412004.jpg", serial: "TD260412004", model: MODELS[3], damage: "blur" },
+  { file: "etichetta-5-strappata-TD260412005.jpg", serial: "TD260412005", model: MODELS[4], damage: "torn" },
+  { file: "etichetta-6-fuori-DDT-TD260499001.png", serial: "TD260499001", model: MODELS[6], damage: null },
+];
+
+// ---- HTML ----
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function ddtHtml(ddt) {
+  const rows = ddt.lines.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.materialCode)}</td><td>${esc(l.description)}</td><td class="mono">${esc(l.serial)}</td><td class="num">${l.quantity}</td><td>PZ</td></tr>`).join("");
+  return `<!doctype html><html lang="it"><head><meta charset="utf-8"><style>
+    * { box-sizing: border-box; }
+    body { font: 10pt Arial, Helvetica, sans-serif; color: #111; margin: 0 3px; } /* 3px: the right borders stay inside the printed area */
+    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 6px; }
+    .brand { font-size: 20pt; font-weight: bold; letter-spacing: .5px; }
+    .brand small { display: block; font-size: 8.5pt; font-weight: normal; color: #333; }
+    .title { text-align: right; } .title b { font-size: 13pt; display: block; }
+    .test { color: #888; font-size: 7pt; letter-spacing: 1px; }
+    .boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+    .box { border: 1px solid #555; padding: 4px 6px; min-height: 44px; } .box h4 { margin: 0 0 2px; font-size: 7.5pt; text-transform: uppercase; color: #444; }
+    .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; } thead { display: table-header-group; }
+    th, td { border: 1px solid #777; padding: 3px 5px; text-align: left; font-size: 9pt; } th { background: #e8e8e8; font-size: 8pt; }
+    tr { page-break-inside: avoid; } .num { text-align: right; } .mono { font-family: "Courier New", monospace; font-weight: bold; color: #000; }
+    .sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; page-break-inside: avoid; }
+    .sign div { border-top: 1px solid #555; padding-top: 3px; font-size: 8pt; height: 36px; }
+  </style></head><body>
+    <div class="head">
+      <div class="brand">${esc(CLIENT.name)}<small>${esc(CLIENT_WAREHOUSE.name)} · ${esc(CLIENT_WAREHOUSE.address)}</small></div>
+      <div class="title"><b>DOCUMENTO DI TRASPORTO</b>D.d.T. (D.P.R. 472/1996)<div class="test">${TEST_MARK}</div></div>
+    </div>
+    <div class="boxes">
+      <div class="box"><h4>Destinatario</h4>${esc(NORD.name)}</div>
+      <div class="box"><h4>Luogo di destinazione</h4>${esc(WAREHOUSE.name)} (${esc(WAREHOUSE.code)})<br>${esc(WAREHOUSE.address)} · ${esc(WAREHOUSE.region)}</div>
+    </div>
+    <div class="meta">
+      <div class="box"><h4>Numero</h4><b>${esc(ddt.number)}</b></div>
+      <div class="box"><h4>Data</h4>${DATE}</div>
+      <div class="box"><h4>Causale</h4>Materiale per swap di rete</div>
+      <div class="box"><h4>Trasporto a cura</h4>Mittente</div>
+    </div>
+    <table><thead><tr><th>Pos.</th><th>Cod. articolo</th><th>Descrizione</th><th>N. serie</th><th>Q.tà</th><th>UM</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="meta" style="margin-top:8px"><div class="box"><h4>Aspetto dei beni</h4>Scatole</div><div class="box"><h4>N. colli</h4>${Math.ceil(ddt.lines.length / 4)}</div><div class="box"><h4>Peso kg</h4>${ddt.lines.length * 6}</div><div class="box"><h4>Inizio trasporto</h4>${DATE} 08:30</div></div>
+    <div class="sign"><div>Firma mittente</div><div>Firma vettore</div><div>Firma destinatario</div></div>
+  </body></html>`;
+}
+const FOOTER = `<div style="font: 7pt Arial, sans-serif; color: #777; width: 100%; padding: 0 12mm; display: flex; justify-content: space-between;"><span>${TEST_MARK} · dati inventati</span><span>Pagina <span class="pageNumber"></span> di <span class="totalPages"></span></span></div>`;
+
+function labelHtml(l, barcodePng) {
+  const torn = l.damage === "torn";
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+    body { margin: 0; width: 760px; height: 420px; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 30% 30%, #8d949b, #4b5157); font-family: Arial, Helvetica, sans-serif; }
+    .label { position: relative; width: 600px; padding: 18px 22px 14px; background: #fbfbf7; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.45);
+      ${l.damage === "blur" ? "filter: blur(2.6px) contrast(.8); transform: rotate(-4deg);" : torn ? "transform: rotate(1.5deg);" : ""} }
+    .top { display: flex; justify-content: space-between; font-size: 15px; } .brand { font-weight: bold; font-size: 20px; }
+    .bar { display: block; width: 556px; height: 120px; margin: 10px 0 4px; image-rendering: pixelated; }
+    .sn { font: bold 26px "Courier New", monospace; letter-spacing: 3px; text-align: center; }
+    .test { position: absolute; right: 10px; bottom: 4px; font-size: 9px; color: #999; letter-spacing: 1px; }
+    .tear { position: absolute; left: 150px; top: 58px; width: 80px; height: 128px; background: linear-gradient(100deg, transparent 0 20%, #d9d6cc 22% 80%, transparent 82%);
+      transform: rotate(12deg); box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
+    .smudge { position: absolute; left: 393px; top: 190px; width: 30px; height: 34px; border-radius: 50%; background: rgba(90,80,60,.55); filter: blur(3px); }
+  </style></head><body><div class="label">
+    <div class="top"><span class="brand">${esc(l.model.manufacturer)}</span><span>${esc(KIND_IT[l.model.equipmentType])} ${esc(l.model.model)}</span></div>
+    <div class="top"><span>P/N ${esc(l.model.materialCode)}</span><span>Made in EU</span></div>
+    <img class="bar" src="data:image/png;base64,${barcodePng.toString("base64")}">
+    <div class="sn">S/N ${esc(l.serial)}</div>
+    ${torn ? '<div class="tear"></div><div class="smudge"></div>' : ""}
+    <div class="test">${TEST_MARK}</div>
+  </div></body></html>`;
+}
+
+// The DDT on paper, photographed on a desk: a little rotated, uneven light, slightly soft (D-45: the real case).
+const photoHtml = (pagePng) => `<!doctype html><html><head><meta charset="utf-8"><style>
+  body { margin: 0; width: 1400px; height: 1900px; overflow: hidden; background: linear-gradient(135deg, #6b5a46, #3e3328); display: flex; align-items: center; justify-content: center; }
+  .sheet { position: relative; transform: perspective(1800px) rotateX(5deg) rotate(-2.2deg); box-shadow: 8px 14px 30px rgba(0,0,0,.55); }
+  .sheet img { display: block; width: 1190px; filter: blur(.6px) contrast(.92) brightness(.97) sepia(.08); }
+  .light { position: absolute; inset: 0; background: radial-gradient(ellipse at 25% 20%, rgba(255,255,240,.18), rgba(0,0,0,.28) 85%); }
+</style></head><body><div class="sheet"><img src="data:image/png;base64,${pagePng.toString("base64")}"><div class="light"></div></div></body></html>`;
+
+// ---- Excel ----
+async function writeExcel(file, sheetName, headers, rows) {
+  const wb = new ExcelJS.Workbook();
+  wb.title = TEST_MARK; wb.subject = `${TEST_MARK} - dati inventati`; wb.creator = "SwapTrack demoDocs";
+  // The first sheet starts with the header row: the app reads it so (readTable).
+  const ws = wb.addWorksheet(sheetName);
+  ws.addRow(headers).font = { bold: true };
+  rows.forEach((r) => ws.addRow(r));
+  ws.columns.forEach((c, i) => { c.width = Math.max(10, ...[headers[i], ...rows.map((r) => r[i])].map((v) => String(v ?? "").length + 2)); });
+  wb.addWorksheet("Leggimi").addRow([`${TEST_MARK}: dati inventati per la demo di SwapTrack, nessun dato reale.`]);
+  await wb.xlsx.writeFile(`${OUT}${file}`);
+}
+
+// ---- Checks of what was written ----
+const pdfPages = (file) => (readFileSync(`${OUT}${file}`, "latin1").match(/\/Type\s*\/Page(?!s)/g) ?? []).length;
+async function excelRows(file) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(`${OUT}${file}`);
+  const ws = wb.worksheets[0];
+  return { headers: ws.getRow(1).values.slice(1), rows: ws.actualRowCount - 1 };
+}
+const decode = async (file) => (await readBarcodes(new Uint8Array(readFileSync(`${OUT}${file}`)), { formats: ["Code128"], tryHarder: true })).map((b) => b.text);
+
+async function main() {
+  mkdirSync(OUT, { recursive: true });
+  // The wasm file from node_modules: never fetched from the network.
+  const wasm = readFileSync(require.resolve("zxing-wasm/full/zxing_full.wasm"));
+  await prepareZXingModule({ overrides: { wasmBinary: wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength) }, fireImmediately: true });
+  const browser = await chromium.launch();
+  const checks = [];
+  try {
+    const page = await browser.newPage();
+    for (const d of DDT) {
+      await page.setContent(ddtHtml(d), { waitUntil: "load" });
+      await page.pdf({ path: `${OUT}DDT-${d.number}.pdf`, format: "A4", printBackground: true, displayHeaderFooter: true, headerTemplate: "<div></div>", footerTemplate: FOOTER, margin: { top: "14mm", bottom: "18mm", left: "12mm", right: "12mm" } });
+    }
+    // The paper photo: the first page of DDT 0412 as an image, then photographed.
+    await page.setViewportSize({ width: 794, height: 1123 });
+    await page.setContent(ddtHtml(DDT[0]).replace("<body>", `<body style="padding: 14mm 12mm; box-sizing: border-box; width: 794px; background: #fff">`), { waitUntil: "load" });
+    const pagePng = await page.screenshot({ fullPage: false, type: "png", scale: "device" });
+    await page.setViewportSize({ width: 1400, height: 1900 });
+    await page.setContent(photoHtml(pagePng), { waitUntil: "load" });
+    await page.screenshot({ path: `${OUT}DDT-TD-2026-0412-foto.jpg`, type: "jpeg", quality: 78 });
+
+    await page.setViewportSize({ width: 760, height: 420 });
+    for (const l of LABELS) {
+      const bar = await writeBarcode(l.serial, { format: "Code128" });
+      if (bar.error) throw new Error(bar.error);
+      await page.setContent(labelHtml(l, Buffer.from(await bar.image.arrayBuffer())), { waitUntil: "load" });
+      await page.screenshot({ path: `${OUT}${l.file}`, ...(l.file.endsWith(".jpg") ? { type: "jpeg", quality: 85 } : { type: "png" }) });
+    }
+  } finally {
+    await browser.close();
+  }
+
+  const DDT_HEADERS = ["Pos.", "Cod. articolo", "Descrizione", "N. serie", "Q.tà", "UM"];
+  await writeExcel("DDT-TD-2026-0412.xlsx", "DDT TD-2026-0412", DDT_HEADERS, DDT[0].lines.map((l, i) => [i + 1, l.materialCode, l.description, l.serial, l.quantity, "PZ"]));
+  await writeExcel(`BOM-${SITE.code}.xlsx`, `BOM ${SITE.code}`, ["Sito", "Operazione", "Cod. articolo", "Descrizione", "N. serie", "Q.tà"],
+    BOM.map((l) => [SITE.code, l.op, l.materialCode, l.description, l.serial, l.quantity]));
+  writeFileSync(`${OUT}LEGGIMI.txt`, leggimi(), "utf8");
+
+  // What was written, read back.
+  checks.push(["DDT-TD-2026-0412.pdf: 1 pagina", pdfPages("DDT-TD-2026-0412.pdf") === 1]);
+  checks.push(["DDT-TD-2026-0413.pdf: 2 pagine", pdfPages("DDT-TD-2026-0413.pdf") === 2]);
+  const x1 = await excelRows("DDT-TD-2026-0412.xlsx");
+  checks.push([`DDT-TD-2026-0412.xlsx: intestazioni in riga 1 e ${DDT[0].lines.length} righe`, x1.headers.join("|") === DDT_HEADERS.join("|") && x1.rows === DDT[0].lines.length]);
+  const x2 = await excelRows(`BOM-${SITE.code}.xlsx`);
+  checks.push([`BOM-${SITE.code}.xlsx: ${BOM.length} righe con la colonna Operazione`, x2.headers.includes("Operazione") && x2.rows === BOM.length]);
+  for (const l of LABELS) {
+    const got = await decode(l.file);
+    checks.push(l.damage
+      ? [`${l.file}: lo scanner NON la legge (caso della lettura automatica)`, !got.includes(l.serial)]
+      : [`${l.file}: lo scanner legge ${l.serial}`, got.length === 1 && got[0] === l.serial]);
+  }
+  for (const [what, ok] of checks) console.log(`${ok ? "OK  " : "NO  "} ${what}`);
+  console.log(`Files in ${OUT}`);
+  if (checks.some(([, ok]) => !ok)) process.exit(1);
+}
+
+function leggimi() {
+  const count = (d) => `${d.lines.filter((l) => l.serial).length} seriali e ${d.lines.filter((l) => !l.serial).length} righe a quantità`;
+  const ddt0 = DDT[0].lines.filter((l) => l.serial).map((l) => l.serial);
+  return [
+    `${TEST_MARK} - dati inventati per la demo di SwapTrack (P-124). Rigenerati con: node scripts/demoDocs.mjs`,
+    "",
+    `Coerenti con il seed: ${NORD.name}, ${WAREHOUSE.name} (${WAREHOUSE.code}), sito ${SITE.code} (${SITE.name}), codici materiale del catalogo.`,
+    "I seriali TD26... sono nuovi: non esistono nel seed. Salvando il DDT, il server crea i pezzi attesi.",
+    "",
+    `DDT-TD-2026-0412.pdf        DDT di 1 pagina: ${count(DDT[0])} (per la lettura automatica)`,
+    "DDT-TD-2026-0412-foto.jpg   lo stesso DDT fotografato sulla scrivania (il caso vero per la lettura automatica)",
+    "DDT-TD-2026-0412.xlsx       lo stesso DDT in Excel: scegli le colonne N. serie, Cod. articolo, Q.tà",
+    `DDT-TD-2026-0413.pdf        DDT di 2 pagine: ${count(DDT[1])}`,
+    `BOM-${SITE.code}.xlsx         BOM del sito ${SITE.code}: colonna Operazione, valori SMONTARE e INSTALLARE`,
+    "etichetta-1..3-pulita       si leggono con la fotocamera (seriali del DDT 0412)",
+    "etichetta-4-sfocata         la fotocamera non la legge: «Leggi dalla foto dell'etichetta»",
+    "etichetta-5-strappata       codice a barre strappato e una cifra macchiata: lettura automatica con carattere incerto",
+    "etichetta-6-fuori-DDT       pezzo che non è nel DDT: risulta «inatteso»",
+    "",
+    "Percorso di demo (Magazzino ASP Nord):",
+    "1. Documenti > Nuovo documento > DDT (arrivo), numero TD-2026-0412, luogo MAG-NORD-01; carica il PDF, l'Excel o la foto; controlla le righe e Salva.",
+    "2. Leggi > Arrivo > DDT TD-2026-0412; leggi le etichette 1, 2, 3 (e la 4 e la 5 con la foto, se la lettura automatica è accesa); poi la 6.",
+    `3. Documenti > TD-2026-0412 > Confronta: arrivati ${ddt0.slice(0, 3).join(", ")} (più 4 e 5 se lette), mancanti gli altri, inatteso TD260499001.`,
+    "",
+  ].join("\r\n");
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
