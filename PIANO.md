@@ -24,14 +24,12 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
+| P-125 | Elenco dei luoghi fermo con «Could not reach Cloud Firestore backend» nei giri grandi: il telefono riprova da solo, ha un limite, ripiega sulla cache? Prima un controllo sul codice, poi la decisione | o3 |
 | P-123 | Rietichettatura lato server (n.37, D-56): annullare un relabel rimette l'etichetta vecchia; un'altra ASP non può rietichettare (falla del criterio 1). Sul ramo o2 (aab74ca), al prossimo turno. La schermata «Rietichetta» resta dopo la demo | o2 |
 | P-124 | Documenti inventati per la demo e per l'AI (`scripts/demoDocs.mjs`, uscita in `demo-docs/` ignorata da git): 2 DDT in PDF (1 e 2 pagine), lo stesso DDT in Excel, una BOM in Excel, etichette pulite, rovinate e una fuori DDT, foto «di carta» del DDT; seriali nuovi, codici materiale del seed. 3–3,5 h | o2 |
-| P-121 | Interruttore «Raffica», spento di partenza (D-55): lettura singola con «Leggi il prossimo». Circa 1 h, dopo P-100 | o3 |
-| P-111 | Lettura con l'AI di un'etichetta rovinata nella schermata di lettura (D-49): foto, codice proposto, conferma, lettura; senza rete inserimento a mano. o2 server dopo extractDocument; o3 schermata con P-108 e P-109. Stime chieste | o2 + o3 |
-| P-87 | Telefono condiviso (D-40). **a)** fatto (abaa679): «Esci» dell'informativa bloccato con dati in coda, coda delle foto dopo il controllo del proprietario; resta il pulsante del Profilo, dopo P-117 di o2. **b)** dopo la demo: avviso con due scelte se entra un altro utente con dati del precedente non inviati; intanto nella guida | o3 |
+| P-87 | Telefono condiviso (D-40). **a)** fatta (abaa679, 36b8439): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra. **b)** dopo la demo: avviso con due scelte se entra un altro utente con dati del precedente non inviati; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-102 | (A8, SPEC §10) In «Smista» la categoria suggerita si conferma con un tocco o se ne sceglie un'altra | o3 |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
@@ -60,6 +58,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-70 | Pagina del pezzo con le sue foto (SPEC §13.2, D-32), lette con getBlob (D-35) | o3 | 03/11/2026 (d155dc3, 540788e) |
 | P-117 | Pagine di amministrazione allineate al server (azioni dell'admin ASP, registro con testi, «Modifica» nello smistamento, password svuotate, export troncato) | o2 | 03/11/2026 (b16dee5) |
 | P-120 | Resoconto con i numeri di fine mese del materiale fermo («Dati al …» / «Calcolato il …») | o2 | 03/11/2026 (a3cfe35) |
+| P-102 | «Smista»: conferma con un tocco o un'altra categoria, categoria fissa senza tocchi, Annulla che lascia ripartire la fotocamera (D-54) | o3 | 03/11/2026 (15ebd21) |
+| P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
+| P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
+| P-31a | Testi nuovi della pagina «Guida» nell'app, per ruolo | reg + o3 | 03/11/2026 (976d8c4) |
 | P-122 | Con poco segnale, dopo l'accesso, l'elenco dei siti non compariva per minuti (la richiesta dei luoghi era in coda dietro il caricamento della cache): ora i luoghi vengono prima, la cache aspetta al massimo 20 s. Misurato: prima oltre 400 s, dopo 6,5 s | o3 | 03/11/2026 (1f0ba54) |
 | P-115 | Letture con i dati giusti: lettura rifiutata che lo dice, Foto dopo Annulla, spunte BOM del sito, foto obbligatoria, luogo dalla spedizione, messaggio di disattivazione vero | o3 | 03/11/2026 (fbf681c) |
 | P-105 | DDT e BOM da Excel (colonne ricordate), PDF o foto, con anteprima e righe da confermare (D-43, D-47) | o3 + o2 | 03/11/2026 (345a681) |
