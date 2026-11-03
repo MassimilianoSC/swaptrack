@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Guida di SwapTrack</title>
+<style>
+:root{
+ color-scheme:light dark;
+ --canvas:#f6f5f1;--paper:#fffefa;--ink:#202923;--muted:#536159;--line:#d9dfd5;
+ --brand:#b64217;--brand-soft:#fff0df;--rail:#eff0e9;--shadow:0 16px 50px #25372a0a;
+ --accent:#536d5a;--soft:#edf2e8;--strong:#2d4935;--focus:#b64217;
+ font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+ font-synthesis:none;text-rendering:optimizeLegibility;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:5rem}
+body{margin:0;background:var(--canvas);color:var(--ink);font-size:17px;line-height:1.75;overflow-wrap:break-word}
+a{color:var(--accent);text-decoration-thickness:1.5px;text-underline-offset:.2em}
+a:hover{text-decoration-thickness:2.5px}
+a:focus-visible{outline:3px solid var(--focus);outline-offset:5px;border-radius:4px}
+button,a{-webkit-tap-highlight-color:transparent}
+svg{display:block;flex:none}
+.hero,.layout,.version-footer{width:min(1216px,calc(100% - 64px));margin-inline:auto}
+.hero{position:relative;padding:76px 0 36px;isolation:isolate}
+.hero:before{content:"";position:absolute;z-index:-1;top:0;left:-120px;right:0;height:480px;background:radial-gradient(ellipse at 85% 10%,#f1d6b650,transparent 56%),radial-gradient(ellipse at 0 0,#c9ddd540,transparent 60%);pointer-events:none}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:150px}
+h1{font-size:clamp(3.3rem,7.4vw,6.5rem);line-height:.96;letter-spacing:-.07em;margin:0;font-weight:800}
+.title-prefix{display:block;font-size:.39em;line-height:1.4;letter-spacing:-.035em;font-weight:550;margin-bottom:.2em}
+.hero-mark{position:relative;width:166px;height:148px;flex:none;margin-right:28px}
+.hero-mark:before{content:"";position:absolute;inset:10px -12px 6px 10px;border:1px solid var(--line);background:var(--paper);border-radius:22px;transform:rotate(11deg)}
+.barcode-card{position:absolute;inset:0 0 12px;background:#263c32;border-radius:20px;transform:rotate(-6deg);box-shadow:0 12px 30px #152f2520;overflow:hidden}
+.barcode-card:before{content:"";position:absolute;inset:30px 22px;background:repeating-linear-gradient(90deg,#f8f2df 0 3px,transparent 3px 7px,#f8f2df 7px 8px,transparent 8px 11px,#f8f2df 11px 16px,transparent 16px 20px,#f8f2df 20px 22px,transparent 22px 27px)}
+.barcode-card:after{content:"";position:absolute;left:13px;right:13px;top:50%;height:3px;background:#ff8245;box-shadow:0 0 18px #ff824580}
+.scan-corner{position:absolute;width:32px;height:32px;border:4px solid #e9642d;right:-11px;top:-11px;border-bottom:0;border-left:0;border-radius:0 12px 0 0}
+.version{font-size:16px;line-height:1.65;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:19px 0;margin:34px 0 0;max-width:100%;font-variant-numeric:tabular-nums}
+.version strong{font-weight:650;color:var(--ink);white-space:nowrap}
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:48px;align-items:start}
+.sidebar{position:sticky;top:28px;padding:25px 16px 22px 0;border-top:3px solid var(--ink);font-size:16px;line-height:1.4}
+.sidebar-label{display:block;font-weight:750;margin-bottom:16px}
+.sidebar a{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 12px;margin:4px 0;border-radius:10px;text-decoration:none;color:var(--muted);border:1px solid transparent;transition:background-color .15s,color .15s}
+.sidebar a:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none}
+.sidebar a:hover{background:var(--rail);color:var(--ink)}
+.sidebar a[aria-current="location"]{background:var(--soft);border-color:var(--line);color:var(--strong);font-weight:700}
+.sidebar a:last-child{margin-top:15px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}
+main{min-width:0}
+.guide-section{--accent:#526e59;--soft:#eef3e9;--strong:#2d4d36;position:relative;min-width:0;margin-bottom:46px;background:var(--paper);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+.role-tecnico-asp{--accent:#ae411b;--soft:#fff0e5;--strong:#8d3111}
+.role-magazzino-asp{--accent:#08786a;--soft:#e4f5ee;--strong:#065d53}
+.role-amministratore-asp{--accent:#7548b9;--soft:#f0eafb;--strong:#61349f}
+.role-magazzino-cliente{--accent:#2468b2;--soft:#e9f1fd;--strong:#185391}
+.role-ufficio-cliente{--accent:#94600c;--soft:#fbf0d9;--strong:#77500f}
+.role-amministratore-cliente{--accent:#b32d54;--soft:#fceaf0;--strong:#942343}
+.role-per-tutti{--accent:#426859;--soft:#eaf1e9;--strong:#2d5042}
+.role-parole-che-incontri{--accent:#466279;--soft:#edf2f6;--strong:#344f66}
+.section-heading{position:relative;display:flex;align-items:center;gap:18px;padding:32px 38px;background:var(--soft);border-bottom:1px solid var(--line);isolation:isolate}
+.section-heading:after{content:"";position:absolute;z-index:-1;right:-25px;top:-60px;width:190px;height:190px;border:24px solid var(--accent);border-radius:50%;opacity:.055}
+.section-icon{display:grid;place-items:center;color:var(--accent);width:56px;height:56px;border:1px solid var(--accent);border-radius:16px;background:var(--paper);flex:none}
+.section-icon svg{width:29px;height:29px}
+h2{font-size:clamp(1.65rem,3.2vw,2.3rem);line-height:1.2;letter-spacing:-.04em;margin:0;color:var(--strong);font-weight:750;scroll-margin-top:5rem}
+.section-body{padding:12px 38px 20px}
+.section-body>ol,.section-body>ul,.section-body>p,.question>p,.question>ol,.question>ul,.question>blockquote{max-width:70ch}
+p{margin:18px 0}
+strong{font-weight:700}
+h3{font-size:clamp(1.22rem,2vw,1.43rem);line-height:1.4;letter-spacing:-.022em;font-weight:750;margin:0 0 19px;color:var(--ink);scroll-margin-top:5rem}
+.question{padding:29px 0 19px;border-top:1px solid var(--line)}
+.question:first-child{border-top:0}
+.question>p:first-of-type{margin-top:0}
+.question>p:last-child,.question>ul:last-child,.question>ol:last-child{margin-bottom:0}
+ol,ul{margin:18px 0;padding-left:1.6em}
+li{padding-left:.25em;margin:9px 0}
+li::marker{color:var(--accent);font-weight:750;font-variant-numeric:tabular-nums}
+li>ol,li>ul{margin:8px 0}
+li>p{margin:9px 0}
+.ui-label{background:var(--soft);color:var(--strong);border:1px solid color-mix(in srgb,var(--accent) 21%,transparent);border-radius:5px;padding:.06em .23em;box-decoration-break:clone;-webkit-box-decoration-break:clone;font-weight:580;font-size:1em}
+.ui-message{color:var(--strong);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--accent) 35%,transparent);text-decoration-thickness:1px;text-underline-offset:.18em}
+.ui-error{color:#a13027;background:#fff0eb;border-radius:4px;padding:.08em .1em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.note-intro{color:var(--strong);font-weight:650;margin-top:24px}
+.warning-intro{border-left:3px solid #c8902e;padding:10px 15px;background:#fbf2df;color:#72521a;border-radius:0 9px 9px 0;margin-top:23px}
+.warning-intro+ul{border-left:1px solid #dfcba3;margin-left:1px;padding-left:1.6em}
+code,pre{font-family:ui-monospace,"Cascadia Code","SFMono-Regular",Consolas,monospace;font-size:16px}
+code{padding:.12em .3em;border-radius:5px;background:var(--soft);color:var(--strong);overflow-wrap:anywhere}
+pre{padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--rail);white-space:pre-wrap;overflow-wrap:anywhere}
+pre code{padding:0;background:none}
+blockquote{border-left:3px solid var(--accent);margin:22px 0;padding:2px 20px;background:var(--soft)}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:16px;line-height:1.6}
+td,th{border:1px solid var(--line);padding:12px;overflow-wrap:anywhere}
+th{background:var(--soft);text-align:left}
+.source-divider{display:none}
+.return-index{padding:22px 38px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+.return-index a{font-size:16px;display:inline-flex;align-items:center;gap:10px;color:var(--strong);text-decoration:none;font-weight:650;min-height:44px;padding:7px 14px;border:1px solid var(--line);border-radius:10px}
+.return-index a:hover{background:var(--soft);border-color:var(--accent)}
+.return-index svg{width:17px;height:17px}
+.intro-section{box-shadow:none;border:0;background:none;margin-bottom:38px;border-radius:0;overflow:visible}
+.intro-section>.section-heading{padding:20px 0 15px;background:none;border:0}
+.intro-section .section-heading:after,.intro-section .section-icon{display:none}
+.intro-section h2{font-size:1.4rem;color:var(--ink)}
+.intro-section .section-body{padding:0}
+.intro-section ol{margin-top:8px}
+.role-index{margin-top:30px;scroll-margin-top:70px}
+.index-label{display:block;font-weight:750;color:var(--ink);margin:0 0 14px;font-size:17px}
+.index-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.index-item{position:relative;min-width:0}
+.index-item>a{height:100%;display:flex;align-items:center;gap:10px;min-height:70px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:15px 34px 15px 16px;background:var(--paper);color:var(--strong);text-decoration:none;font-weight:650;font-size:17px;line-height:1.35;box-shadow:0 3px 10px #233c2c03;transition:background-color .15s,transform .15s}
+.index-item>a:after{content:"";position:absolute;right:17px;width:7px;height:7px;border-right:1.8px solid currentColor;border-top:1.8px solid currentColor;transform:rotate(45deg)}
+.index-item>a:hover{background:var(--soft);transform:translateY(-2px)}
+.index-separator{position:absolute;right:-7px;top:50%;font-size:16px;color:var(--muted);transform:translate(50%,-50%);z-index:1;line-height:1}
+.index-item:nth-child(2n) .index-separator{right:50%;top:auto;bottom:-7px;transform:translate(50%,50%);opacity:.5}
+.mobile-index{display:none}
+.version-footer{margin-top:12px;margin-bottom:40px;padding-left:280px}
+.version-footer .version{margin:0;padding:22px 0;border-top:2px solid var(--ink)}
+@media(prefers-color-scheme:dark){
+ :root{--canvas:#121a17;--paper:#1a2420;--ink:#edf0e7;--muted:#b6c2b8;--line:#35433b;--brand:#ff9d63;--brand-soft:#35271c;--rail:#232e27;--shadow:0 18px 45px #00000015;--accent:#b2c5ad;--soft:#25372c;--strong:#d4e4ca;--focus:#ffac6f}
+ .hero:before{background:radial-gradient(ellipse at 85% 0,#7d572a20,transparent 60%),radial-gradient(ellipse at 0 0,#406a5420,transparent 60%)}
+ .role-tecnico-asp{--accent:#ff9d6b;--soft:#3b2b22;--strong:#ffc09b}
+ .role-magazzino-asp{--accent:#65d4bc;--soft:#1e352f;--strong:#9ce7d3}
+ .role-amministratore-asp{--accent:#c4a2ff;--soft:#302a41;--strong:#dcc5ff}
+ .role-magazzino-cliente{--accent:#89baff;--soft:#253246;--strong:#b5d3ff}
+ .role-ufficio-cliente{--accent:#e8c06b;--soft:#39321f;--strong:#f1d695}
+ .role-amministratore-cliente{--accent:#f695b0;--soft:#3e2832;--strong:#ffc1d2}
+ .role-per-tutti{--accent:#a8c8ae;--soft:#28392d;--strong:#cee2cb}
+ .role-parole-che-incontri{--accent:#a1bdd1;--soft:#283640;--strong:#c8dce9}
+ .warning-intro{background:#373020;color:#ead39c;border-color:#dbad50}
+ .warning-intro+ul{border-color:#655331}
+ .ui-error{background:#462b28;color:#ffb8a5}
+ .barcode-card{background:#d8e6d3}
+ .barcode-card:before{background:repeating-linear-gradient(90deg,#253c31 0 3px,transparent 3px 7px,#253c31 7px 8px,transparent 8px 11px,#253c31 11px 16px,transparent 16px 20px,#253c31 20px 22px,transparent 22px 27px)}
+}
+@media(min-width:1500px){.hero,.layout,.version-footer{width:min(1280px,calc(100% - 96px))}.layout{gap:64px}.version-footer{padding-left:296px}.section-heading{padding-inline:44px}.section-body{padding-inline:44px}}
+@media(max-width:1060px){
+ .hero,.layout,.version-footer{width:min(810px,calc(100% - 48px))}
+ .hero{padding-top:46px}
+ .layout{display:block}
+ .sidebar{display:none}
+ .version-footer{padding-left:0}
+ .mobile-index{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;min-height:54px;padding:7px 24px;background:var(--canvas);border-bottom:1px solid var(--line)}
+ .mobile-index a{display:inline-flex;align-items:center;gap:9px;font-size:16px;font-weight:700;text-decoration:none;color:var(--ink);padding:4px 13px;border:1px solid var(--line);border-radius:9px;min-height:40px;background:var(--paper)}
+ .mobile-index svg{width:18px;height:18px}
+}
+@media(max-width:600px){
+ .hero,.layout,.version-footer{width:calc(100% - 28px)}
+ .hero{padding:30px 4px 18px}
+ .hero-top{min-height:115px;gap:10px}
+ h1{font-size:clamp(3rem,12.8vw,4.4rem)}
+ .hero-mark{width:85px;height:94px;margin-right:5px}
+ .barcode-card{border-radius:14px}
+ .barcode-card:before{inset:22px 13px}
+ .hero-mark:before{border-radius:14px;inset:10px -5px 6px 4px}
+ .scan-corner{width:20px;height:20px;border-width:3px;right:-4px;top:-7px}
+ .version{margin-top:24px;font-size:16px;padding-block:15px}
+ .mobile-index{padding:7px 14px}
+ .guide-section{border-radius:17px;margin-bottom:30px}
+ .section-heading{padding:24px 19px;gap:13px}
+ .section-icon{width:44px;height:44px;border-radius:12px}
+ .section-icon svg{width:25px;height:25px}
+ .section-body{padding:6px 19px 18px}
+ .intro-section>.section-heading{padding:16px 5px 12px}
+ .intro-section .section-body{padding:0 5px}
+ .question{padding:26px 0 16px}
+ .question>ul,.question>ol{padding-left:1.4em}
+ .index-grid{gap:10px}
+ .index-item>a{font-size:16px;padding:13px 23px 13px 10px;min-height:77px;border-left-width:3px}
+ .index-item>a:after{right:10px;width:6px;height:6px}
+ .index-separator{opacity:.65}
+ .return-index{padding:17px 19px}
+ .return-index a{width:100%;justify-content:center}
+ .version-footer{margin-bottom:25px}
+}
+@media(max-width:360px){.hero-mark{display:none}.section-heading{gap:10px}.section-icon{width:36px;height:40px}.section-body{padding-inline:16px}.section-heading{padding-inline:16px}.index-item>a{font-size:16px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+@page{size:A4;margin:17mm 16mm}
+@media print{
+ :root{color-scheme:light;--canvas:#fff;--paper:#fff;--ink:#111;--muted:#333;--line:#aaa;--accent:#111;--soft:#fff;--strong:#111;font-size:12pt}
+ html{scroll-padding-top:0;scroll-behavior:auto}
+ body{font-size:11.5pt;line-height:1.5;background:#fff!important;color:#111!important}
+ .hero,.layout,.version-footer{width:100%;margin:0;padding:0;display:block}
+ .hero{padding:0 0 16pt}
+ .hero-top{min-height:0}
+ .hero:before,.hero-mark,.mobile-index,.sidebar,.section-heading:after,.return-index,.index-item>a:after,.index-separator{display:none!important}
+ h1{font-size:36pt;line-height:1.1;letter-spacing:-.04em}
+ .title-prefix{font-size:.6em;display:inline;letter-spacing:inherit}
+ .version,.version-footer .version{font-size:10pt;line-height:1.5;padding:9pt 0;margin:12pt 0 0;color:#222;border-color:#777}
+ .version strong{color:#111}
+ .guide-section{background:#fff!important;color:#111!important;border:0;border-radius:0;box-shadow:none;overflow:visible;margin:0 0 20pt;--accent:#111;--soft:#fff;--strong:#111}
+ .role-section{break-before:page;page-break-before:always}
+ .section-heading{background:none!important;border:0;border-bottom:1.5pt solid #111;padding:0 0 12pt;break-after:avoid}
+ .section-icon{display:none}
+ h2{font-size:24pt;color:#111!important;scroll-margin:0}
+ .section-body{padding:0}
+ .intro-section h2{font-size:17pt}
+ .intro-section>.section-heading{padding:0 0 8pt;border-bottom:0}
+ h3{font-size:14pt;color:#111;break-after:avoid;page-break-after:avoid;margin-bottom:9pt;scroll-margin:0}
+ .question{border-top:0;padding:14pt 0 3pt;break-inside:auto}
+ p{margin:9pt 0;orphans:3;widows:3}
+ ol,ul{margin:9pt 0}
+ li{margin:5pt 0;break-inside:avoid}
+ .ui-label,.ui-message,.ui-error{background:none!important;color:#111!important;border:0;padding:0;text-decoration:none;box-shadow:none}
+ .ui-label{font-weight:650}
+ .warning-intro{background:none!important;color:#111;border-left:2pt solid #777;padding:7pt 10pt;break-after:avoid}
+ .warning-intro+ul{border:0;margin-left:0}
+ code,pre{font-size:10pt;color:#111!important;background:none!important}
+ a{color:#111!important;text-decoration:underline}
+ .role-index{margin-top:15pt}
+ .index-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4pt 15pt}
+ .index-item>a{box-shadow:none;border:0;border-bottom:1pt solid #bbb;border-radius:0;min-height:0;padding:5pt 0;background:none!important;color:#111!important;font-size:11pt}
+ .index-label{font-size:12pt}
+ .version-footer{margin-top:20pt}
+}
+</style>
+</head>
+<body>
+<nav class="mobile-index" data-added="navigation" aria-label="Indice"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6h.1M3 12h.1M3 18h.1"/></svg>Indice</a></nav><header class="hero"><div class="hero-top"><h1 id="guida-di-swaptrack"><span class="title-prefix">Guida di </span>SwapTrack</h1><div class="hero-mark" aria-hidden="true"><div class="barcode-card"></div><span class="scan-corner"></span></div></div><p class="version" data-version="top">App descritta: commit <strong>bf65dfc</strong> · Testo della guida: sha <strong>69e14f14e5c4</strong> · Data: 03/11/2026</p></header><div class="layout"><aside class="sidebar" data-added="navigation"><nav aria-label="Indice"><span class="sidebar-label">Indice</span><a class="role-per-tutti" href="#per-tutti">Per tutti</a><a class="role-tecnico-asp" href="#tecnico-asp">Tecnico ASP</a><a class="role-magazzino-asp" href="#magazzino-asp">Magazzino ASP</a><a class="role-amministratore-asp" href="#amministratore-asp">Amministratore ASP</a><a class="role-magazzino-cliente" href="#magazzino-cliente">Magazzino cliente</a><a class="role-ufficio-cliente" href="#ufficio-cliente">Ufficio cliente</a><a class="role-amministratore-cliente" href="#amministratore-cliente">Amministratore cliente</a><a class="role-parole-che-incontri" href="#parole-che-incontri">Parole che incontri</a></nav></aside><main><section class="guide-section intro-section" aria-labelledby="come-usare-questa-guida"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v15H4zM11 5l9-2v15l-9 2"/></svg></span><h2 id="come-usare-questa-guida">Come usare questa guida</h2>
+</header><div class="section-body"><ol>
+<li>Cerca qui sotto il nome del tuo ruolo: è scritto nel <span class="ui-label">«Menu utente»</span> (l'icona della persona in alto a destra), accanto al tuo nome.</li>
+<li>Leggi la parte «Per tutti»: vale per ogni ruolo (accesso, password, telefono, lavoro senza rete).</li>
+<li>Poi vai alla parte del tuo ruolo e cerca la domanda «Come faccio a…?» che ti serve.</li>
+<li>Il testo tra «…» è quello esatto che vedi sullo schermo: pulsanti, voci di menu, messaggi.</li>
+<li>Se un ruolo fa anche le cose di un altro, la guida te lo dice e ti rimanda alla sezione giusta.</li>
+</ol>
+<nav id="indice" class="role-index" aria-label="Indice"><span class="index-label">Indice:</span><div class="index-grid"><span class="index-item role-per-tutti"><a href="#per-tutti">Per tutti</a><span class="index-separator"> · </span></span><span class="index-item role-tecnico-asp"><a href="#tecnico-asp">Tecnico ASP</a><span class="index-separator"> · </span></span><span class="index-item role-magazzino-asp"><a href="#magazzino-asp">Magazzino ASP</a><span class="index-separator"> · </span></span><span class="index-item role-amministratore-asp"><a href="#amministratore-asp">Amministratore ASP</a><span class="index-separator"> · </span></span><span class="index-item role-magazzino-cliente"><a href="#magazzino-cliente">Magazzino cliente</a><span class="index-separator"> · </span></span><span class="index-item role-ufficio-cliente"><a href="#ufficio-cliente">Ufficio cliente</a><span class="index-separator"> · </span></span><span class="index-item role-amministratore-cliente"><a href="#amministratore-cliente">Amministratore cliente</a><span class="index-separator"> · </span></span><span class="index-item role-parole-che-incontri"><a href="#parole-che-incontri">Parole che incontri</a></span></div></nav><hr class="source-divider" />
+</div></section><section class="guide-section role-per-tutti" aria-labelledby="per-tutti"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8-1a3 3 0 1 0 0-6M2 21v-3a6 6 0 0 1 12 0v3m3-9a5 5 0 0 1 5 5v4"/></svg></span><h2 id="per-tutti">Per tutti</h2>
+</header><div class="section-body"><p>SwapTrack segue i <strong>pezzi</strong> (gli apparati) leggendo il loro codice a barre. Segue i materiali, non il lavoro delle persone.</p>
+<section class="question" aria-labelledby="cosa-vedi-in-alto"><h3 id="cosa-vedi-in-alto">Cosa vedi in alto</h3>
+<ul>
+<li><strong>Il menu delle pagine.</strong> Sul computer è la barra a sinistra (puoi stringerla con <span class="ui-label">«Riduci la barra laterale»</span> e riaprirla con <span class="ui-label">«Espandi la barra laterale»</span>). Sul telefono si apre con <span class="ui-label">«Apri il menu»</span> (le tre righe in alto a sinistra).</li>
+<li><strong>La campanella</strong>: quanti avvisi aperti ci sono (non compare al Tecnico ASP).</li>
+<li><strong>«Online» o «Offline»</strong>: se il telefono ha rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.</li>
+<li><strong>L'icona della lingua</strong>: «Italiano» o «English».</li>
+<li><strong>Il <span class="ui-label">«Menu utente»</span></strong> (icona della persona): il tuo nome e ruolo, <span class="ui-label">«Profilo»</span>, <span class="ui-label">«Guida»</span>, <span class="ui-label">«Esci»</span>.</li>
+</ul>
+<p>La voce <span class="ui-label">«Guida»</span> dell'app contiene solo pochi promemoria brevi. Questa guida è quella completa.</p>
+</section><section class="question" aria-labelledby="come-faccio-il-primo-accesso-dopo-linvito"><h3 id="come-faccio-il-primo-accesso-dopo-linvito">Come faccio il primo accesso, dopo l'invito?</h3>
+<p>Nessuno si iscrive da solo: un amministratore ti invita.</p>
+<ol>
+<li>Apri il link che hai ricevuto per e-mail (o che l'amministratore ti ha consegnato).</li>
+<li>Si apre «Imposta la tua password». Controlla che l'indirizzo mostrato sia il tuo.</li>
+<li>Scrivi la password in <span class="ui-label">«Nuova password»</span> e di nuovo in <span class="ui-label">«Ripeti la password»</span>. Regola: «Almeno 10 caratteri, con lettere e cifre.»</li>
+<li>Premi una volta <span class="ui-label">«Salva la password»</span>. Vedi «Password salvata. Ora puoi accedere.»</li>
+<li>Premi <span class="ui-label">«Torna all'accesso»</span> ed entra (vedi la domanda successiva).</li>
+<li>La prima volta l'app ti mostra l'«Informativa privacy»: leggila e premi <span class="ui-label">«Ho letto e accetto»</span>.</li>
+</ol>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li><span class="ui-error">«Questo link non è valido o è scaduto. Chiedine uno nuovo all'amministratore o richiedi un nuovo reset.»</span>: chiedi all'amministratore di mandarti di nuovo l'invito.</li>
+<li>Il pulsante <span class="ui-label">«Salva la password»</span> resta spento: la password è troppo corta, non ha lettere o cifre, oppure le due password sono diverse (<span class="ui-error">«Le due password sono diverse.»</span>).</li>
+</ul>
+</section><section class="question" aria-labelledby="come-entro-nellapp"><h3 id="come-entro-nellapp">Come entro nell'app?</h3>
+<ol>
+<li>Apri SwapTrack. Si apre <span class="ui-label">«Accedi»</span>.</li>
+<li>Scrivi la tua «E-mail di lavoro» e la «Password».</li>
+<li>Premi <span class="ui-label">«Accedi»</span>.</li>
+</ol>
+<p>Se la tua azienda li ha attivati, vedi anche «Accedi con Google» o «Accedi con Microsoft». Se il tuo indirizzo ha già una password, l'app scrive <span class="ui-error">«Questa e-mail ha già una password: inseriscila per collegare i due metodi di accesso.»</span>: scrivi la password e premi <span class="ui-label">«Accedi»</span>.</p>
+<p class="note-intro">Messaggi più frequenti:</p>
+<ul>
+<li><span class="ui-error">«E-mail o password errate.»</span>: controlla e riprova, oppure usa <span class="ui-label">«Password dimenticata?»</span>.</li>
+<li><span class="ui-error">«Troppi tentativi. Attendi qualche minuto.»</span>: aspetta e riprova.</li>
+<li><span class="ui-error">«Nessuna rete.»</span>: per entrare la prima volta serve la rete.</li>
+<li><span class="ui-error">«Questo account è bloccato.»</span> oppure <span class="ui-error">«Accesso rifiutato: l'account non è attivo.»</span>: parla con il tuo amministratore.</li>
+<li><span class="ui-error">«Account non abilitato»</span>: il tuo account non ha un ruolo; parla con il tuo amministratore.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-faccio-se-ho-dimenticato-la-password"><h3 id="come-faccio-se-ho-dimenticato-la-password">Come faccio se ho dimenticato la password?</h3>
+<ol>
+<li>Nella pagina <span class="ui-label">«Accedi»</span> premi <span class="ui-label">«Password dimenticata?»</span>.</li>
+<li>Scrivi la tua «E-mail di lavoro» e premi <span class="ui-label">«Invia il link»</span>.</li>
+<li>Vedi sempre lo stesso messaggio: <span class="ui-message">«Se l'indirizzo appartiene a un account attivo, riceverai un'e-mail con un link per reimpostare la password.»</span> Questo messaggio non conferma che l'e-mail sia partita.</li>
+<li>Apri il link dell'e-mail: si apre «Scegli una nuova password». Continua come nel primo accesso (passi 3–5).</li>
+</ol>
+<p>Se l'e-mail non arriva dopo qualche minuto, controlla la posta indesiderata e poi chiedi all'amministratore.</p>
+</section><section class="question" aria-labelledby="che-cosè-linformativa-privacy-e-perché-ricompare"><h3 id="che-cosè-linformativa-privacy-e-perché-ricompare">Che cos'è l'informativa privacy e perché ricompare?</h3>
+<p>Al primo accesso, e ogni volta che l'amministratore cambia il testo, l'app ti mostra l'«Informativa privacy». Finché non premi <span class="ui-label">«Ho letto e accetto»</span> non puoi usare le pagine. Se vedi <span class="ui-error">«L'informativa è cambiata: rileggila.»</span>, rileggila e accetta di nuovo.</p>
+</section><section class="question" aria-labelledby="come-cambio-la-lingua"><h3 id="come-cambio-la-lingua">Come cambio la lingua?</h3>
+<p>Premi l'icona della lingua in alto e scegli «Italiano» o «English». La scelta vale anche le volte successive.</p>
+</section><section class="question" aria-labelledby="cosa-trovo-nel-mio-profilo-come-cambio-la-password"><h3 id="cosa-trovo-nel-mio-profilo-come-cambio-la-password">Cosa trovo nel mio profilo? Come cambio la password?</h3>
+<p>Dal <span class="ui-label">«Menu utente»</span> premi <span class="ui-label">«Profilo»</span>. Vedi nome, e-mail e ruolo. Nome ed e-mail non si cambiano da qui: se sono sbagliati, chiedi all'amministratore.</p>
+<p>Per cambiare la password:</p>
+<ol>
+<li>Premi <span class="ui-label">«Cambia password»</span>.</li>
+<li>Scrivi la «Password attuale» e la <span class="ui-label">«Nuova password»</span> (almeno 10 caratteri, con lettere e cifre).</li>
+<li>Conferma. Vedi «Password cambiata».</li>
+</ol>
+<p>Se vedi «Accedi di nuovo e riprova.» o <span class="ui-error">«Password errata.»</span>, esci, rientra e riprova.</p>
+</section><section class="question" aria-labelledby="come-esco-perché-a-volte-lapp-non-mi-lascia-uscire"><h3 id="come-esco-perché-a-volte-lapp-non-mi-lascia-uscire">Come esco? Perché a volte l'app non mi lascia uscire?</h3>
+<ol>
+<li>Apri il <span class="ui-label">«Menu utente»</span> e premi <span class="ui-label">«Esci»</span>.</li>
+<li>Se tutto è stato inviato, l'app si chiude e torna ad <span class="ui-label">«Accedi»</span>.</li>
+</ol>
+<p>Se vedi <span class="ui-error">«Non puoi ancora uscire»</span> con <span class="ui-message">«Alcune letture o foto non sono ancora arrivate al server. Collegati alla rete e attendi che vengano inviate.»</span>, l'app ti protegge: sul telefono ci sono ancora letture o foto da mandare («Letture da inviare: 2», «Foto da inviare: 1»). Collegati alla rete, aspetta che in alto sparisca «da inviare» e riprova.</p>
+<p><strong>Telefono condiviso.</strong> Prima di passare il telefono a un collega, esci sempre con <span class="ui-label">«Esci»</span> dal <span class="ui-label">«Menu utente»</span>. Quando entra un'altra persona, l'app cancella dal telefono i dati della persona precedente.</p>
+<p>Se l'app all'apertura dice <span class="ui-error">«L'app non può aprirsi»</span> o <span class="ui-error">«Chiudi le altre schede»</span>, segui il messaggio (chiudi le altre finestre dell'app, disattiva la navigazione privata, chiudi e riapri) e premi <span class="ui-label">«Riprova»</span>. Se succede ancora, chiama l'amministratore.</p>
+</section><section class="question" aria-labelledby="come-installo-lapp-sul-telefono"><h3 id="come-installo-lapp-sul-telefono">Come installo l'app sul telefono?</h3>
+<p>Installarla è importante: così si apre come un'app e lavora anche senza rete.</p>
+<p><strong>Android</strong></p>
+<ol>
+<li>Apri l'indirizzo di SwapTrack nel browser.</li>
+<li>Se compare <span class="ui-label">«Installa l'app»</span>, premilo e conferma nella finestra del browser.</li>
+<li>Usa Chrome. Se <span class="ui-label">«Installa l'app»</span> non compare, apri il menu di Chrome (i tre puntini in alto a destra) e scegli «Installa app» oppure «Aggiungi a schermata Home».</li>
+<li>Apri SwapTrack dall'icona sul telefono, non dal browser.</li>
+</ol>
+<p><strong>iPhone</strong></p>
+<ol>
+<li>Apri l'indirizzo di SwapTrack con Safari.</li>
+<li>Tocca <span class="ui-label">«Condividi»</span>, poi <span class="ui-label">«Aggiungi alla schermata Home»</span>.</li>
+<li>Apri SwapTrack dall'icona nella schermata Home, non da Safari.</li>
+</ol>
+<p>L'app stessa te lo ricorda: <span class="ui-message">«Installa l'app nella schermata Home: tocca Condividi, poi "Aggiungi alla schermata Home". Come scheda di Safari, iOS può cancellare le letture non ancora inviate e l'elenco dei siti offline.»</span></p>
+<p><strong>Aggiornamenti.</strong> Se vedi «È disponibile una nuova versione.», premi <span class="ui-label">«Ricarica»</span>. Se vedi «Aggiornamento necessario», premi il pulsante per ricaricare: la versione vecchia non funziona più.</p>
+</section><section class="question" aria-labelledby="posso-lavorare-senza-rete"><h3 id="posso-lavorare-senza-rete">Posso lavorare senza rete?</h3>
+<p>Sì, per le letture. Ecco cosa succede.</p>
+<p>Funziona senza rete:</p>
+<ul>
+<li>leggere i codici a barre e fare foto: restano sul telefono e partono da sole quando torna la rete;</li>
+<li>scegliere il sito o il magazzino dall'elenco già scaricato;</li>
+<li>guardare i dati che il telefono ha già scaricato.</li>
+</ul>
+<p>Non funziona senza rete (vedi <span class="ui-error">«Sei offline: questa azione richiede la rete.»</span>):</p>
+<ul>
+<li>il primo accesso;</li>
+<li>creare, inviare o confermare spedizioni;</li>
+<li>salvare documenti, esportazioni, rapporti, modifiche di amministrazione;</li>
+<li>vedere la cronologia di un pezzo e le foto già inviate.</li>
+</ul>
+<p><strong>Cosa vuol dire «da inviare».</strong> In alto vedi, per esempio, «4 da inviare»: sono letture e foto fatte ma non ancora arrivate. Quando arrivano, il numero sparisce. Accanto a ogni lettura vedi «Da inviare» oppure «Inviata». «Inviata» vuol dire che la lettura è arrivata, non che è tutto in regola: eventuali problemi li vede l'ufficio, nelle pagine <span class="ui-label">«Anomalie»</span> e <span class="ui-label">«Avvisi»</span>.</p>
+<p><strong>Prima di andare dove non c'è rete</strong>, apri l'app quando hai ancora rete: scarica l'elenco dei luoghi e dei pezzi. Nella Home vedi «12 disponibili offline · aggiornati …» con la data dell'ultimo aggiornamento.</p>
+</section><section class="question" aria-labelledby="cosa-succede-se-il-mio-account-viene-disattivato-o-bloccato"><h3 id="cosa-succede-se-il-mio-account-viene-disattivato-o-bloccato">Cosa succede se il mio account viene disattivato o bloccato?</h3>
+<ul>
+<li>Se l'amministratore ti <strong>disattiva</strong>, l'app mostra «Il tuo accesso è stato disattivato» e «Invio delle letture rimanenti… Tieni l'app aperta e collegata.» Tieni l'app aperta con la rete: prova a inviare ciò che resta, poi pulisce il telefono e ti riporta ad <span class="ui-label">«Accedi»</span>. Le letture fatte senza rete prima della disattivazione vengono ancora accettate per 7 giorni.</li>
+<li>Se l'amministratore ti <strong>blocca subito</strong> (per esempio per un telefono perso), all'accesso vedi <span class="ui-error">«Questo account è bloccato.»</span>. Le letture non ancora inviate da quel telefono vanno perse.</li>
+<li>In entrambi i casi, per tornare a lavorare chiedi al tuo amministratore di riattivarti.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-funzionano-le-tabelle"><h3 id="come-funzionano-le-tabelle">Come funzionano le tabelle?</h3>
+<p>In quasi tutte le pagine d'ufficio i dati sono in tabelle:</p>
+<ul>
+<li><span class="ui-label">«Filtra»</span> cerca tra le righe già mostrate in quella pagina, non in tutto l'archivio;</li>
+<li>tocca il titolo di una colonna per ordinare;</li>
+<li>25 righe per pagina: usa <span class="ui-label">«Pagina precedente»</span> e <span class="ui-label">«Pagina successiva»</span>; vedi «Righe: …» e «Pagina 1 di 3».</li>
+</ul>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-tecnico-asp role-section" aria-labelledby="tecnico-asp"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v15m-5 0h10M9 21l3-11 3 11M8 3a6 6 0 0 0 0 9m8-9a6 6 0 0 1 0 9M5 1a10 10 0 0 0 0 13m14-13a10 10 0 0 1 0 13"/></svg></span><h2 id="tecnico-asp">Tecnico ASP</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Lavori nei siti: smonti il materiale vecchio e installi quello nuovo. Con l'app leggi il codice di ogni pezzo che smonti o installi e, alla fine, dichiari che hai finito nel sito.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span> (la scelta del sito) e <span class="ui-label">«Guida»</span>. In basso a destra c'è sempre il grande pulsante <span class="ui-label">«Leggi»</span>. In alto vedi il sito scelto: toccalo per cambiarlo.</p>
+<p><strong>Cosa non vedi.</strong> Vedi solo i siti della tua ASP. Non vedi avvisi, anomalie e le pagine d'ufficio.</p>
+<section class="question" aria-labelledby="come-scelgo-il-sito"><h3 id="come-scelgo-il-sito">Come scelgo il sito?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Home»</span>: vedi «Scegli il sito».</li>
+<li>Scrivi nel campo «Cerca per codice o nome» una parte del codice o del nome.</li>
+<li>Tocca la riga del sito. Compare «Luogo selezionato».</li>
+<li>Per cambiarlo, premi <span class="ui-label">«Cambia luogo»</span>.</li>
+</ol>
+<p>Il sito resta scelto finché non chiudi l'app. Funziona anche senza rete, con l'elenco già scaricato.</p>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li><span class="ui-error">«Nessun luogo disponibile»</span> con <span class="ui-message">«La tua organizzazione non ha ancora luoghi attivi. Chiedi all'amministratore.»</span>: avvisa il tuo amministratore.</li>
+<li><span class="ui-error">«Non è stato possibile caricare i luoghi.»</span>: premi <span class="ui-label">«Riprova»</span>.</li>
+<li>Il sito non compare: forse è stato disattivato o assegnato a un'altra ASP. Chiedi all'amministratore.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-leggo-un-codice-a-barre"><h3 id="come-leggo-un-codice-a-barre">Come leggo un codice a barre?</h3>
+<p>Ci sono tre modi, nella schermata che si apre con <span class="ui-label">«Leggi»</span>.</p>
+<p><strong>Con la fotocamera.</strong></p>
+<ol>
+<li>Inquadra il codice dentro il riquadro colorato.</li>
+<li>Quando la lettura riesce, lo schermo diventa verde con il codice, senti un suono e il telefono vibra (se lo permette).</li>
+<li>Dopo meno di un secondo puoi leggere il pezzo successivo: non serve premere nulla (è la «raffica»).</li>
+</ol>
+<p>Aiuti: <span class="ui-label">«Torcia»</span> accende la luce (se il telefono la ha); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante (<span class="ui-label">«Suono sì/no»</span>) spegne o accende il suono.</p>
+<p><strong>Con una pistola o un anello lettore.</strong> Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo.</p>
+<p><strong>A mano.</strong> Scrivi le cifre nel campo «Digita le cifre sotto il codice a barre» e premi <span class="ui-label">«Conferma»</span>.</p>
+<p class="note-intro">Da sapere:</p>
+<ul>
+<li>Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte: per qualche secondo la ignora. È normale.</li>
+<li>Se l'app dice <span class="ui-error">«Questo è il codice prodotto: leggi il numero di serie»</span>, hai letto il codice del modello (uguale su tutti i pezzi dello stesso tipo). Cerca sull'etichetta il numero di serie del singolo pezzo e leggi quello.</li>
+<li>Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto», poi leggi il codice prodotto. È sempre un solo pezzo.</li>
+</ul>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li><span class="ui-error">«Fotocamera non consentita. Su iPhone: Impostazioni &gt; Safari &gt; Fotocamera (o le impostazioni dell'app installata). Puoi digitare il codice qui sotto.»</span>: dai il permesso della fotocamera, oppure scrivi il codice a mano.</li>
+<li><span class="ui-error">«Il motore di lettura non è disponibile: digita il codice qui sotto.»</span>: usa il campo per scrivere a mano.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-registro-lo-smontaggio-dei-pezzi-in-un-sito"><h3 id="come-registro-lo-smontaggio-dei-pezzi-in-un-sito">Come registro lo smontaggio dei pezzi in un sito?</h3>
+<ol>
+<li>Scegli il sito (vedi sopra).</li>
+<li>Premi <span class="ui-label">«Leggi»</span>.</li>
+<li>In alto premi <span class="ui-label">«Smonta»</span> (se non è già evidenziato).</li>
+<li>Leggi uno dopo l'altro i codici dei pezzi che smonti.</li>
+</ol>
+<p>Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture in questa sessione», e l'elenco dei codici con «Da inviare» o «Inviata». Più sotto, «Le mie letture di oggi» elenca tutte le tue letture della giornata.</p>
+<p><strong>Se compare «Pezzo sconosciuto».</strong> L'app dice <span class="ui-message">«Il codice … è nuovo. Scegli un modello per aiutare l'ufficio a completarlo, oppure salta.»</span></p>
+<ul>
+<li>Se sai che modello è, sceglilo nella tendina «Modello» e premi <span class="ui-label">«Conferma»</span>.</li>
+<li>Se non lo sai, premi <span class="ui-label">«Salta»</span>: il pezzo viene registrato lo stesso e l'ufficio completerà il modello.</li>
+<li>Usa sempre uno di questi due pulsanti.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-registro-linstallazione-dei-pezzi-nuovi"><h3 id="come-registro-linstallazione-dei-pezzi-nuovi">Come registro l'installazione dei pezzi nuovi?</h3>
+<ol>
+<li>Scegli il sito.</li>
+<li>Premi <span class="ui-label">«Leggi»</span>.</li>
+<li>In alto premi <span class="ui-label">«Installa»</span>.</li>
+<li>Leggi i codici dei pezzi nuovi che installi.</li>
+</ol>
+<p>I pezzi nuovi arrivano dal magazzino della tua ASP: se un codice non è conosciuto, l'app lo registra lo stesso e l'ufficio lo vedrà tra le anomalie.</p>
+</section><section class="question" aria-labelledby="come-annullo-una-lettura-sbagliata"><h3 id="come-annullo-una-lettura-sbagliata">Come annullo una lettura sbagliata?</h3>
+<ol>
+<li>Premi <span class="ui-label">«Annulla l'ultima»</span>. Vedi «Ultima lettura annullata».</li>
+<li>Puoi premerlo di nuovo per annullare la lettura precedente, e così via.</li>
+</ol>
+<p class="note-intro">Da sapere:</p>
+<ul>
+<li>Il pulsante è spento se in questa sessione non hai ancora letto nulla.</li>
+<li>La lettura non sparisce dalla storia: in «Le mie letture di oggi» resta barrata con «annullata».</li>
+<li>Puoi annullare solo le tue letture, nello stesso luogo, entro 24 ore. Altrimenti l'ufficio vedrà «Annullamento non permesso»: chiedi all'ufficio di correggere.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-faccio-una-foto-a-un-pezzo"><h3 id="come-faccio-una-foto-a-un-pezzo">Come faccio una foto a un pezzo?</h3>
+<ol>
+<li>Leggi il pezzo.</li>
+<li>Subito dopo, prima di leggere il pezzo successivo, premi <span class="ui-label">«Foto»</span> e scatta.</li>
+<li>Vedi «Foto in coda per l'invio»: la foto parte appena c'è rete.</li>
+</ol>
+<p class="note-intro">Da sapere:</p>
+<ul>
+<li>La foto si collega all'ultima lettura fatta in questa schermata. Il pulsante <span class="ui-label">«Foto»</span> è spento finché non hai letto almeno un pezzo.</li>
+<li>«Foto: solo il pezzo, mai persone.» La foto viene rimpicciolita e perde i dati di posizione prima di partire.</li>
+<li>La foto è facoltativa: puoi registrare il pezzo anche senza.</li>
+</ul>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li><span class="ui-error">«La foto non può essere salvata su questo dispositivo.»</span>: il telefono non ha spazio o non lo permette; riprova o continua senza foto.</li>
+<li>«2 foto non sono state inviate.»: quelle foto non sono riuscite a partire. Premi <span class="ui-label">«Chiudi»</span> per toglierle dal telefono (vedi «Foto perse rimosse da questo dispositivo.»). Avvisa l'ufficio se servivano.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-dichiaro-che-ho-finito-in-un-sito"><h3 id="come-dichiaro-che-ho-finito-in-un-sito">Come dichiaro che ho finito in un sito?</h3>
+<ol>
+<li>Nella schermata <span class="ui-label">«Leggi»</span>, con il sito giusto scelto, premi <span class="ui-label">«Ho finito in questo sito»</span>.</li>
+<li>Vedi «Sito segnato come finito».</li>
+</ol>
+<p>Premilo solo quando hai davvero finito: non c'è una domanda di conferma. Il sito non si chiude e resta scelto. Dopo questa segnalazione l'ufficio controlla i pezzi letti contro la lista prevista del sito (la BOM) e, se qualcosa non torna, vede un avviso.</p>
+</section><section class="question" aria-labelledby="come-controllo-che-le-mie-letture-siano-arrivate"><h3 id="come-controllo-che-le-mie-letture-siano-arrivate">Come controllo che le mie letture siano arrivate?</h3>
+<ul>
+<li>In alto: se non c'è scritto «da inviare», è arrivato tutto.</li>
+<li>In «Le mie letture di oggi» ogni riga dice «Da inviare» o «Inviata».</li>
+<li>Prima di uscire o di passare il telefono a qualcuno, aspetta che tutto sia «Inviata» (vedi «Come esco?» nella parte «Per tutti»).</li>
+</ul>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-magazzino-asp role-section" aria-labelledby="magazzino-asp"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M2 21h20M7 21v-9h10v9M7 15h10M7 18h10"/></svg></span><h2 id="magazzino-asp">Magazzino ASP</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Lavori nel magazzino della tua ASP. Con l'app registri gli arrivi di materiale (nuovo e smontato), smisti il materiale smontato, prepari i resi al cliente e i trasferimenti tra magazzini, e completi i dati dei pezzi.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span> (la scelta del magazzino), <span class="ui-label">«Pezzi»</span>, <span class="ui-label">«Da completare»</span>, <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Documenti»</span>, <span class="ui-label">«Avvisi»</span>, <span class="ui-label">«Anomalie»</span>, <span class="ui-label">«Guida»</span>. In basso a destra c'è il pulsante <span class="ui-label">«Leggi»</span>.</p>
+<p><strong>Cosa non vedi.</strong> Vedi solo i pezzi, i documenti, le spedizioni e gli avvisi della tua ASP, più i pezzi che un'altra ASP ti sta trasferendo. Nelle spedizioni, il magazzino di un'altra ASP compare come «altra organizzazione».</p>
+<p>La lettura dei codici (fotocamera, pistola, a mano, <span class="ui-label">«Annulla l'ultima»</span>, <span class="ui-label">«Foto»</span>, «Pezzo sconosciuto») funziona come per il Tecnico ASP: vedi <a href="#come-leggo-un-codice-a-barre">Come leggo un codice a barre?</a>, <a href="#come-annullo-una-lettura-sbagliata">Come annullo una lettura sbagliata?</a> e <a href="#come-faccio-una-foto-a-un-pezzo">Come faccio una foto a un pezzo?</a>.</p>
+<section class="question" aria-labelledby="come-scelgo-il-magazzino"><h3 id="come-scelgo-il-magazzino">Come scelgo il magazzino?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Home»</span>: vedi «Scegli il magazzino».</li>
+<li>Cerca con «Cerca per codice o nome» e tocca il tuo magazzino.</li>
+<li>Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi <span class="ui-label">«Cambia luogo»</span>.</li>
+</ol>
+<p>Controlla sempre il magazzino scelto (in alto) prima di leggere: ogni lettura viene registrata lì.</p>
+</section><section class="question" aria-labelledby="come-registro-larrivo-di-materiale-smontato"><h3 id="come-registro-larrivo-di-materiale-smontato">Come registro l'arrivo di materiale smontato?</h3>
+<ol>
+<li>Scegli il magazzino e premi <span class="ui-label">«Leggi»</span>.</li>
+<li>Premi <span class="ui-label">«Arrivo»</span>.</li>
+<li>Nella tendina «Materiale» lascia <span class="ui-label">«Materiale smontato»</span>.</li>
+<li>Lascia la categoria su <span class="ui-label">«Solo arrivo (smisto dopo)»</span> se smisterai più tardi.</li>
+<li>Leggi i codici dei pezzi arrivati.</li>
+</ol>
+<p><strong>Se vuoi smistare nello stesso passaggio</strong>, spunta <span class="ui-label">«Smista nello stesso passaggio»</span> prima di leggere. Per ogni pezzo l'app usa la categoria suggerita e te la mostra in grande («Suggerita: …»). Se l'app non ha un suggerimento, vedi per esempio «ABC123: nessuna categoria suggerita, da smistare dopo»: il pezzo è registrato come arrivato e lo smisterai dopo. Se vuoi una categoria precisa, sceglila nella tendina prima di leggere.</p>
+<p>Se compare «Pezzo sconosciuto», scegli il modello e premi <span class="ui-label">«Conferma»</span>, oppure premi <span class="ui-label">«Salta»</span>.</p>
+</section><section class="question" aria-labelledby="come-registro-larrivo-di-materiale-nuovo-con-il-ddt"><h3 id="come-registro-larrivo-di-materiale-nuovo-con-il-ddt">Come registro l'arrivo di materiale nuovo con il DDT?</h3>
+<p>Prima prepara il DDT nell'app (una volta per ogni DDT):</p>
+<ol>
+<li>Apri <span class="ui-label">«Documenti»</span> e premi <span class="ui-label">«Nuovo documento»</span>.</li>
+<li>«Tipo»: «DDT (arrivo)».</li>
+<li>«Numero»: il numero scritto sul DDT di carta.</li>
+<li>«Luogo»: il tuo magazzino.</li>
+<li>«Righe»: un numero di serie per riga, copiato dal DDT. Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio <code>#3 MC-A</code>).</li>
+<li>Premi <span class="ui-label">«Salva»</span>. Vedi «Salvato».</li>
+</ol>
+<p>Se vedi <span class="ui-error">«Esiste già un documento con questo numero per questa ASP.»</span>, hai già inserito quel DDT: controlla in <span class="ui-label">«Documenti»</span> prima di continuare.</p>
+<p>Poi registra l'arrivo:</p>
+<ol>
+<li>Scegli il magazzino e premi <span class="ui-label">«Leggi»</span>.</li>
+<li>Premi <span class="ui-label">«Arrivo»</span>.</li>
+<li>Nella tendina «Materiale» scegli <span class="ui-label">«Materiale nuovo»</span>.</li>
+<li>Nella tendina <span class="ui-label">«DDT»</span> scegli «DDT …» con il numero giusto. (Se lasci <span class="ui-error">«Nessun DDT (solo arrivo)»</span>, i pezzi arrivano ma non vengono confrontati con il DDT.)</li>
+<li>Leggi i codici dei pezzi.</li>
+</ol>
+<p>Cosa vedi dopo: il riquadro «Confronto con il DDT …» con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo <strong>le tue</strong> letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in <span class="ui-label">«Documenti»</span> (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.</p>
+<p>Infine, controlla e chiudi il confronto:</p>
+<ol>
+<li>Apri <span class="ui-label">«Documenti»</span> e premi <span class="ui-label">«Apri»</span> sul DDT.</li>
+<li>Premi <span class="ui-label">«Confronta»</span>: vedi «Arrivati», «Mancanti», <span class="ui-error">«Non attesi»</span>, «Modello sconosciuto» e, per le quantità, contati/attesi.</li>
+<li>Quando l'arrivo è completo, premi <span class="ui-label">«Segna verificato»</span>. Vedi «Segnato verificato».</li>
+</ol>
+<p>Da sapere: dopo <span class="ui-label">«Segna verificato»</span> il DDT non compare più nella tendina <span class="ui-label">«DDT»</span> del telefono. Se qualcosa non torna, l'app crea un avviso «DDT (arrivo) differenza» (vedi <span class="ui-label">«Avvisi»</span>).</p>
+</section><section class="question" aria-labelledby="come-smisto-il-materiale-smontato"><h3 id="come-smisto-il-materiale-smontato">Come smisto il materiale smontato?</h3>
+<ol>
+<li>Scegli il magazzino e premi <span class="ui-label">«Leggi»</span>.</li>
+<li>Premi <span class="ui-label">«Smista / classifica»</span>.</li>
+<li>Nella tendina «Categoria»:
+<ul>
+<li>lascia <span class="ui-label">«Usa la categoria suggerita»</span> per usare il suggerimento: per ogni pezzo letto l'app applica subito la categoria suggerita e te la mostra in grande («Suggerita: …»);</li>
+<li>oppure scegli tu una categoria: vale per tutti i pezzi che leggi dopo, finché non la cambi.</li>
+</ul>
+</li>
+<li>Leggi i codici.</li>
+</ol>
+<p>Se accanto alla categoria compare «nuovo installato», quel pezzo era stato installato nuovo e poi smontato.</p>
+<p><strong>Materiale nuovo difettoso o avanzato.</strong> Nella seconda tendina («Materiale smontato (categoria)») scegli «Difettoso» o «Avanzo», poi leggi i pezzi.</p>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li>«Scegli prima una categoria»: l'app non ha un suggerimento per quel pezzo e tu non hai scelto una categoria. Il pezzo NON è stato registrato: scegli una categoria e rileggilo.</li>
+<li>Hai applicato la categoria sbagliata: premi <span class="ui-label">«Annulla l'ultima»</span>, scegli la categoria giusta e rileggi il pezzo.</li>
+</ul>
+</section><section class="question" aria-labelledby="come-preparo-un-reso-al-cliente"><h3 id="come-preparo-un-reso-al-cliente">Come preparo un reso al cliente?</h3>
+<ol>
+<li>In <span class="ui-label">«Home»</span> scegli il magazzino da cui parte il reso.</li>
+<li>Apri <span class="ui-label">«Spedizioni»</span> e premi <span class="ui-label">«Nuovo reso»</span>.</li>
+<li>«Da»: il tuo magazzino (lo stesso scelto in Home). «A»: il magazzino del cliente. Premi <span class="ui-label">«Crea»</span>. Vedi «Spedizione creata» e si apre la scheda del reso, nello stato «Bozza».</li>
+<li>Premi <span class="ui-label">«Leggi i pezzi»</span>: si apre la lettura in modalità «Spedizione reso».</li>
+<li>Leggi i codici dei pezzi che metti nel reso. Ogni pezzo diventa «In reso» e compare tra le «Righe» del reso.</li>
+<li>Torna alla scheda del reso (da <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Apri»</span>). Controlla «Righe» e <span class="ui-label">«Pezzi»</span>.</li>
+<li>Se vuoi, conserva una copia del DDT con <span class="ui-label">«Allega file DDT»</span> (PDF o foto). Vedi «File DDT allegato».</li>
+<li>Premi <span class="ui-label">«Invia»</span>, scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi <span class="ui-label">«Invia»</span>. Vedi «Spedizione inviata».</li>
+</ol>
+<p class="note-intro">Da sapere:</p>
+<ul>
+<li>Usa sempre <span class="ui-label">«Leggi i pezzi»</span> dalla scheda del reso: i pulsanti «Spedizione reso» e «Trasferimento» nella schermata <span class="ui-label">«Leggi»</span> funzionano solo se arrivi da una spedizione (altrimenti vedi «Spedizione non trovata.»).</li>
+<li><span class="ui-label">«Leggi i pezzi»</span> non cambia il magazzino scelto: per questo al passo 1 scegli il magazzino giusto.</li>
+<li>Leggere due volte lo stesso pezzo nello stesso reso non lo conta due volte.</li>
+<li>Per togliere un pezzo letto per errore, premi subito <span class="ui-label">«Annulla l'ultima»</span>.</li>
+</ul>
+<p class="warning-intro">Se qualcosa va storto:</p>
+<ul>
+<li>«Inserisci il numero di DDT.»: il numero è obbligatorio per inviare un reso.</li>
+<li><span class="ui-error">«La spedizione non è una bozza.»</span>: il reso è già stato inviato o annullato.</li>
+<li><span class="ui-error">«File troppo grande: massimo 5 MB.»</span> o <span class="ui-error">«Tipo di file non ammesso…»</span>: usa un PDF o una foto più piccola.</li>
+<li><span class="ui-error">«Immagine non leggibile: prova con un'altra foto o con un PDF.»</span></li>
+</ul>
+</section><section class="question" aria-labelledby="come-annullo-una-bozza-di-spedizione"><h3 id="come-annullo-una-bozza-di-spedizione">Come annullo una bozza di spedizione?</h3>
+<ol>
+<li>Apri la spedizione in <span class="ui-label">«Spedizioni»</span>.</li>
+<li>Premi <span class="ui-label">«Annulla bozza»</span> e conferma («Annullare questa bozza? Ogni lettura verrà annullata.»).</li>
+<li>Vedi «Bozza annullata».</li>
+</ol>
+<p>Funziona solo finché la spedizione è in «Bozza».</p>
+</section><section class="question" aria-labelledby="come-trasferisco-pezzi-a-un-altro-magazzino-della-mia-asp"><h3 id="come-trasferisco-pezzi-a-un-altro-magazzino-della-mia-asp">Come trasferisco pezzi a un altro magazzino della mia ASP?</h3>
+<ol>
+<li>In <span class="ui-label">«Home»</span> scegli il magazzino da cui partono i pezzi.</li>
+<li>Apri <span class="ui-label">«Spedizioni»</span> e premi <span class="ui-label">«Nuovo trasferimento»</span>.</li>
+<li>«Da»: il magazzino di partenza. «A»: l'altro tuo magazzino. Premi <span class="ui-label">«Crea»</span>.</li>
+<li>Nella scheda premi <span class="ui-label">«Leggi i pezzi»</span> (modalità «Trasferimento») e leggi i pezzi. Ogni pezzo diventa «In trasferimento».</li>
+<li>Torna alla scheda e premi <span class="ui-label">«Invia»</span> («Invia il trasferimento. Il magazzino ricevente registrerà l'arrivo.»), poi <span class="ui-label">«Invia»</span>. Vedi «Spedizione inviata».</li>
+</ol>
+<p>I trasferimenti verso un'altra ASP li crea solo l'Amministratore cliente; tu li prepari e li invii come sopra, dalla bozza che trovi in <span class="ui-label">«Spedizioni»</span>.</p>
+</section><section class="question" aria-labelledby="come-registro-larrivo-di-un-trasferimento"><h3 id="come-registro-larrivo-di-un-trasferimento">Come registro l'arrivo di un trasferimento?</h3>
+<ol>
+<li>In <span class="ui-label">«Home»</span> scegli il magazzino che riceve.</li>
+<li>Apri <span class="ui-label">«Spedizioni»</span>, cerca il «Trasferimento» nello stato «Inviata» e premi <span class="ui-label">«Apri»</span>.</li>
+<li>Premi <span class="ui-label">«Leggi i pezzi»</span>: si apre la lettura in <span class="ui-label">«Arrivo»</span>.</li>
+<li>Leggi i pezzi arrivati.</li>
+</ol>
+<p>Cosa vedi dopo: nella scheda del trasferimento ogni riga arrivata mostra «Arrivato». Dopo l'arrivo il pezzo passa alla tua ASP. Se dopo alcuni giorni (7, salvo diversa impostazione) mancano ancora righe, compare l'avviso «Trasferimento in ritardo» all'ASP che ha spedito.</p>
+</section><section class="question" aria-labelledby="come-completo-un-pezzo-senza-modello"><h3 id="come-completo-un-pezzo-senza-modello">Come completo un pezzo senza modello?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Da completare»</span>: è l'elenco dei pezzi senza modello.</li>
+<li>Premi <span class="ui-label">«Apri»</span> sul pezzo.</li>
+<li>Premi <span class="ui-label">«Modifica»</span>: si apre «Modifica pezzo».</li>
+<li>Scegli il «Modello». Se serve, scrivi la «Condizione».</li>
+<li>Premi <span class="ui-label">«Salva»</span>. Vedi «Salvato».</li>
+</ol>
+<p>Se vedi «Nulla da completare.», non ci sono pezzi senza modello.</p>
+</section><section class="question" aria-labelledby="come-cerco-un-pezzo"><h3 id="come-cerco-un-pezzo">Come cerco un pezzo?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Pezzi»</span>.</li>
+<li>Scrivi il codice <strong>completo</strong> in «Cerca per codice» e premi <span class="ui-label">«Cerca»</span>. Si apre la scheda del pezzo. Se vedi <span class="ui-error">«Nessun pezzo ha questo codice.»</span>, controlla il codice (una parte del codice non basta).</li>
+<li>Oppure usa i filtri «Stato», «Sito o magazzino» («Scrivi il codice o il nome e scegli dall'elenco»), «Modello». <span class="ui-label">«Togli i filtri»</span> li azzera.</li>
+</ol>
+<p>L'elenco mostra i pezzi più recenti, 200 alla volta: <span class="ui-label">«Mostra altri»</span> ne aggiunge altri 200.</p>
+<p>Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici», <span class="ui-label">«Foto»</span>, «Cronologia» (le letture, con data e ora, senza il nome di chi le ha fatte) e <span class="ui-label">«Anomalie»</span>.</p>
+</section><section class="question" aria-labelledby="come-guardo-avvisi-e-anomalie"><h3 id="come-guardo-avvisi-e-anomalie">Come guardo avvisi e anomalie?</h3>
+<ul>
+<li><strong><span class="ui-label">«Avvisi»</span></strong>: le differenze da controllare (DDT, BOM, trasferimenti in ritardo, materiale fermo da troppi giorni). Un avviso per documento, spedizione o luogo, con il «Conteggio». Tocca l'«Oggetto» per aprire ciò a cui si riferisce. Premi <span class="ui-label">«Segna visto»</span> per far sapere che l'hai guardato: diventa «Visto» per tutti. <span class="ui-label">«Mostra chiusi»</span> fa vedere anche quelli chiusi. <span class="ui-error">«Nessuna differenza ora»</span> vuol dire che il problema oggi non c'è più. Gli avvisi non arrivano per e-mail: stanno solo nell'app.</li>
+<li><strong><span class="ui-label">«Anomalie»</span></strong>: letture che non tornano con lo stato del pezzo (per esempio «Pezzo di un'altra ASP», «Transizione proibita»). Da questa pagina puoi solo guardarle e aprire il pezzo. Per correggerle, chiama il tuo Amministratore ASP.</li>
+</ul>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-amministratore-asp role-section" aria-labelledby="amministratore-asp"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 4v6c0 6-9 10-9 10S3 18 3 12V6l9-4zM8 12l3 3 5-6"/></svg></span><h2 id="amministratore-asp">Amministratore ASP</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Gestisci la tua ASP: inviti e gestisci i tecnici e i magazzinieri, carichi le liste dei siti (BOM), correggi i pezzi della tua ASP, guardi i numeri e scarichi esportazioni e rapporti. Puoi fare anche tutto ciò che fa il Magazzino ASP.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span>, <span class="ui-label">«Cruscotto»</span>, <span class="ui-label">«Pezzi»</span>, <span class="ui-label">«Da completare»</span>, <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Documenti»</span>, <span class="ui-label">«Avvisi»</span>, <span class="ui-label">«Anomalie»</span>, <span class="ui-label">«Esportazioni»</span>, <span class="ui-label">«Rapporti»</span>, <span class="ui-label">«Persone»</span>, <span class="ui-label">«Guida»</span>. In basso a destra c'è il pulsante <span class="ui-label">«Leggi»</span>.</p>
+<p><strong>Cosa non vedi.</strong> Solo i dati della tua ASP. Non vedi le altre ASP, né i loro pezzi (salvo quelli che stanno arrivando a te).</p>
+<p><strong>Dal Magazzino ASP:</strong> arrivi, DDT, smistamento, resi, trasferimenti, pezzi da completare, ricerca dei pezzi, avvisi e anomalie funzionano allo stesso modo. Vedi la <a href="#magazzino-asp">parte Magazzino ASP</a>.</p>
+<p>Sul telefono l'app ha l'aspetto «da campo» (come per i magazzinieri); sul computer ha l'aspetto da ufficio.</p>
+<p>Se l'Amministratore cliente ha attivato la <strong>verifica in due passaggi</strong>, al primo accesso l'app chiede di configurare un'app di autenticazione sul telefono: premi «Configura l'app di autenticazione», aggiungi la chiave (o premi «Apri nell'app di autenticazione»), scrivi il «Codice di 6 cifre» e premi <span class="ui-label">«Conferma»</span>; poi esci e rientra. Se vedi «Accedi di nuovo per usare la verifica in due passaggi.», esci e rientra.</p>
+<section class="question" aria-labelledby="come-invito-una-persona"><h3 id="come-invito-una-persona">Come invito una persona?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Persone»</span> e premi <span class="ui-label">«Invita utente»</span> («La persona riceve un link per impostare la password.»).</li>
+<li>Scegli il ruolo: «Magazzino ASP» o «Tecnico ASP».</li>
+<li>Scrivi «Nome», «Cognome», «E-mail di lavoro» e scegli la «Lingua».</li>
+<li>Conferma. Vedi «Invito creato».</li>
+</ol>
+<p class="note-intro">Cosa vedi dopo:</p>
+<ul>
+<li>«L'e-mail di invito è stata inviata.»: la persona riceve il link per e-mail.</li>
+<li>Oppure <span class="ui-message">«L'invio delle e-mail non è configurato: copia questo link e consegnalo alla persona. Viene mostrato solo ora.»</span>: premi <span class="ui-label">«Copia»</span> (diventa «Copiato») e consegna il link alla persona in modo riservato. Non lo vedrai più.</li>
+</ul>
+<p class="warning-intro">Se qualcosa va storto: <span class="ui-error">«Esiste già un account con questa e-mail.»</span>; <span class="ui-error">«Questo ruolo non appartiene a questa organizzazione.»</span>; <span class="ui-error">«L'organizzazione non è attiva.»</span> (chiedi all'Amministratore cliente).</p>
+</section><section class="question" aria-labelledby="come-gestisco-le-persone-della-mia-asp"><h3 id="come-gestisco-le-persone-della-mia-asp">Come gestisco le persone della mia ASP?</h3>
+<p>In <span class="ui-label">«Persone»</span>, sulla riga della persona, apri «Azioni». Puoi gestire solo i ruoli «Magazzino ASP» e «Tecnico ASP»: su un altro amministratore l'app rifiuta l'azione (<span class="ui-error">«Non hai il permesso di farlo.»</span>).</p>
+<ul>
+<li><strong><span class="ui-label">«Invia di nuovo l'invito»</span></strong>: se la persona non ha ricevuto o ha perso il link.</li>
+<li><strong><span class="ui-label">«Cambia ruolo»</span></strong>: scegli il nuovo ruolo e premi <span class="ui-label">«Salva»</span>. «La modifica vale dal prossimo rinnovo del token (entro 10 minuti).»: cioè entro 10 minuti.</li>
+<li><strong><span class="ui-label">«Disattiva»</span></strong>: per chi lascia il lavoro. <span class="ui-message">«… non potrà più usare l'app. Le letture fatte offline prima di ora sono ancora accettate per 7 giorni.»</span> Lo stato diventa «Disattivato (periodo di tolleranza)».</li>
+<li><strong><span class="ui-label">«Riattiva»</span></strong>: ridà l'accesso a una persona disattivata.</li>
+<li><strong><span class="ui-label">«Blocca subito»</span></strong>: solo per un telefono perso o rubato. <span class="ui-message">«… viene bloccato subito su tutti i dispositivi. Le letture non ancora inviate vanno perse.»</span></li>
+<li><strong><span class="ui-label">«Esci da tutti i dispositivi»</span></strong>: chiude le sessioni della persona su tutti i telefoni. Le sue letture non ancora inviate vanno perse.</li>
+<li><strong><span class="ui-label">«Elimina»</span></strong>: chiude l'account e cancella i dati personali. «L'operazione non si può annullare.» La storia dei pezzi resta.</li>
+</ul>
+<p>Ogni azione chiede una conferma. Non puoi disattivare, bloccare o eliminare te stesso.</p>
+</section><section class="question" aria-labelledby="come-carico-la-lista-dei-pezzi-di-un-sito-bom"><h3 id="come-carico-la-lista-dei-pezzi-di-un-sito-bom">Come carico la lista dei pezzi di un sito (BOM)?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Documenti»</span> e premi <span class="ui-label">«Nuovo documento»</span>.</li>
+<li>«Tipo»: «BOM». «Numero»: il riferimento della lista. «Luogo»: il sito.</li>
+<li>«Righe»: un numero di serie per riga, <strong>seguito sempre</strong> da <code>[remove]</code> (da smontare) o <code>[install]</code> (da installare). Per esempio <code>SERIALE [remove]</code>. Una riga senza <code>[remove]</code> o <code>[install]</code> non viene usata nel controllo.</li>
+<li>Premi <span class="ui-label">«Salva»</span>.</li>
+</ol>
+<p>Cosa succede dopo: quando il tecnico preme <span class="ui-label">«Ho finito in questo sito»</span>, e ogni notte, l'app confronta i pezzi letti nel sito con la BOM. Se qualcosa non torna, compare l'avviso «BOM differenza».</p>
+<p>Ogni nuovo salvataggio dello stesso documento crea una nuova versione (la vedi accanto al tipo, per esempio «v2»).</p>
+</section><section class="question" aria-labelledby="come-chiudo-un-documento"><h3 id="come-chiudo-un-documento">Come chiudo un documento?</h3>
+<ol>
+<li>Apri il documento da <span class="ui-label">«Documenti»</span>.</li>
+<li>Premi <span class="ui-label">«Chiudi»</span> e conferma («Chiudere questo documento?»). Vedi «Chiuso».</li>
+</ol>
+<p>Un documento chiuso non si modifica più. Chiudere un documento non chiude gli avvisi collegati.</p>
+</section><section class="question" aria-labelledby="come-chiudo-un-avviso"><h3 id="come-chiudo-un-avviso">Come chiudo un avviso?</h3>
+<ol>
+<li>In <span class="ui-label">«Avvisi»</span>, sulla riga dell'avviso, premi <span class="ui-label">«Chiudi»</span>.</li>
+<li>Scrivi una nota se serve («Nota (facoltativa):») e conferma. Vedi «Chiuso».</li>
+</ol>
+<p>Premi <span class="ui-label">«Chiudi»</span> solo quando hai risolto: non c'è un pulsante per riaprire. Se il problema si ripresenta, l'app riapre l'avviso da sola.</p>
+</section><section class="question" aria-labelledby="come-correggo-un-pezzo"><h3 id="come-correggo-un-pezzo">Come correggo un pezzo?</h3>
+<p>Apri il pezzo (da <span class="ui-label">«Pezzi»</span> o da <span class="ui-label">«Anomalie»</span>). Oltre a <span class="ui-label">«Modifica»</span> (vedi <a href="#come-completo-un-pezzo-senza-modello">Come completo un pezzo senza modello?</a>), hai:</p>
+<ul>
+<li><strong><span class="ui-label">«Forzatura d'ufficio»</span></strong>: scegli lo «Stato» giusto, scrivi il «Motivo» (obbligatorio) e premi <span class="ui-label">«Applica»</span>. Usala quando lo stato del pezzo è sbagliato e una lettura non basta a correggerlo.</li>
+<li><strong><span class="ui-label">«Unisci»</span></strong>: quando lo stesso pezzo fisico è stato registrato con due codici. Scrivi il «Codice del pezzo da unire», il «Motivo», e premi <span class="ui-label">«Unisci in questo»</span>. Puoi unire solo pezzi della tua ASP. Errore possibile: «Uno di questi pezzi era già stato unito.»</li>
+<li><strong><span class="ui-label">«Mostra autore»</span></strong> (icona accanto a una lettura): mostra chi ha fatto quella lettura, se il dato è ancora disponibile («Autore non disponibile.» altrimenti). Ogni richiesta viene registrata e ne puoi fare al massimo 20 all'ora: usala solo quando serve davvero.</li>
+</ul>
+<p>Tutte le correzioni restano nella storia del pezzo.</p>
+</section><section class="question" aria-labelledby="come-leggo-il-cruscotto"><h3 id="come-leggo-il-cruscotto">Come leggo il cruscotto?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Cruscotto»</span>.</li>
+<li>Vedi quanti pezzi della tua ASP sono «Al magazzino ASP», «Installato», «Smontato in sito», «Reso», «Smistato», «Difettoso», «Avanzo», «In trasferimento». Tocca un numero per aprire l'elenco dei pezzi.</li>
+<li>Più sotto: «Per flusso e stato», «Per regione», «Modelli più presenti», «Per produttore», «Esito smistamento», «Magazzini».</li>
+</ol>
+<p>I numeri si aggiornano dopo le letture e ogni notte. Riapri la pagina per vedere gli ultimi.</p>
+</section><section class="question" aria-labelledby="come-scarico-un-export"><h3 id="come-scarico-un-export">Come scarico un export?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Esportazioni»</span>.</li>
+<li>Scegli i filtri che ti servono (tutti facoltativi): «Stato», «Modello», «Sito o magazzino», «Categoria di smistamento», «Letti dal», «Letti fino al». Le date si riferiscono all'ultima lettura di ogni pezzo.</li>
+<li>Premi <span class="ui-label">«Crea esportazione»</span>. Vedi «Esportazione creata» e una nuova riga nell'elenco, con le «Righe» prodotte.</li>
+<li>Premi <span class="ui-label">«Scarica»</span> su quella riga: scarichi un file Excel.</li>
+</ol>
+<p>L'elenco mostra solo le esportazioni create da te. Se vedi <span class="ui-error">«Non è stato possibile caricare i dati.»</span>, riprova con la rete.</p>
+</section><section class="question" aria-labelledby="come-scarico-un-rapporto-mensile"><h3 id="come-scarico-un-rapporto-mensile">Come scarico un rapporto mensile?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Rapporti»</span>.</li>
+<li>Ogni mese, il giorno 1, l'app prepara da sola il rapporto del mese precedente per la tua ASP.</li>
+<li>Sulla riga del mese premi <span class="ui-label">«PDF»</span> o <span class="ui-label">«XLSX»</span>.</li>
+</ol>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-magazzino-cliente role-section" aria-labelledby="magazzino-cliente"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h11v12H3zM14 9h4l4 4v4h-8M5 17a2 2 0 1 0 4 0m7 0a2 2 0 1 0 4 0M6 9l2 2 3-3"/></svg></span><h2 id="magazzino-cliente">Magazzino cliente</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Lavori nel magazzino del cliente: ricevi i resi che arrivano dalle ASP e confermi quali pezzi sono arrivati davvero.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span>, <span class="ui-label">«Pezzi»</span>, <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Documenti»</span>, <span class="ui-label">«Avvisi»</span>, <span class="ui-label">«Guida»</span>.</p>
+<p><strong>Cosa non vedi.</strong> Vedi solo le spedizioni di reso (non i trasferimenti tra ASP) e solo gli avvisi sulle differenze dei resi.</p>
+<section class="question" aria-labelledby="come-confermo-un-reso"><h3 id="come-confermo-un-reso">Come confermo un reso?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Spedizioni»</span> e cerca il «Reso» nello stato «Inviata». Premi <span class="ui-label">«Apri»</span>.</li>
+<li>Controlla il «Riepilogo» (pezzi, «Numero DDT») e le «Righe».</li>
+<li>Premi <span class="ui-label">«Conferma»</span>. Leggi <span class="ui-message">«Togli la spunta ai pezzi mancanti. Aggiungi pezzi in più digitando il codice.»</span></li>
+<li>In «Pezzi attesi» sono tutti spuntati: togli la spunta ai pezzi che <strong>non</strong> sono arrivati.</li>
+<li>Se sono arrivati pezzi che non erano nella lista, scrivi il codice in «Pezzi in più» («Scrivi un codice e premi Invio») e premi «Aggiungi». Per togliere un codice aggiunto per errore premi «×».</li>
+<li>Premi <span class="ui-label">«Conferma»</span>. Vedi «Confermata».</li>
+</ol>
+<p>Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e il riepilogo dice «Completa: Sì» o «No». Se mancano pezzi o ce ne sono in più, l'app crea l'avviso «DDT (reso) differenza».</p>
+<p><strong>Pezzi arrivati dopo.</strong> Se un pezzo mancante arriva più tardi, riapri lo stesso reso, premi di nuovo <span class="ui-label">«Conferma»</span> e aggiungilo. I pezzi già confermati non vengono contati due volte.</p>
+<p class="warning-intro">Se qualcosa va storto: <span class="ui-error">«La spedizione non è stata inviata.»</span>: l'ASP non ha ancora inviato il reso, aspetta. Controlla sempre in <span class="ui-label">«Spedizioni»</span> che il reso compaia come «Confermata».</p>
+</section><section class="question" aria-labelledby="come-guardo-e-chiudo-gli-avvisi-sui-resi"><h3 id="come-guardo-e-chiudo-gli-avvisi-sui-resi">Come guardo e chiudo gli avvisi sui resi?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Avvisi»</span>: vedi gli avvisi «DDT (reso) differenza», con il «Conteggio» dei pezzi che non tornano.</li>
+<li>Premi <span class="ui-label">«Segna visto»</span> quando l'hai guardato.</li>
+<li>Quando la differenza è chiarita, premi <span class="ui-label">«Chiudi»</span>, scrivi una nota se serve e conferma. Premilo solo quando sei sicuro: non si riapre a mano.</li>
+</ol>
+<p>Per vedere il reso a cui si riferisce l'avviso, aprilo da <span class="ui-label">«Spedizioni»</span>.</p>
+</section><section class="question" aria-labelledby="come-cerco-un-pezzo-1"><h3 id="come-cerco-un-pezzo-1">Come cerco un pezzo?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Pezzi»</span>.</li>
+<li>Scrivi il codice completo in «Cerca per codice» e premi <span class="ui-label">«Cerca»</span>.</li>
+<li>Nella scheda vedi stato, luogo e codici del pezzo.</li>
+</ol>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-ufficio-cliente role-section" aria-labelledby="ufficio-cliente"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 16v-4m5 4V8m5 8V5"/></svg></span><h2 id="ufficio-cliente">Ufficio cliente</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Lavori negli uffici del cliente: segui l'avanzamento dello swap su tutte le ASP, controlli differenze e anomalie, prepari esportazioni e rapporti. Puoi consultare quasi tutto, ma non modifichi pezzi, documenti o spedizioni.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span>, <span class="ui-label">«Cruscotto»</span>, <span class="ui-label">«Pezzi»</span>, <span class="ui-label">«Da completare»</span>, <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Documenti»</span>, <span class="ui-label">«Avvisi»</span>, <span class="ui-label">«Anomalie»</span>, <span class="ui-label">«Esportazioni»</span>, <span class="ui-label">«Rapporti»</span>, <span class="ui-label">«Guida»</span>.</p>
+<p><strong>Cosa vedi.</strong> I pezzi, le spedizioni, i documenti, gli avvisi e le anomalie di tutte le ASP. Non vedi chi ha fatto le singole letture.</p>
+<p><span class="ui-label">«Da completare»</span> (i pezzi senza modello) e <span class="ui-label">«Spedizioni»</span> (resi e trasferimenti, con il loro stato) sono per te in sola consultazione: premi <span class="ui-label">«Apri»</span> su una riga per vedere il dettaglio.</p>
+<section class="question" aria-labelledby="come-leggo-il-cruscotto-1"><h3 id="come-leggo-il-cruscotto-1">Come leggo il cruscotto?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Cruscotto»</span>.</li>
+<li>Nella tendina «Ambito» scegli «Tutte le ASP (cliente)» oppure una sola ASP.</li>
+<li>Leggi i numeri come descritto in <a href="#come-leggo-il-cruscotto">Come leggo il cruscotto?</a> dell'Amministratore ASP. Tocca un numero per aprire l'elenco dei pezzi filtrato.</li>
+</ol>
+</section><section class="question" aria-labelledby="come-cerco-un-pezzo-2"><h3 id="come-cerco-un-pezzo-2">Come cerco un pezzo?</h3>
+<p>Come in <a href="#come-cerco-un-pezzo">Come cerco un pezzo?</a> del Magazzino ASP. In più hai il filtro «ASP». La scheda del pezzo è in sola lettura.</p>
+</section><section class="question" aria-labelledby="come-controllo-un-ddt-o-una-bom"><h3 id="come-controllo-un-ddt-o-una-bom">Come controllo un DDT o una BOM?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Documenti»</span> e premi <span class="ui-label">«Apri»</span> sul documento.</li>
+<li>Premi <span class="ui-label">«Confronta»</span>: vedi «Arrivati», «Mancanti», <span class="ui-error">«Non attesi»</span>, «Modello sconosciuto».</li>
+</ol>
+<p>I documenti li inseriscono e verificano le ASP e l'Amministratore cliente.</p>
+</section><section class="question" aria-labelledby="come-guardo-avvisi-e-anomalie-1"><h3 id="come-guardo-avvisi-e-anomalie-1">Come guardo avvisi e anomalie?</h3>
+<p>Come in <a href="#come-guardo-avvisi-e-anomalie">Come guardo avvisi e anomalie?</a> del Magazzino ASP: puoi aprire gli avvisi e premere <span class="ui-label">«Segna visto»</span>. La chiusura degli avvisi e la correzione delle anomalie spettano agli amministratori.</p>
+</section><section class="question" aria-labelledby="come-scarico-un-export-1"><h3 id="come-scarico-un-export-1">Come scarico un export?</h3>
+<p>Come in <a href="#come-scarico-un-export">Come scarico un export?</a> dell'Amministratore ASP. In più puoi scegliere il filtro «ASP» (vuoto = tutte).</p>
+</section><section class="question" aria-labelledby="come-preparo-e-scarico-un-rapporto-mensile"><h3 id="come-preparo-e-scarico-un-rapporto-mensile">Come preparo e scarico un rapporto mensile?</h3>
+<p>Il giorno 1 di ogni mese l'app prepara da sola il rapporto complessivo del mese precedente. Per farne uno a richiesta:</p>
+<ol>
+<li>Apri <span class="ui-label">«Rapporti»</span>.</li>
+<li>Scegli «Anno» e «Mese».</li>
+<li>Premi <span class="ui-label">«Genera»</span>. Vedi «Rapporto generato» e una nuova riga nell'elenco.</li>
+<li>Premi <span class="ui-label">«PDF»</span> o <span class="ui-label">«XLSX»</span> sulla riga.</li>
+</ol>
+<p>Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel mese, materiale in attesa, avvisi, i modelli e i siti principali. Non contiene nomi di persone.</p>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-amministratore-cliente role-section" aria-labelledby="amministratore-cliente"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h8m-6-12v4m4 1v4m-4 1v4"/></svg></span><h2 id="amministratore-cliente">Amministratore cliente</h2>
+</header><div class="section-body"><p><strong>Chi sei.</strong> Gestisci tutta l'installazione: crei le ASP, inviti gli utenti, prepari siti, magazzini, catalogo dei modelli e categorie di smistamento, scegli le impostazioni. Puoi correggere i pezzi di tutte le ASP, creare trasferimenti tra ASP e confermare i resi.</p>
+<p><strong>Cosa trovi nel menu.</strong> <span class="ui-label">«Home»</span>, <span class="ui-label">«Cruscotto»</span>, <span class="ui-label">«Pezzi»</span>, <span class="ui-label">«Da completare»</span>, <span class="ui-label">«Spedizioni»</span>, <span class="ui-label">«Documenti»</span>, <span class="ui-label">«Avvisi»</span>, <span class="ui-label">«Anomalie»</span>, <span class="ui-label">«Esportazioni»</span>, <span class="ui-label">«Rapporti»</span>, <span class="ui-label">«Organizzazioni»</span>, <span class="ui-label">«Utenti»</span>, <span class="ui-label">«Siti e magazzini»</span>, <span class="ui-label">«Catalogo modelli»</span>, <span class="ui-label">«Smistamento»</span>, <span class="ui-label">«Impostazioni»</span>, <span class="ui-label">«Registro amministrativo»</span>, <span class="ui-label">«Guida»</span>.</p>
+<p>Funzionano come per gli altri ruoli, e non le ripetiamo:</p>
+<ul>
+<li>cruscotto, esportazioni e rapporti: vedi <a href="#ufficio-cliente">Ufficio cliente</a>;</li>
+<li>conferma dei resi: vedi <a href="#come-confermo-un-reso">Come confermo un reso?</a>;</li>
+<li>pezzi, documenti (DDT e BOM), correzioni dei pezzi, chiusura di documenti e avvisi: vedi <a href="#amministratore-asp">Amministratore ASP</a> e <a href="#magazzino-asp">Magazzino ASP</a>.</li>
+<li>verifica in due passaggi: vedi <a href="#amministratore-asp">Amministratore ASP</a>.</li>
+</ul>
+<section class="question" aria-labelledby="come-preparo-linstallazione-la-prima-volta"><h3 id="come-preparo-linstallazione-la-prima-volta">Come preparo l'installazione la prima volta?</h3>
+<p>Ordine consigliato:</p>
+<ol>
+<li><span class="ui-label">«Impostazioni»</span>: marchio, accesso, testo dell'informativa privacy.</li>
+<li><span class="ui-label">«Organizzazioni»</span>: crea le ASP con il loro primo amministratore.</li>
+<li><span class="ui-label">«Siti e magazzini»</span>: importa o crea siti, magazzini ASP e magazzini cliente.</li>
+<li><span class="ui-label">«Catalogo modelli»</span>: importa o crea i modelli.</li>
+<li><span class="ui-label">«Smistamento»</span>: categorie e regole.</li>
+<li><span class="ui-label">«Utenti»</span>: invita le persone del cliente.</li>
+</ol>
+</section><section class="question" aria-labelledby="come-creo-una-asp"><h3 id="come-creo-una-asp">Come creo una ASP?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Organizzazioni»</span> e premi <span class="ui-label">«Nuova ASP»</span> («Crea l'organizzazione e invita il suo primo amministratore.»).</li>
+<li>Scrivi il «Nome» dell'ASP e scegli la «Lingua dei report».</li>
+<li>In «Primo amministratore» scrivi «Nome», «Cognome», «E-mail di lavoro» e scegli la «Lingua».</li>
+<li>Conferma con <span class="ui-label">«Nuova ASP»</span>. Vedi «ASP creata» e poi l'esito dell'invito (e-mail inviata o link da copiare, come in <a href="#come-invito-una-persona">Come invito una persona?</a> dell'Amministratore ASP).</li>
+</ol>
+<p>Se vedi <span class="ui-error">«Esiste già un account con questa e-mail.»</span>, l'invito non è partito: prima di riprovare controlla in <span class="ui-label">«Organizzazioni»</span> se l'ASP compare già, e usa un'altra e-mail per il primo amministratore.</p>
+<p><strong>Lingua dei report</strong>: cambiala dalla tendina sulla riga dell'ASP; si salva subito.</p>
+<p><strong>Disabilitare un'ASP</strong>: premi <span class="ui-label">«Disabilita»</span> e conferma («Disabilitare … disattiva tutti i suoi utenti.»). <span class="ui-label">«Abilita»</span> la riattiva, ma i suoi utenti restano disattivati finché non li riattivi uno per uno da <span class="ui-label">«Utenti»</span>. Un'ASP non si cancella e non si rinomina.</p>
+</section><section class="question" aria-labelledby="come-invito-una-persona-1"><h3 id="come-invito-una-persona-1">Come invito una persona?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Utenti»</span> e premi <span class="ui-label">«Invita utente»</span>.</li>
+<li>Scegli l'«Organizzazione» (il cliente o un'ASP attiva) e il «Ruolo» adatto a quell'organizzazione.</li>
+<li>Scrivi «Nome», «Cognome», «E-mail di lavoro», scegli la «Lingua» e conferma.</li>
+</ol>
+<p>Esito e azioni sulle persone (<span class="ui-label">«Cambia ruolo»</span>, <span class="ui-label">«Disattiva»</span>, <span class="ui-label">«Blocca subito»</span>, <span class="ui-label">«Elimina»</span>…) sono come in <a href="#come-gestisco-le-persone-della-mia-asp">Come gestisco le persone della mia ASP?</a>, ma per tutti gli utenti di tutte le organizzazioni. Se vedi «È l'ultimo amministratore attivo: non può essere rimosso né declassato.», prima nomina un altro amministratore.</p>
+</section><section class="question" aria-labelledby="come-gestisco-siti-e-magazzini"><h3 id="come-gestisco-siti-e-magazzini">Come gestisco siti e magazzini?</h3>
+<p><strong>Creare o modificare un luogo</strong></p>
+<ol>
+<li>Apri <span class="ui-label">«Siti e magazzini»</span> e premi <span class="ui-label">«Nuovo luogo»</span> (o <span class="ui-label">«Modifica»</span> sulla riga).</li>
+<li>Scrivi «Codice» e «Nome», scegli il «Tipo» («Sito», «Magazzino ASP», «Magazzino cliente») e, per siti e magazzini ASP, l'«ASP». Facoltativi: «Indirizzo», «Regione». Spunta «Attivo».</li>
+<li>Premi <span class="ui-label">«Salva»</span>. Vedi «Salvato».</li>
+</ol>
+<p>Codice e tipo non si cambiano dopo la creazione. Un luogo non si cancella: si disattiva togliendo «Attivo». Errore possibile: <span class="ui-error">«Questo codice esiste già.»</span>.</p>
+<p><strong>Spostare un sito a un'altra ASP</strong></p>
+<ol>
+<li>Sulla riga del sito premi <span class="ui-label">«Riassegna»</span>.</li>
+<li>Leggi <span class="ui-message">«Il sito … e i pezzi smontati lì e non ancora ritirati passano alla nuova ASP.»</span></li>
+<li>Scegli la nuova ASP, scrivi un «Motivo» se vuoi, e conferma.</li>
+</ol>
+</section><section class="question" aria-labelledby="come-importo-siti-magazzini-o-modelli-da-un-file-excel"><h3 id="come-importo-siti-magazzini-o-modelli-da-un-file-excel">Come importo siti, magazzini o modelli da un file Excel?</h3>
+<ol>
+<li>In <span class="ui-label">«Siti e magazzini»</span> (o <span class="ui-label">«Catalogo modelli»</span>) premi <span class="ui-label">«Importa»</span>.</li>
+<li>«Scegli un file Excel o CSV». La prima riga del file deve contenere i titoli delle colonne. Vedi «Righe: …».</li>
+<li>In «Associa le colonne» indica, per ogni dato, la colonna del file. Sono obbligatori quelli con l'asterisco: per i luoghi «Codice», «Nome», «Tipo»; per i modelli «Codice materiale», «Modello». Per il tipo dei luoghi il file deve usare: «Valori del tipo: site, asp_warehouse, client_warehouse.» L'app ricorda le associazioni per la volta successiva.</li>
+<li>Premi <span class="ui-label">«Anteprima»</span>: vedi quante righe sono «Nuove», «Modificate», «Invariate», «Con errori», gli eventuali «Nomi ASP sconosciuti» e l'elenco «Riga» / «Problemi».</li>
+<li>Premi «Importa … righe». Vedi «Importazione completata». Le righe con errori vengono saltate, le altre scritte.</li>
+<li>Alla fine l'app ti dice se ci sono luoghi o modelli attivi che non erano nel file («… record attivi non sono nel file. Seleziona quelli da disattivare.»). Spunta quelli da disattivare e premi «Disattiva …», oppure lascia tutto com'è.</li>
+</ol>
+<p>L'importazione non cancella mai nulla e non crea ASP nuove: un nome di ASP sconosciuto è un errore (prima crea l'ASP). Errori di riga frequenti: «Codice mancante.», «Nome mancante.», «Tipo non valido.», «ASP sconosciuta.», «L'ASP di un sito si cambia solo con Riassegna.».</p>
+</section><section class="question" aria-labelledby="come-gestisco-il-catalogo-dei-modelli"><h3 id="come-gestisco-il-catalogo-dei-modelli">Come gestisco il catalogo dei modelli?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Catalogo modelli»</span> e premi <span class="ui-label">«Nuovo modello»</span> (o <span class="ui-label">«Modifica»</span>).</li>
+<li>Scrivi «Codice materiale» (il codice prodotto, uguale su ogni pezzo di quel modello) e «Modello». Facoltativi: «Produttore», «Tipo di apparato».</li>
+<li>Premi <span class="ui-label">«Salva»</span>.</li>
+</ol>
+<p>Il codice materiale non si cambia dopo la creazione. Un modello non si cancella: si disattiva.</p>
+</section><section class="question" aria-labelledby="come-preparo-categorie-e-regole-di-smistamento"><h3 id="come-preparo-categorie-e-regole-di-smistamento">Come preparo categorie e regole di smistamento?</h3>
+<p><strong>Categorie</strong></p>
+<ol>
+<li>Apri <span class="ui-label">«Smistamento»</span> e premi <span class="ui-label">«Nuova categoria»</span>.</li>
+<li>Scrivi «Etichetta (italiano)» ed «Etichetta (inglese)» (tutte e due obbligatorie) e un «Ordine» (un numero da 0 a 999: decide la posizione nell'elenco). Spunta «Attivo».</li>
+<li>Premi <span class="ui-label">«Salva»</span>.</li>
+</ol>
+<p><strong>Regole</strong> (servono a suggerire la categoria al magazzino)</p>
+<ol>
+<li>Premi <span class="ui-label">«Nuova regola»</span> (serve almeno una categoria).</li>
+<li>Indica almeno uno tra «Codice sito (facoltativo)», «Modello», «Tipo di apparato», e scegli la «Categoria».</li>
+<li>Premi <span class="ui-label">«Salva»</span>.</li>
+</ol>
+<p>Quando più regole valgono per lo stesso pezzo: <span class="ui-message">«Vince la più specifica: sito + modello &gt; sito + tipo apparato &gt; modello &gt; tipo apparato &gt; sito.»</span> Categorie e regole non si cancellano: si disattivano. Se disattivi una categoria, disattiva anche le regole che la usano. Errori possibili: <span class="ui-error">«Esiste già una regola attiva con le stesse chiavi.»</span>, «Una regola richiede un sito, un modello o un tipo di apparato.».</p>
+</section><section class="question" aria-labelledby="come-creo-un-trasferimento-tra-due-asp"><h3 id="come-creo-un-trasferimento-tra-due-asp">Come creo un trasferimento tra due ASP?</h3>
+<ol>
+<li>Apri <span class="ui-label">«Spedizioni»</span> e premi <span class="ui-label">«Nuovo trasferimento»</span>.</li>
+<li>«Da»: il magazzino dell'ASP che spedisce. «A»: un magazzino di un'<strong>altra</strong> ASP.</li>
+<li>Premi <span class="ui-label">«Crea»</span>. Vedi «Spedizione creata».</li>
+</ol>
+<p>Poi il magazzino dell'ASP che spedisce trova la bozza in <span class="ui-label">«Spedizioni»</span>, legge i pezzi e la invia; l'ASP che riceve registra l'arrivo (vedi <a href="#come-registro-larrivo-di-un-trasferimento">Come registro l'arrivo di un trasferimento?</a>). Per i trasferimenti dentro la stessa ASP non serve il tuo intervento: li creano i magazzinieri. Puoi annullare una bozza con <span class="ui-label">«Annulla bozza»</span>.</p>
+</section><section class="question" aria-labelledby="come-accetto-un-pezzo-arrivato-a-unaltra-asp"><h3 id="come-accetto-un-pezzo-arrivato-a-unaltra-asp">Come accetto un pezzo arrivato a un'altra ASP?</h3>
+<p>Se un'ASP legge un pezzo che appartiene a un'altra ASP senza trasferimento, nasce l'anomalia «Pezzo di un'altra ASP».</p>
+<ol>
+<li>Apri il pezzo (da <span class="ui-label">«Anomalie»</span>, colonna <span class="ui-label">«Pezzi»</span>).</li>
+<li>Nella sezione <span class="ui-label">«Anomalie»</span> premi <span class="ui-label">«Accetta spostamento»</span> (<span class="ui-message">«Scrive una correzione d'ufficio un istante prima dell'arrivo; il pezzo passa all'ASP che ha scansionato.»</span>).</li>
+<li>Scrivi un motivo se vuoi e premi <span class="ui-label">«Conferma»</span>.</li>
+</ol>
+</section><section class="question" aria-labelledby="come-uso-le-impostazioni"><h3 id="come-uso-le-impostazioni">Come uso le impostazioni?</h3>
+<p>Apri <span class="ui-label">«Impostazioni»</span>. Ogni scheda ha il suo <span class="ui-label">«Salva»</span>: cambiare scheda non salva. Dopo il salvataggio vedi «Salvato».</p>
+<ul>
+<li><strong>«Marchio»</strong>: «Nome dell'app», «Colore principale», «Logo» (PNG, JPEG, SVG o WebP, al massimo 500 KB; compare anche nella pagina di accesso). <span class="ui-label">«Rimuovi il logo»</span> lo toglie.</li>
+<li><strong>«Accesso»</strong>: «Accesso con Google», «Accesso con Microsoft (account aziendale)», «Verifica in due passaggi per gli amministratori», «Chiudi le sessioni desktop dopo inattività» con i «Minuti di inattività» (da 5 a 480; vale solo sui computer, e non chiude se ci sono letture da inviare). Google, Microsoft e la verifica in due passaggi richiedono una preparazione tecnica del servizio di accesso: attivali solo dopo averne parlato con chi ha installato SwapTrack.</li>
+<li><strong>«App»</strong>: «Versione minima» (vuoto = nessun blocco; se la scrivi, chi ha una versione più vecchia deve aggiornare). «L'invio delle e-mail è configurato (Trigger Email)»: spuntalo solo se l'invio delle e-mail è stato davvero preparato; altrimenti gli inviti ti mostrano il link da copiare.</li>
+<li><strong>«Privacy»</strong>: «Testo dell'informativa (italiano)» e «(inglese)». Cambiando un testo, tutti dovranno accettarlo di nuovo. «Chiedi a tutti di accettare di nuovo (nuova versione)» lo richiede anche senza cambiare il testo. «Rimuovi l'autore dagli eventi vecchi» con «Dopo quanti giorni» (da 30 a 3650): toglie dalle letture vecchie l'indicazione di chi le ha fatte.</li>
+<li><strong>«Soglie»</strong>: «Giorni per stale_material» (dopo quanti giorni il materiale fermo genera l'avviso «Materiale fermo»; predefinito 30) e «Giorni per transfer_difference» (dopo quanti giorni un trasferimento incompleto genera «Trasferimento in ritardo»; predefinito 7).</li>
+</ul>
+</section><section class="question" aria-labelledby="come-leggo-il-registro-amministrativo"><h3 id="come-leggo-il-registro-amministrativo">Come leggo il registro amministrativo?</h3>
+<p>Apri <span class="ui-label">«Registro amministrativo»</span>: per ogni azione di gestione vedi «Quando», «Azione», «Da», «Oggetto», «Dettagli». Il registro non si modifica e non si cancella. Non registra il lavoro quotidiano dei tecnici e dei magazzinieri.</p>
+<hr class="source-divider" />
+</section></div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section><section class="guide-section role-parole-che-incontri" aria-labelledby="parole-che-incontri"><header class="section-heading"><span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1m0-16c3-2 6-2 10-1v16c-4-1-7-1-10 1V5z"/></svg></span><h2 id="parole-che-incontri">Parole che incontri</h2>
+</header><div class="section-body"><ul>
+<li><strong>Pezzo</strong>: un singolo apparato fisico, riconosciuto dal suo numero di serie.</li>
+<li><strong>Numero di serie (seriale)</strong>: il codice unico del singolo pezzo. È quello da leggere.</li>
+<li><strong>Codice prodotto / codice materiale</strong>: il codice del modello, uguale su tutti i pezzi dello stesso tipo. Non identifica un pezzo.</li>
+<li><strong>Modello</strong>: il tipo di apparato (dal <span class="ui-label">«Catalogo modelli»</span>).</li>
+<li><strong>Sito</strong>: il luogo dove si smonta e si installa. Ogni sito appartiene a una sola ASP.</li>
+<li><strong>Magazzino ASP</strong>: il magazzino di una ditta installatrice. È anche il nome del ruolo dei magazzinieri.</li>
+<li><strong>Magazzino cliente</strong>: il magazzino dove arrivano i resi. È anche il nome di un ruolo.</li>
+<li><strong>ASP</strong>: una ditta installatrice. Ognuna vede solo i propri dati.</li>
+<li><strong>Materiale nuovo</strong>: pezzi nuovi che vanno dal cliente al magazzino ASP e poi al sito.</li>
+<li><strong>Materiale smontato</strong>: pezzi tolti dai siti, che tornano al magazzino ASP, vengono smistati e resi al cliente.</li>
+<li><strong>DDT</strong>: il documento di trasporto. «DDT (arrivo)» per il materiale nuovo che arriva; «DDT (reso)» per un reso al cliente.</li>
+<li><strong>BOM</strong>: la lista dei pezzi previsti in un sito, da smontare (<code>[remove]</code>) o installare (<code>[install]</code>).</li>
+<li><strong>Smistamento</strong>: assegnare a ogni pezzo smontato una categoria.</li>
+<li><strong>Categoria</strong>: il gruppo in cui finisce un pezzo smontato dopo lo smistamento (le decide l'Amministratore cliente).</li>
+<li><strong>Difettoso / Avanzo</strong>: materiale nuovo che non si installa perché guasto o perché in più.</li>
+<li><strong>Reso</strong>: una spedizione di pezzi dal magazzino ASP al magazzino cliente; anche lo stato finale del pezzo restituito.</li>
+<li><strong>Trasferimento</strong>: una spedizione di pezzi tra due magazzini ASP (della stessa ASP o di due ASP diverse).</li>
+<li><strong>Bozza</strong>: una spedizione in preparazione, non ancora inviata.</li>
+<li><strong>Avviso</strong>: una differenza da guardare (su un documento, una spedizione o un luogo). Sta solo nell'app.</li>
+<li><strong>Anomalia</strong>: una lettura che non torna con la storia del pezzo. La vede l'ufficio.</li>
+<li><strong>Lettura</strong>: la registrazione di un codice letto (con fotocamera, pistola o a mano).</li>
+<li><strong>Raffica</strong>: leggere un pezzo dopo l'altro senza premere nulla tra una lettura e l'altra.</li>
+<li><strong>«Da inviare»</strong>: letture o foto fatte sul telefono ma non ancora arrivate. Partono da sole quando c'è rete.</li>
+<li><strong>«Inviata»</strong>: la lettura è arrivata. Non vuol dire che sia tutto in regola.</li>
+<li><strong><span class="ui-label">«Da completare»</span></strong>: pezzi a cui manca il modello.</li>
+<li><strong>Forzatura d'ufficio</strong>: una correzione dello stato di un pezzo fatta da un amministratore, con un motivo.</li>
+<li><strong>Disattivare / Bloccare</strong>: togliere l'accesso a una persona; bloccare è immediato e fa perdere le letture non inviate.</li>
+</ul>
+</div><nav class="return-index" data-added="navigation"><a href="#indice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6"/></svg>Torna all'indice</a></nav></section></main></div><footer class="version-footer" data-added="version"><p class="version" data-version="bottom">App descritta: commit <strong>bf65dfc</strong> · Testo della guida: sha <strong>69e14f14e5c4</strong> · Data: 03/11/2026</p></footer><script>(function(){'use strict';var sections=Array.from(document.querySelectorAll('.guide-section:not(.intro-section)'));var links=Array.from(document.querySelectorAll('.sidebar a'));var pending=false;function update(){pending=false;var current='';var threshold=window.innerHeight*.23;sections.forEach(function(section){if(section.getBoundingClientRect().top<=threshold){current=section.getAttribute('aria-labelledby');}});links.forEach(function(link){if(link.hash==='#'+current){link.setAttribute('aria-current','location');}else{link.removeAttribute('aria-current');}});}window.addEventListener('scroll',function(){if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});window.addEventListener('resize',update);window.addEventListener('pageshow',update);update();})();</script>
+</body>
+</html>

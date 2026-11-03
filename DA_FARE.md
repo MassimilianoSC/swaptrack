@@ -132,6 +132,27 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
   8. Un avviso le cui differenze sono sparite compare «Nessuna differenza ora», non in rosso (P-60, D-29).
 - **Aggiornamento del 02/11 (o2):** nessun indice, regola o funzione nuova rispetto al quadro del 30/10; nessuna migrazione nuova. Le funzioni vanno ripubblicate perché il loro codice interno è cambiato (riservatezza, foto, resoconti). Le ricerche nuove dell'app sono solo uguaglianze.
 
+### Lotto 2: risultati attesi e controlli a mano (preparati da o2 il 03/11)
+- **Cosa cambia online rispetto al lotto 1:** 7 indici nuovi (shipments ×2, items ×4, documents ×1); nessuna regola cambiata (Storage: solo un commento); dipendenza nuova delle funzioni `@google/genai`; router `documents` con timeout 120 s e 1 GiB; impostazione nuova `features.aiDailyLimit` (predefinito 20). La regola CORS del bucket è già applicata (03/11). Le funzioni bloccanti sono già verificate (P-14).
+- **Prima dei controlli:** nella console, i 7 indici nuovi «Abilitati».
+- **Controlli a mano** (account del seed; in ordine di importanza per la demo; l'atteso viene dalla specifica o dalla decisione):
+  1. Pezzi, due filtri insieme (P-101; §13.1–13.2). Ufficio cliente → Cruscotto → clic su «Smistato»: solo pezzi «Smistato». Poi scegli anche un modello: solo smistati di quel modello, nessun errore. Un errore d'indice: mandarne il testo.
+  2. Raffica col telefono vero (P-98, P-109). Magazziniere Nord sul telefono, Arrivo, fotocamera ferma 5 s sulla stessa etichetta: una sola riga, contatore +1; rileggendo subito compare «Già letto».
+  3. Reso: rilettura e «Annulla l'ultima» (P-90, P-91, D-41; §8.2). Magazziniere Nord: nuovo reso, due pezzi «Smistato», rileggi il secondo: pezzi 2, nessuna anomalia nuova. «Annulla l'ultima»: 1 pezzo e 1 riga, il pezzo annullato torna «Smistato».
+  4. Esportazione scaricata (D-35, P-89, P-106; §13.3). Ufficio cliente → Esportazioni → senza filtri → Scarica: si apre in Excel e si chiama «SwapTrack-export-AAAA-MM-GG-hhmm.xlsx».
+  5. Resoconto di un'ASP (P-99, P-114 n.26; §13.4). Ufficio cliente → Resoconti → ambito «ASP Nord», ottobre 2026 → Genera due volte: due righe, tutte e due scaricabili; il file dice «ASP Nord» e si chiama «SwapTrack-resoconto-2026-10-…».
+  6. Reso con un mancante, avviso che apre il reso (P-103; §9.3). Magazzino cliente: conferma un reso togliendo la spunta a un pezzo → avviso di differenza del reso; aperto da Avvisi porta al reso, non al documento.
+  7. Foto vista dall'ufficio (P-68, P-70; §13.2). Tecnico Nord: lettura con foto, in rete. Ufficio cliente: nel pezzo la miniatura, cliccata si apre.
+  8. Arrivo di smontato con smistamento (P-25, D-27, D-39; §12.2). Magazziniere Nord, Arrivo, «Smontato», «Smista nello stesso passaggio»: categoria suggerita in grande, pezzo «Smistato». Con «Nuovo» il pezzo è «Al magazzino ASP», mai «Smistato».
+  9. BOM con direzione (P-92; §11.2). Amministratore cliente: BOM per un sito di Nord con righe in «Da smontare» e «Da installare» → si salva. Tecnico Nord a quel sito: righe divise per direzione.
+  10. Trasferimento ricevuto (P-114 n.16; §9.4). Magazziniere Nord: trasferimento MAG-NORD-01 → MAG-NORD-02 con 2 pezzi, invia; a MAG-NORD-02, Arrivo con quel trasferimento, leggi i 2 pezzi: spedizione «Ricevuta», con la data.
+  11. Documenti del magazzino cliente (P-97): l'elenco dei DDT di reso compare, nessuna rotellina infinita.
+  12. Niente testi grezzi (P-96, P-117). Ufficio cliente: Home, Anomalie, Esportazioni senza scritte tipo «home.cards…». Amministratore cliente: Registro con testi, mai codici con il trattino basso.
+  13. Persone dell'amministratore ASP (P-117 n.30; §3.3). Amministratore Nord → Persone: nessun menu azioni sulla propria riga; sì su magazziniere e tecnico.
+  14. Uscita con letture in coda (P-87a, se nel lotto). Tecnico, modalità aereo: una lettura, poi Profilo → «Esci da tutti i dispositivi»: «Non puoi ancora uscire», l'uscita non avviene.
+  15. DDT caricato come foto (P-105, D-47, se nel lotto; §11.2). Magazziniere Nord: nuovo DDT con 2 foto → salva; aggiunge una terza: 3 pagine; tolta una, resta nella storia.
+  16. Lettura con l'AI (D-45, se nel lotto; dopo i passi di messa a punto). Interruttore spento: nessun pulsante «Leggi automaticamente». Acceso: righe proposte da confermare, nulla salvato senza conferma.
+
 ## P-31 Documentazione per l'utente e il collaudo
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.
