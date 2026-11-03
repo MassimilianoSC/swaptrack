@@ -17,6 +17,16 @@ async function admin() {
   const { getFirestore, Timestamp } = await import("firebase-admin/firestore");
   return { auth: getAuth(app), db: getFirestore(app), Timestamp };
 }
+// An account of this test only, with the given role (the privacy notice is accepted by signIn).
+async function ownAccount(role: string, orgId: string, name: string) {
+  const { auth, db } = await admin();
+  const email = `e2e.${name}.${Date.now()}@swaptrack-demo.test`;
+  const { uid } = await auth.createUser({ email, password: PASSWORD, emailVerified: true });
+  const claims = { role, orgId, active: true, disabledAt: null };
+  await auth.setCustomUserClaims(uid, claims);
+  await db.collection("users").doc(uid).set({ email, firstName: "Prova", lastName: name, language: "it", privacyNoticeVersion: null, privacyAcceptedAt: null, ...claims });
+  return { uid, email };
+}
 
 test.describe("Pagine di amministrazione (scrivania)", () => {
   test("persone: l'admin di ASP Nord ha il menu azioni solo su magazzinieri e tecnici della sua ASP", async ({ page }) => {
@@ -58,12 +68,7 @@ test.describe("Pagine di amministrazione (scrivania)", () => {
   });
 
   test("profilo: dopo il cambio della password i due campi sono vuoti", async ({ page }) => {
-    const { auth, db } = await admin();
-    const email = `e2e.profile.${Date.now()}@swaptrack-demo.test`;
-    const { uid } = await auth.createUser({ email, password: PASSWORD, emailVerified: true });
-    const claims = { role: "asp_warehouse", orgId: "org_asp_nord", active: true, disabledAt: null };
-    await auth.setCustomUserClaims(uid, claims);
-    await db.collection("users").doc(uid).set({ email, firstName: "Prova", lastName: "Profilo", language: "it", privacyNoticeVersion: null, privacyAcceptedAt: null, ...claims });
+    const { email } = await ownAccount("asp_warehouse", "org_asp_nord", "profilo");
     await signIn(page, email);
     await page.goto("/profile");
     await page.getByTestId("profile-current-password").fill(PASSWORD);
@@ -72,5 +77,17 @@ test.describe("Pagine di amministrazione (scrivania)", () => {
     await expect(page.getByText(tr("profile.passwordChanged")).first()).toBeVisible();
     await expect(page.getByTestId("profile-current-password")).toHaveValue("");
     await expect(page.getByTestId("profile-new-password")).toHaveValue("");
+  });
+
+  test("esportazioni: un export troncato dal server lo dice nella sua riga (n.36)", async ({ page }) => {
+    const { uid, email } = await ownAccount("client_office", "org_client", "export");
+    const { db, Timestamp } = await admin();
+    const id = `e2e-trunc-${Date.now()}`;
+    await db.collection("exports").doc(id).set({ scope: "client", filter: {}, language: "it", path: `exports/client/${id}.xlsx`, rowCount: 10000, truncated: true, createdAt: Timestamp.now(), createdBy: uid });
+    await db.collection("exports").doc(`${id}-full`).set({ scope: "client", filter: {}, language: "it", path: `exports/client/${id}-full.xlsx`, rowCount: 12, truncated: false, createdAt: Timestamp.now(), createdBy: uid });
+    await signIn(page, email);
+    await page.goto("/exports");
+    await expect(page.getByTestId(`exports-truncated-${id}`)).toContainText(tr("exports.truncatedShort"));
+    await expect(page.getByTestId(`exports-truncated-${id}-full`)).toHaveCount(0);
   });
 });
