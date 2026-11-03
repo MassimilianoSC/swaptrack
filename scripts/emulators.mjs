@@ -13,15 +13,18 @@
 //                                              runs in front of the events of the tests.
 //                                              D-57: the base seed alone (--seed "yarn seed") writes no events, so
 //                                              it runs in the emulators started for <cmd>: no second start and stop.
+//                                              D-60: any other seed is exported once and kept (seedCache.mjs): the
+//                                              next runs import the same files. --no-seed-cache seeds again.
 // The stop kills the process tree this script started, recorded while the CLI was alive (on Windows the CLI
 // leaves its Java emulators running after it exits, and they are no longer linked to it).
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   ROOT, PROJECT, FIREBASE, hostOf, portsOf, busyPorts, cliEnv, processTable, descendantsOf, killPids, sleep, waitPortsFree,
 } from "./emulatorPorts.mjs";
+import { SEED_INPUTS, seedCacheKey } from "./seedCache.mjs";
 
 const ONLY = ["auth", "firestore", "functions", "storage", "pubsub"];
 const SEED_ONLY = ["auth", "firestore", "storage"];
@@ -40,6 +43,11 @@ const SEED = argOf("--seed");
 // D-57: a seed that writes no events (the base seed: organizations, users through the Admin SDK, places, models,
 // settings) wakes no trigger: it runs in place, after the start (measured: about 22 s saved out of 130).
 const SEED_IN_PLACE = !!SEED && SEED.split("&&").every((c) => c.trim() === "yarn seed");
+const SEED_CACHE = !process.argv.includes("--no-seed-cache");
+// One cached export at a time, outside the repository; "complete" is written last, so a cut copy is never used.
+const CACHE_ROOT = join(tmpdir(), "swaptrack-seed-cache");
+const cacheDir = () => join(CACHE_ROOT, seedCacheKey(SEED, new Date().toISOString().slice(0, 10), SEED_INPUTS.map((f) => readFileSync(`${ROOT}${f}`))));
+const MARK = "complete";
 if ((process.argv.includes("--run") && !COMMAND) || (process.argv.includes("--seed") && (!SEED || !COMMAND))) {
   console.error('emulators: usage: node scripts/emulators.mjs [--seed "<seed command>"] --run "<command>"');
   process.exit(2);
@@ -138,6 +146,21 @@ async function warmUpTrigger() {
   console.log(`emulators: onEventCreated ${done ? "warmed up" : "NOT warmed up"} in ${Date.now() - started} ms`);
 }
 
+// D-60: a fresh export is copied into the cache (the older ones are removed: they can never match again).
+function keepSeed(dir) {
+  const target = cacheDir();
+  try {
+    mkdirSync(CACHE_ROOT, { recursive: true });
+    for (const old of readdirSync(CACHE_ROOT)) if (join(CACHE_ROOT, old) !== target) rmSync(join(CACHE_ROOT, old), { recursive: true, force: true });
+    rmSync(target, { recursive: true, force: true });
+    cpSync(dir, target, { recursive: true });
+    writeFileSync(join(target, MARK), new Date().toISOString());
+    console.log(`emulators: seed kept in the cache ${target}`);
+  } catch (e) {
+    console.error(`emulators: seed not kept in the cache (${e.message}); the next run seeds again.`);
+  }
+}
+
 async function main() {
   const busy = await busyPorts(PORTS);
   if (busy.length) {
@@ -145,9 +168,13 @@ async function main() {
     process.exit(2);
   }
   const t0 = Date.now();
-  const seeded = SEED && !SEED_IN_PLACE ? await seedPhase() : null;
+  // D-60: the exported seed of an earlier run (same key) is imported as it is, and never deleted here.
+  const cached = SEED && !SEED_IN_PLACE && SEED_CACHE && existsSync(join(cacheDir(), MARK)) ? cacheDir() : null;
+  if (cached) console.log(`emulators: seed from the cache ${cached}`);
+  const seeded = cached ? null : SEED && !SEED_IN_PLACE ? await seedPhase() : null;
+  if (seeded && SEED_CACHE) keepSeed(seeded);
   let t = Date.now();
-  const data = seeded ? ["--import", seeded] : COMMAND ? [] : ["--import", DATA, "--export-on-exit", DATA];
+  const data = cached ?? seeded ? ["--import", cached ?? seeded] : COMMAND ? [] : ["--import", DATA, "--export-on-exit", DATA];
   if (!COMMAND) mkdirSync(`${ROOT}.emulator-data`, { recursive: true });
   const cli = startCli(ONLY, data);
   await waitReady(cli, ONLY, "emulators");
