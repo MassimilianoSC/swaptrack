@@ -82,10 +82,11 @@ export function applyEvent(prev: ItemState | null, e: MachineEvent): Result {
     });
   }
   if (prev.status === "returned") return { state: prev, anomaly: "event_after_end_of_flow" };
-  if (e.type === "relabel") return { state: s };
   if (e.source !== "server" && e.aspId && prev.currentAspId && e.aspId !== prev.currentAspId && prev.pendingAspId !== e.aspId) {
     return { state: prev, anomaly: "code_of_another_asp" };
   }
+  // A relabel changes the codes only (§6.5); another ASP's relabel is refused above, as any other event (n.37).
+  if (e.type === "relabel") return { state: s };
   // Repetition at the current location changes nothing (except sorting of removed material during arrival, D-39).
   const sameLoc = e.locationId === prev.currentLocationId;
   const sortsOnArrival = sameLoc && e.type === "arrive_at_warehouse" && !!p.categoryId && prev.status === "received_at_asp" && prev.flow === "removed";

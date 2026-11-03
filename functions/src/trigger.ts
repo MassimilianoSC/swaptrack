@@ -165,7 +165,9 @@ export async function processEvent(id: string): Promise<void> {
         tx.update(targetRef, { voided: true });
         tx.update(ref, { processedAt: FieldValue.serverTimestamp(), scannedAtEffective: effective, outcome: "ok", itemId: t.itemId ?? null });
         if (!t.itemId) return null;
-        return { itemId: t.itemId as string, shipmentId: SHIPPING.includes(t.type) ? (t.payload?.shipmentId as string | undefined) ?? null : null };
+        // n.37: undoing a relabel puts its old label back and removes the new one it created.
+        const relabel = t.type === "relabel" ? { oldId: computeCodeId(String(t.payload?.oldCodeRaw ?? "")) as string, newId: String(t.codeId), eventId: targetRef.id } : null;
+        return { itemId: t.itemId as string, shipmentId: SHIPPING.includes(t.type) ? (t.payload?.shipmentId as string | undefined) ?? null : null, relabel };
       });
       // Replay after the voided flag is committed, so the target is excluded.
       if (target) {
@@ -183,6 +185,14 @@ export async function processEvent(id: string): Promise<void> {
           // counters go down; the undone event keeps its itemId in the history. Read before any write.
           const gone = !r.state && !!r.before;
           const codes = gone ? await tx.get(db.collection("codes").where("itemId", "==", targetItem)) : null;
+          const rl = target.relabel && !gone ? target.relabel : null;
+          const oldRef = rl ? db.collection("codes").doc(rl.oldId) : null, newRef = rl ? db.collection("codes").doc(rl.newId) : null;
+          const oldCode = oldRef ? (await tx.get(oldRef)).data() : undefined, newCode = newRef ? (await tx.get(newRef)).data() : undefined;
+          // Only the labels this relabel changed, and only while the new one was not replaced again.
+          if (rl && oldCode?.replacedBy === rl.newId && newCode?.active && newCode.relabelEventId === rl.eventId && newCode.itemId === targetItem) {
+            tx.update(oldRef!, { active: true, replacedBy: null });
+            tx.delete(newRef!);
+          }
           if (lineRef && line && !line.confirmedAt && !line.arrivedAt) {
             tx.delete(lineRef);
             tx.update(db.collection("shipments").doc(sid!), { itemCount: FieldValue.increment(-1) });
@@ -267,9 +277,12 @@ export async function processEvent(id: string): Promise<void> {
       const codeFields = { itemId: itemRef.id, aspId: r.state.currentAspId, pendingAspId: r.state.pendingAspId };
       if (codeRef && !code) tx.set(codeRef, { raw: codeRaw, norm: normalizeBarcode(codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), ...codeFields });
       else if (codeRef && e.type !== "relabel") tx.update(codeRef, codeFields);
-      if (e.type === "relabel" && codeRef && newCodeRef) {
+      // A refused relabel (another ASP's piece, after the end of the flow) leaves the codes as they are (n.37).
+      if (e.type === "relabel" && codeRef && newCodeRef && !r.anomaly) {
         tx.update(codeRef, { ...codeFields, active: false, replacedBy: e.codeId });
-        tx.set(newCodeRef, { raw: e.codeRaw, norm: normalizeBarcode(e.codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), ...codeFields });
+        // relabelEventId: the label this relabel created, so that undoing it removes it again (n.37).
+        if (newCode) tx.update(newCodeRef, { ...codeFields, active: true, replacedBy: null });
+        else tx.set(newCodeRef, { raw: e.codeRaw, norm: normalizeBarcode(e.codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), relabelEventId: id, ...codeFields });
       }
       if (sh && sid) {
         tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { codeRaw: e.codeRaw, model: r.before?.model ?? model?.model ?? null, addedAt: FieldValue.serverTimestamp(), fromAspId: sh.fromAspId, toAspId: sh.toAspId ?? null, kind: sh.kind }, { merge: true });
