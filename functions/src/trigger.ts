@@ -154,7 +154,7 @@ export async function processEvent(id: string): Promise<void> {
 
     if (e.type === "void") {
       const targetRef = db.collection("events").doc(String(e.payload?.targetEventId));
-      const targetItem = await db.runTransaction(async (tx) => {
+      const target = await db.runTransaction(async (tx) => {
         const t = (await tx.get(targetRef)).data();
         const me = (await tx.get(ref)).data();
         if (me?.processedAt) return null;
@@ -164,14 +164,25 @@ export async function processEvent(id: string): Promise<void> {
         // Set even if the target is not processed yet: its own trigger then skips it (§8.2).
         tx.update(targetRef, { voided: true });
         tx.update(ref, { processedAt: FieldValue.serverTimestamp(), scannedAtEffective: effective, outcome: "ok", itemId: t.itemId ?? null });
-        return (t.itemId as string) ?? null;
+        if (!t.itemId) return null;
+        return { itemId: t.itemId as string, shipmentId: SHIPPING.includes(t.type) ? (t.payload?.shipmentId as string | undefined) ?? null : null };
       });
       // Replay after the voided flag is committed, so the target is excluded.
-      if (targetItem) {
+      if (target) {
+        const targetItem = target.itemId;
         await db.runTransaction(async (tx) => {
           const itemRef = db.collection("items").doc(targetItem);
           const locs = new Map<string, Doc>(), ships = new Map<string, ShipmentInfo | null>();
           const r = await replayItem(tx, itemRef, null, locs, ships);
+          // P-91 ("undo last" in a shipment): with no reading left, the piece leaves the shipment, unless the line is
+          // already confirmed or arrived (then the voided reading only leaves the history).
+          const sid = target.shipmentId;
+          const lineRef = sid && !r.readingsIn.get(sid) ? db.collection("shipments").doc(sid).collection("lines").doc(targetItem) : null;
+          const line = lineRef ? (await tx.get(lineRef)).data() : undefined;
+          if (lineRef && line && !line.confirmedAt && !line.arrivedAt) {
+            tx.delete(lineRef);
+            tx.update(db.collection("shipments").doc(sid!), { itemCount: FieldValue.increment(-1) });
+          }
           if (r.state && r.before) {
             const region = (locs.get(String(r.state.currentLocationId))?.region ?? null) as string | null;
             writeItem(tx, itemRef, r.before, r.state, null, region);
