@@ -1,7 +1,7 @@
 import * as React from "react";
 import i18n from "@/i18n";
 import { onUser, readClaims, signOut, type User, type Claims } from "@/lib/data/auth";
-import { watchDoc, watchProfile, watchPendingEvents, type Row, type UserProfile } from "@/lib/data/db";
+import { watchDoc, watchProfile, watchPendingEvents, firstFieldLocations, type Row, type UserProfile } from "@/lib/data/db";
 import { readCacheOwner, writeCacheOwner, countQueuedPhotos } from "@/lib/offline/deviceStore";
 import { clearDevice, requestPersistentStorage } from "@/lib/offline/device";
 import { flushQueue } from "@/lib/offline/photoQueue";
@@ -47,6 +47,7 @@ const LOC_KEY = "swaptrack.location";
 const REFRESH_MS = 10 * 60 * 1000;
 const PRIME_RESUME_MS = 10 * 60 * 1000;
 const DOCS_LATE_MS = 8000;
+const LOCATIONS_FIRST_MS = 20_000;
 
 function applyPrimary(hex: string) {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -164,7 +165,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     const prime = () => {
       if (running) return;
       running = true;
-      void primeFieldCache(orgId, role).then((ok) => {
+      // P-122: the field locations first (the site picker, the first screen), then the thousands of documents; never
+      // more than LOCATIONS_FIRST_MS of waiting, so a failed list does not stop the cache.
+      const first = Promise.race([firstFieldLocations(orgId).catch(() => null), new Promise((r) => setTimeout(r, LOCATIONS_FIRST_MS))]);
+      void first.then(() => primeFieldCache(orgId, role)).then((ok) => {
         if (!ok) return;
         lastOk = Date.now();
         setFieldCacheAt(lastOk);

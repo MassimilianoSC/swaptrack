@@ -2,7 +2,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Search, MapPin, CheckCircle2 } from "lucide-react";
 import { useSession } from "@/app/session";
-import { loadFieldLocations, type Row, type Location } from "@/lib/data/db";
+import { loadFieldLocations, firstFieldLocations, type Row, type Location } from "@/lib/data/db";
 import { formatInstant, cn } from "@/lib/utils";
 import { Input } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,11 @@ export default function SitePicker() {
   });
   const wanted = claims?.role === "asp_technician" ? "site" : "asp_warehouse";
 
-  const load = React.useCallback(async () => {
+  // The first load shares the session's request (P-122); a later one (back to the app) asks again.
+  const load = React.useCallback(async (again = false) => {
     setError(false);
     try {
-      const r = await loadFieldLocations(claims!.orgId!);
+      const r = await (again ? loadFieldLocations : firstFieldLocations)(claims!.orgId!);
       const usable = r.list.filter((l) => l.active && l.type === wanted);
       setList(usable);
       if (!r.fromCache) { setSitesAt(Date.now()); setMeta((m) => ({ count: usable.length, at: m?.at ?? 0 })); }
@@ -48,7 +49,7 @@ export default function SitePicker() {
 
   React.useEffect(() => {
     void load();
-    const onVis = () => { if (document.visibilityState === "visible") void load(); };
+    const onVis = () => { if (document.visibilityState === "visible") void load(true); };
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [load]);

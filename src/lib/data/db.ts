@@ -69,6 +69,18 @@ export async function loadFieldLocations(orgId: string): Promise<{ list: Row<Loc
   }
 }
 
+// P-122: the field locations asked once at the start of a session and shared: the site picker shows them, and the
+// offline cache load waits for them, so the first screen of a field user is never queued behind thousands of documents
+// (measured: on a weak signal the list appeared only after the whole cache, about 3 minutes).
+let firstLocations: { orgId: string; p: ReturnType<typeof loadFieldLocations> } | null = null;
+export function firstFieldLocations(orgId: string): ReturnType<typeof loadFieldLocations> {
+  if (firstLocations?.orgId === orgId) return firstLocations.p;
+  const p = loadFieldLocations(orgId);
+  firstLocations = { orgId, p };
+  p.catch(() => { firstLocations = null; });
+  return p;
+}
+
 // Pending own events (written offline, not yet acknowledged by the server).
 export function watchPendingEvents(uid: string, cb: (n: number) => void) {
   const q = query(collection(db, "events"), where("userId", "==", uid), orderBy("scannedAt", "desc"), limit(500));
