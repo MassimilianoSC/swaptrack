@@ -125,7 +125,7 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
   1. Magazzino cliente: Spedizioni mostra i resi senza errori; aprendo un reso si vedono le righe.
   2. Ufficio cliente: crea una BOM per un sito di ASP Nord; il tecnico di Nord la vede nella schermata di lettura di quel sito.
   3. Ufficio cliente: Esportazioni → crea un export senza filtri → il file Excel si scarica.
-  4. Ufficio cliente: Resoconti → genera ottobre 2026 → il file si chiama 2026-10; il resoconto di ASP Nord dice «ASP Nord».
+  4. Ufficio cliente: Resoconti → genera ottobre 2026 → il file scaricato si chiama «SwapTrack-resoconto-2026-10-cliente» (P-106); scegliendo l'ambito ASP Nord (P-99) il file finisce con il nome dell'ASP e il resoconto dice «ASP Nord»; generandolo due volte, il primo file resta scaricabile (P-114).
   5. Magazzino Nord: in arrivo con un DDT legge un pezzo sbagliato, «annulla l'ultima», poi «Confronta»: il pezzo annullato non è fra gli inattesi.
   6. Magazzino Nord, «Arrivo» di materiale nuovo: compare la scelta del DDT aperto e il riquadro arrivati/mancanti/inattesi si aggiorna a ogni lettura (P-24).
   7. Tecnico o magazzino: una lettura con foto scattata in rete; poi l'ufficio cliente apre la pagina di quel pezzo e vede la foto (P-68, P-70).
