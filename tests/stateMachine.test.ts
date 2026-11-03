@@ -97,6 +97,17 @@ describe("transitions", () => {
     expect(r.s!.status).toBe("received_at_asp");
     expect(r.a).toBe("moved_without_transfer");
   });
+  it("D-41: a piece read again into the same shipment is a repetition, no anomaly; into another one it is forbidden", () => {
+    const ret = sh({ kind: "return", toAspId: null });
+    const again = run(ev("classify", { payload: { categoryId: "C" } }), ev("return_ship", { shipment: ret }), ev("return_ship", { shipment: ret }));
+    expect(again.s).toMatchObject({ status: "in_return", previousStatus: "sorted", shipmentId: "SH" });
+    expect(again.a).toBeUndefined();
+    const t = sh();
+    const twice = run(ev("arrive_at_warehouse"), ev("transfer_out", { shipment: t }), ev("transfer_out", { shipment: t }));
+    expect(twice.s).toMatchObject({ status: "in_transfer", previousStatus: "received_at_asp", shipmentId: "SH" });
+    expect(twice.a).toBeUndefined();
+    expect(run(ev("classify", { payload: { categoryId: "C" } }), ev("return_ship", { shipment: ret }), ev("return_ship", { shipment: { ...ret, id: "SH2" } })).a).toBe("forbidden_transition");
+  });
   it("in_return piece reappearing at an ASP warehouse", () => {
     const r = run(ev("classify", { payload: { categoryId: "C" } }), ev("return_ship", { shipment: sh({ kind: "return" }) }), ev("arrive_at_warehouse", { locationId: "W2" }));
     expect(r.s!.status).toBe("sorted");

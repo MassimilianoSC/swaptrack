@@ -138,11 +138,14 @@ export function applyEvent(prev: ItemState | null, e: MachineEvent): Result {
       }
       return forbidden(false);
     case "transfer_out":
+      // D-41: a piece read again into the shipment it is already in is a repetition (burst mode), not an anomaly.
+      if (prev.status === "in_transfer" && !!e.shipment && prev.shipmentId === e.shipment.id) return { state: s };
       if (prev.status === "received_at_asp" || HELD.includes(prev.status)) {
         return to("in_transfer", { previousStatus: prev.status, shipmentId: e.shipment?.id ?? null, pendingAspId: pending(e) });
       }
       return forbidden(false);
     case "return_ship":
+      if (prev.status === "in_return" && !!e.shipment && prev.shipmentId === e.shipment.id) return { state: s };
       if (HELD.includes(prev.status)) return to("in_return", { previousStatus: prev.status, shipmentId: e.shipment?.id ?? null });
       return forbidden(false);
     case "return_confirm":
