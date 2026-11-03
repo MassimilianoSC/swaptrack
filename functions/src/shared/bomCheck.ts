@@ -2,7 +2,7 @@
 import { db } from "../core/admin";
 import { alertId } from "./alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
-import { compareDocument, type Line, type EventFact } from "./documents";
+import { compareDocument, alertDetail, type Line, type EventFact } from "./documents";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -28,14 +28,14 @@ export async function bomCheckForSite(locationId: string, aspId: string): Promis
   const facts: EventFact[] = await Promise.all(relevantEvs.map(async (x) => {
     const e = x.data() as Doc;
     const item = e.itemId ? (await db.collection("items").doc(e.itemId).get()).data() : null;
-    return { type: e.type, codeId: e.codeId ?? null, materialCode: item?.materialCode ?? null, modelId: item?.modelId ?? null, itemModelKnown: !!item && !item.needsModel };
+    return { type: e.type, codeId: e.codeId ?? null, codeRaw: e.codeRaw ?? null, materialCode: item?.materialCode ?? null, modelId: item?.modelId ?? null, itemModelKnown: !!item && !item.needsModel };
   }));
   const r = compareDocument("bom", bomSnap.id, lines, facts);
   const diffs = r.totals.missing + r.totals.unexpected + r.totals.arrivedModelUnknown + r.quantities.reduce((n, q) => n + Math.abs(q.expected - q.counted), 0);
   if (diffs > 0) {
     await upsertAlert(alertId.bom(bomSnap.id), { kind: "bom_difference", aspId: bom.aspId ?? null, locationId, documentId: bomSnap.id, shipmentId: null,
-      detail: r.totals, count: diffs });
+      detail: alertDetail(r), count: diffs });
   } else {
-    await zeroAlertIfOpen(alertId.bom(bomSnap.id), r.totals);
+    await zeroAlertIfOpen(alertId.bom(bomSnap.id), alertDetail(r));
   }
 }

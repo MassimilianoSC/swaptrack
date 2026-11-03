@@ -8,7 +8,7 @@ import { adminLog } from "../core/adminLog";
 import { isClientRole } from "../shared/roles";
 import { alertId } from "../shared/alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
-import { compareDocument, type DocKind, type Line, type EventFact } from "../shared/documents";
+import { compareDocument, alertDetail, type DocKind, type Line, type EventFact } from "../shared/documents";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { computeCodeId, normalizeBarcode } = require("../codeId.node.js");
 
@@ -169,7 +169,7 @@ export const documents = {
       const facts: EventFact[] = await Promise.all(evs.map(async (x) => {
         const e = x.data();
         const item = e.itemId ? (await db.collection("items").doc(e.itemId).get()).data() : null;
-        return { type: e.type, codeId: e.codeId ?? null, materialCode: item?.materialCode ?? null, modelId: item?.modelId ?? null,
+        return { type: e.type, codeId: e.codeId ?? null, codeRaw: e.codeRaw ?? null, materialCode: item?.materialCode ?? null, modelId: item?.modelId ?? null,
           itemModelKnown: !!item && !item.needsModel, ddtId: e.payload?.ddtId ?? null, aspId: e.aspId ?? null, locationId: e.locationId ?? null };
       }));
       const result = compareDocument(kind, d.documentId, lines, facts);
@@ -196,9 +196,9 @@ export const documents = {
         const kindCode = kind === "ddt_in" ? "ddt_in_difference" : "bom_difference";
         if (diffs > 0) {
           await upsertAlert(id, { kind: kindCode, aspId: doc!.aspId ?? null, locationId: doc!.locationId, documentId: d.documentId, shipmentId: null,
-            detail: compared.totals, count: diffs });
+            detail: alertDetail(compared), count: diffs });
         } else {
-          await zeroAlertIfOpen(id, compared.totals);
+          await zeroAlertIfOpen(id, alertDetail(compared));
         }
       }
     },

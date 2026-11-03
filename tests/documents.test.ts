@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compareDocument, type Line, type EventFact } from "../functions/src/shared/documents";
+import { compareDocument, alertDetail, type Line, type EventFact } from "../functions/src/shared/documents";
 
 const s = (codeRaw: string, modelId?: string, direction?: "remove" | "install"): Line =>
   ({ kind: "serial", codeRaw, codeId: `cid-${codeRaw}`, materialCode: null, modelId: modelId ?? null, direction });
@@ -83,5 +83,27 @@ describe("compareDocument / bom", () => {
     const events = [ev("remove_at_site", "A", null, { itemModelKnown: false })];
     const r = compareDocument("bom", "BOM1", lines, events);
     expect(r.totals.arrivedModelUnknown).toBe(1);
+  });
+});
+
+// P-95, SPEC §11.4 "updated with the count and the list": the people reading the alert and the comparison must see
+// which serials, as printed on the label (codeRaw), never the internal codeId. Red on 50600fa: unexpected pieces
+// and pieces with unknown model came out as codeIds, and the alert kept the counts only.
+describe("readable codes and the alert's lists (P-95)", () => {
+  const raw = (type: string, codeRaw: string, ddtId?: string | null, extra: Partial<EventFact> = {}) => ev(type, codeRaw, ddtId, { codeRaw, ...extra });
+  it("unexpected and unknown-model pieces are reported with the code read, for every kind of document", () => {
+    const ddt = compareDocument("ddt_in", "DDT1", [s("A")], [raw("arrive_at_warehouse", "A", "DDT1", { itemModelKnown: false }), raw("arrive_at_warehouse", "X", "DDT1")]);
+    expect([ddt.unexpected, ddt.arrivedModelUnknown]).toEqual([["X"], ["A"]]);
+    const ret = compareDocument("ddt_return", "R1", [s("A")], [raw("return_confirm", "A"), raw("return_confirm", "Y")]);
+    expect(ret.unexpected).toEqual(["Y"]);
+    const bom = compareDocument("bom", "BOM1", [s("A", undefined, "remove")], [raw("remove_at_site", "A", null, { itemModelKnown: false }), raw("install_at_site", "Z")]);
+    expect([bom.unexpected, bom.arrivedModelUnknown]).toEqual([["Z"], ["A"]]);
+  });
+  it("the alert detail has the totals and the lists, at most 50 codes each", () => {
+    const lines = Array.from({ length: 60 }, (_, i) => s(`M${i}`));
+    const r = compareDocument("ddt_in", "DDT1", lines, [raw("arrive_at_warehouse", "X", "DDT1")]);
+    const d = alertDetail(r);
+    expect(d).toMatchObject({ missing: 60, unexpected: 1, arrived: 0, arrivedModelUnknown: 0, unexpectedCodes: ["X"], modelUnknownCodes: [] });
+    expect(d.missingCodes).toEqual(lines.slice(0, 50).map((l) => (l as { codeRaw: string }).codeRaw));
   });
 });

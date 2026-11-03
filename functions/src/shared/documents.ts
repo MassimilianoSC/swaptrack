@@ -9,7 +9,7 @@ export interface QuantityLine { materialCode?: string | null; modelId?: string |
 export type Line = ({ kind: "serial" } & SerialLine) | ({ kind: "quantity" } & QuantityLine);
 
 export interface EventFact {
-  type: string; codeId: string | null; materialCode: string | null; modelId: string | null;
+  type: string; codeId: string | null; codeRaw?: string | null; materialCode: string | null; modelId: string | null;
   itemModelKnown: boolean; ddtId?: string | null; aspId?: string | null; locationId?: string | null; direction?: Direction;
 }
 
@@ -18,6 +18,12 @@ export interface CompareResult {
   arrived: string[]; missing: string[]; unexpected: string[]; arrivedModelUnknown: string[];
   quantities: QuantityResult[]; totals: { arrived: number; missing: number; unexpected: number; arrivedModelUnknown: number };
 }
+
+// P-95: pieces found by the events are reported with the code as read (codeRaw), the codeId only when unknown.
+const readable = (events: EventFact[]) => {
+  const raw = new Map(events.filter((e) => e.codeId && e.codeRaw).map((e) => [e.codeId!, e.codeRaw!]));
+  return (codeId: string) => raw.get(codeId) ?? codeId;
+};
 
 const quantityKey = (q: Pick<QuantityLine, "materialCode" | "modelId" | "direction">) =>
   `${q.modelId ?? ""}|${q.materialCode ?? ""}|${q.direction ?? ""}`;
@@ -34,14 +40,14 @@ function compareDdtIn(documentId: string, lines: Line[], events: EventFact[]): C
   const arrivedByQuantityKey = new Map<string, number>();
   for (const ev of linked) {
     if (ev.codeId) arrivedCodeIds.add(ev.codeId);
-    if (!ev.itemModelKnown) arrivedUnknownModel.push(ev.codeId ?? "");
+    if (!ev.itemModelKnown) arrivedUnknownModel.push(ev.codeRaw ?? ev.codeId ?? "");
     const qk = quantityKey({ materialCode: ev.materialCode, modelId: ev.modelId });
     arrivedByQuantityKey.set(qk, (arrivedByQuantityKey.get(qk) ?? 0) + 1);
   }
   const arrived = serials.filter((s) => arrivedCodeIds.has(s.codeId)).map((s) => s.codeRaw);
   const missing = serials.filter((s) => !arrivedCodeIds.has(s.codeId)).map((s) => s.codeRaw);
   const expectedCodeIds = new Set(serials.map((s) => s.codeId));
-  const unexpected = [...arrivedCodeIds].filter((c) => !expectedCodeIds.has(c));
+  const unexpected = [...arrivedCodeIds].filter((c) => !expectedCodeIds.has(c)).map(readable(events));
   const quantitiesOut: QuantityResult[] = quantities.map((q) => ({
     key: quantityKey(q), materialCode: q.materialCode ?? null, modelId: q.modelId ?? null,
     expected: q.quantity, counted: arrivedByQuantityKey.get(quantityKey(q)) ?? 0,
@@ -61,7 +67,7 @@ function compareDdtReturn(_documentId: string, lines: Line[], events: EventFact[
   const confirmed = new Set(events.filter((e) => e.type === "return_confirm" && e.codeId).map((e) => e.codeId!));
   const arrived = serials.filter((s) => confirmed.has(s.codeId)).map((s) => s.codeRaw);
   const missing = serials.filter((s) => !confirmed.has(s.codeId)).map((s) => s.codeRaw);
-  const unexpected = [...confirmed].filter((c) => !expected.has(c));
+  const unexpected = [...confirmed].filter((c) => !expected.has(c)).map(readable(events));
   return { arrived, missing, unexpected, arrivedModelUnknown: [], quantities: [], totals: { arrived: arrived.length, missing: missing.length, unexpected: unexpected.length, arrivedModelUnknown: 0 } };
 }
 
@@ -81,9 +87,9 @@ function compareBom(_documentId: string, lines: Line[], events: EventFact[]): Co
   }
   const arrived = serials.filter((s) => got.has(serialKey(s.codeId, s.direction!))).map((s) => s.codeRaw);
   const missing = serials.filter((s) => !got.has(serialKey(s.codeId, s.direction!))).map((s) => s.codeRaw);
-  const unexpected = [...got.keys()].filter((k) => !expectedSerials.has(k)).map((k) => k.split("|")[1]);
+  const unexpected = [...got.keys()].filter((k) => !expectedSerials.has(k)).map((k) => readable(events)(k.split("|")[1]));
   const arrivedModelUnknown: string[] = [];
-  for (const [k, evs] of got) if (expectedSerials.has(k)) for (const ev of evs) if (!ev.itemModelKnown && ev.codeId) arrivedModelUnknown.push(ev.codeId);
+  for (const [k, evs] of got) if (expectedSerials.has(k)) for (const ev of evs) if (!ev.itemModelKnown && ev.codeId) arrivedModelUnknown.push(ev.codeRaw ?? ev.codeId);
   const seenByKey = new Map<string, number>();
   for (const [k, evs] of got) {
     const dir = k.split("|")[0] as Direction;
@@ -104,4 +110,11 @@ export function compareDocument(kind: DocKind, documentId: string, lines: Line[]
   if (kind === "ddt_in") return compareDdtIn(documentId, lines, events);
   if (kind === "ddt_return") return compareDdtReturn(documentId, lines, events);
   return compareBom(documentId, lines, events);
+}
+
+// §11.4 "updated with the count and the list" (P-95): the detail of a document alert, totals and the codes (at most
+// ALERT_LIST_MAX of each list, so the alert stays small).
+export const ALERT_LIST_MAX = 50;
+export function alertDetail(r: CompareResult) {
+  return { ...r.totals, missingCodes: r.missing.slice(0, ALERT_LIST_MAX), unexpectedCodes: r.unexpected.slice(0, ALERT_LIST_MAX), modelUnknownCodes: r.arrivedModelUnknown.slice(0, ALERT_LIST_MAX) };
 }
