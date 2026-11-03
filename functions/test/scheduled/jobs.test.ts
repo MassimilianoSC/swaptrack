@@ -198,8 +198,8 @@ describe("monthlyReports (§13.4)", () => {
     expect(of(NORD)).toMatchObject({ month: "2026-10", language: "en", summary: { received: 1, installed: 1 } });
     expect(of(CENTRO)).toMatchObject({ month: "2026-10", summary: { received: 1, installed: 0 } });
     const bucket = t.admin.bucket();
-    const [pdf] = await bucket.file(`reports/${NORD}/2026-10.pdf`).download();
-    const [xlsx] = await bucket.file(`reports/${NORD}/2026-10.xlsx`).download();
+    const [pdf] = await bucket.file(of(NORD).pdfPath).download();
+    const [xlsx] = await bucket.file(of(NORD).xlsxPath).download();
     expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
     expect(xlsx.subarray(0, 2).toString()).toBe("PK");
     // P-64: an ASP's report shows its own name, not its id.
@@ -209,6 +209,24 @@ describe("monthlyReports (§13.4)", () => {
     const cells = wb.worksheets[0].getSheetValues().flat().map(String);
     expect(cells).toContain("ASP Nord");
     expect(cells).not.toContain(NORD);
+  });
+
+  // P-114 n.26: generating the same month again never overwrites the earlier files (each report keeps its own).
+  // Red before: both reports pointed to reports/{scope}/{month}.pdf, holding the second generation only.
+  it("the same month generated twice: two reports, two sets of files, the first still readable as it was", async () => {
+    await set(`organizations/${NORD}`, { name: "ASP Nord", type: "asp", language: "it" });
+    const from = new Date(Date.UTC(2026, 9, 1)), to = new Date(Date.UTC(2026, 10, 1));
+    await t.jobs.produceReport(NORD, "2026-10", from, to);
+    const first = (await db().collection("reports").get()).docs[0].data();
+    const [before] = await t.admin.bucket().file(first.xlsxPath).download();
+    await event("again", { type: "arrive_at_warehouse", scannedAt: ts(Date.UTC(2026, 9, 20)) });
+    await t.jobs.produceReport(NORD, "2026-10", from, to);
+    const all = (await db().collection("reports").get()).docs.map((d) => d.data());
+    expect(all).toHaveLength(2);
+    expect(new Set(all.map((r) => r.pdfPath)).size).toBe(2);
+    expect(new Set(all.map((r) => r.xlsxPath)).size).toBe(2);
+    const [after] = await t.admin.bucket().file(first.xlsxPath).download();
+    expect(after.equals(before)).toBe(true);
   });
 
   it("D-38 / P-79: distinct pieces, no voided scans, the ASP's returns, sorted per category, waiting, alerts, top models and sites", async () => {
@@ -231,7 +249,7 @@ describe("monthlyReports (§13.4)", () => {
     await t.jobs.produceReport(NORD, "2026-10", new Date(Date.UTC(2026, 9, 1)), new Date(Date.UTC(2026, 10, 1)));
     const nord = (await db().collection("reports").where("scope", "==", NORD).get()).docs[0].data();
     expect(nord.summary).toEqual({ received: 2, installed: 1, removed: 0, sorted: 1, returned: 1, waitingNew: 1, waitingRemoved: 0, alertsOpened: 1, alertsClosed: 1 });
-    const [xlsx] = await t.admin.bucket().file(`reports/${NORD}/2026-10.xlsx`).download();
+    const [xlsx] = await t.admin.bucket().file(nord.xlsxPath).download();
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(xlsx);
