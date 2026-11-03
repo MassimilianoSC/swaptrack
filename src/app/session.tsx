@@ -185,13 +185,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const photos = await countQueuedPhotos().catch(() => 0);
       setPending({ events, photos });
     }, 5000);
-    // §7.3 photo offline queue: upload when online, attach through attachPhotos.
+    return () => { unsub(); clearInterval(poll); };
+  }, [user]);
+
+  // §7.3 photo offline queue: upload when online, attach through attachPhotos. D-40 (P-87a): only once the owner of the
+  // device was checked (phase "ready", §4.12): the photos of a previous user are never sent with the token of a new one.
+  React.useEffect(() => {
+    if (!user || phase !== "ready") return;
     const flush = () => { if (navigator.onLine) void flushQueue(); };
     flush();
     const flushEvery = setInterval(flush, 30_000);
     window.addEventListener("online", flush);
-    return () => { unsub(); clearInterval(poll); clearInterval(flushEvery); window.removeEventListener("online", flush); };
-  }, [user]);
+    return () => { clearInterval(flushEvery); window.removeEventListener("online", flush); };
+  }, [user, phase]);
 
   const setLocation = React.useCallback((l: SelectedLocation | null) => {
     setLocationState(l);

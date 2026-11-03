@@ -111,7 +111,7 @@ export function LanguageSwitch() {
 function UserMenu() {
   const { t } = useTranslation();
   const nav = useNavigate();
-  const { profile, claims, safeSignOut, pending } = useSession();
+  const { profile, claims, safeSignOut } = useSession();
   const [blocked, setBlocked] = React.useState(false);
   const out = async () => { if ((await safeSignOut()) === "pending") setBlocked(true); };
   return (
@@ -128,15 +128,24 @@ function UserMenu() {
           <MenuItem onSelect={out} data-testid="user-menu-signout"><LogOut className="h-4 w-4" /> {t("auth.signOut")}</MenuItem>
         </MenuContent>
       </Menu>
-      <Dialog open={blocked} onOpenChange={setBlocked}>
-        <DialogContent title={t("auth.signOutBlockedTitle")} description={t("auth.signOutBlockedBody")}>
-          <ul className="text-sm space-y-1" data-testid="signout-pending-list">
-            <li>{t("status.pendingEvents", { count: pending.events })}</li>
-            <li>{t("status.pendingPhotos", { count: pending.photos })}</li>
-          </ul>
-        </DialogContent>
-      </Dialog>
+      <SignOutBlockedDialog open={blocked} onOpenChange={setBlocked} />
     </>
+  );
+}
+
+// §4.12 / D-40: "you cannot sign out yet": what is still waiting to be sent. Every way out of the app uses it.
+export function SignOutBlockedDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useTranslation();
+  const { pending } = useSession();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent title={t("auth.signOutBlockedTitle")} description={t("auth.signOutBlockedBody")}>
+        <ul className="text-sm space-y-1" data-testid="signout-pending-list">
+          <li>{t("status.pendingEvents", { count: pending.events })}</li>
+          <li>{t("status.pendingPhotos", { count: pending.photos })}</li>
+        </ul>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -11,6 +11,7 @@ import { clearDevice } from "@/lib/offline/device";
 import { flushQueue, listQueued } from "@/lib/offline/photoQueue";
 import { rejectedScanCount } from "@/lib/data/events";
 import { useAction } from "./hooks";
+import { SignOutBlockedDialog } from "@/components/shell/parts";
 import type { TotpSecret } from "firebase/auth";
 
 export function FailClosedScreen() {
@@ -73,8 +74,11 @@ export function UpdateRequiredScreen() {
 // §4.15: privacy notice accepted at first sign-in and at every new version.
 export function PrivacyGate() {
   const { t, i18n } = useTranslation();
-  const { privacy } = useSession();
+  const { privacy, safeSignOut } = useSession();
   const { busy, run } = useAction();
+  // D-40 (P-87a): leaving from the notice goes through the same check as the user menu: never with readings or photos
+  // still waiting to be sent.
+  const [blocked, setBlocked] = React.useState(false);
   if (!privacy) return <Loading />;
   const text = privacy.texts[i18n.language as "it" | "en"] || privacy.texts.it || privacy.texts.en;
   return (
@@ -84,8 +88,9 @@ export function PrivacyGate() {
       </div>
       <div className="flex gap-2">
         <Button disabled={busy} onClick={() => run(() => call("acceptPrivacy", { version: privacy.version }))} data-testid="privacy-accept-button">{t("privacy.accept")}</Button>
-        <Button variant="secondary" onClick={() => signOut()} data-testid="privacy-signout-button">{t("auth.signOut")}</Button>
+        <Button variant="secondary" onClick={async () => { if ((await safeSignOut()) === "pending") setBlocked(true); }} data-testid="privacy-signout-button">{t("auth.signOut")}</Button>
       </div>
+      <SignOutBlockedDialog open={blocked} onOpenChange={setBlocked} />
     </BlockingScreen>
   );
 }
