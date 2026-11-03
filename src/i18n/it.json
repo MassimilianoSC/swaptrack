@@ -31,7 +31,8 @@
     "open": "Apri",
     "yes": "Sì",
     "no": "No",
-    "reason": "Motivo"
+    "reason": "Motivo",
+    "download": "Scarica"
   },
   "nav": {
     "main": "Navigazione principale",
@@ -156,6 +157,15 @@
       "malformed_event": "Evento malformato",
       "void_not_allowed": "Annullamento non permesso",
       "returned_piece_reappeared": "Pezzo reso riapparso"
+    },
+    "subtitle": "Letture che non tornano con lo stato del pezzo.",
+    "showResolved": "Mostra anche le risolte",
+    "hideResolved": "Nascondi le risolte",
+    "empty": "Nessuna anomalia aperta.",
+    "opened": "Aperta il",
+    "resolutions": {
+      "forced": "Corretta d'ufficio",
+      "manual": "Risolta a mano"
     }
   },
   "exports": {
@@ -402,7 +412,17 @@
       "models": "Modelli di apparato: importa e modifica.",
       "settings": "Marchio, accesso, versione e privacy.",
       "adminLog": "Ogni azione di gestione degli accessi.",
-      "guide": "Come usare l'app nel tuo ruolo."
+      "guide": "Come usare l'app nel tuo ruolo.",
+      "dashboard": "Quantità per stato, ASP e luogo.",
+      "items": "Cerca un pezzo per codice e guarda la sua storia.",
+      "toComplete": "Pezzi senza modello o con dati da completare.",
+      "shipments": "Resi al cliente e trasferimenti tra ASP.",
+      "documents": "DDT e BOM: righe attese e confronto.",
+      "alerts": "Differenze da guardare su documenti, spedizioni e luoghi.",
+      "anomalies": "Letture che non tornano, da verificare.",
+      "exports": "Elenco dei pezzi in Excel, con filtri.",
+      "reports": "Resoconto mensile in PDF.",
+      "sorting": "Categorie e regole di smistamento."
     }
   },
   "profile": {
@@ -731,7 +751,12 @@
     "alert_not_found": "Avviso non trovato.",
     "event_not_found": "Evento non trovato.",
     "model_not_found": "Modello non trovato.",
-    "anomaly_incomplete": "Mancano dati per risolvere automaticamente questa anomalia."
+    "anomaly_incomplete": "Mancano dati per risolvere automaticamente questa anomalia.",
+    "document_not_found": "Documento non trovato.",
+    "file_too_large": "File troppo grande: massimo 5 MB.",
+    "unsupported_file_type": "Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.",
+    "image_unreadable": "Immagine non leggibile: prova con un'altra foto o con un PDF.",
+    "bom_direction_required": "Ogni riga della BOM deve dire se il pezzo va smontato o installato."
   },
   "items": {
     "title": "Pezzo {{id}}",

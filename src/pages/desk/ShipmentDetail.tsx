@@ -14,6 +14,7 @@ import { Input, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { compressImage } from "@/lib/imageCompress.js";
 import { toast } from "sonner";
 
 // §9.3 / §9.4: shipment detail — send/cancel draft, confirm (return), see arrivals (transfer).
@@ -67,14 +68,17 @@ export default function ShipmentDetail() {
 
   const scanTo = canScanDraft ? `/scan?mode=${shipment.kind === "return" ? "return_ship" : "transfer_out"}&shipmentId=${id}` : canScanArrival ? `/scan?mode=arrive_at_warehouse&shipmentId=${id}` : null;
 
-  const attachDdt = async (file: File) => {
-    const base64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(file); });
-    await run(() => call("saveDocument", {
+  const attachDdt = (file: File) => run(async () => {
+    // §7.3: a photo is never uploaded as taken: re-encoded (at most 1200 px, JPEG), which also drops EXIF and GPS.
+    const isImage = file.type.startsWith("image/");
+    const blob = isImage ? await compressImage(file).catch(() => { throw new Error("image_unreadable"); }) : file;
+    const base64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(blob); });
+    return call("saveDocument", {
       kind: "ddt_return", number: shipment.ddtNumber || `R-${id.slice(0, 6)}`,
       locationId: shipment.fromLocationId, linesSource: "manual", lines: [],
-      files: [{ base64, contentType: file.type }], shipmentId: id,
-    }), t("documents.attached"));
-  };
+      files: [{ base64, contentType: isImage ? "image/jpeg" : file.type }], shipmentId: id,
+    });
+  }, t("documents.attached"));
 
   const title = `${t(`shipments.kinds.${shipment.kind}`)} · ${id.slice(0, 8)}`;
   return (

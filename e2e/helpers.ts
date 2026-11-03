@@ -27,6 +27,29 @@ export function tr(path: string): string {
   return v;
 }
 
+// The texts of the page shown as raw i18n keys ("home.cards.items", "common.download"): one of the app's namespaces,
+// a dot, a name. innerText, not textContent: textContent glues neighbouring elements ("Pezzihome.cards.items").
+export async function rawKeysIn(page: Page): Promise<string[]> {
+  const re = new RegExp(`\\b(?:${Object.keys(IT).join("|")})\\.[a-zA-Z_.]+`, "g");
+  return (await page.getByTestId("main-content").evaluate((el) => (el as HTMLElement).innerText)).match(re) ?? [];
+}
+
+// Admin reads of the emulators ("Bearer owner" bypasses the rules; emulators only, never the real project). The
+// ports come from firebase.json (D-21), the project and bucket from .env.development.
+const EMU = (JSON.parse(readFileSync(new URL("../firebase.json", import.meta.url), "utf8")) as { emulators: Record<string, { port: number }> }).emulators;
+const ENV = Object.fromEntries(readFileSync(new URL("../.env.development", import.meta.url), "utf8").split(/\r?\n/).filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
+const OWNER = { Authorization: "Bearer owner" };
+export async function emulatorDoc(path: string): Promise<Record<string, { stringValue?: string; arrayValue?: { values?: Array<{ stringValue?: string }> } }>> {
+  const r = await fetch(`http://127.0.0.1:${EMU.firestore.port}/v1/projects/${ENV.VITE_FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}`, { headers: OWNER });
+  if (!r.ok) throw new Error(`emulatorDoc ${path}: ${r.status}`);
+  return ((await r.json()) as { fields: never }).fields;
+}
+export async function emulatorFile(path: string): Promise<Uint8Array> {
+  const r = await fetch(`http://127.0.0.1:${EMU.storage.port}/v0/b/${ENV.VITE_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(path)}?alt=media`, { headers: OWNER });
+  if (!r.ok) throw new Error(`emulatorFile ${path}: ${r.status}`);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
 // A code that belongs to this run only: tests that write never touch the seeded SNN-/SNC-/SNS- pieces.
 let codeCounter = 0;
 export const uniqueCode = (prefix: string): string => `E2E-${prefix}-${Date.now().toString(36).toUpperCase()}${(codeCounter++).toString(36).toUpperCase()}`;

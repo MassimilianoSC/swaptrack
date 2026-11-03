@@ -31,7 +31,8 @@
     "open": "Open",
     "yes": "Yes",
     "no": "No",
-    "reason": "Reason"
+    "reason": "Reason",
+    "download": "Download"
   },
   "nav": {
     "main": "Main navigation",
@@ -156,6 +157,15 @@
       "malformed_event": "Malformed event",
       "void_not_allowed": "Void not allowed",
       "returned_piece_reappeared": "Returned piece reappeared"
+    },
+    "subtitle": "Readings that do not match the state of the piece.",
+    "showResolved": "Show resolved too",
+    "hideResolved": "Hide resolved",
+    "empty": "No open anomalies.",
+    "opened": "Opened",
+    "resolutions": {
+      "forced": "Corrected by the office",
+      "manual": "Resolved by hand"
     }
   },
   "exports": {
@@ -402,7 +412,17 @@
       "models": "Equipment models: import and edit.",
       "settings": "Branding, sign-in, version and privacy.",
       "adminLog": "Every access-management action.",
-      "guide": "How to use the app in your role."
+      "guide": "How to use the app in your role.",
+      "dashboard": "Quantities by status, ASP and location.",
+      "items": "Find a piece by code and see its history.",
+      "toComplete": "Pieces without a model or with data to complete.",
+      "shipments": "Returns to the client and transfers between ASPs.",
+      "documents": "DDTs and BOMs: expected lines and comparison.",
+      "alerts": "Differences to look at on documents, shipments and locations.",
+      "anomalies": "Readings that do not add up, to check.",
+      "exports": "List of pieces in Excel, with filters.",
+      "reports": "Monthly report in PDF.",
+      "sorting": "Sorting categories and rules."
     }
   },
   "profile": {
@@ -731,7 +751,12 @@
     "alert_not_found": "Alert not found.",
     "event_not_found": "Event not found.",
     "model_not_found": "Model not found.",
-    "anomaly_incomplete": "This anomaly is missing data to be resolved automatically."
+    "anomaly_incomplete": "This anomaly is missing data to be resolved automatically.",
+    "document_not_found": "Document not found.",
+    "file_too_large": "File too large: 5 MB at most.",
+    "unsupported_file_type": "File type not allowed: use PDF, an image (JPEG, PNG, WebP), Excel or CSV.",
+    "image_unreadable": "Unreadable image: try another photo or a PDF.",
+    "bom_direction_required": "Every BOM line must say whether the piece is removed or installed."
   },
   "items": {
     "title": "Piece {{id}}",
