@@ -35,7 +35,7 @@ export function Logo() {
   const [url, setUrl] = React.useState<string | null>(null);
   React.useEffect(() => { void logoUrl(branding.logoPath).then(setUrl); }, [branding.logoPath]);
   return (
-    <Link to="/" className="flex items-center gap-2 min-h-touch font-semibold" data-testid="topbar-logo">
+    <Link to="/" className="flex min-w-0 items-center gap-2 min-h-touch font-semibold" data-testid="topbar-logo">
       {url ? <img src={url} alt="" className="h-7 w-auto" /> : <LogoMark />}
       <span className="truncate">{branding.appName}</span>
     </Link>
@@ -81,7 +81,8 @@ function Connection() {
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium", online ? "bg-success/15 text-success" : "bg-warning/15 text-warning")} data-testid="topbar-connection" role="status">
       {online ? <Wifi className="h-4 w-4" aria-hidden /> : <WifiOff className="h-4 w-4" aria-hidden />}
-      <span>{online ? t("status.online") : t("status.offline")}</span>
+      {/* On a phone the icon alone: the top bar never gets wider than the screen (the label stays for screen readers). */}
+      <span className="sr-only sm:not-sr-only">{online ? t("status.online") : t("status.offline")}</span>
       {waiting > 0 && <span className="tabular" data-testid="topbar-pending-count">· {t("status.pending", { count: waiting })}</span>}
     </span>
   );
@@ -174,7 +175,7 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenu} aria-label={t("nav.openMenu")} data-testid="topbar-menu-button"><MenuIcon className="h-6 w-6" /></Button>
       <Logo />
       {isAspRole(claims?.role ?? "") && <div className="hidden sm:block ml-2"><LocationChip /></div>}
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         <AlertCounter />
         <Connection />
         <LanguageSwitch />
