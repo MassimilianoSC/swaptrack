@@ -24,6 +24,14 @@ async function newDocument(page: Page, kind: "ddt_in" | "bom", location: string)
   await page.getByTestId("document-location").selectOption(`loc_${location}`);
 }
 const count = (n: number, skipped: number) => tr("documents.excelCount_other").replace("{{count}}", String(n)).replace("{{skipped}}", String(skipped));
+// The column choice. The mapping saved for the ASP loads after the panel shows and replaces what was chosen before it
+// arrived (measured on the emulators with the base seed; reported to o3): chosen again until the count is right.
+async function chooseColumns(page: Page, choices: Array<[string, string]>, ready: string) {
+  await expect(async () => {
+    for (const [field, value] of choices) await page.getByTestId(`excel-map-${field}`).selectOption(value);
+    await expect(page.getByTestId("excel-map-count")).toHaveText(ready, { timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
+}
 
 test.describe("Documenti di prova della demo (scrivania)", () => {
   test("il DDT TD-2026-0412 in Excel: 10 righe con il codice materiale del catalogo", async ({ page }) => {
@@ -31,16 +39,12 @@ test.describe("Documenti di prova della demo (scrivania)", () => {
     await signIn(page, ACCOUNTS.aspWarehouseNord);
     await newDocument(page, "ddt_in", SEED.nord.warehouse);
     await page.getByTestId("document-files-input").setInputFiles(file("DDT-TD-2026-0412.xlsx"));
-    await page.getByTestId("excel-map-serial").selectOption("N. serie");
-    await page.getByTestId("excel-map-materialCode").selectOption("Cod. articolo");
-    await page.getByTestId("excel-map-quantity").selectOption("Q.tà");
-    await expect(page.getByTestId("excel-map-count")).toHaveText(count(10, 0));
+    await chooseColumns(page, [["serial", "N. serie"], ["materialCode", "Cod. articolo"], ["quantity", "Q.tà"]], count(10, 0));
     await page.getByTestId("excel-map-apply").click();
-    const lines = await page.getByTestId("document-lines").inputValue();
-    expect(lines.split("\n")).toEqual([
+    await expect(page.getByTestId("document-lines")).toHaveValue([
       "TD260412001 MC400100", "TD260412002 MC400107", "TD260412003 MC400114", "TD260412004 MC400121",
       "TD260412005 MC400128", "TD260412006 MC400135", "TD260412007 MC400142", "TD260412008 MC400149", "#3 MC400170", "#2 MC400205",
-    ]);
+    ].join("\n"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     // Every material code of the document is a model of the seed catalog.
@@ -52,18 +56,13 @@ test.describe("Documenti di prova della demo (scrivania)", () => {
     await signIn(page, ACCOUNTS.aspAdminNord);
     await newDocument(page, "bom", "SITO-00013");
     await page.getByTestId("document-files-input").setInputFiles(file("BOM-SITO-00013.xlsx"));
-    await page.getByTestId("excel-map-serial").selectOption("N. serie");
-    await page.getByTestId("excel-map-materialCode").selectOption("Cod. articolo");
-    await page.getByTestId("excel-map-quantity").selectOption("Q.tà");
-    await page.getByTestId("excel-map-direction").selectOption("Operazione");
-    await page.getByTestId("excel-map-removeValue").selectOption("SMONTARE");
-    await page.getByTestId("excel-map-installValue").selectOption("INSTALLARE");
-    await expect(page.getByTestId("excel-map-count")).toHaveText(count(10, 0));
+    await chooseColumns(page, [["serial", "N. serie"], ["materialCode", "Cod. articolo"], ["quantity", "Q.tà"], ["direction", "Operazione"],
+      ["removeValue", "SMONTARE"], ["installValue", "INSTALLARE"]], count(10, 0));
     await page.getByTestId("excel-map-apply").click();
-    expect((await page.getByTestId("document-lines-remove").inputValue()).split("\n")).toHaveLength(5);
-    expect((await page.getByTestId("document-lines-install").inputValue()).split("\n")).toEqual([
-      "TD26I13001 MC400135", "TD26I13002 MC400142", "TD26I13003 MC400149", "TD26I13004 MC400156", "#2 MC400177",
-    ]);
+    await expect(page.getByTestId("document-lines-remove")).toHaveValue(
+      ["TD26R13001 MC400100", "TD26R13002 MC400107", "TD26R13003 MC400114", "TD26R13004 MC400121", "TD26R13005 MC400128"].join("\n"));
+    await expect(page.getByTestId("document-lines-install")).toHaveValue(
+      ["TD26I13001 MC400135", "TD26I13002 MC400142", "TD26I13003 MC400149", "TD26I13004 MC400156", "#2 MC400177"].join("\n"));
     await expect(page.getByTestId("document-lines-none")).toHaveCount(0);
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
