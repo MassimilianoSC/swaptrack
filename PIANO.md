@@ -24,9 +24,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
+| P-126 | Esportazioni: per i ruoli ASP la colonna «Ambito» mostra il codice dell'ASP invece del nome | o3 |
+| P-127 | Avvisi (e altre tabelle): premendo un pulsante di una riga si spengono quelli di tutte le righe (segnalato dal committente) | o3 |
+| P-128 | Scelta delle colonne dell'Excel: la scelta salvata arriva dopo e sovrascrive quella dell'utente, che la vede tornare a «—» (trovato da o2) | o3 |
 | P-125 | Letture che prendono la cache per il server (D-58), prima del lotto 2: elenco dei luoghi vuoto con «aggiornati» falso e senza nuovo tentativo; categorie e regole di smistamento assenti senza rete; DDT e BOM non aggiornati se il server tarda; «Caricamento…» infinito di documento e pezzo senza rete. Circa 3–3,5 h | o3 |
-| P-123 | Rietichettatura lato server (n.37, D-56): annullare un relabel rimette l'etichetta vecchia; un'altra ASP non può rietichettare (falla del criterio 1). Sul ramo o2 (aab74ca), al prossimo turno. La schermata «Rietichetta» resta dopo la demo | o2 |
-| P-124 | Documenti inventati per la demo e per l'AI (`scripts/demoDocs.mjs`, uscita in `demo-docs/` ignorata da git): 2 DDT in PDF (1 e 2 pagine), lo stesso DDT in Excel, una BOM in Excel, etichette pulite, rovinate e una fuori DDT, foto «di carta» del DDT; seriali nuovi, codici materiale del seed. 3–3,5 h | o2 |
 | P-87 | Telefono condiviso (D-40). **a)** fatta (abaa679, 36b8439): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra. **b)** dopo la demo: avviso con due scelte se entra un altro utente con dati del precedente non inviati; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
@@ -58,6 +59,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-70 | Pagina del pezzo con le sue foto (SPEC §13.2, D-32), lette con getBlob (D-35) | o3 | 03/11/2026 (d155dc3, 540788e) |
 | P-117 | Pagine di amministrazione allineate al server (azioni dell'admin ASP, registro con testi, «Modifica» nello smistamento, password svuotate, export troncato) | o2 | 03/11/2026 (b16dee5) |
 | P-120 | Resoconto con i numeri di fine mese del materiale fermo («Dati al …» / «Calcolato il …») | o2 | 03/11/2026 (a3cfe35) |
+| P-123 | Rietichettatura lato server (D-56): annullare un relabel rimette l'etichetta vecchia; un'altra ASP non può rietichettare (falla del criterio 1); pezzo reso intatto | o2 | 03/11/2026 (1ff937c, 58b6f53) |
+| P-124 | Documenti inventati per la demo e per l'AI: `node scripts/demoDocs.mjs` → `demo-docs/` (e2e della pagina sul ramo, dopo P-128) | o2 | 03/11/2026 (1d853d2) |
 | P-102 | «Smista»: conferma con un tocco o un'altra categoria, categoria fissa senza tocchi, Annulla che lascia ripartire la fotocamera (D-54) | o3 | 03/11/2026 (15ebd21) |
 | P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
 | P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
