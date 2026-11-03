@@ -54,4 +54,16 @@ test.describe("Telefono condiviso — uscite e coda delle foto (telefono)", () =
     await page.waitForTimeout(5000);
     expect(uploads).toEqual([]);
   });
+
+  test("«Esci da tutti i dispositivi» con una foto in coda: non esce e dice cosa manca", async ({ page }) => {
+    test.setTimeout(180_000);
+    const w = await ownWorker();
+    await page.route(STORAGE, (r) => r.abort());
+    await signIn(page, w.email);
+    await queuePhoto(page);
+    await page.goto("/profile");
+    await page.getByTestId("profile-signout-everywhere-button").click();
+    await expect(page.getByTestId("signout-pending-list")).toBeVisible();
+    await expect(page.getByTestId("signin-submit-button")).toHaveCount(0);
+  });
 });

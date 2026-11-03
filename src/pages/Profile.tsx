@@ -8,10 +8,20 @@ import { passwordIssues } from "@shared/policy";
 import { Card, PageHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Field, Select } from "@/components/ui/form";
+import { SignOutBlockedDialog } from "@/components/shell/parts";
+import { countQueuedPhotos } from "@/lib/offline/deviceStore";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
-  const { profile, claims, user } = useSession();
+  const { profile, claims, user, pending } = useSession();
+  // D-40 (P-87a): never out with readings or photos still waiting to be sent, like the user menu (§4.12); the server is
+  // not even called then, so the other devices are not signed out either.
+  const [blocked, setBlocked] = React.useState(false);
+  const signOutEverywhere = async () => {
+    const photos = await countQueuedPhotos().catch(() => 0);
+    if (pending.events > 0 || photos > 0) { setBlocked(true); return; }
+    await run(async () => { await call("signOutEverywhere", { uid: user!.uid }); await signOut(); });
+  };
   const { busy, run } = useAction();
   const [cur, setCur] = React.useState("");
   const [next, setNext] = React.useState("");
@@ -54,8 +64,9 @@ export default function Profile() {
         <h2 className="font-semibold">{t("profile.signOutEverywhere")}</h2>
         <p className="text-sm text-muted">{t("profile.signOutEverywhereHint")}</p>
         <Button variant="danger" disabled={busy} data-testid="profile-signout-everywhere-button"
-          onClick={() => run(async () => { await call("signOutEverywhere", { uid: user!.uid }); await signOut(); })}>{t("profile.signOutEverywhere")}</Button>
+          onClick={() => void signOutEverywhere()}>{t("profile.signOutEverywhere")}</Button>
       </Card>
+      <SignOutBlockedDialog open={blocked} onOpenChange={setBlocked} />
     </div>
   );
 }
