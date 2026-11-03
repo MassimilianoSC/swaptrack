@@ -120,6 +120,8 @@ export const documents = {
       shipmentId: z.string().optional(),
     }),
     handler: async (ctx, d) => {
+      // §11.2 (P-92): every BOM line says whether the piece is removed or installed at the site.
+      if (d.kind === "bom" && d.lines.some((l) => !l.direction)) fail("invalid-argument", "bom_direction_required");
       const aspId = await ensureCanWrite(ctx, d.kind, d.locationId);
       const ref = d.documentId ? db.collection("documents").doc(d.documentId) : db.collection("documents").doc();
       const prev = (await ref.get()).data();
