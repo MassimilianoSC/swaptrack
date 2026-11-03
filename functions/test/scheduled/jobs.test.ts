@@ -213,6 +213,37 @@ describe("monthlyReports (§13.4)", () => {
 
   // P-114 n.26: generating the same month again never overwrites the earlier files (each report keeps its own).
   // Red before: both reports pointed to reports/{scope}/{month}.pdf, holding the second generation only.
+  // P-120 (census n.27): "waiting at the end of the month" is taken by the monthly job (1st, 06:00) and kept; a later
+  // generation of that month uses it and says so ("Dati al …"); a month without it is computed now ("Calcolato il …").
+  // Red before: every generation recomputed the waiting pieces from the states of today.
+  it("P-120: the end-of-month waiting numbers are kept for every later generation of the month", async () => {
+    await set(`organizations/${NORD}`, { name: "ASP Nord", type: "asp", language: "it" });
+    await item("st1", { lastScannedAt: ts(Date.UTC(2026, 8, 1)) }); // new material waiting since September
+    await t.jobs.runMonthlyReports(new Date(NOW));
+    const nordReports = async () => (await db().collection("reports").where("scope", "==", NORD).get()).docs.map((d) => d.data());
+    expect((await nordReports())[0].summary.waitingNew).toBe(1);
+    await item("st2", { lastScannedAt: ts(Date.UTC(2026, 8, 2)) }); // later the data change
+    await t.jobs.produceReport(NORD, "2026-10", new Date(Date.UTC(2026, 9, 1)), new Date(Date.UTC(2026, 10, 1)));
+    const all = await nordReports();
+    expect(all.map((r) => r.summary.waitingNew)).toEqual([1, 1]);
+    const ExcelJS = (await import("exceljs")).default;
+    for (const r of all) {
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load((await t.admin.bucket().file(r.xlsxPath).download())[0]);
+      expect(wb.worksheets[0].getSheetValues().flat().map(String)).toContain("Dati al 01/11/2026 06:00");
+    }
+  });
+
+  it("P-120: a month without the end-of-month numbers is computed now, and says so", async () => {
+    await set(`organizations/${NORD}`, { name: "ASP Nord", type: "asp", language: "it" });
+    await t.jobs.produceReport(NORD, "2026-09", new Date(Date.UTC(2026, 8, 1)), new Date(Date.UTC(2026, 9, 1)));
+    const r = (await db().collection("reports").where("scope", "==", NORD).get()).docs[0].data();
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load((await t.admin.bucket().file(r.xlsxPath).download())[0]);
+    expect(wb.worksheets[0].getSheetValues().flat().map(String).some((v) => v.startsWith("Calcolato il "))).toBe(true);
+  });
+
   it("the same month generated twice: two reports, two sets of files, the first still readable as it was", async () => {
     await set(`organizations/${NORD}`, { name: "ASP Nord", type: "asp", language: "it" });
     const from = new Date(Date.UTC(2026, 9, 1)), to = new Date(Date.UTC(2026, 10, 1));

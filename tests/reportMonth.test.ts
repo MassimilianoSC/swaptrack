@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { reportMonth, previousReportMonth } from "../functions/src/shared/reportMonth";
+import { reportMonth, previousReportMonth, romeDateTime } from "../functions/src/shared/reportMonth";
 
 // §13.4: the label is the month the report covers (and the start of its file name, reports/{scope}/{label}-{stamp}.pdf).
 // Before: the on-demand report of October was labelled "2026-09" (overwriting September's file) and the
@@ -19,5 +19,13 @@ describe("reportMonth", () => {
     expect(jan.start.toISOString()).toBe("2026-12-01T00:00:00.000Z");
     expect(jan.end.toISOString()).toBe("2027-01-01T00:00:00.000Z");
     expect(previousReportMonth(new Date("2026-11-01T05:00:00Z")).label).toBe("2026-10");
+  });
+});
+
+// P-120: the time of the end-of-month numbers, in Rome time, as the report prints it.
+describe("romeDateTime", () => {
+  it("dd/mm/yyyy hh:mm in Europe/Rome, summer and winter time", () => {
+    expect(romeDateTime(new Date(Date.UTC(2026, 10, 1, 5, 0)))).toBe("01/11/2026 06:00");
+    expect(romeDateTime(new Date(Date.UTC(2026, 6, 1, 4, 30)))).toBe("01/07/2026 06:30");
   });
 });
