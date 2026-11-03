@@ -78,4 +78,16 @@ describe("a document belongs to the ASP of its location (§3.3, §11.2)", () => 
       .rejects.toMatchObject({ code: "permission-denied" });
     expect((await t.db.collection("shipments").doc(SH_C).get()).get("documentId")).toBeUndefined();
   });
+
+  // P-92: SPEC §11.2 "BOM lines also have a mandatory direction". Red before: a BOM line without direction was saved,
+  // and the technician's screen, which keeps only lines with a direction, showed the BOM empty.
+  it("a BOM line without direction is refused, nothing saved; DDT lines need none", async () => {
+    const number = `B-NODIR-${RUN}`;
+    await expect(documents.saveDocument.handler(CA(), { kind: "bom", number, locationId: SITE, linesSource: "manual", lines: [install(`SN-${RUN}-ND1`), { kind: "serial", codeRaw: `SN-${RUN}-ND2` }] }))
+      .rejects.toMatchObject({ code: "invalid-argument", message: "bom_direction_required" });
+    expect((await t.db.collection("documents").where("number", "==", number).get()).empty).toBe(true);
+    const WH = `loc_TT-MAG-NODIR-${RUN}`;
+    await t.db.collection("locations").doc(WH).set({ ...loc(`TT-MAG-NODIR-${RUN}`, NORD), type: "asp_warehouse" });
+    await documents.saveDocument.handler(ctxOf("asp_warehouse", NORD), { kind: "ddt_in", number: `D-NODIR-${RUN}`, locationId: WH, linesSource: "manual", lines: [{ kind: "serial", codeRaw: `SN-${RUN}-ND3` }] });
+  });
 });
