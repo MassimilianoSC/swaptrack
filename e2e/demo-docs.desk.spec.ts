@@ -24,13 +24,11 @@ async function newDocument(page: Page, kind: "ddt_in" | "bom", location: string)
   await page.getByTestId("document-location").selectOption(`loc_${location}`);
 }
 const count = (n: number, skipped: number) => tr("documents.excelCount_other").replace("{{count}}", String(n)).replace("{{skipped}}", String(skipped));
-// The column choice. The mapping saved for the ASP loads after the panel shows and replaces what was chosen before it
-// arrived (measured on the emulators with the base seed; reported to o3): chosen again until the count is right.
+// The column choice, as a user does it: after the saved choice has loaded (P-128: it fills only the untouched fields).
 async function chooseColumns(page: Page, choices: Array<[string, string]>, ready: string) {
-  await expect(async () => {
-    for (const [field, value] of choices) await page.getByTestId(`excel-map-${field}`).selectOption(value);
-    await expect(page.getByTestId("excel-map-count")).toHaveText(ready, { timeout: 2_000 });
-  }).toPass({ timeout: 30_000 });
+  await expect(page.getByTestId("excel-map-loading")).toHaveCount(0, { timeout: 30_000 });
+  for (const [field, value] of choices) await page.getByTestId(`excel-map-${field}`).selectOption(value);
+  await expect(page.getByTestId("excel-map-count")).toHaveText(ready);
 }
 
 test.describe("Documenti di prova della demo (scrivania)", () => {
