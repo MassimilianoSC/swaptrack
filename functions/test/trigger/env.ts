@@ -36,7 +36,9 @@ type Trigger = typeof import("../../src/trigger");
 export interface TriggerEnv { db: Admin["db"]; processEvent: Trigger["processEvent"]; fire: (data: Doc) => Promise<string> }
 
 // Loads the real modules (after the env above) and seeds the fixed documents of this project.
-export async function setupTrigger(): Promise<TriggerEnv> {
+// project: a test file that needs data no other file touches (for example the dashboard counters) uses its own.
+export async function setupTrigger(project = "demo-trigger-tests"): Promise<TriggerEnv> {
+  process.env.GCLOUD_PROJECT = project;
   const { db } = await import("../../src/core/admin");
   const { processEvent } = await import("../../src/trigger");
   const loc = (code: string, type: string, aspId: string | null) => ({ code, name: code, type, aspId, active: true, region: "Test" });
