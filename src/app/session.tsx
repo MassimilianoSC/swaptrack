@@ -3,14 +3,14 @@ import i18n from "@/i18n";
 import { onUser, readClaims, signOut, type User, type Claims } from "@/lib/data/auth";
 import { watchDoc, watchProfile, watchPendingEvents, firstFieldLocations, type Row, type UserProfile } from "@/lib/data/db";
 import { readCacheOwner, writeCacheOwner, countQueuedPhotos } from "@/lib/offline/deviceStore";
-import { clearDevice, requestPersistentStorage } from "@/lib/offline/device";
+import { clearDevice, requestPersistentStorage, OWNER_PENDING_KEY } from "@/lib/offline/device";
 import { flushQueue } from "@/lib/offline/photoQueue";
 import { primeFieldCache } from "@/lib/data/events";
 import { isAspRole } from "@shared/roles";
 import { measureOffset } from "@/lib/clockOffset.js";
 import { SETTINGS_DEFAULTS } from "@shared/settingsDefaults";
 
-export type Phase = "loading" | "signedOut" | "failClosed" | "noAccount" | "deactivated" | "ready";
+export type Phase = "loading" | "signedOut" | "failClosed" | "noAccount" | "deactivated" | "previousPending" | "ready";
 type Branding = typeof SETTINGS_DEFAULTS.branding;
 type AuthSettings = typeof SETTINGS_DEFAULTS.auth;
 type AppSettings = typeof SETTINGS_DEFAULTS.app;
@@ -38,6 +38,11 @@ interface SessionValue {
   refreshClaims: () => Promise<void>;
   // §4.11: sign-out is refused while events or photos are waiting to be sent.
   safeSignOut: () => Promise<"ok" | "pending">;
+  // P-87b (phase "previousPending"): readings and photos of the previous user not yet sent (-1: not known), and the two
+  // choices: sign out so that the previous user signs in again and sends them, or delete them and go on.
+  leftBehind: number;
+  keepPrevious: () => Promise<void>;
+  discardPrevious: () => Promise<void>;
 }
 
 const Ctx = React.createContext<SessionValue | null>(null);
@@ -54,6 +59,15 @@ function applyPrimary(hex: string) {
   if (m) document.documentElement.style.setProperty("--primary", `${parseInt(m[1], 16)} ${parseInt(m[2], 16)} ${parseInt(m[3], 16)}`);
 }
 
+// P-87b: readings (last count seen by the owner) and queued photos (the queue holds only the owner's) not yet sent;
+// -1 when they cannot be read, so that the user is warned rather than the data lost in silence.
+async function previousLeftBehind(): Promise<number> {
+  try {
+    const events = Number(localStorage.getItem(OWNER_PENDING_KEY) ?? 0) || 0;
+    return events + await countQueuedPhotos();
+  } catch { return -1; }
+}
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = React.useState<Phase>("loading");
   const [failReason, setFailReason] = React.useState<string | null>(null);
@@ -65,12 +79,21 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [appSettings, setAppSettings] = React.useState<AppSettings | null>(null);
   const [privacy, setPrivacy] = React.useState<Privacy | null>(null);
   const [pending, setPending] = React.useState({ events: 0, photos: 0 });
+  const [leftBehind, setLeftBehind] = React.useState(0);
+  const [pendingSeen, setPendingSeen] = React.useState(false);
   const [fieldCacheAt, setFieldCacheAt] = React.useState<number | null>(null);
   const [location, setLocationState] = React.useState<SelectedLocation | null>(() => {
     try { return JSON.parse(sessionStorage.getItem(LOC_KEY) ?? "null"); } catch { return null; }
   });
 
   const failClosed = (reason: string) => { setFailReason(reason); setPhase("failClosed"); };
+  // §4.12: the data of the previous owner leave the device before the new user uses it; any failure keeps the app closed.
+  const replaceOwner = async (uid: string) => {
+    try { await clearDevice(); await writeCacheOwner(uid); } catch (e) {
+      return failClosed((e as Error).message === "other_tabs" ? "other_tabs" : "clear_failed");
+    }
+    window.location.reload();
+  };
 
   // Public settings: branding and provider flags (readable without sign-in).
   React.useEffect(() => {
@@ -88,9 +111,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const evaluate = React.useCallback(async (u: User, refresh: boolean) => {
     const c = await readClaims(u, refresh);
     setClaims(c);
-    if (!c.role || !c.orgId) setPhase("noAccount");
-    else if (c.active !== true) setPhase("deactivated");
-    else setPhase("ready");
+    const next: Phase = !c.role || !c.orgId ? "noAccount" : c.active !== true ? "deactivated" : "ready";
+    // P-87b: the periodic refresh of the claims never opens the app past the choice about the previous user's data.
+    setPhase((p) => (p === "previousPending" ? p : next));
   }, []);
 
   React.useEffect(() => onUser(async (u) => {
@@ -100,11 +123,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     let owner: string | undefined;
     try { owner = await readCacheOwner(); } catch { return failClosed("owner_unreadable"); }
     if (owner && owner !== u.uid) {
-      try { await clearDevice(); await writeCacheOwner(u.uid); } catch (e) {
-        return failClosed((e as Error).message === "other_tabs" ? "other_tabs" : "clear_failed");
-      }
-      window.location.reload();
-      return;
+      // P-87b (D-40): clearing would lose what the previous user has not sent yet: ask first.
+      const left = await previousLeftBehind();
+      if (left !== 0) { setLeftBehind(left); setPhase("previousPending"); return; }
+      return replaceOwner(u.uid);
     }
     if (!owner) {
       try { await writeCacheOwner(u.uid); } catch { return failClosed("owner_unwritable"); }
@@ -184,7 +206,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (!user) return;
     let events = 0;
-    const unsub = watchPendingEvents(user.uid, (n) => { events = n; setPending((p) => ({ ...p, events: n })); });
+    setPendingSeen(false);
+    const unsub = watchPendingEvents(user.uid, (n) => { events = n; setPending((p) => ({ ...p, events: n })); setPendingSeen(true); });
     const poll = setInterval(async () => {
       const photos = await countQueuedPhotos().catch(() => 0);
       setPending({ events, photos });
@@ -203,6 +226,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => { clearInterval(flushEvery); window.removeEventListener("online", flush); };
   }, [user, phase]);
 
+  // P-87b: what the owner of the device has not sent yet, kept for another user who signs in (only once the owner was
+  // checked: before that, the counts are of a user who may not be the owner).
+  React.useEffect(() => {
+    if (!user || phase !== "ready" || !pendingSeen) return;
+    try { localStorage.setItem(OWNER_PENDING_KEY, String(pending.events)); } catch { /* storage unavailable: the next sign-in warns anyway */ }
+  }, [user, phase, pendingSeen, pending.events]);
+
+  const keepPrevious = React.useCallback(async () => {
+    sessionStorage.setItem("swaptrack.notice", "previous_pending");
+    await signOut();
+  }, []);
+  const discardPrevious = React.useCallback(async () => { if (user) await replaceOwner(user.uid); }, [user]);
+
   const setLocation = React.useCallback((l: SelectedLocation | null) => {
     setLocationState(l);
     if (l) sessionStorage.setItem(LOC_KEY, JSON.stringify(l)); else sessionStorage.removeItem(LOC_KEY);
@@ -218,6 +254,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const value: SessionValue = {
     phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, fieldCacheAt, docsLate, location, setLocation, refreshClaims, safeSignOut,
+    leftBehind, keepPrevious, discardPrevious,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -62,6 +62,7 @@ export default function SignIn() {
   return (
     <AuthLayout title={t(mfa ? "mfa.title" : "auth.signInTitle")}>
       {(notice === "deactivated" || notice === "deactivated_partial") && <p role="alert" className="rounded border border-warning p-3 text-sm" data-testid="signin-deactivated-notice">{t(notice === "deactivated" ? "gate.deactivated.done" : "gate.deactivated.partial")}</p>}
+      {notice === "previous_pending" && <p role="alert" className="rounded border border-warning p-3 text-sm" data-testid="signin-previous-pending-notice">{t("gate.previousPending.keptNotice")}</p>}
       {link && <p className="text-sm" data-testid="signin-link-notice">{t("auth.linkRequired")}</p>}
       <form onSubmit={submit} className="space-y-4" noValidate>
         {!mfa ? (

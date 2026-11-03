@@ -461,6 +461,15 @@
     "update": {
       "title": "Aggiornamento necessario",
       "body": "Questa versione dell'app non è più supportata. Ricarica per ottenere quella nuova."
+    },
+    "previousPending": {
+      "title": "Ci sono dati dell'utente precedente",
+      "body_one": "Su questo dispositivo c'è {{count}} lettura o foto dell'utente precedente non ancora inviata. Se continui, va persa.",
+      "body_other": "Su questo dispositivo ci sono {{count}} letture o foto dell'utente precedente non ancora inviate. Se continui, vanno perse.",
+      "bodyUnknown": "Su questo dispositivo potrebbero esserci letture o foto dell'utente precedente non ancora inviate. Se continui, vanno perse.",
+      "keep": "Esci e fai rientrare l'utente precedente",
+      "discard": "Cancella i suoi dati e continua",
+      "keptNotice": "Fai entrare l'utente precedente con la rete attiva: le sue letture e foto partiranno da sole. Poi potrai entrare tu."
     }
   },
   "privacy": {

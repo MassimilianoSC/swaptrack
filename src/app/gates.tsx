@@ -24,6 +24,23 @@ export function FailClosedScreen() {
   );
 }
 
+// P-87b (D-40): another user signs in on a device where the previous one left readings or photos not yet sent.
+export function PreviousPendingScreen() {
+  const { t } = useTranslation();
+  const { leftBehind, keepPrevious, discardPrevious } = useSession();
+  const [busy, setBusy] = React.useState(false);
+  const act = (fn: () => Promise<void>) => { setBusy(true); void fn().finally(() => setBusy(false)); };
+  const body = leftBehind > 0 ? t("gate.previousPending.body", { count: leftBehind }) : t("gate.previousPending.bodyUnknown");
+  return (
+    <BlockingScreen testId="previous-pending-screen" title={t("gate.previousPending.title")} body={body}>
+      <div className="flex flex-col gap-2">
+        <Button disabled={busy} onClick={() => act(keepPrevious)} data-testid="previous-pending-keep">{t("gate.previousPending.keep")}</Button>
+        <Button variant="danger" disabled={busy} onClick={() => act(discardPrevious)} data-testid="previous-pending-discard">{t("gate.previousPending.discard")}</Button>
+      </div>
+    </BlockingScreen>
+  );
+}
+
 export function NoAccountScreen() {
   const { t } = useTranslation();
   return (

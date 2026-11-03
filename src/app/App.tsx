@@ -2,7 +2,7 @@ import * as React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { Toaster } from "sonner";
 import { SessionProvider, useSession } from "./session";
-import { FailClosedScreen, NoAccountScreen, DeactivatedScreen, UpdateRequiredScreen, PrivacyGate, MfaEnrollGate } from "./gates";
+import { FailClosedScreen, NoAccountScreen, PreviousPendingScreen, DeactivatedScreen, UpdateRequiredScreen, PrivacyGate, MfaEnrollGate } from "./gates";
 import { AppShell } from "@/components/shell/AppShell";
 import { Loading } from "@/components/states";
 import { APP_VERSION } from "@/lib/data/firebase";
@@ -56,6 +56,7 @@ function Gate() {
       </Routes>
     );
   }
+  if (s.phase === "previousPending") return <PreviousPendingScreen />;
   if (s.phase === "noAccount") return <NoAccountScreen />;
   if (s.phase === "deactivated") return <DeactivatedScreen />;
   // P-85: the session documents never hold the screen beyond DOCS_LATE_MS; each check applies as soon as its documents

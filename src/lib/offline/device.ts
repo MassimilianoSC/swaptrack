@@ -1,7 +1,10 @@
 import { clearFirestoreCache } from "../data/firebase";
 import { clearCacheOwner, clearPhotoQueue } from "./deviceStore";
 
-export const LOCAL_KEYS = ["swaptrack.location", "swaptrack.fieldLocationsMeta"];
+// P-87b: readings of the owner of the device not yet sent, as last seen; Firestore shows its queue only to the user who
+// wrote it, so this is what another user signing in can know of it.
+export const OWNER_PENDING_KEY = "swaptrack.ownerPendingEvents";
+export const LOCAL_KEYS = ["swaptrack.location", "swaptrack.fieldLocationsMeta", OWNER_PENDING_KEY];
 // Per-user "offline cache loaded at" times (session.tsx, P-78): gone with the cache they describe.
 const CACHE_TIME_PREFIX = "swaptrack.fieldCacheAt.";
 

@@ -461,6 +461,15 @@
     "update": {
       "title": "Update required",
       "body": "This version of the app is no longer supported. Reload to get the new one."
+    },
+    "previousPending": {
+      "title": "Data of the previous user on this device",
+      "body_one": "This device has {{count}} reading or photo of the previous user not yet sent. If you continue, it is lost.",
+      "body_other": "This device has {{count}} readings or photos of the previous user not yet sent. If you continue, they are lost.",
+      "bodyUnknown": "This device may have readings or photos of the previous user not yet sent. If you continue, they are lost.",
+      "keep": "Sign out and let the previous user sign in",
+      "discard": "Delete their data and continue",
+      "keptNotice": "Let the previous user sign in with the network on: their readings and photos will be sent automatically. Then you can sign in."
     }
   },
   "privacy": {

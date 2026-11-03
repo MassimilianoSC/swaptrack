@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signIn, pickLocation, scanManual, uniqueCode, png, emulatorCreateUser, emulatorSetClaims, emulatorSetDoc } from "./helpers";
+import { signIn, pickLocation, scanManual, uniqueCode, png, PASSWORD, emulatorCreateUser, emulatorSetClaims, emulatorSetDoc } from "./helpers";
 import { SEED } from "./seed";
 
 // P-87a (D-40, SPEC §4.12): on a shared phone nothing of a user is lost or sent with someone else's account.
@@ -49,8 +49,19 @@ test.describe("Telefono condiviso — uscite e coda delle foto (telefono)", () =
     await page.unroute(STORAGE);
     const uploads: string[] = [];
     page.on("request", (r) => { if (r.url().includes("/v0/b/") && r.method() === "POST") uploads.push(r.url()); });
-    await signIn(page, b.email);
-    await expect(page.getByTestId("topbar")).toBeVisible();
+    // P-87b: B is first told about the photo left behind; neither while asking nor after "delete and continue" is it sent.
+    await page.goto("/signin");
+    await page.getByTestId("signin-email-input").fill(b.email);
+    await page.getByTestId("signin-password-input").fill(PASSWORD);
+    await page.getByTestId("signin-submit-button").click();
+    await expect(page.getByTestId("previous-pending-screen")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(5000);
+    expect(uploads).toEqual([]);
+    await page.getByTestId("previous-pending-discard").click();
+    const privacy = page.getByTestId("privacy-accept-button");
+    await expect(privacy.or(page.getByTestId("topbar"))).toBeVisible({ timeout: 30_000 });
+    if (await privacy.isVisible()) await privacy.click();
+    await expect(page.getByTestId("topbar")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(5000);
     expect(uploads).toEqual([]);
   });
