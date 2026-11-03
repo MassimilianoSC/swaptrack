@@ -15,7 +15,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi poi |
 |---|---|---|
 | P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel README; `memory/test_credentials.md` cancellato con P-3, ma resta nella storia di git) | committente in console; poi reg toglie la password dai documenti |
-| P-4 | Elenco delle differenze notate rispetto all'app vecchia («la raffica» e «altre cose») | reg le divide in errori / specifica non fatta / scelte da valutare |
+| P-4 | Differenze notate rispetto all'app vecchia. Prime tre del 03/11: (1) il luogo lo sceglie solo l'operaio sul telefono, nella vecchia app poteva indicarlo un amministratore: domanda al committente; (2) pulsante «Foto» a volte spento senza spiegazione: P-108; (3) stessa etichetta letta due volte, la seconda ignorata senza avviso: P-109 | committente |
 | P-50 | Dire se nella demo online ha caricato documenti (BOM o DDT) come `client_admin`: nascevano senza ASP (P-49). Se sì, lo script `scripts/fixDocumentAsp.mjs` è pronto (solo elenco di default, `--apply` dopo aver visto l'elenco; comandi in REGISTRO) | committente |
 
 ## In corso
@@ -24,8 +24,13 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
-| P-107 | Lettura automatica con l'AI di foto e PDF di DDT e BOM (D-45): callable `extractDocument` con Gemini su Vertex AI, modello finto nelle prove (o2, 5–7 h, dopo P-77); pulsante «Leggi automaticamente» e righe da confermare (o3, 3–4 h, dopo P-105); passi in console del committente (API, ruolo, regione, budget) e chiamate vere di messa a punto | o2 + o3 + committente |
+| P-107 | Lettura automatica con l'AI di foto e PDF di DDT e BOM (D-45): callable `extractDocument` con Gemini su Vertex AI, modello finto nelle prove (o2, 5–7 h, dopo P-77); pulsante «Leggi automaticamente» e righe da confermare (o3, 3–4 h, subito dopo P-105, entro il 08/11); passi in console del committente (API, ruolo, regione, budget) e chiamate vere di messa a punto | o2 + o3 + committente |
 | P-106 | Nome leggibile dei file scaricati (oggi «1793695363191.xlsx»): «SwapTrack-export-AAAA-MM-GG-hhmm.xlsx», «SwapTrack-resoconto-AAAA-MM-<ambito>.xlsx» | o3 |
+| P-112 | Difetto (committente, telefono): dopo aver chiuso con la X la finestra che compare dopo una lettura, lo stesso codice non si legge più finché non si chiude l'app. Riparazione con D-50, prima di P-105 | o3 |
+| P-113 | Finestra «Pezzo sconosciuto»: manca la ricerca del modello per codice o nome (§6.4), c'è solo la tendina con tutto il catalogo; casella di ricerca e risultati come pulsanti grandi, anche offline. 1 h, dopo P-112 | o3 |
+| P-111 | Lettura con l'AI di un'etichetta rovinata nella schermata di lettura (D-49): foto, codice proposto, conferma, lettura; senza rete inserimento a mano. o2 server dopo extractDocument; o3 schermata con P-108 e P-109. Stime chieste | o2 + o3 |
+| P-108 | Pulsante «Foto» spento finché non c'è una lettura (giusto: la foto va con l'ultima lettura), ma sembra una scritta: riga di spiegazione e aspetto da pulsante spento (dal committente, P-4) | o3 |
+| P-109 | Stessa etichetta riletta subito: ignorata (P-98, criterio 2) ma senza segnale; avviso breve «Già letto…» (dal committente, P-4) | o3 |
 | P-87 | Telefono condiviso (D-40). **a)** «Esci da tutti i dispositivi» e «Esci» dell'informativa nuova saltavano il blocco dell'uscita con letture o foto in coda (SPEC riga 201); la coda foto partiva prima del controllo del proprietario (foto di un altro utente caricate e lasciate orfane). Prima della demo. **b)** Dopo un'uscita forzata, se entra un altro utente le letture e foto non inviate del precedente si perdono senza avviso: avviso con due scelte. Dopo la demo; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
@@ -35,12 +40,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-103 | (A10) L'avviso del reso apre il DDT invece della spedizione, con pulsanti che il server rifiuta | o3 |
 | P-100 | (A6) Nomi al posto degli id (luoghi, ASP, categorie, da/a) in varie pagine; da controllare anche per il criterio 1 (id di un'altra ASP visibile) | o3 |
 | P-102 | (A8, SPEC §10) In «Smista» la categoria suggerita si conferma con un tocco o se ne sceglie un'altra | o3 |
-| P-101 | (A7) Pezzi: i filtri del cruscotto sono ignorati; mancano ricerca per sito e modello (§13.1, §13.2). Passata a o2 (D-44) | o2 |
 | P-104 | (A11) Arrivo col DDT: finestra del modello anche per pezzi del DDT; il DDT compare solo dopo aver scelto «Nuovo» | o3 |
-| P-94 | (S5) Storia del pezzo con organizzazione e ruolo (§13.2), mai il nome della persona | o2 + o3 |
-| P-95 | (S6) Avviso del DDT controllato con l'elenco dei seriali (§11.4) | o2 + o3 |
-| P-105 | (A12) Caricare il DDT come file o foto (§12.2, mappatura Excel §11.2): PRIMA della demo (D-43). Server: file delle versioni precedenti conservati (o2, sul ramo). App 5–7 h (o3) | o3 + o2 |
-| P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione. Passata a o2 (D-44) | o2 |
+| P-105 | (A12) Caricare il DDT come file o foto (§12.2, mappatura Excel §11.2): PRIMA della demo (D-43). Server: file delle versioni precedenti conservati (o2, su main 6b36997); keepFiles (D-47) in corso. App 9–10 h (stima di o3: file allegati e anteprima, Excel con scelta delle colonne, stato unico «righe da confermare», e2e); su main entro il 08/11 | o3 + o2 |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
@@ -67,12 +68,16 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, «Smista nello stesso passaggio» (D-27); suggerimento anche alla prima lettura (le regole di smistamento arrivavano dopo la lettura, anche in «Smista») | o3 | 03/11/2026 (40075fb, 40f0cc5) |
 | P-86 | Materiale nuovo mai «smistato» da un arrivo con categoria (D-39): server e app | o2 + o3 | 03/11/2026 (811f995, 40f0cc5) |
 | P-70 | Pagina del pezzo con le sue foto (SPEC §13.2, D-32), lette con getBlob (D-35) | o3 | 03/11/2026 (d155dc3, 540788e) |
+| P-101 | Pagina Pezzi filtrabile per stato, ASP, sito o magazzino e modello; numeri del cruscotto aprono la lista filtrata; 200 alla volta (4 indici). Difetto proprio trovato dalla e2e della raffica e riparato | o2 | 03/11/2026 (6b36997) |
+| P-77 | Spedizioni di un'ASP: ultime 200 inviate e 200 ricevute (2 indici) | o2 | 03/11/2026 |
+| P-94 | Storia del pezzo con organizzazione e ruolo, mai il nome | o2 | 03/11/2026 |
+| P-95 | Avvisi e confronto dei documenti con l'elenco dei seriali mancanti e inattesi | o2 | 03/11/2026 |
 | P-98 | Raffica col telefono vero: lo stesso pezzo non si registra più due volte con la fotocamera ferma sul codice | o3 | 03/11/2026 (d01510b) |
 | P-96 | Niente testi grezzi (Home dell'ufficio cliente, Anomalie, Esportazioni); errori del server tradotti; foto del DDT compressa; controllo permanente delle chiavi in check:i18n | o3 | 03/11/2026 (8e3d5bc) |
 | P-90 | Il numero di pezzi della spedizione cresce solo alla prima lettura del pezzo (3 rosse prima) | o2 | 03/11/2026 (e50f90e) |
 | P-91 | «Annulla l'ultima» in un reso o trasferimento toglie la riga e fa scendere il conteggio; riga già confermata o arrivata resta | o2 | 03/11/2026 (9eeba8a) |
 | P-93 | Rilettura di un pezzo nella stessa spedizione senza anomalia (D-41) | o2 | 03/11/2026 (6bcee66) |
-| P-3 | Residui di Emergent cancellati: `memory/`, `test_result.md`, `test_reports/` (reg); `tests/__init__.py` a o2. Restano nella storia di git | reg + o2 | 03/11/2026 |
+| P-3 | Residui di Emergent cancellati: `memory/`, `test_result.md`, `test_reports/` (reg); `tests/__init__.py` (o2, 6b36997). Restano nella storia di git | reg + o2 | 03/11/2026 |
 | P-89 | Scarico online di export, resoconti e foto: mancava la regola CORS del bucket (errore visto in console dal committente); `scripts/storage-cors.json` (57753c4) applicato dal committente con gcloud, export scaricato | o2 + committente | 03/11/2026 |
 | P-14 | Funzioni bloccanti sul progetto vero: registrate in europe-west1; `checkBlocking.mjs` tre OK (attivo entra, disattivato respinto da beforeSignIn, registrazione da soli respinta da beforeCreate); tecnico di Sud riattivato | committente | 03/11/2026 |
 | P-1 | Sito Hosting predefinito `kronos-caffe-sito.web.app` (vecchio sito del bar) spento con `firebase hosting:disable`; in incognito non si apre più | committente | 03/11/2026 |
@@ -121,5 +126,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 ## Più avanti (non in questa fase)
 
 **AI nell'app:** il 03/11/2026 il committente ha deciso la prima applicazione, la lettura di DDT e BOM (D-45, P-107). Altri candidati per dopo: spiegazione in parole semplici di anomalie e differenze; lettura di etichette rovinate dalla foto. Resta aperta la domanda al cliente sulle sue regole per l'AI.
+
+**Luogo indicato da un superiore (D-48, P-110):** dopo la demo, un superiore può indicare all'operaio dove lavorerà. Da progettare con il committente: chi assegna, durata, cambio da parte dell'operaio, offline, chi la vede (criterio 1).
 
 Risposte mancanti del cliente (PASSAGGIO_DI_CONSEGNE §5); estensione Trigger Email per gli inviti veri; App Check; MFA e accessi Google/Microsoft con provider veri; un progetto Firebase definitivo al posto dell'escamotage; app da store con Capacitor; divisione del bundle (avviso sopra 500 kB); scollegare Google Analytics dal progetto (facoltativo).
