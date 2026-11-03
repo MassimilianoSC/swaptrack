@@ -45,8 +45,10 @@ function create(e: MachineEvent): Result {
       return { state: { ...base(e, "installed", "new"), siteOfInstallation: e.locationId }, anomaly: unknown };
     case "arrive_at_warehouse": {
       if (e.locationType === "site") return { state: null, anomaly: "forbidden_transition" };
-      const s = base(e, p.categoryId ? "sorted" : "received_at_asp", (p.flow as Flow) ?? "new");
-      return { state: { ...s, sortingCategoryId: (p.categoryId as string) ?? null } };
+      // D-39: only removed material is sorted; the category of new material is ignored.
+      const flow = (p.flow as Flow) ?? "new";
+      const cat = flow === "removed" ? (p.categoryId as string) ?? null : null;
+      return { state: { ...base(e, cat ? "sorted" : "received_at_asp", flow), sortingCategoryId: cat } };
     }
     case "classify": {
       if (e.locationType === "site") return { state: null, anomaly: "forbidden_transition" };
@@ -84,9 +86,10 @@ export function applyEvent(prev: ItemState | null, e: MachineEvent): Result {
   if (e.source !== "server" && e.aspId && prev.currentAspId && e.aspId !== prev.currentAspId && prev.pendingAspId !== e.aspId) {
     return { state: prev, anomaly: "code_of_another_asp" };
   }
-  // Repetition at the current location changes nothing (except sorting during arrival).
+  // Repetition at the current location changes nothing (except sorting of removed material during arrival, D-39).
   const sameLoc = e.locationId === prev.currentLocationId;
-  if (POSITION.includes(e.type) && sameLoc && !(e.type === "arrive_at_warehouse" && p.categoryId && prev.status === "received_at_asp")) {
+  const sortsOnArrival = sameLoc && e.type === "arrive_at_warehouse" && !!p.categoryId && prev.status === "received_at_asp" && prev.flow === "removed";
+  if (POSITION.includes(e.type) && sameLoc && !sortsOnArrival) {
     return { state: s };
   }
 
@@ -104,7 +107,7 @@ export function applyEvent(prev: ItemState | null, e: MachineEvent): Result {
       const arrived = cat ? { status: "sorted" as Status, extra: { sortingCategoryId: cat } } : { status: "received_at_asp" as Status, extra: {} };
       if (prev.status === "removed_at_site") return to(arrived.status, { ...moveTo(), currentAspId: e.aspId, ...arrived.extra });
       if (prev.status === "received_at_asp") {
-        if (sameLoc && cat) return to("sorted", { sortingCategoryId: cat });
+        if (sortsOnArrival) return to("sorted", { sortingCategoryId: cat });
         return { ...to("received_at_asp", moveTo()), anomaly: "moved_without_transfer" };
       }
       if (prev.status === "in_transfer") {

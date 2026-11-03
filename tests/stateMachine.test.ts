@@ -29,7 +29,14 @@ describe("unknown code: natural state", () => {
     expect(run(ev("classify", { payload: { newClass: "defective" } })).s!.status).toBe("defective");
   });
   it("arrival with category sorts in one pass", () => {
-    expect(run(ev("arrive_at_warehouse", { payload: { categoryId: "C" } })).s!.status).toBe("sorted");
+    expect(run(ev("arrive_at_warehouse", { payload: { flow: "removed", categoryId: "C" } })).s!.status).toBe("sorted");
+  });
+  // D-39: sorting is for removed material only (§10, §12.2, as classify): the category of an arrival of new material
+  // is ignored, the arrival stays valid, no anomaly.
+  it.each([["new"], [undefined]])("first arrival of new material (flow %s) with category: received, not sorted", (flow) => {
+    const r = run(ev("arrive_at_warehouse", { payload: { ...(flow ? { flow } : {}), categoryId: "C" } }));
+    expect(r.s).toMatchObject({ status: "received_at_asp", flow: "new", sortingCategoryId: null });
+    expect(r.a).toBeUndefined();
   });
   it("classify at site on unknown code is forbidden, no piece created", () => {
     const r = run(ev("classify", { ...site(), payload: { categoryId: "C" } }));
@@ -57,6 +64,13 @@ describe("transitions", () => {
     const r = run(ev("remove_at_site", site()), ev("arrive_at_warehouse"), ev("classify", { payload: { categoryId: "C" } }),
       ev("return_ship", { shipment: sh({ kind: "return", toAspId: null }) }), ev("return_confirm", { source: "server", locationId: "CW", locationType: "client_warehouse" }));
     expect(r.s!.status).toBe("returned");
+    expect(r.a).toBeUndefined();
+  });
+  it("D-39: arrival with category at the same warehouse sorts removed material, never new material", () => {
+    expect(run(ev("remove_at_site", site()), ev("arrive_at_warehouse"), ev("arrive_at_warehouse", { payload: { categoryId: "C" } })).s)
+      .toMatchObject({ status: "sorted", sortingCategoryId: "C" });
+    const r = run(ev("arrive_at_warehouse", { payload: { flow: "new" } }), ev("arrive_at_warehouse", { payload: { categoryId: "C" } }));
+    expect(r.s).toMatchObject({ status: "received_at_asp", flow: "new", sortingCategoryId: null });
     expect(r.a).toBeUndefined();
   });
   it("arrival at another warehouse of the same ASP: moved_without_transfer", () => {
@@ -167,14 +181,14 @@ describe("replay (§8.2)", () => {
   it("ties broken by createdAt (ascending), lower is applied first", () => {
     // Two classifications on the same already-sorted piece, same scannedAt: the one with lower createdAt
     // is applied first, so the one with higher createdAt (Y) wins.
-    const arrival = ev("arrive_at_warehouse", { at: 0, createdAt: 0, payload: { categoryId: "X" } });
+    const arrival = ev("arrive_at_warehouse", { at: 0, createdAt: 0, payload: { flow: "removed", categoryId: "X" } });
     const a = ev("classify", { at: 1_000, createdAt: 2_000, payload: { categoryId: "Y" } });
     const b = ev("classify", { at: 1_000, createdAt: 1_000, payload: { categoryId: "X" } });
     // Shuffle on input; replay must deterministically order a last.
     expect(replay([a, arrival, b]).state!.sortingCategoryId).toBe("Y");
   });
   it("ties on createdAt broken by id (ascending)", () => {
-    const arrival = ev("arrive_at_warehouse", { at: 0, createdAt: 0, payload: { categoryId: "X" } });
+    const arrival = ev("arrive_at_warehouse", { at: 0, createdAt: 0, payload: { flow: "removed", categoryId: "X" } });
     const z = { ...ev("classify", { at: 1_000, createdAt: 1_000, payload: { categoryId: "Z" } }), id: "zzz" };
     const a = { ...ev("classify", { at: 1_000, createdAt: 1_000, payload: { categoryId: "A" } }), id: "aaa" };
     // Lower id applied first; higher id ("zzz") wins.
