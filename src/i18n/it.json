@@ -982,7 +982,8 @@
       "received": "Ricevuta",
       "confirmed": "Confermata",
       "cancelled": "Annullata"
-    }
+    },
+    "confirmedElsewhere": "Confermata in un altro reso"
   },
   "names": {
     "otherPlace": "Luogo di un'altra ASP",

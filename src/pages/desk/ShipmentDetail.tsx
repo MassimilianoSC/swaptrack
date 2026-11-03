@@ -62,7 +62,8 @@ export default function ShipmentDetail() {
   const addExtra = () => { const c = extraInput.trim(); if (!c) return; setExtra((x) => Array.from(new Set([...x, c]))); setExtraInput(""); };
   const dropExtra = (c: string) => setExtra((x) => x.filter((v) => v !== c));
   const confirmReturn = async () => {
-    const confirmed = lines.filter((l) => !missing.has(l.id)).map((l) => l.id);
+    // A line confirmed in another return is already decided (the server skips it as well).
+    const confirmed = lines.filter((l) => !missing.has(l.id) && !l.confirmedElsewhere).map((l) => l.id);
     const missingArr = [...missing];
     await run(() => call("confirmReturn", { shipmentId: id, confirmed, missing: missingArr, extra }), t("shipments.confirmed"));
     setConfirmOpen(false); setMissing(new Set()); setExtra([]);
@@ -128,6 +129,10 @@ export default function ShipmentDetail() {
                 {l.arrivedAt && <Badge tone="success">{t("shipments.arrived")}</Badge>}
                 {l.confirmedAt && <Badge tone="success">{t("shipments.confirmedLine")}</Badge>}
                 {l.missing && <Badge tone="warning">{t("shipments.missing")}</Badge>}
+                {/* P-59 (D-30): this piece was confirmed by the client in another return. */}
+                {l.confirmedElsewhere && (typeof l.confirmedElsewhere === "string"
+                  ? <Link to={`/shipments/${l.confirmedElsewhere}`} data-testid={`shipment-line-elsewhere-${l.id}`}><Badge tone="neutral">{t("shipments.confirmedElsewhere")}</Badge></Link>
+                  : <span data-testid={`shipment-line-elsewhere-${l.id}`}><Badge tone="neutral">{t("shipments.confirmedElsewhere")}</Badge></span>)}
                 <Link to={`/items/${l.id}`} className="text-primary hover:underline text-xs" data-testid={`shipment-line-link-${l.id}`}>{t("common.open")}</Link>
               </li>
             ))}
@@ -151,8 +156,9 @@ export default function ShipmentDetail() {
             <ul className="divide-y divide-border text-sm" data-testid="confirm-lines-list">
               {lines.map((l) => (
                 <li key={l.id} className="flex items-center gap-2 py-2">
-                  <input id={`cl-${l.id}`} type="checkbox" className="h-5 w-5 accent-[rgb(var(--primary))]" checked={!missing.has(l.id)} onChange={() => toggleMissing(l.id)} data-testid={`confirm-line-${l.id}`} />
+                  <input id={`cl-${l.id}`} type="checkbox" className="h-5 w-5 accent-[rgb(var(--primary))]" checked={!missing.has(l.id)} disabled={!!l.confirmedElsewhere} onChange={() => toggleMissing(l.id)} data-testid={`confirm-line-${l.id}`} />
                   <label htmlFor={`cl-${l.id}`} className="font-mono flex-1 truncate">{l.codeRaw}</label>
+                  {l.confirmedElsewhere && <Badge tone="neutral">{t("shipments.confirmedElsewhere")}</Badge>}
                   <span className="text-muted">{l.model ?? "—"}</span>
                 </li>
               ))}

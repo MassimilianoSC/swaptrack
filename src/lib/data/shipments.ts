@@ -14,6 +14,8 @@ export interface Shipment {
 export interface ShipmentLine {
   codeRaw: string; model: string | null; addedAt: Timestamp; arrivedAt?: Timestamp | null;
   confirmedAt?: Timestamp | null; missing?: boolean; fromAspId?: string; toAspId?: string | null; kind?: string;
+  // §9.2 / D-30: confirmed at the client as an extra piece of another return (its id, or true when unknown).
+  confirmedElsewhere?: string | boolean;
 }
 
 export const loadShipment = async (id: string): Promise<Row<Shipment> | null> => {

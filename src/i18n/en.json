@@ -982,7 +982,8 @@
       "received": "Received",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled"
-    }
+    },
+    "confirmedElsewhere": "Confirmed in another return"
   },
   "names": {
     "otherPlace": "Place of another ASP",
