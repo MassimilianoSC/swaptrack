@@ -22,14 +22,20 @@ export type AiModel = (r: AiRequest) => Promise<unknown>;
 const projectId = () => process.env.GCLOUD_PROJECT ?? JSON.parse(process.env.FIREBASE_CONFIG ?? "{}").projectId ?? "";
 export const usesFakeModel = () => process.env.FUNCTIONS_EMULATOR === "true" || projectId().startsWith("demo-");
 
-// The real model. `test` lets a test check the request without network and without credentials.
-export function geminiModel(project: string, test?: { fetch: typeof fetch; authClient: unknown }): AiModel {
+type Log = (message: string, data: Record<string, unknown>) => void;
+
+// The real model. `test` lets a test check the request and the log without network and without credentials.
+// Every call writes one log line ("ai_call" or "ai_call_failed"): time, tokens or the error of Vertex AI, so the
+// first calls online can be checked and their cost estimated (P-124 procedure). Never the request or the answer.
+export function geminiModel(project: string, test?: { fetch: typeof fetch; authClient: unknown; log?: Log }): AiModel {
+  const info: Log = test?.log ?? ((m, d) => logger.info(m, d)), warn: Log = test?.log ?? ((m, d) => logger.warn(m, d));
   const ai = new GoogleGenAI({
     vertexai: true, project, location: AI_LOCATION,
     httpOptions: { baseUrl: AI_BASE_URL, apiVersion: "v1", timeout: AI_TIMEOUT_MS, ...(test ? { fetch: test.fetch } : {}) },
     ...(test ? { googleAuthOptions: { authClient: test.authClient as never } } : {}),
   });
   return async (r) => {
+    const started = Date.now();
     const res = await ai.models.generateContent({
       model: AI_MODEL,
       contents: [{ role: "user", parts: r.parts }],
@@ -40,7 +46,13 @@ export function geminiModel(project: string, test?: { fetch: typeof fetch; authC
         temperature: 0,
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }, // the lowest level gemini-3.8-flash accepts
       },
+    }).catch((e: { status?: number; message?: string; name?: string }) => {
+      warn("ai_call_failed", { purpose: r.purpose, model: AI_MODEL, location: AI_LOCATION, ms: Date.now() - started, status: e?.status ?? null, error: String(e?.message ?? e?.name ?? "error").slice(0, 300) });
+      throw e;
     });
+    const u = res.usageMetadata;
+    info("ai_call", { purpose: r.purpose, model: AI_MODEL, location: AI_LOCATION, ms: Date.now() - started,
+      promptTokens: u?.promptTokenCount ?? null, outputTokens: u?.candidatesTokenCount ?? null, thoughtsTokens: u?.thoughtsTokenCount ?? null });
     return JSON.parse(res.text ?? "null");
   };
 }

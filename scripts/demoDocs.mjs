@@ -90,6 +90,26 @@ function ddtHtml(ddt) {
     <div class="sign"><div>Firma mittente</div><div>Firma vettore</div><div>Firma destinatario</div></div>
   </body></html>`;
 }
+// The BOM of the site as a printed list, for the automatic reading (the Excel is for the column choice). Same look as
+// the DDT: its style block is reused.
+function bomHtml() {
+  const ddt = ddtHtml(DDT[0]);
+  const style = ddt.slice(ddt.indexOf("<style>"), ddt.indexOf("</style>") + "</style>".length);
+  const rows = BOM.map((l, i) => `<tr><td>${i + 1}</td><td><b>${esc(l.op)}</b></td><td>${esc(l.materialCode)}</td><td>${esc(l.description)}</td><td class="mono">${esc(l.serial)}</td><td class="num">${l.quantity}</td></tr>`).join("");
+  const count = (op) => BOM.filter((l) => l.op === op).length;
+  return `<!doctype html><html lang="it"><head><meta charset="utf-8">${style}</head><body>
+    <div class="head">
+      <div class="brand">${esc(CLIENT.name)}<small>Pianificazione swap di rete</small></div>
+      <div class="title"><b>LISTA MATERIALI DEL SITO (BOM)</b>Rif. BOM-${esc(SITE.code)}-01<div class="test">${TEST_MARK}</div></div>
+    </div>
+    <div class="boxes">
+      <div class="box"><h4>Sito</h4>${esc(SITE.code)} · ${esc(SITE.name)}<br>${esc(SITE.address)} · ${esc(SITE.region)}</div>
+      <div class="box"><h4>Ditta installatrice</h4>${esc(NORD.name)}</div>
+    </div>
+    <div class="meta"><div class="box"><h4>Data</h4>${DATE}</div><div class="box"><h4>Da smontare</h4>${count("SMONTARE")} righe</div><div class="box"><h4>Da installare</h4>${count("INSTALLARE")} righe</div><div class="box"><h4>Revisione</h4>1</div></div>
+    <table><thead><tr><th>Pos.</th><th>Operazione</th><th>Cod. articolo</th><th>Descrizione</th><th>N. serie</th><th>Q.tà</th></tr></thead><tbody>${rows}</tbody></table>
+  </body></html>`;
+}
 const FOOTER = `<div style="font: 7pt Arial, sans-serif; color: #777; width: 100%; padding: 0 12mm; display: flex; justify-content: space-between;"><span>${TEST_MARK} · dati inventati</span><span>Pagina <span class="pageNumber"></span> di <span class="totalPages"></span></span></div>`;
 
 function labelHtml(l, barcodePng) {
@@ -160,6 +180,8 @@ async function main() {
       await page.setContent(ddtHtml(d), { waitUntil: "load" });
       await page.pdf({ path: `${OUT}DDT-${d.number}.pdf`, format: "A4", printBackground: true, displayHeaderFooter: true, headerTemplate: "<div></div>", footerTemplate: FOOTER, margin: { top: "14mm", bottom: "18mm", left: "12mm", right: "12mm" } });
     }
+    await page.setContent(bomHtml(), { waitUntil: "load" });
+    await page.pdf({ path: `${OUT}BOM-${SITE.code}.pdf`, format: "A4", printBackground: true, displayHeaderFooter: true, headerTemplate: "<div></div>", footerTemplate: FOOTER, margin: { top: "14mm", bottom: "18mm", left: "12mm", right: "12mm" } });
     // The paper photo: the first page of DDT 0412 as an image, then photographed.
     await page.setViewportSize({ width: 794, height: 1123 });
     await page.setContent(ddtHtml(DDT[0]).replace("<body>", `<body style="padding: 14mm 12mm; box-sizing: border-box; width: 794px; background: #fff">`), { waitUntil: "load" });
@@ -188,6 +210,7 @@ async function main() {
   // What was written, read back.
   checks.push(["DDT-TD-2026-0412.pdf: 1 pagina", pdfPages("DDT-TD-2026-0412.pdf") === 1]);
   checks.push(["DDT-TD-2026-0413.pdf: 2 pagine", pdfPages("DDT-TD-2026-0413.pdf") === 2]);
+  checks.push([`BOM-${SITE.code}.pdf: 1 pagina`, pdfPages(`BOM-${SITE.code}.pdf`) === 1]);
   const x1 = await excelRows("DDT-TD-2026-0412.xlsx");
   checks.push([`DDT-TD-2026-0412.xlsx: intestazioni in riga 1 e ${DDT[0].lines.length} righe`, x1.headers.join("|") === DDT_HEADERS.join("|") && x1.rows === DDT[0].lines.length]);
   const x2 = await excelRows(`BOM-${SITE.code}.xlsx`);
@@ -217,6 +240,7 @@ function leggimi() {
     "DDT-TD-2026-0412.xlsx       lo stesso DDT in Excel: scegli le colonne N. serie, Cod. articolo, Q.tà",
     `DDT-TD-2026-0413.pdf        DDT di 2 pagine: ${count(DDT[1])}`,
     `BOM-${SITE.code}.xlsx         BOM del sito ${SITE.code}: colonna Operazione, valori SMONTARE e INSTALLARE`,
+    `BOM-${SITE.code}.pdf          la stessa BOM stampata (per la lettura automatica)`,
     "etichetta-1..3-pulita       si leggono con la fotocamera (seriali del DDT 0412)",
     "etichetta-4-sfocata         la fotocamera non la legge: «Leggi dalla foto dell'etichetta»",
     "etichetta-5-strappata       codice a barre strappato e una cifra macchiata: lettura automatica con carattere incerto",
