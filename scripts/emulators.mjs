@@ -81,12 +81,18 @@ async function waitReady(cli, only, tag) {
   cli.record();
 }
 
+// D-57: how long each phase took, so that the time of a test round can be read from its log.
+const lap = (what, since) => console.log(`emulators: [time] ${what}: ${((Date.now() - since) / 1000).toFixed(1)} s`);
+
 // Phase 1 of --seed: seed without the functions emulator, export to a temporary folder, stop. Returns the folder.
 async function seedPhase() {
   const dir = mkdtempSync(join(tmpdir(), "swaptrack-seed-"));
+  let t = Date.now();
   const cli = startCli(SEED_ONLY, []);
   await waitReady(cli, SEED_ONLY, "emulators --seed");
+  lap("seed emulators started", t); t = Date.now();
   const code = await runCommand(SEED);
+  lap("seed command", t); t = Date.now();
   let exported = false;
   if (code === 0) {
     const r = await fetch(`http://${hostOf("hub")}/_admin/export`, {
@@ -95,7 +101,9 @@ async function seedPhase() {
     exported = r.ok;
     if (!exported) console.error(`emulators --seed: export failed (${r.status}).`);
   }
+  lap("seed export", t); t = Date.now();
   const freed = await cli.stop("emulators --seed");
+  lap("seed emulators stopped", t);
   if (code !== 0 || !exported || !freed) {
     rmSync(dir, { recursive: true, force: true });
     process.exit(code !== 0 ? code : !freed ? 3 : 1);
@@ -131,17 +139,24 @@ async function main() {
     console.error(`emulators: port(s) ${busy.join(", ")} already in use. Another SwapTrack emulator instance is running (CLAUDE.md §5: one at a time).`);
     process.exit(2);
   }
+  const t0 = Date.now();
   const seeded = SEED ? await seedPhase() : null;
+  let t = Date.now();
   const data = seeded ? ["--import", seeded] : COMMAND ? [] : ["--import", DATA, "--export-on-exit", DATA];
   if (!COMMAND) mkdirSync(`${ROOT}.emulator-data`, { recursive: true });
   const cli = startCli(ONLY, data);
   await waitReady(cli, ONLY, "emulators");
+  lap("emulators started", t);
 
   if (COMMAND) {
     if (seeded) console.log(`emulators: data imported; onEventCreated runs so far: ${(cli.log.match(TRIGGER_RUN) ?? []).length}`);
     await warmUpTrigger();
+    t = Date.now();
     const code = await runCommand(COMMAND);
+    lap("command", t); t = Date.now();
     const freed = await cli.stop("emulators --run");
+    lap("emulators stopped", t);
+    lap("total", t0);
     if (seeded) rmSync(seeded, { recursive: true, force: true });
     process.exit(freed ? code : 3);
   }

@@ -29,6 +29,7 @@ async function main() {
     console.error(`test-rules: port(s) ${busy.join(", ")} already in use. Another emulator instance is running (CLAUDE.md §5: one at a time).`);
     process.exit(2);
   }
+  const t0 = Date.now();
   const emu = spawn(process.execPath, [FIREBASE, "emulators:start", "--only", ONLY.join(","), "--project", PROJECT], {
     cwd: ROOT, stdio: ["ignore", "pipe", "pipe"], env: cliEnv(),
   });
@@ -46,6 +47,7 @@ async function main() {
       return true;
     }, 120_000, "emulators did not open their ports");
     recorded = descendantsOf(processTable(), emu.pid);
+    console.log(`test-rules: [time] emulators started: ${((Date.now() - t0) / 1000).toFixed(1)} s`);
     // The hub needs a moment after the ports open; the first test run otherwise races the rules load.
     await sleep(1500);
     const env = {
@@ -59,6 +61,7 @@ async function main() {
       cwd: ROOT, stdio: "inherit", env,
     });
     code = test.status ?? 1;
+    console.log(`test-rules: [time] tests done: ${((Date.now() - t0) / 1000).toFixed(1)} s from the start`);
   } catch (e) {
     console.error(String(e));
     code = 1;
