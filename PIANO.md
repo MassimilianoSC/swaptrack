@@ -27,6 +27,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-126 | Esportazioni: per i ruoli ASP la colonna «Ambito» mostra il codice dell'ASP invece del nome | o3 |
 | P-127 | Avvisi (e altre tabelle): premendo un pulsante di una riga si spengono quelli di tutte le righe (segnalato dal committente) | o3 |
 | P-128 | Scelta delle colonne dell'Excel: la scelta salvata arriva dopo e sovrascrive quella dell'utente, che la vede tornare a «—» (trovato da o2) | o3 |
+| P-129 | Avviso di installazione (D-59): sul computer voce «Installa l'app» nel menu al posto della barra; sul telefono barra con «Più tardi» per 7 giorni più la voce nel menu. Circa 1 h | o3 |
 | P-125 | Letture che prendono la cache per il server (D-58), prima del lotto 2: elenco dei luoghi vuoto con «aggiornati» falso e senza nuovo tentativo; categorie e regole di smistamento assenti senza rete; DDT e BOM non aggiornati se il server tarda; «Caricamento…» infinito di documento e pezzo senza rete. Circa 3–3,5 h | o3 |
 | P-87 | Telefono condiviso (D-40). **a)** fatta (abaa679, 36b8439): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra. **b)** dopo la demo: avviso con due scelte se entra un altro utente con dati del precedente non inviati; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
