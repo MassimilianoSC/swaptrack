@@ -140,7 +140,19 @@
     "excelInstallValue": "Valore che vuol dire «installare»",
     "excelCount_one": "{{count}} riga pronta, {{skipped}} non lette.",
     "excelCount_other": "{{count}} righe pronte, {{skipped}} non lette.",
-    "excelApply": "Usa queste righe"
+    "excelApply": "Usa queste righe",
+    "aiRead": "Leggi automaticamente",
+    "aiSaveFirst": "Salva prima i file nuovi, poi usa la lettura automatica.",
+    "aiToConfirm_one": "{{count}} riga proposta dalla lettura automatica: controllala, poi Salva.",
+    "aiToConfirm_other": "{{count}} righe proposte dalla lettura automatica: controllale, poi Salva.",
+    "aiWarnings": "La lettura automatica ha dei dubbi su alcune righe: controllale con attenzione.",
+    "aiWarn": {
+      "ai_file_skipped": "Un file non si può leggere automaticamente (per esempio un Excel): usa la scelta delle colonne.",
+      "ai_lines_dropped": "Alcune righe non sono state capite e non compaiono: confrontale con il documento.",
+      "ai_direction_missing": "Alcune righe della BOM non dicono se smontare o installare: spostale nella casella giusta.",
+      "ai_too_many_lines": "Il documento ha troppe righe: ne è stata letta solo una parte.",
+      "ai_no_lines": "Nel documento non è stata trovata nessuna riga."
+    }
   },
   "alerts": {
     "subtitle": "Un avviso per oggetto (documento, spedizione, luogo).",
@@ -703,7 +715,7 @@
     "acceptAndAlert": "Accetta e crea un avviso",
     "acceptSilently": "Accetta in silenzio (senza avviso)",
     "aiDocumentExtraction": "Lettura automatica documenti (AI)",
-    "aiHint": "Non implementato. L'estensione dichiara 'non disponibile'.",
+    "aiHint": "Propone le righe di DDT e BOM leggendo foto e PDF. Le righe si salvano solo dopo il controllo di chi carica il documento.",
     "itemFieldsHint": "Campi aggiuntivi dei pezzi; obbligatorio significa 'appare nella lista Da completare', non blocca mai una lettura.",
     "required": "Obbligatorio",
     "appName": "Nome dell'app",

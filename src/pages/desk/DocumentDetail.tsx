@@ -1,12 +1,13 @@
 import * as React from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Save, Check, Lock, Scale } from "lucide-react";
+import { Save, Check, Lock, Scale, Sparkles } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
-import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
+import { listLocationsFor, watchDoc, type Row, type Location } from "@/lib/data/db";
+import { extractLines } from "@/lib/documents/extract";
 import { readTable, type Sheet } from "@/lib/import/readTable";
 import { parseLines, linesToText, splitByDirection, carryModels, type DocLine } from "@/lib/documents/lines";
 import { isClientRole } from "@shared/roles";
@@ -51,7 +52,10 @@ export default function DocumentDetail() {
   const [removed, setRemoved] = React.useState<string[]>([]);
   const [sheet, setSheet] = React.useState<Sheet | null>(null);
   const [linesSource, setLinesSource] = React.useState<"manual" | "excel">("manual");
-  const [toConfirm, setToConfirm] = React.useState<{ count: number; skipped: number } | null>(null);
+  const [toConfirm, setToConfirm] = React.useState<{ from: "excel" | "ai"; count: number; skipped: number; warnings: string[] } | null>(null);
+  // D-45: the automatic reading, when the client admin has turned it on (settings/features, readable by every role).
+  const [aiOn, setAiOn] = React.useState(false);
+  React.useEffect(() => watchDoc<{ aiDocumentExtraction?: boolean }>("settings/features", (v) => setAiOn(!!v?.aiDocumentExtraction)), []);
   const [compare, setCompare] = React.useState<Compare | null>(null);
   // Bumped after every write, so status and lines on screen follow the server (the button "mark checked" disappears).
   const [reloadKey, setReloadKey] = React.useState(0);
@@ -82,16 +86,24 @@ export default function DocumentDetail() {
   const mappingScope = isClientRole(claims?.role ?? "") ? "client" : claims?.orgId ?? "";
 
   const onExcel = (f: File) => { void readTable(f).then((s) => setSheet(s.headers.length ? s : null)).catch(() => toast.error(t("errors.unsupported_file_type"))); };
-  const applyExcel = (r: { lines: DocLine[]; skipped: number }) => {
-    const add = (box: string, lines: DocLine[]) => [box.trim(), linesToText(lines)].filter(Boolean).join("\n");
+  // Lines read from an Excel or proposed by the automatic reading join the boxes (never replacing what is typed) and
+  // wait for "Save".
+  const applyLines = (lines: DocLine[], to: { from: "excel" | "ai"; skipped: number; warnings: string[] }) => {
+    const join = (a: string, b: string) => [a.trim(), b].filter(Boolean).join("\n");
     if (kind === "bom") {
-      const split = splitByDirection(r.lines);
-      setBomLines((b) => ({ remove: [b.remove.trim(), split.remove].filter(Boolean).join("\n"), install: [b.install.trim(), split.install].filter(Boolean).join("\n"), none: [b.none.trim(), split.none].filter(Boolean).join("\n") }));
-    } else setRawLines((x) => add(x, r.lines));
-    setLinesSource("excel");
-    setToConfirm({ count: r.lines.length, skipped: r.skipped });
-    setSheet(null);
+      const split = splitByDirection(lines);
+      setBomLines((b) => ({ remove: join(b.remove, split.remove), install: join(b.install, split.install), none: join(b.none, split.none) }));
+    } else setRawLines((x) => join(x, linesToText(lines)));
+    if (to.from === "excel") setLinesSource("excel");
+    setToConfirm({ ...to, count: lines.length });
   };
+  const applyExcel = (r: { lines: DocLine[]; skipped: number }) => { applyLines(r.lines, { from: "excel", skipped: r.skipped, warnings: [] }); setSheet(null); };
+  const readAutomatically = async () => {
+    const r = await run(() => extractLines(id!));
+    if (r) applyLines(r.lines, { from: "ai", skipped: 0, warnings: r.warnings });
+  };
+  // The reading works on the saved photos and PDFs of the document.
+  const readable = (doc?.files ?? []).some((f) => /\.(pdf|jpe?g|png|webp)$/i.test(f));
 
   const save = async () => {
     if (!number.trim() || !locationId) { toast.error(t("errors.invalid_data")); return; }
@@ -157,12 +169,23 @@ export default function DocumentDetail() {
         <Card className="space-y-3">
           <FilesPanel existing={doc?.files ?? []} removed={removed} onRemoved={setRemoved} pending={pending} onPending={setPending} onExcel={onExcel} canAdd={editable} />
           {sheet && editable && <ExcelMapping sheet={sheet} kind={kind} scope={mappingScope} onApply={applyExcel} onCancel={() => setSheet(null)} />}
+          {aiOn && editable && !isNew && readable && (
+            <div className="space-y-1">
+              <Button type="button" variant="secondary" onClick={() => void readAutomatically()} disabled={busy || pending.length > 0} data-testid="document-ai-read"><Sparkles className="h-4 w-4" />{t("documents.aiRead")}</Button>
+              {pending.length > 0 && <p className="text-xs text-muted">{t("documents.aiSaveFirst")}</p>}
+            </div>
+          )}
         </Card>
         <Card className="space-y-3">
           {toConfirm && (
-            <p className="rounded border border-warning p-2 text-sm text-warning" data-testid="document-lines-to-confirm">
-              {t("documents.linesToConfirm", { count: toConfirm.count, skipped: toConfirm.skipped })}
-            </p>
+            <div className="rounded border border-warning p-2 text-sm text-warning" data-testid="document-lines-to-confirm">
+              <p>{toConfirm.from === "ai" ? t("documents.aiToConfirm", { count: toConfirm.count }) : t("documents.linesToConfirm", { count: toConfirm.count, skipped: toConfirm.skipped })}</p>
+              {toConfirm.warnings.length > 0 && (
+                <ul className="list-disc pl-5" data-testid="document-ai-warnings">
+                  {toConfirm.warnings.map((w) => <li key={w}>{t(`documents.aiWarn.${w}`, { defaultValue: t("documents.aiWarnings") })}</li>)}
+                </ul>
+              )}
+            </div>
           )}
           {kind === "bom" ? (
             <>

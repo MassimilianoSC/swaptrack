@@ -140,7 +140,19 @@
     "excelInstallValue": "Value meaning \"install\"",
     "excelCount_one": "{{count}} line ready, {{skipped}} not read.",
     "excelCount_other": "{{count}} lines ready, {{skipped}} not read.",
-    "excelApply": "Use these lines"
+    "excelApply": "Use these lines",
+    "aiRead": "Read automatically",
+    "aiSaveFirst": "Save the new files first, then use the automatic reading.",
+    "aiToConfirm_one": "{{count}} line proposed by the automatic reading: check it, then Save.",
+    "aiToConfirm_other": "{{count}} lines proposed by the automatic reading: check them, then Save.",
+    "aiWarnings": "The automatic reading is unsure about some lines: check them carefully.",
+    "aiWarn": {
+      "ai_file_skipped": "A file cannot be read automatically (for example an Excel): use the column mapping.",
+      "ai_lines_dropped": "Some lines were not understood and are missing: compare them with the document.",
+      "ai_direction_missing": "Some BOM lines do not say remove or install: move them to the right box.",
+      "ai_too_many_lines": "The document has too many lines: only part of them was read.",
+      "ai_no_lines": "No line was found in the document."
+    }
   },
   "alerts": {
     "subtitle": "One alert per object (document, shipment, place).",
@@ -703,7 +715,7 @@
     "acceptAndAlert": "Accept and create an alert",
     "acceptSilently": "Accept silently (no alert)",
     "aiDocumentExtraction": "Automatic document reading (AI)",
-    "aiHint": "Not implemented. The extension point reports 'not available'.",
+    "aiHint": "Proposes the lines of DDTs and BOMs by reading photos and PDFs. The lines are saved only after the check of whoever uploads the document.",
     "itemFieldsHint": "Extra fields of the pieces; required means 'appears in the To complete list', it never blocks a scan.",
     "required": "Required",
     "appName": "App name",
