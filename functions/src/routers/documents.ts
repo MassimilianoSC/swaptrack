@@ -173,7 +173,15 @@ export const documents = {
       // client_warehouse reads return DDTs only (§3.3, P-62).
       if (ctx.role === "client_warehouse" && doc!.kind !== "ddt_return") fail("permission-denied", "forbidden");
       const kind = doc!.kind as DocKind;
-      const lines = (doc!.lines as Line[]) ?? [];
+      let lines = (doc!.lines as Line[]) ?? [];
+      // P-114 n.18, §11.3: a return DDT of a shipment compares the shipment's pieces (its lines, except those
+      // confirmed in another return) with the pieces the client confirmed; the lines typed in the DDT count only
+      // when there is no shipment.
+      if (kind === "ddt_return" && doc!.shipmentId) {
+        const shipLines = await db.collection("shipments").doc(doc!.shipmentId).collection("lines").get();
+        lines = shipLines.docs.filter((l) => !l.get("confirmedElsewhere") && l.get("codeRaw"))
+          .map((l): Line => ({ kind: "serial", codeRaw: l.get("codeRaw"), codeId: computeCodeId(l.get("codeRaw")) as string, materialCode: null, modelId: null }));
+      }
       let evs: FirebaseFirestore.QueryDocumentSnapshot[];
       if (kind === "ddt_in") {
         const atWarehouse = await db.collection("events").where("locationId", "==", doc!.locationId).where("type", "==", "arrive_at_warehouse").get();
