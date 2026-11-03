@@ -8,7 +8,7 @@ import type { Row } from "@/lib/data/db";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
-import { Loading } from "@/components/states";
+import { Loading, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 
 // §11 Documents list (ddt_in, ddt_return, bom).
@@ -16,7 +16,9 @@ export default function Documents() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const [all, setAll] = React.useState<Row<SwDocument>[] | null>(null);
-  React.useEffect(() => claims?.orgId ? watchDocuments({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
+  const [loadError, setLoadError] = React.useState(false);
+  React.useEffect(() => claims?.orgId ? watchDocuments({ role: claims.role!, orgId: claims.orgId }, setAll, () => setLoadError(true)) : undefined, [claims]);
+  if (loadError) return <ErrorState message={t("errors.load_failed")} />;
   if (!all) return <Loading />;
   const canCreate = ["client_admin", "asp_admin", "asp_warehouse"].includes(claims?.role ?? "");
   return (

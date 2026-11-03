@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, emulatorDoc } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 4 (DA_FARE P-6): return to the client. The Nord warehouse worker sorts three own pieces, creates a return
@@ -39,6 +39,9 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
     await page.getByTestId("shipments-create").click();
     await expect(page).toHaveURL(/\/shipments\/[^/]+$/, { timeout: 30_000 });
     const shipmentId = page.url().split("/").pop()!;
+    // The DDT of the return, attached as a file (P-103: the alert must still open the shipment).
+    await page.getByTestId("shipment-attach-ddt").setInputFiles({ name: "ddt.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF\n") });
+    await expect(page.getByText(tr("documents.attached")).first()).toBeVisible({ timeout: 60_000 });
 
     // 3. The pieces are scanned into the return; the trigger fills its lines.
     await page.getByTestId("shipment-scan").click();
@@ -71,6 +74,17 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
     await page.goto("/alerts");
     const alertLink = page.getByTestId(`alerts-row-link-return-${shipmentId}`);
     await expect(alertLink).toBeVisible({ timeout: 60_000 });
+    // P-103: the alert opens the shipment, not the attached DDT; on the DDT the client warehouse only reads and compares.
+    await expect(alertLink).toHaveAttribute("href", `/shipments/${shipmentId}`);
+    const documentId = (await emulatorDoc(`shipments/${shipmentId}`)).documentId?.stringValue;
+    expect(documentId).toBeTruthy();
+    await page.goto(`/documents/${documentId}`);
+    await expect(page.getByTestId("document-compare")).toBeVisible();
+    await expect(page.getByTestId("document-save")).toHaveCount(0);
+    await expect(page.getByTestId("document-mark")).toHaveCount(0);
+    // P-97: the Documents menu of the client warehouse lists the return DDTs (before, it stayed on "Loading").
+    await page.goto("/documents");
+    await expect(page.getByTestId(`documents-row-${documentId}`)).toBeVisible({ timeout: 30_000 });
 
     // 6. The missing piece turns up: a second, complete confirmation. No anomaly, the alert has no differences now.
     await page.goto(`/shipments/${shipmentId}`);

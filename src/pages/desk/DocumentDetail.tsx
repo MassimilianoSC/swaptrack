@@ -7,7 +7,6 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
 import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
-import { isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
@@ -55,8 +54,11 @@ export default function DocumentDetail() {
     return { kind: "serial", codeRaw: s.replace(/\s*\[(remove|install)\]\s*$/, ""), direction };
   });
 
-  const canWrite = isClientRole(claims?.role ?? "") || ["asp_admin", "asp_warehouse"].includes(claims?.role ?? "");
-  const canCheck = canWrite;
+  // P-103: only the buttons the server accepts (saveDocument, markDocumentChecked); the client office and the client
+  // warehouse read and compare. The ASP warehouse never writes a BOM (§3.3, P-62).
+  const writerRole = ["client_admin", "asp_admin", "asp_warehouse"].includes(claims?.role ?? "");
+  const canWrite = writerRole && !(claims?.role === "asp_warehouse" && doc?.kind === "bom");
+  const canCheck = writerRole;
   const canClose = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
   // §3.3 (P-65): a BOM is uploaded only by client_admin and asp_admin; the server refuses it to the others.
   const canUploadBom = ["client_admin", "asp_admin"].includes(claims?.role ?? "");

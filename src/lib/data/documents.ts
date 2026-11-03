@@ -15,11 +15,14 @@ export const loadDocument = async (id: string): Promise<Row<SwDocument> | null> 
   return s.exists() ? ({ id: s.id, ...(s.data() as SwDocument) }) : null;
 };
 
-export function watchDocuments(scope: { role: string; orgId: string }, cb: (v: Row<SwDocument>[]) => void) {
-  const client = scope.role === "client_admin" || scope.role === "client_office" || scope.role === "client_warehouse";
-  const q = client ? query(collection(db, "documents"), orderBy("createdAt", "desc"), limit(500))
-    : query(collection(db, "documents"), where("aspId", "==", scope.orgId), orderBy("createdAt", "desc"), limit(500));
-  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as SwDocument) }))));
+// The documents each role may read (firestore.rules): all for the client office, only the return DDTs for the client
+// warehouse (P-97: asking for all of them is refused), the own ASP's for the ASP roles.
+export function watchDocuments(scope: { role: string; orgId: string }, cb: (v: Row<SwDocument>[]) => void, onError?: (e: Error) => void) {
+  const base = collection(db, "documents");
+  const q = scope.role === "client_admin" || scope.role === "client_office" ? query(base, orderBy("createdAt", "desc"), limit(500))
+    : scope.role === "client_warehouse" ? query(base, where("kind", "==", "ddt_return"), orderBy("createdAt", "desc"), limit(500))
+    : query(base, where("aspId", "==", scope.orgId), orderBy("createdAt", "desc"), limit(500));
+  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as SwDocument) }))), (e) => onError?.(e));
 }
 
 export interface Alert {

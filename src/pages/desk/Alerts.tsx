@@ -25,7 +25,8 @@ export default function Alerts() {
   if (!all) return <Loading />;
   const list = showClosed ? all : all.filter((a) => !a.closedAt);
   const canClose = ["client_admin", "asp_admin", "client_warehouse"].includes(claims?.role ?? "");
-  const link = (a: Row<Alert>) => a.documentId ? `/documents/${a.documentId}` : a.shipmentId ? `/shipments/${a.shipmentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
+  // P-103: the alert of a shipment (return, transfer) opens the shipment, also when a DDT is attached to it.
+  const link = (a: Row<Alert>) => a.shipmentId ? `/shipments/${a.shipmentId}` : a.documentId ? `/documents/${a.documentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
   const seen = (id: string) => run(() => call("markAlertSeen", { alertId: id }));
   const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (!canClose) return; await run(() => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
   return (
@@ -37,7 +38,7 @@ export default function Alerts() {
           { key: "kind", header: t("alerts.kind"), render: (a) => <Badge tone={isAlertToWatch(a) ? "warning" : "neutral"}>{t(`alerts.kinds.${a.kind}`, { defaultValue: a.kind })}</Badge> },
           { key: "n", header: t("alerts.count"), value: (a) => hasNoDifferenceNow(a) ? t("alerts.noDifferenceNow") : a.count, className: "tabular",
             render: (a) => hasNoDifferenceNow(a) ? <span className="text-muted" data-testid={`alerts-no-difference-${a.id}`}>{t("alerts.noDifferenceNow")}</span> : <>{a.count}</> },
-          { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{a.documentId ?? a.shipmentId ?? a.locationId ?? "—"}</Link> },
+          { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{a.shipmentId ?? a.documentId ?? a.locationId ?? "—"}</Link> },
           { key: "at", header: t("alerts.updated"), value: (a) => formatInstant(a.updatedAt?.toDate?.() ?? null, i18n.language) },
           { key: "seen", header: "", render: (a) => <Button size="sm" variant="ghost" onClick={() => seen(a.id)} disabled={busy || !!a.seenAt} data-testid={`alerts-seen-${a.id}`}><Eye className="h-4 w-4" />{a.seenAt ? t("alerts.seen") : t("alerts.markSeen")}</Button> },
           { key: "close", header: "", render: (a) => canClose && !a.closedAt ? <Button size="sm" variant="ghost" onClick={() => close(a.id)} disabled={busy} data-testid={`alerts-close-${a.id}`}><Lock className="h-4 w-4" />{t("common.close")}</Button> : null },
