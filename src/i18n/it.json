@@ -190,7 +190,8 @@
     "year": "Anno",
     "month": "Mese",
     "monthLabel": "Mese",
-    "empty": "Nessun rapporto."
+    "empty": "Nessun rapporto.",
+    "fileScopeClient": "cliente"
   },
   "sorting": {
     "subtitle": "Categorie e regole suggerite al magazzino durante lo smistamento.",
@@ -756,7 +757,10 @@
     "file_too_large": "File troppo grande: massimo 5 MB.",
     "unsupported_file_type": "Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.",
     "image_unreadable": "Immagine non leggibile: prova con un'altra foto o con un PDF.",
-    "bom_direction_required": "Ogni riga della BOM deve dire se il pezzo va smontato o installato."
+    "bom_direction_required": "Ogni riga della BOM deve dire se il pezzo va smontato o installato.",
+    "feature_disabled": "La lettura automatica non è attiva.",
+    "ai_daily_limit": "Hai raggiunto le letture automatiche di oggi.",
+    "ai_unavailable": "Il servizio di lettura automatica non risponde, riprova più tardi."
   },
   "items": {
     "title": "Pezzo {{id}}",
