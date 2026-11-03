@@ -75,6 +75,13 @@ export async function emulatorList(collection: string, pageSize = 20): Promise<A
   const docs = ((await r.json()) as { documents?: Array<{ name: string; fields?: Record<string, FsValue> }> }).documents ?? [];
   return docs.map((d) => ({ id: d.name.split("/").pop()!, ...(fromFs({ mapValue: { fields: d.fields ?? {} } }) as Record<string, unknown>) }));
 }
+// The first document of a collection whose fields equal the given values (a seeded example to read).
+export async function emulatorFindOne(collection: string, equals: Record<string, string>): Promise<(Record<string, unknown> & { id: string }) | null> {
+  const where = { compositeFilter: { op: "AND", filters: Object.entries(equals).map(([field, v]) => ({ fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: { stringValue: v } } })) } };
+  const r = await fetch(`${docsUrl("")}`.replace(/\/documents\/$/, "/documents:runQuery"), { method: "POST", headers: { ...OWNER, "Content-Type": "application/json" }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where, limit: 1 } }) });
+  const doc = ((await r.json()) as Array<{ document?: { name: string; fields?: Record<string, FsValue> } }>).find((x) => x.document)?.document;
+  return doc ? { id: doc.name.split("/").pop()!, ...(fromFs({ mapValue: { fields: doc.fields ?? {} } }) as Record<string, unknown>) } : null;
+}
 export async function emulatorFirstId(collection: string): Promise<string> {
   const r = await fetch(`${docsUrl(collection)}?pageSize=1`, { headers: OWNER });
   const name = ((await r.json()) as { documents?: Array<{ name: string }> }).documents?.[0]?.name ?? "";

@@ -72,7 +72,7 @@ test.describe("Letture con i dati giusti (telefono)", () => {
   test("lettura aperta da un reso: il luogo diventa quello di partenza del reso", async ({ page }) => {
     test.setTimeout(180_000);
     await signIn(page, ACCOUNTS.aspAdminNord);
-    await pickLocation(page, SEED.nord.site);
+    await pickLocation(page, "MAG-NORD-02"); // the session is at the other Nord warehouse
     await page.goto("/shipments");
     await page.getByTestId("shipments-new-return").click();
     await page.getByTestId("shipments-from-select").selectOption(`loc_${SEED.nord.warehouse}`);
@@ -87,18 +87,22 @@ test.describe("Letture con i dati giusti (telefono)", () => {
   // n.5: "photo mandatory for defective pieces" (Settings) is read by the scanning screen: it asks for the photo.
   // NOTE: settings/photos is shared by every test. This test turns the setting on and always back off (finally); it is
   // safe only while no other test classifies defective pieces. A new test on defective pieces must not run alongside.
-  test("foto obbligatoria per i difettosi: dopo la lettura del difettoso la schermata chiede la foto", async ({ page }) => {
+  test("foto obbligatoria per i difettosi: dopo la lettura del difettoso la schermata chiede la foto", async ({ page, browser }) => {
     test.setTimeout(300_000);
     const code = uniqueCode("J");
+    // In a browser context of its own, so the setting is restored whoever is signed in on the test's page.
     const setMandatory = async (on: boolean) => {
-      await signIn(page, ACCOUNTS.clientAdmin);
-      await page.goto("/admin/settings");
-      await page.getByTestId("settings-tab-photos").click();
-      const box = page.getByTestId("settings-photos-mandatory");
+      const { baseURL, locale } = test.info().project.use;
+      const ctx = await browser.newContext({ baseURL, locale });
+      const admin = await ctx.newPage();
+      await signIn(admin, ACCOUNTS.clientAdmin);
+      await admin.goto("/admin/settings");
+      await admin.getByTestId("settings-tab-photos").click();
+      const box = admin.getByTestId("settings-photos-mandatory");
       if ((await box.isChecked()) !== on) await box.click();
-      await page.getByTestId("settings-photos-save").click();
-      await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
-      await signOut(page);
+      await admin.getByTestId("settings-photos-save").click();
+      await expect(admin.getByText(tr("common.saved")).last()).toBeVisible();
+      await ctx.close();
     };
     await setMandatory(true);
     try {
@@ -113,7 +117,6 @@ test.describe("Letture con i dati giusti (telefono)", () => {
       await expect(page.getByTestId("scan-defective-photo-needed")).toBeVisible();
       await page.getByTestId("scan-photo-input").setInputFiles({ name: "difetto.png", mimeType: "image/png", buffer: png(16) });
       await expect(page.getByTestId("scan-defective-photo-needed")).toHaveCount(0);
-      await signOut(page);
     } finally {
       await setMandatory(false);
     }

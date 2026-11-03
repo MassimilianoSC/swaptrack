@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, tr, emulatorList } from "./helpers";
+import { ACCOUNTS, signIn, tr, emulatorFindOne } from "./helpers";
 import { SEED } from "./seed";
 
 // P-100 (with censimento n.11 and n.13): the pages show names, never internal ids, and an ASP never sees the identity of
@@ -7,11 +7,13 @@ import { SEED } from "./seed";
 const RAW_ID = /\b(loc_|org_|cat_)[A-Za-z0-9_-]+/;
 
 test.describe("Nomi al posto degli id (scrivania)", () => {
-  test("ASP Sud sul pezzo in arrivo dalla Nord: «Altra ASP», mai il suo id", async ({ page }) => {
+  test("ASP Centro sul pezzo in arrivo dalla Nord: «Altra ASP», mai il suo id", async ({ page }) => {
     test.setTimeout(120_000);
-    const [line] = await emulatorList(`shipments/${SEED.nord.transferNordSud}/lines`, 1);
-    const itemId = line.itemId as string;
-    await signIn(page, ACCOUNTS.aspAdminSud);
+    // A seeded piece in transfer from Nord to Centro (fullSeed: pendingAspId is the next ASP).
+    const piece = await emulatorFindOne("items", { currentAspId: SEED.nord.orgId, pendingAspId: "org_asp_centro" });
+    expect(piece).not.toBeNull();
+    const itemId = piece!.id;
+    await signIn(page, ACCOUNTS.aspAdminCentro);
     await page.goto(`/items/${itemId}`);
     const asp = page.getByTestId("item-asp");
     await expect(asp).toContainText(tr("names.otherAsp"));
