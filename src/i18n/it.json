@@ -826,6 +826,17 @@
       "in_transfer": "In trasferimento",
       "in_return": "In reso",
       "returned": "Reso"
+    },
+    "filters": {
+      "all": "Tutti",
+      "status": "Stato",
+      "asp": "ASP",
+      "location": "Sito o magazzino",
+      "locationHint": "Scrivi il codice o il nome e scegli dall'elenco",
+      "model": "Modello",
+      "clear": "Togli i filtri",
+      "showMore": "Mostra altri",
+      "moreAvailable": "Mostrati i primi {{count}} pezzi, dal più recente: usa i filtri o «Mostra altri»."
     }
   },
   "shipments": {

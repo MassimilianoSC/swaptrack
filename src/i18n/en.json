@@ -826,6 +826,17 @@
       "in_transfer": "In transfer",
       "in_return": "In return",
       "returned": "Returned"
+    },
+    "filters": {
+      "all": "All",
+      "status": "Status",
+      "asp": "ASP",
+      "location": "Site or warehouse",
+      "locationHint": "Type the code or the name and pick it from the list",
+      "model": "Model",
+      "clear": "Clear filters",
+      "showMore": "Show more",
+      "moreAvailable": "Showing the first {{count}} pieces, latest first: use the filters or \"Show more\"."
     }
   },
   "shipments": {
