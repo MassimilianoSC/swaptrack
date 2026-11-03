@@ -23,8 +23,10 @@ In containers without a cloud metadata server, `scripts/emulators.sh` sets `GCE_
 yarn test        # Vitest: tests/**/*.test.{mjs,ts} and functions/src/**/*.test.ts
 yarn test:rules  # security rules, trigger and scheduled-job tests on the emulators (functions/test/): starts and stops the emulators itself
 yarn check:i18n  # it.json and en.json have the same keys
-yarn e2e         # end-to-end tests of the demo paths (e2e/): builds functions, starts the emulators on empty data, seeds,
-                 # runs Playwright (its own yarn dev on port 3010), then stops everything. Needs all emulator ports and 3010 free.
+yarn e2e         # end-to-end tests of the demo paths (e2e/), in blocks (e2e/blocks.json, D-60): builds functions, then for each
+                 # block starts fresh emulators, seeds, runs Playwright (its own yarn dev on port 3010) and stops everything.
+                 # Needs all emulator ports and 3010 free. One block: node scripts/e2e-blocks.mjs --block <name>
+yarn check:e2e-blocks  # every e2e/*.spec.ts is in exactly one block
 # One profile or one file (build functions first with yarn build:functions):
 #   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only --project=desk"
 #   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
