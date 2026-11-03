@@ -55,12 +55,13 @@ if (passed) {
   const busy = await busyPorts(portsOf(["auth", "firestore", "functions", "storage", "pubsub"]));
   if (busy.length) fail(`port(s) ${busy.join(", ")} in use: close the emulators first`);
 
-  step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end (seeded data imported, P-71)");
+  step("Full test round: functions build, unit tests, translations, rules and trigger, end-to-end in blocks (D-60)");
   run("yarn", ["build:functions"]);
   run("yarn", ["test"]);
   run("yarn", ["check:i18n"]);
   run("node", ["scripts/test-rules.mjs"]);
-  run("yarn", ["e2e"]);
+  // D-60: in blocks, each on fresh emulators (the Firestore emulator slows down with every test).
+  run(process.execPath, ["scripts/e2e-blocks.mjs"]);
 }
 
 step("App build for the demo (.env.demo, with type check)");

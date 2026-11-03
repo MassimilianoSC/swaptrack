@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 export const CHECK_FILE = join(tmpdir(), "swaptrack-deploy-check.json");
-export const CHECK_VERSION = 1; // raise when the test round changes, so an older record is not trusted
+export const CHECK_VERSION = 2; // raise when the test round changes, so an older record is not trusted
 export const CHECK_VALID_MS = 24 * 3600 * 1000;
 
 // Pure: is this record a pass of the same commit and test round, recorded less than 24 hours before `now`?
