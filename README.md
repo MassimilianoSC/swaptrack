@@ -32,6 +32,8 @@ yarn check:e2e-blocks  # every e2e/*.spec.ts is in exactly one block
 #   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
 # --seed "yarn seed" seeds into the running emulators (the base seed writes no events); with seed:full the data still goes through export and import, so the seed queues no triggers.
 # Before a merge (D-57): only the e2e files written or changed for that item, with the small seed when enough.
+# The exported full seed is kept in %TEMP%\swaptrack-seed-cache and reused the same day until the seed scripts change;
+# node scripts/emulators.mjs --no-seed-cache … seeds from scratch.
 # (yarn e2e --project=desk does NOT filter.) First time: npx playwright install chromium
 ```
 Unit tests cover pure logic (state machine, sorting precedence, document comparison, code parity, report month, Firestore indexes, emulator ports). The tests on the emulators cover the security rules (Firestore and Storage), the trigger and replay, the scheduled jobs.
