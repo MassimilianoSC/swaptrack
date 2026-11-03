@@ -6,6 +6,7 @@ import { setupTrigger, ev, computeCodeId, LOC, NORD, CENTRO, UID, RUN, T0, type 
 // old, at the selected place. "Undo last" on that screen writes a `void` of it.
 // Red before: "undo last" left the old label replaced and the new one active (the void only replayed the item); a relabel
 // by another ASP rewrote the codes of a piece that is not its own, with no anomaly (§9.2 "another ASP's piece").
+// D-56: a refused relabel (another ASP, a returned piece) leaves the labels unchanged.
 let t: TriggerEnv;
 const event = async (id: string) => (await t.db.collection("events").doc(id).get()).data()!;
 const code = async (raw: string) => (await t.db.collection("codes").doc(computeCodeId(raw)).get()).data();
@@ -66,5 +67,17 @@ describe("relabel from the field screen (§6.5)", () => {
     expect(await code(oldCode)).toMatchObject({ active: true, replacedBy: null, itemId, aspId: NORD });
     expect(await code(newCode)).toBeUndefined();
     expect((await t.db.collection("items").doc(itemId).get()).data()).toMatchObject({ currentAspId: NORD, currentLocationId: LOC.nordWh });
+  });
+
+  // D-56: a relabel refused by the state machine leaves the labels as they are, also on a piece already returned.
+  it("a piece already returned: event_after_end_of_flow, labels unchanged", async () => {
+    const oldCode = `SN-${RUN}-RLR-OLD`, newCode = `SN-${RUN}-RLR-NEW`;
+    const first = await t.fire(ev("return_confirm", oldCode, { source: "server", locationId: LOC.clientWh }));
+    const itemId = (await event(first)).itemId as string;
+    expect((await t.db.collection("items").doc(itemId).get()).get("status")).toBe("returned");
+    const rl = await t.fire(ev("relabel", newCode, { at: T0 + 1000, payload: { oldCodeRaw: oldCode } }));
+    expect(await anomalyTypes(rl)).toEqual(["event_after_end_of_flow"]);
+    expect(await code(oldCode)).toMatchObject({ active: true, replacedBy: null, itemId });
+    expect(await code(newCode)).toBeUndefined();
   });
 });
