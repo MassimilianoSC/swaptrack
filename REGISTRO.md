@@ -4,6 +4,16 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO
 
+- **03/11/2026 sera — FERMATA PER OGGI (decisione del committente).** Finito il compito in corso, o2 e o3 si fermano del tutto fino a domani.
+  - **Online:** lotto 2, commit 1887717, pubblicato a mano con i comandi di deployBatch (D-61); 8 router raggiungibili. Giro completo a blocchi con 3 rosse, tutte verdi da sole su emulatori nuovi (rallentamento dell'emulatore, D-60).
+  - **Su main e non online (lotto 3):** P-129 (avviso di installazione, D-59), P-131 (scrivania senza rete), P-87b (telefono condiviso, 3e1f5a8), P-132 (giro a blocchi, cache del seed), prova del router. Le righe della guida per il lotto 3 sono in `swaptrack-guida/AGGIORNAMENTI_LOTTO3.md`.
+  - **Sui rami, dopo la demo:** o2-n14 (campi extra, server).
+  - **Domani, ordine deciso dal committente:** eventuali modifiche ancora da fare; giro completo a blocchi; pubblicazione del lotto 3 (con la regola D-61: le rosse si guardano una per una e si riparano in modo isolato); aggiornamento di GUIDA.md e GUIDA.html; poi i controlli a mano del committente (DA_FARE, lotto 2), la prova dell'AI (DA_FARE, procedura di o2) e la prova sui telefoni (P-21).
+  - **Sessioni:** memoria storica `swaptrack-c0`; o2 `swaptrack-02`; o3 `swaptrack-5c` (compact fatto il 03/11 pomeriggio, consegne nella sezione «Consegne delle sessioni»).
+  - **Da ricordare al committente:** il push di main a fine giornata.
+
+### Storia (righe precedenti, superate)
+
 - **02/11: LOTTO 1 PUBBLICATO** (commit e4a053b, `deployBatch.mjs --yes`, tutti i controlli verdi, otto router raggiungibili). Prima: `checkOnline.mjs` sul progetto vero = 0 eventi non elaborati, 0 documenti senza ASP. Main sbloccato. Da fare ora: i controlli a mano dopo il lotto (DA_FARE P-30), poi P-14 (funzioni bloccanti) e P-21 (telefoni veri) col committente.
 
 - **02/11:** ripresa dopo la fermata del 30/10; niente è cambiato nel frattempo (main = GitHub). Si riaprono o2 e o3 e si segue l'ordine di ripresa scritto sotto («Domani per primo»). — aggiornato il 29/10/2026, sera
