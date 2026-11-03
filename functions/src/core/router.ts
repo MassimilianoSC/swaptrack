@@ -30,8 +30,9 @@ export const op = <S extends ZodTypeAny>(def: OpDef<S>) => def;
 
 // One router per area (R20). Auth, permissions, validation, rate limit and logging apply to every op.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function makeRouter(area: Area, handlers: Partial<Record<OpName, OpDef<any>>>) {
-  return onCall({ region: REGION, enforceAppCheck: false }, async (req: CallableRequest<unknown>) => {
+// opts: per-router limits (D-45: the documents router waits for the model, up to 120 s, with room for the pages).
+export function makeRouter(area: Area, handlers: Partial<Record<OpName, OpDef<any>>>, opts: { timeoutSeconds?: number; memory?: "512MiB" | "1GiB" } = {}) {
+  return onCall({ region: REGION, enforceAppCheck: false, ...opts }, async (req: CallableRequest<unknown>) => {
     const started = Date.now();
     const body = (req.data ?? {}) as { op?: string; data?: unknown };
     const name = String(body.op ?? "");

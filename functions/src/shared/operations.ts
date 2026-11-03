@@ -40,6 +40,7 @@ export const OPERATIONS = {
   markDocumentChecked: "documents",
   closeDocument: "documents",
   saveDocumentMapping: "documents",
+  extractDocument: "documents",
 
   markAlertSeen: "alerts",
   closeAlert: "alerts",

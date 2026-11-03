@@ -10,7 +10,8 @@ export interface SettingsShapes {
   itemFields: { fields: Array<{ key: string; labels: { it: string; en: string }; type: "text" | "number" | "choice"; options?: string[]; required: boolean }> };
   thresholds: { staleDays: number; transferDays: number };
   fieldPolicy: { pieceAtSiteNotInBom: "accept_and_alert" | "accept_silently" };
-  features: { aiDocumentExtraction: boolean };
+  // D-45 / D-46: automatic reading of documents and labels (off by default) and the readings per user per day.
+  features: { aiDocumentExtraction: boolean; aiDailyLimit: number };
 }
 
 export const SETTINGS_DEFAULTS: SettingsShapes = {
@@ -23,7 +24,7 @@ export const SETTINGS_DEFAULTS: SettingsShapes = {
   itemFields: { fields: [] },
   thresholds: { staleDays: 30, transferDays: 7 },
   fieldPolicy: { pieceAtSiteNotInBom: "accept_and_alert" },
-  features: { aiDocumentExtraction: false },
+  features: { aiDocumentExtraction: false, aiDailyLimit: 20 },
 };
 
 export type SettingsName = keyof SettingsShapes;

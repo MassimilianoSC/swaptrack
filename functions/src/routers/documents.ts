@@ -9,6 +9,9 @@ import { isClientRole } from "../shared/roles";
 import { alertId } from "../shared/alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 import { compareDocument, alertDetail, type DocKind, type Line, type EventFact } from "../shared/documents";
+import { askModel } from "../core/aiExtract";
+import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines } from "../core/aiOutput";
+import type { Part } from "@google/genai";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { computeCodeId, normalizeBarcode } = require("../codeId.node.js");
 
@@ -21,6 +24,9 @@ const DOC_FILE_TYPES: Record<string, string> = {
 };
 const FILE_MAX = 5 * 1024 * 1024; // 5 MB per file (§7.3)
 const MAX_FILES = 10; // pages of one version (D-47: kept + new)
+// D-45: the pages the model can read (by file extension, as storeFiles names them), and their total size.
+const AI_FILE_TYPES: Record<string, string> = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
+const AI_BYTES_MAX = 20 * 1024 * 1024;
 
 // §3.3: a document belongs to the ASP of its location, whoever uploads it (client_admin uploads BOMs and DDTs
 // for an ASP). Returns that aspId; an ASP role writes only at its own locations.
@@ -226,6 +232,38 @@ export const documents = {
   }),
 
   // §11.2: saved column mappings per (kind, aspId). client_admin can save `{kind}_client` default.
+  // D-45 / D-46: the model reads the pages (PDF and images) of a saved document and PROPOSES its lines; nothing is
+  // saved here. Whoever may upload that document may use it (same checks as saveDocument); the switch, the daily
+  // limit and the EU endpoint are in core/aiExtract.ts.
+  extractDocument: op({
+    roles: ["asp_admin", "asp_warehouse", "client_admin"],
+    rate: [10, 60],
+    schema: z.object({ documentId: z.string().min(1) }),
+    handler: async (ctx, d) => {
+      const doc = (await db.collection("documents").doc(d.documentId).get()).data();
+      if (!doc) fail("not-found", "document_not_found");
+      const aspId = await ensureCanWrite(ctx, doc!.kind as DocKind, doc!.locationId);
+      if (doc!.aspId != null && doc!.aspId !== aspId) fail("permission-denied", "forbidden");
+      const files: string[] = Array.isArray(doc!.files) ? doc!.files : [];
+      const readable = files.filter((p) => AI_FILE_TYPES[p.split(".").pop() ?? ""]);
+      if (!readable.length) fail("invalid-argument", "unsupported_file_type");
+      const parts: Part[] = [];
+      let total = 0;
+      for (const path of readable) {
+        const [bytes] = await bucket().file(path).download();
+        total += bytes.length;
+        if (total > AI_BYTES_MAX) fail("invalid-argument", "file_too_large");
+        parts.push({ inlineData: { mimeType: AI_FILE_TYPES[path.split(".").pop()!], data: bytes.toString("base64") } });
+      }
+      parts.push({ text: "Extract the item lines of this document." });
+      const kind = doc!.kind as DocKind;
+      const { answer, fake } = await askModel(ctx.uid!, { parts, instruction: documentInstruction(kind), schema: DOCUMENT_RESPONSE_SCHEMA, purpose: "document" }, kind === "bom");
+      const r = normalizeDocumentLines(answer, kind);
+      const warnings = [...(fake ? ["demo_extraction"] : []), ...(readable.length < files.length ? ["ai_file_skipped"] : []), ...r.warnings];
+      return { lines: r.lines, warnings, pages: readable.length };
+    },
+  }),
+
   saveDocumentMapping: op({
     roles: ["asp_admin", "asp_warehouse", "client_admin"],
     schema: z.object({ kind: z.enum(DOC_KINDS), scope: z.string().min(1), mapping: z.record(z.string().max(200)) }),
@@ -238,5 +276,5 @@ export const documents = {
   }),
 };
 
-export const documentsRouter = makeRouter("documents", documents);
+export const documentsRouter = makeRouter("documents", documents, { timeoutSeconds: 120, memory: "1GiB" });
 export { randomUUID };

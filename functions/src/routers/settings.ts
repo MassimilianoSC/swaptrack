@@ -35,7 +35,8 @@ const schemas = {
   itemFields: z.object({ fields: z.array(z.object({ key: z.string().trim().min(1).max(50), labels: z.object({ it: z.string().trim().min(1).max(80), en: z.string().trim().min(1).max(80) }), type: z.enum(["text", "number", "choice"]), options: z.array(z.string().max(80)).max(50).optional(), required: z.boolean() })).max(30) }),
   thresholds: z.object({ staleDays: z.number().int().min(1).max(365), transferDays: z.number().int().min(1).max(90) }),
   fieldPolicy: z.object({ pieceAtSiteNotInBom: z.enum(["accept_and_alert", "accept_silently"]) }),
-  features: z.object({ aiDocumentExtraction: z.boolean() }),
+  // aiDailyLimit optional: a save of the switch alone keeps the stored limit (the document is written with merge).
+  features: z.object({ aiDocumentExtraction: z.boolean(), aiDailyLimit: z.number().int().min(1).max(500).optional() }),
 };
 
 type Name = keyof typeof schemas;

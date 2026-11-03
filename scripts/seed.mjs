@@ -123,8 +123,8 @@ async function main() {
     [db.collection("settings").doc("privacy"), {
       version: 1, retentionEnabled: false, retentionDays: 365,
       texts: {
-        it: "Informativa di esempio (dati inventati). SwapTrack registra i movimenti dei materiali, non l'attività delle persone. Non usa la posizione GPS.",
-        en: "Sample notice (invented data). SwapTrack records the movements of materials, not the activity of people. It does not use GPS location.",
+        it: "Informativa di esempio (dati inventati). SwapTrack registra i movimenti dei materiali, non l'attività delle persone. Non usa la posizione GPS. Se l'amministratore attiva la lettura automatica dei documenti, le foto e i PDF di DDT e BOM caricati vengono letti da un servizio Google Cloud che li elabora solo nell'Unione europea; le righe proposte si salvano solo dopo la conferma di chi carica il documento.",
+        en: "Sample notice (invented data). SwapTrack records the movements of materials, not the activity of people. It does not use GPS location. If the administrator turns on automatic document reading, uploaded photos and PDFs of DDTs and BOMs are read by a Google Cloud service that processes them only in the European Union; the proposed lines are saved only after the uploader confirms them.",
       },
     }],
     [db.collection("settings").doc("importMappings"), { locations: {}, models: {} }],
