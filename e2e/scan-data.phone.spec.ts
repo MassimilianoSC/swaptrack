@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, png } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, png, emulatorPatchSetting } from "./helpers";
 import { SEED } from "./seed";
 
 // P-115 (criterion 2, censimento §11): the readings carry the right data and the user always knows what happened.
@@ -87,23 +87,11 @@ test.describe("Letture con i dati giusti (telefono)", () => {
   // n.5: "photo mandatory for defective pieces" (Settings) is read by the scanning screen: it asks for the photo.
   // NOTE: settings/photos is shared by every test. This test turns the setting on and always back off (finally); it is
   // safe only while no other test classifies defective pieces. A new test on defective pieces must not run alongside.
-  test("foto obbligatoria per i difettosi: dopo la lettura del difettoso la schermata chiede la foto", async ({ page, browser }) => {
+  test("foto obbligatoria per i difettosi: dopo la lettura del difettoso la schermata chiede la foto", async ({ page }) => {
     test.setTimeout(300_000);
     const code = uniqueCode("J");
-    // In a browser context of its own, so the setting is restored whoever is signed in on the test's page.
-    const setMandatory = async (on: boolean) => {
-      const { baseURL, locale } = test.info().project.use;
-      const ctx = await browser.newContext({ baseURL, locale });
-      const admin = await ctx.newPage();
-      await signIn(admin, ACCOUNTS.clientAdmin);
-      await admin.goto("/admin/settings");
-      await admin.getByTestId("settings-tab-photos").click();
-      const box = admin.getByTestId("settings-photos-mandatory");
-      if ((await box.isChecked()) !== on) await box.click();
-      await admin.getByTestId("settings-photos-save").click();
-      await expect(admin.getByText(tr("common.saved")).last()).toBeVisible();
-      await ctx.close();
-    };
+    // Written in the emulator (what the Settings page saves): this test is about the scanning screen reading it.
+    const setMandatory = (on: boolean) => emulatorPatchSetting("photos", { mandatoryForDefective: on });
     await setMandatory(true);
     try {
       await signIn(page, ACCOUNTS.aspWarehouseNord);

@@ -34,7 +34,10 @@ export default function SignIn() {
   const [mfa, setMfa] = React.useState<MultiFactorResolver | null>(null);
   const [code, setCode] = React.useState("");
   const [link, setLink] = React.useState<{ email: string; pending: AuthCredential } | null>(null);
-  const [notice] = React.useState(() => { const n = sessionStorage.getItem("swaptrack.notice"); sessionStorage.removeItem("swaptrack.notice"); return n; });
+  // Read in the initializer, removed in an effect: an initializer may run twice (React StrictMode), and removing there
+  // made the second run find nothing (the notice after a deactivation never showed in development).
+  const [notice] = React.useState(() => sessionStorage.getItem("swaptrack.notice"));
+  React.useEffect(() => { sessionStorage.removeItem("swaptrack.notice"); }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -75,6 +75,12 @@ export async function emulatorList(collection: string, pageSize = 20): Promise<A
   const docs = ((await r.json()) as { documents?: Array<{ name: string; fields?: Record<string, FsValue> }> }).documents ?? [];
   return docs.map((d) => ({ id: d.name.split("/").pop()!, ...(fromFs({ mapValue: { fields: d.fields ?? {} } }) as Record<string, unknown>) }));
 }
+// A shared setting (settings/{name}) changed for one test and put back by it: the other fields are kept.
+export async function emulatorPatchSetting(name: string, fields: Record<string, unknown>): Promise<void> {
+  const current = await emulatorRead(`settings/${name}`).catch(() => ({}));
+  await emulatorSetDoc(`settings/${name}`, { ...current, ...fields });
+}
+
 // The first document of a collection whose fields equal the given values (a seeded example to read).
 export async function emulatorFindOne(collection: string, equals: Record<string, string>): Promise<(Record<string, unknown> & { id: string }) | null> {
   const where = { compositeFilter: { op: "AND", filters: Object.entries(equals).map(([field, v]) => ({ fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: { stringValue: v } } })) } };

@@ -81,7 +81,8 @@ export default function DocumentDetail() {
   const canClose = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
   // §3.3 (P-65): a BOM is uploaded only by client_admin and asp_admin; the server refuses it to the others.
   const canUploadBom = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
-  const editable = isNew ? writerRole : canWrite && doc!.status !== "closed";
+  // doc is still null at the first render of a saved document (the page shows Loading then): never dereference it here.
+  const editable = isNew ? writerRole : !!doc && canWrite && doc.status !== "closed";
   // §11.2: an ASP reads and saves its own column mappings; client_admin the client's default.
   const mappingScope = isClientRole(claims?.role ?? "") ? "client" : claims?.orgId ?? "";
 
