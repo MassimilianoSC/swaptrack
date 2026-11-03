@@ -34,13 +34,13 @@ export default function SignIn() {
   const [mfa, setMfa] = React.useState<MultiFactorResolver | null>(null);
   const [code, setCode] = React.useState("");
   const [link, setLink] = React.useState<{ email: string; pending: AuthCredential } | null>(null);
-  // Read in the initializer, removed in an effect: an initializer may run twice (React StrictMode), and removing there
-  // made the second run find nothing (the notice after a deactivation never showed in development).
+  // The notice after a deactivation stays until the next sign-in: the page is drawn once at the sign-out and again
+  // after the reload that follows it (gates.tsx), and reading it once and removing it lost it before the reload.
   const [notice] = React.useState(() => sessionStorage.getItem("swaptrack.notice"));
-  React.useEffect(() => { sessionStorage.removeItem("swaptrack.notice"); }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    sessionStorage.removeItem("swaptrack.notice");
     setBusy(true); setError(null);
     try {
       if (link) { await linkAfterPassword(link.email, password, link.pending); return; }

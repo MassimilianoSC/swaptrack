@@ -26,6 +26,7 @@ export const SEED = {
     warehouse: "MAG-NORD-01",
     site: "SITO-00001",
     site2: "SITO-00004", // the next Nord site in seed.mjs's order
+    site3: "SITO-00007", // and the one after: used by one test only (scan-data, BOM ticks)
 
     shipmentWithin: "sh_in_1",
     transferNordSud: "sh_bt_1",

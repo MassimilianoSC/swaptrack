@@ -48,7 +48,7 @@ test.describe("Letture con i dati giusti (telefono)", () => {
     await page.goto("/documents/new");
     await page.getByTestId("document-kind").selectOption("bom");
     await page.getByTestId("document-number").fill(uniqueCode("BOMJ"));
-    await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.site}`);
+    await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.site3}`); // a site of this test only
     await page.getByTestId("document-lines-remove").fill(code);
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
@@ -63,7 +63,7 @@ test.describe("Letture con i dati giusti (telefono)", () => {
     await page.goto("/scan?mode=remove_at_site");
     await scanManual(page, code, { withModel: true });
     // ...so at the BOM's site nothing is ticked yet.
-    await pickLocation(page, SEED.nord.site);
+    await pickLocation(page, SEED.nord.site3);
     await page.goto("/scan?mode=remove_at_site");
     await expect(page.getByTestId("scan-bom-count")).toHaveText("0/1");
   });
