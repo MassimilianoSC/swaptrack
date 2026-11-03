@@ -237,6 +237,14 @@ describe("sorting precedence (§10)", () => {
     [{ siteId: "Z", modelId: "X", equipmentType: "Q" }, null],
   ])("%o -> %s", (k, want) => { expect(suggestCategory(rules, k)).toBe(want); });
   it("inactive rules are ignored", () => { expect(suggestCategory([R("m", { modelId: "M", active: false })], { modelId: "M" })).toBeNull(); });
+  // P-114 n.24: the worker can only choose active categories; a rule leading to a deactivated one is skipped and the
+  // next most specific rule applies. Red before: the deactivated category was suggested.
+  it("a rule whose category is deactivated is skipped when the active categories are given", () => {
+    const rs = [R("m", { modelId: "M", categoryId: "old" }), R("t", { equipmentType: "T", categoryId: "cat_ok" })];
+    expect(suggestCategory(rs, { modelId: "M", equipmentType: "T" }, new Set(["cat_ok"]))).toBe("cat_ok");
+    expect(suggestCategory(rs, { modelId: "M" }, new Set(["cat_ok"]))).toBeNull();
+    expect(suggestCategory(rs, { modelId: "M", equipmentType: "T" })).toBe("old"); // without the set: as before
+  });
   it("duplicate rule with the same keys is refused", () => {
     expect(conflictingRule(rules, { siteId: "S", modelId: "M", categoryId: "x", active: true })?.id).toBe("siteModel");
     expect(conflictingRule(rules, { siteId: "S", modelId: "N", categoryId: "x", active: true })).toBeNull();

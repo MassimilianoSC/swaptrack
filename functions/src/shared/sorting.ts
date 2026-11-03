@@ -20,10 +20,13 @@ function matches(r: SortingRule, k: PieceKeys): boolean {
   return true;
 }
 
-export function suggestCategory(rules: SortingRule[], k: PieceKeys): string | null {
+// activeCategories (P-114 n.24): when given, a rule leading to a category not in it (deactivated) is skipped and the
+// next most specific rule applies, since the worker can only choose active categories.
+export function suggestCategory(rules: SortingRule[], k: PieceKeys, activeCategories?: ReadonlySet<string>): string | null {
   let best: SortingRule | null = null;
   for (const r of rules) {
     if (!r.active || !matches(r, k) || specificity(r) === 0) continue;
+    if (activeCategories && !activeCategories.has(r.categoryId)) continue;
     if (!best || specificity(r) > specificity(best)) best = r;
   }
   return best?.categoryId ?? null;
