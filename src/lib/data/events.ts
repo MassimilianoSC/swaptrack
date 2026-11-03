@@ -20,9 +20,26 @@ export async function writeEvent(e: NewEvent): Promise<string> {
   };
   if (e.codeRaw) { data.codeRaw = e.codeRaw; data.codeId = await computeCodeId(e.codeRaw); }
   if (e.secondCodeRaw) data.secondCodeRaw = e.secondCodeRaw;
-  void setDoc(doc(db, "events", id), data).catch(() => undefined); // queued offline; rejected writes surface as never-acknowledged
+  // Queued offline. The server's answer comes later (at once online, when the network is back otherwise): a reading the
+  // rules refuse disappears from the cache, so it is reported here (P-115, censimento n.23) instead of vanishing.
+  void setDoc(doc(db, "events", id), data).catch((err: { code?: string }) => reportRejected({ id, codeRaw: e.codeRaw ?? null, type: e.type, reason: err?.code ?? "unknown" }));
   return id;
 }
+
+// Readings refused by the server since the app was opened (this device, this session).
+export interface RejectedScan { id: string; codeRaw: string | null; type: string; reason: string }
+const rejected: RejectedScan[] = [];
+const rejectedListeners = new Set<(all: RejectedScan[]) => void>();
+function reportRejected(r: RejectedScan) {
+  rejected.push(r);
+  rejectedListeners.forEach((cb) => cb([...rejected]));
+}
+export function watchRejectedScans(cb: (all: RejectedScan[]) => void): () => void {
+  rejectedListeners.add(cb);
+  cb([...rejected]);
+  return () => { rejectedListeners.delete(cb); };
+}
+export const rejectedScanCount = () => rejected.length;
 
 // R11: only the author's own events of today. `ddtId` (payload) serves the live DDT comparison on the device (§12.2).
 export interface MyScan { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null }

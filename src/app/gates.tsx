@@ -8,7 +8,8 @@ import { call } from "@/lib/data/call";
 import { signOut, hasMfa, startTotpEnrollment, finishTotpEnrollment } from "@/lib/data/auth";
 import { flushPendingWrites } from "@/lib/data/db";
 import { clearDevice } from "@/lib/offline/device";
-import { flushQueue } from "@/lib/offline/photoQueue";
+import { flushQueue, listQueued } from "@/lib/offline/photoQueue";
+import { rejectedScanCount } from "@/lib/data/events";
 import { useAction } from "./hooks";
 import type { TotpSecret } from "firebase/auth";
 
@@ -38,11 +39,13 @@ export function DeactivatedScreen() {
   const [step, setStep] = React.useState<"sending" | "tabs">("sending");
   React.useEffect(() => {
     void (async () => {
-      await flushPendingWrites().catch(() => undefined);
+      const writesOk = await flushPendingWrites().then(() => true, () => false);
       // §4.8 / §7.3: upload the queued photos (attachPhotos) before clearing the device.
       await flushQueue().catch(() => undefined);
+      // P-115 (n.33): "everything was sent" only when it is true: no reading refused, no photo left in the queue.
+      const allSent = writesOk && rejectedScanCount() === 0 && (await listQueued().catch(() => [1])).length === 0;
       try { await clearDevice(); } catch (e) { if ((e as Error).message === "other_tabs") { setStep("tabs"); return; } }
-      sessionStorage.setItem("swaptrack.notice", "deactivated");
+      sessionStorage.setItem("swaptrack.notice", allSent ? "deactivated" : "deactivated_partial");
       await signOut().catch(() => undefined);
       location.reload();
     })();

@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
-import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, type Category, type Source, type MyScan, type CachedDdt } from "@/lib/data/events";
-import { listModels, type Row, type Model } from "@/lib/data/db";
+import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type RejectedScan } from "@/lib/data/events";
+import { listModels, watchDoc, loadFieldLocations, type Row, type Model } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId } from "@/lib/codeId.js";
 import { suggestCategory, type SortingRule } from "@shared/sorting";
@@ -35,7 +35,7 @@ function beep(muted: boolean) {
 // optional photo (offline queue, §7.3), model pick for unknown pieces (§6.4), shipment-draft burst mode (§9.3 / §9.4).
 export default function Scan() {
   const { t, i18n } = useTranslation();
-  const { claims, user, location, appSettings, fieldCacheAt } = useSession();
+  const { claims, user, location, setLocation, fieldCacheAt } = useSession();
   const [params, setParams] = useSearchParams();
   const role = claims?.role ?? "";
   const paramMode = params.get("mode");
@@ -95,7 +95,31 @@ export default function Scan() {
   const [lastPieceBadge, setLastPieceBadge] = React.useState<"previously_new" | null>(null);
   const photoInput = React.useRef<HTMLInputElement>(null);
   const [photoNum, setPhotoNum] = React.useState<Record<string, number>>({});
-  const photoMandatoryDefective = (appSettings as unknown as { photos?: { mandatoryForDefective?: boolean } })?.photos?.mandatoryForDefective ?? false;
+  // P-115 (n.5): the setting is settings/photos, where the Settings page saves it (readable by every role).
+  const [photoMandatoryDefective, setPhotoMandatoryDefective] = React.useState(false);
+  React.useEffect(() => watchDoc<{ mandatoryForDefective?: boolean }>("settings/photos", (v) => setPhotoMandatoryDefective(!!v?.mandatoryForDefective)), []);
+  // P-115 (n.23): readings the server refused, shown on their row and said once.
+  const [defectivePhotoFor, setDefectivePhotoFor] = React.useState<string | null>(null);
+  // P-115 (n.28): opened from a shipment, the screen works at the shipment's place (given in the address), never at
+  // the place left in the session.
+  const paramLocation = params.get("location");
+  React.useEffect(() => {
+    if (!paramLocation || !claims?.orgId || location?.id === paramLocation) return;
+    void loadFieldLocations(claims.orgId).then(({ list }) => {
+      const l = list.find((x) => x.id === paramLocation);
+      if (l) setLocation({ id: l.id, code: l.code, name: l.name, type: l.type });
+    }).catch(() => undefined);
+  }, [paramLocation, claims?.orgId, location?.id, setLocation]);
+  const [rejectedScans, setRejectedScans] = React.useState<RejectedScan[]>([]);
+  const toldRejected = React.useRef(new Set<string>());
+  React.useEffect(() => watchRejectedScans((all) => {
+    setRejectedScans(all);
+    for (const r of all) {
+      if (toldRejected.current.has(r.id)) continue;
+      toldRejected.current.add(r.id);
+      toast.error(t("scan.refusedToast", { code: r.codeRaw ?? "" }), { description: t(r.reason === "permission-denied" ? "scan.refusedPermission" : "scan.refusedOther") });
+    }
+  }), [t]);
 
   // §12.1 point 4: BOM tick list for the technician scan screen. Direction derived from mode.
   const bomDirection: "remove" | "install" | null = mode === "remove_at_site" ? "remove" : mode === "install_at_site" ? "install" : null;
@@ -183,7 +207,8 @@ export default function Scan() {
   // Joined with the BOM's expected codeIds; anything not expected goes to the unexpected list.
   React.useEffect(() => {
     if (!bom || !bomDirection || !location) { setBomTicks(new Set()); setBomUnexpected([]); return; }
-    const relevant = today.filter((s) => !s.voided && s.type === mode && s.codeRaw);
+    // P-115 (n.4): only the readings at this site since the BOM exists, like the server's check (bomCheck.ts).
+    const relevant = today.filter((s) => !s.voided && s.type === mode && s.codeRaw && s.locationId === location.id && s.at.getTime() >= bom.createdAtMs);
     const expectedSet = new Set(bom.expected.map((e) => e.codeId));
     let aborted = false;
     (async () => {
@@ -243,6 +268,8 @@ export default function Scan() {
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
     setSession((s) => [{ id, code, type: mode }, ...s]);
     setLastEventId(id);
+    // §12.2 / P-115 (n.5): a new defective with the setting on asks for its photo until one is queued.
+    if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectivePhotoFor(id);
     if (source === "camera") cameraLast.current = { code, at: Date.now() };
     if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
   };
@@ -310,6 +337,8 @@ export default function Scan() {
     if (!last || !location || !user || !claims?.orgId) return;
     await writeEvent({ type: "void", locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source: "manual", engine: null, payload: { targetEventId: last.id } });
     setSession((s) => s.slice(1));
+    // P-115 (n.21): the photo goes with the reading before the undone one, or with none.
+    setLastEventId(session[1]?.id ?? null);
     show(t("scan.undone"), "warn");
   };
 
@@ -324,6 +353,7 @@ export default function Scan() {
     setPhotoNum((m) => ({ ...m, [lastEventId]: n }));
     try {
       await enqueuePhoto(lastEventId, claims.orgId, file, n);
+      if (defectivePhotoFor === lastEventId) setDefectivePhotoFor(null);
       toast.success(t("scan.photoQueued"));
       void flushQueue();
     } catch {
@@ -393,7 +423,13 @@ export default function Scan() {
               <option value="">{t("scan.removedMaterial")}</option><option value="defective">{t("scan.defective")}</option><option value="leftover">{t("scan.leftover")}</option>
             </Select>
           )}
-          {needPhotoForDefective && <p className="text-xs text-warning" data-testid="scan-defective-photo-hint">{t("scan.defectivePhotoRequired")}</p>}
+          {needPhotoForDefective && !defectivePhotoFor && <p className="text-xs text-warning" data-testid="scan-defective-photo-hint">{t("scan.defectivePhotoRequired")}</p>}
+          {defectivePhotoFor && defectivePhotoFor === lastEventId && (
+            <div className="flex items-center gap-2 rounded border border-warning p-2 text-sm text-warning" data-testid="scan-defective-photo-needed">
+              <span>{t("scan.defectivePhotoNow")}</span>
+              <Button size="sm" onClick={takePhoto} className="ml-auto" data-testid="scan-defective-photo-take"><Camera className="h-4 w-4" />{t("scan.photo")}</Button>
+            </div>
+          )}
         </div>
       )}
       <div className="relative overflow-hidden rounded-lg border border-border bg-black aspect-video">
@@ -413,11 +449,12 @@ export default function Scan() {
           <ul className="mt-2 max-h-36 overflow-y-auto text-sm" data-testid="scan-session-list">
             {session.map((s) => {
               const sent = today.some((r) => r.id === s.id && !r.pending);
+              const refused = rejectedScans.find((r) => r.id === s.id);
               return (
                 <li key={s.id} className="flex gap-3 border-b border-border py-1" data-testid="scan-session-row">
                   <span className="font-mono truncate">{s.code}</span>
                   <span className="text-muted">{t(`scan.modes.${s.type}`, { defaultValue: s.type })}</span>
-                  <span className="ml-auto shrink-0">{sent ? t("scan.sent") : t("scan.waiting")}</span>
+                  <span className={cn("ml-auto shrink-0", refused && "text-danger font-semibold")} data-testid={refused ? "scan-session-refused" : undefined}>{refused ? t("scan.refused") : sent ? t("scan.sent") : t("scan.waiting")}</span>
                 </li>
               );
             })}

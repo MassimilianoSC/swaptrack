@@ -25,6 +25,8 @@ export const SEED = {
     itemId: "it_SNN-000002",
     warehouse: "MAG-NORD-01",
     site: "SITO-00001",
+    site2: "SITO-00004", // the next Nord site in seed.mjs's order
+
     shipmentWithin: "sh_in_1",
     transferNordSud: "sh_bt_1",
     ddtAlertDoc: "doc_ddtin_1",

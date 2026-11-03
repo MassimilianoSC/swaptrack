@@ -66,7 +66,9 @@ export default function ShipmentDetail() {
     setConfirmOpen(false); setMissing(new Set()); setExtra([]);
   };
 
-  const scanTo = canScanDraft ? `/scan?mode=${shipment.kind === "return" ? "return_ship" : "transfer_out"}&shipmentId=${id}` : canScanArrival ? `/scan?mode=arrive_at_warehouse&shipmentId=${id}` : null;
+  // P-115 (n.28): the reading opens at the shipment's place (departure to prepare it, destination for its arrival).
+  const scanTo = canScanDraft ? `/scan?mode=${shipment.kind === "return" ? "return_ship" : "transfer_out"}&shipmentId=${id}&location=${shipment.fromLocationId}`
+    : canScanArrival ? `/scan?mode=arrive_at_warehouse&shipmentId=${id}&location=${shipment.toLocationId}` : null;
 
   const attachDdt = (file: File) => run(async () => {
     // §7.3: a photo is never uploaded as taken: re-encoded (at most 1200 px, JPEG), which also drops EXIF and GPS.

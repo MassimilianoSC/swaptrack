@@ -345,7 +345,12 @@
     "alreadyRead": "Già letto. Per rileggerlo allontana il telefono per 3 secondi.",
     "photoHint": "Leggi un pezzo, poi scatta la foto.",
     "modelSearch": "Cerca modello o codice",
-    "modelSearchNone": "Nessun modello trovato: puoi saltare."
+    "modelSearchNone": "Nessun modello trovato: puoi saltare.",
+    "refused": "Rifiutata",
+    "refusedToast": "Lettura di {{code}} rifiutata dal server",
+    "refusedPermission": "Non è permessa per il tuo ruolo o per questo luogo. Controlla il luogo scelto e rileggila, oppure avvisa l'ufficio.",
+    "refusedOther": "Rileggila; se succede ancora, avvisa l'ufficio.",
+    "defectivePhotoNow": "Foto obbligatoria per il difettoso: scattala ora."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",
@@ -378,7 +383,8 @@
     "deactivated": {
       "title": "Il tuo accesso è stato disattivato",
       "body": "Invio delle letture rimanenti… Tieni l'app aperta e collegata.",
-      "done": "Il tuo accesso è stato disattivato. Le letture rimanenti sono state inviate e questo dispositivo è stato ripulito."
+      "done": "Il tuo accesso è stato disattivato. Le letture rimanenti sono state inviate e questo dispositivo è stato ripulito.",
+      "partial": "Il tuo accesso è stato disattivato e questo dispositivo è stato ripulito, ma alcune letture o foto non sono state inviate. Avvisa l'ufficio."
     },
     "update": {
       "title": "Aggiornamento necessario",

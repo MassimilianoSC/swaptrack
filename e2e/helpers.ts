@@ -1,5 +1,6 @@
 import { expect, type Page, type Download } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { deflateSync, crc32 } from "node:zlib";
 
 // Seeded accounts of the emulators (README, scripts/seed.mjs). Invented data.
 // The password is the one of the emulator seed; E2E_PASSWORD overrides it.
@@ -44,6 +45,50 @@ export async function emulatorDoc(path: string): Promise<Record<string, { string
   if (!r.ok) throw new Error(`emulatorDoc ${path}: ${r.status}`);
   return ((await r.json()) as { fields: never }).fields;
 }
+// The tests' own documents, written and read as plain values through the emulator's REST API (admin).
+type FsValue = Record<string, unknown>;
+const toFs = (v: unknown): FsValue => v === null || v === undefined ? { nullValue: null }
+  : v instanceof Date ? { timestampValue: v.toISOString() }
+  : typeof v === "string" ? { stringValue: v } : typeof v === "boolean" ? { booleanValue: v }
+  : typeof v === "number" ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v })
+  : Array.isArray(v) ? { arrayValue: { values: v.map(toFs) } }
+  : { mapValue: { fields: Object.fromEntries(Object.entries(v as object).map(([k, x]) => [k, toFs(x)])) } };
+const fromFs = (v: Record<string, unknown>): unknown => {
+  if ("mapValue" in v) return Object.fromEntries(Object.entries(((v.mapValue as { fields?: Record<string, FsValue> }).fields) ?? {}).map(([k, x]) => [k, fromFs(x)]));
+  if ("arrayValue" in v) return (((v.arrayValue as { values?: FsValue[] }).values) ?? []).map(fromFs);
+  if ("integerValue" in v) return Number(v.integerValue);
+  if ("nullValue" in v) return null;
+  return Object.values(v)[0];
+};
+const docsUrl = (path: string) => `http://127.0.0.1:${EMU.firestore.port}/v1/projects/${ENV.VITE_FIREBASE_PROJECT_ID}/databases/(default)/documents/${path}`;
+export async function emulatorSetDoc(path: string, data: Record<string, unknown>): Promise<void> {
+  const r = await fetch(docsUrl(path), { method: "PATCH", headers: { ...OWNER, "Content-Type": "application/json" }, body: JSON.stringify({ fields: (toFs(data).mapValue as { fields: unknown }).fields }) });
+  if (!r.ok) throw new Error(`emulatorSetDoc ${path}: ${r.status} ${await r.text()}`);
+}
+export async function emulatorRead(path: string): Promise<Record<string, unknown>> {
+  const r = await fetch(docsUrl(path), { headers: OWNER });
+  if (!r.ok) throw new Error(`emulatorRead ${path}: ${r.status}`);
+  return fromFs({ mapValue: await r.json() }) as Record<string, unknown>;
+}
+export async function emulatorFirstId(collection: string): Promise<string> {
+  const r = await fetch(`${docsUrl(collection)}?pageSize=1`, { headers: OWNER });
+  const name = ((await r.json()) as { documents?: Array<{ name: string }> }).documents?.[0]?.name ?? "";
+  return name.split("/").pop()!;
+}
+
+// A test's own account (never a seeded one): created in the Auth emulator by its admin API, which, like the Admin SDK,
+// does not run the blocking functions; claims as setCustomUserClaims writes them (users.ts).
+const authUrl = (op: string) => `http://127.0.0.1:${EMU.auth.port}/identitytoolkit.googleapis.com/v1/projects/${ENV.VITE_FIREBASE_PROJECT_ID}/${op}`;
+export async function emulatorCreateUser(email: string): Promise<string> {
+  const r = await fetch(authUrl("accounts"), { method: "POST", headers: { ...OWNER, "Content-Type": "application/json" }, body: JSON.stringify({ email, password: PASSWORD }) });
+  if (!r.ok) throw new Error(`emulatorCreateUser: ${r.status} ${await r.text()}`);
+  return ((await r.json()) as { localId: string }).localId;
+}
+export async function emulatorSetClaims(uid: string, claims: Record<string, unknown>): Promise<void> {
+  const r = await fetch(authUrl("accounts:update"), { method: "POST", headers: { ...OWNER, "Content-Type": "application/json" }, body: JSON.stringify({ localId: uid, customAttributes: JSON.stringify(claims) }) });
+  if (!r.ok) throw new Error(`emulatorSetClaims: ${r.status} ${await r.text()}`);
+}
+
 export async function emulatorFile(path: string): Promise<Uint8Array> {
   const r = await fetch(`http://127.0.0.1:${EMU.storage.port}/v0/b/${ENV.VITE_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(path)}?alt=media`, { headers: OWNER });
   if (!r.ok) throw new Error(`emulatorFile ${path}: ${r.status}`);
@@ -133,4 +178,19 @@ export async function collectRows(page: Page, tableId: string): Promise<TableRow
 // The first bytes of a file the browser saved (downloads read with the Storage rules, D-35): PK = xlsx, %PDF = pdf.
 export async function fileStart(download: Download, n: number): Promise<string> {
   return readFileSync(await download.path()).subarray(0, n).toString("latin1");
+}
+
+// A small grey PNG built here, enough for the compressor (imageCompress.js) to decode and re-encode as JPEG.
+export function png(size: number): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
+    const out = Buffer.alloc(12 + data.length);
+    out.writeUInt32BE(data.length, 0); body.copy(out, 4); out.writeUInt32BE(crc32(body), 8 + data.length);
+    return out;
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4); ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB
+  const raw = Buffer.alloc(size * (1 + size * 3), 0x80);
+  for (let y = 0; y < size; y++) raw[y * (1 + size * 3)] = 0; // filter byte of each row
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }

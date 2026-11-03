@@ -345,7 +345,12 @@
     "alreadyRead": "Already read. To read it again, move the phone away for 3 seconds.",
     "photoHint": "Read a piece, then take the photo.",
     "modelSearch": "Search model or code",
-    "modelSearchNone": "No model found: you can skip."
+    "modelSearchNone": "No model found: you can skip.",
+    "refused": "Refused",
+    "refusedToast": "Reading of {{code}} refused by the server",
+    "refusedPermission": "It is not allowed for your role or for this place. Check the chosen place and read it again, or tell the office.",
+    "refusedOther": "Read it again; if it happens again, tell the office.",
+    "defectivePhotoNow": "Photo required for the defective piece: take it now."
   },
   "pwa": {
     "newVersion": "A new version is available.",
@@ -378,7 +383,8 @@
     "deactivated": {
       "title": "Your access has been deactivated",
       "body": "Sending your remaining scans… Keep the app open and connected.",
-      "done": "Your access has been deactivated. Your remaining scans have been sent and this device has been cleared."
+      "done": "Your access has been deactivated. Your remaining scans have been sent and this device has been cleared.",
+      "partial": "Your access was deactivated and this device was cleared, but some readings or photos were not sent. Tell the office."
     },
     "update": {
       "title": "Update required",

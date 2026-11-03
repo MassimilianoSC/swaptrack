@@ -58,7 +58,7 @@ export default function SignIn() {
 
   return (
     <AuthLayout title={t(mfa ? "mfa.title" : "auth.signInTitle")}>
-      {notice === "deactivated" && <p role="alert" className="rounded border border-warning p-3 text-sm" data-testid="signin-deactivated-notice">{t("gate.deactivated.done")}</p>}
+      {(notice === "deactivated" || notice === "deactivated_partial") && <p role="alert" className="rounded border border-warning p-3 text-sm" data-testid="signin-deactivated-notice">{t(notice === "deactivated" ? "gate.deactivated.done" : "gate.deactivated.partial")}</p>}
       {link && <p className="text-sm" data-testid="signin-link-notice">{t("auth.linkRequired")}</p>}
       <form onSubmit={submit} className="space-y-4" noValidate>
         {!mfa ? (
