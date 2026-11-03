@@ -29,11 +29,9 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-68 | Foto (server, o2): `attachPhotos` accetta l'utente in grazia (SPEC §4.8); foto arrivata prima dell'elaborazione dell'evento agganciata dal trigger; seconda tornata di foto aggiunta, non sostituita. Scritte, da provare al turno | o2 |
-| P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32). Sul ramo `o3-foto`, e2e delle foto dopo P-68 | o3 |
+| P-70 | Pagina del pezzo: sezione «Foto» con miniature (SPEC §13.2, D-32), con la parte foto di D-35 (`getBlob`). Sul ramo `o3-completo` (d5b874c, 74f2762), da portare su main col giro e2e | o3 |
 | P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
-| P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Schermata ferma subito dopo l'accesso mentre il browser salva migliaia di pezzi nella cache: caricamento a pagine fatto (59e76d3), il blocco si accorcia ma non sparisce sugli emulatori (prima lettura ancora «Da inviare» dopo 10 s). Da misurare su un telefono vero col progetto vero dopo il lotto 1 (P-21) | o3 |
-| P-75 | File non pubblici scaricati con `getBlob` (foto, esportazioni, resoconti), non con indirizzi aperti a chiunque (D-35) | o3 |
+| P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
 
@@ -55,6 +53,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-61 | Chiamate con campi facoltativi vuoti: riparate e dimostrate (export verde, DDT creato) | o3 | 30/10/2026 (commit 9c98fa7) |
 | P-65 | «BOM» tolta dai tipi caricabili dal magazzino ASP; nessuna vista mostra uid di persone (R11, verificato) | o3 | 30/10/2026 (commit 506ee44) |
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
+| P-75 | Esportazioni e resoconti scaricati con `getBlob`, non con indirizzi aperti (D-35); la parte delle foto va con P-70 | o3 | 02/11/2026 (ea09bb8, lotto 1) |
+| P-68 | Foto (server): agganciate anche in grazia, anche prima che il trigger elabori l'evento, senza sostituire le precedenti | o2 | 30/10/2026 (59f58df, lotto 1) |
 | P-85 | Accesso non più fermo su «Caricamento…»: la cache parte dopo profilo e informativa, e dopo 8 s la schermata si apre comunque (informativa obbligatoria rispettata) | o3 | 02/11/2026 (3ef1bbb) |
 | P-84 | `scripts/setDemoPassword.mjs` (password nuova a tutti gli account demo, nascosta, mai salvata) e seed che non la rimette sul progetto vero | o2 | 02/11/2026 (3e54adf) |
 | P-82 | `deployBatch.mjs --yes` salta il giro delle prove già superato sullo stesso commit (24 ore); git, installazione e build sempre | o2 | 02/11/2026 (893679a) |
