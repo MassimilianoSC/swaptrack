@@ -77,15 +77,48 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
   return null;
 }
 
-// Inside the app (Android/desktop): a banner while the browser offers installation and the app is not installed.
+// D-59: the install entry at the bottom of the side menu (computer and phone), while the app is not installed: the
+// browser's prompt where there is one, the Share → "Add to Home Screen" steps on iOS.
+export function InstallNavItem({ collapsed, className }: { collapsed?: boolean; className?: string }) {
+  const { t } = useTranslation();
+  const prompt = useInstallPrompt();
+  const [iosOpen, setIosOpen] = React.useState(false);
+  if (isStandalone() || (!prompt && !isIos())) return null;
+  const onClick = async () => {
+    if (prompt) { await prompt.prompt(); await prompt.userChoice.catch(() => null); deferredPrompt = null; notify(); }
+    else setIosOpen((v) => !v);
+  };
+  return (
+    <div className={className}>
+      <button type="button" onClick={() => void onClick()} title={collapsed ? t("pwa.install") : undefined} data-testid="nav-install"
+        className="flex w-full items-center gap-3 rounded px-3 min-h-touch text-sm font-medium hover:bg-surface-2">
+        {prompt ? <Download className="h-5 w-5 shrink-0" aria-hidden /> : <Share className="h-5 w-5 shrink-0" aria-hidden />}
+        {!collapsed && <span>{t("pwa.install")}</span>}
+      </button>
+      {iosOpen && !collapsed && <p className="px-3 pb-2 text-sm text-muted" data-testid="nav-install-ios-steps">{t("pwa.iosInstall")}</p>}
+    </div>
+  );
+}
+
+// Inside the app on the phone (D-59: never on the computer): a banner while the browser offers installation and the
+// app is not installed; "Later" hides it for LATER_DAYS on this device (the menu entry stays).
+const LATER_KEY = "swaptrack.installLaterUntil";
+const LATER_DAYS = 7;
 export function InstallBanner() {
   const { t } = useTranslation();
   const prompt = useInstallPrompt();
-  if (!prompt || isStandalone()) return null;
+  const [hiddenUntil, setHiddenUntil] = React.useState(() => { try { return Number(localStorage.getItem(LATER_KEY) ?? 0) || 0; } catch { return 0; } });
+  if (!prompt || isStandalone() || Date.now() < hiddenUntil) return null;
+  const later = () => {
+    const until = Date.now() + LATER_DAYS * 24 * 60 * 60 * 1000;
+    try { localStorage.setItem(LATER_KEY, String(until)); } catch { /* storage unavailable: hidden for this visit */ }
+    setHiddenUntil(until);
+  };
   return (
     <div role="note" className="flex flex-wrap items-center gap-3 bg-primary/10 border-b border-border px-4 py-2 text-sm" data-testid="install-banner">
       <Download className="h-4 w-4" aria-hidden /> <span className="flex-1">{t("pwa.installHint")}</span>
       <InstallAppButton />
+      <Button size="sm" variant="ghost" onClick={later} data-testid="install-banner-later"><X className="h-4 w-4" aria-hidden /> {t("pwa.later")}</Button>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { shellFor, isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Sidebar, SideNav, TopBar, ScanButton, LocationChip } from "./parts";
-import { IosInstallHint, UpdatePrompt, InstallBanner } from "./banners";
+import { IosInstallHint, UpdatePrompt, InstallBanner, InstallNavItem } from "./banners";
 
 // §4.13: inactivity sign-out on desktop sessions only, never in the field shell.
 function useInactivity(enabled: boolean, minutes: number, signOut: () => Promise<unknown>) {
@@ -38,7 +38,8 @@ export function AppShell() {
       <TopBar onMenu={() => setDrawer(true)} />
       <UpdatePrompt />
       <IosInstallHint />
-      <InstallBanner />
+      {/* D-59: the install banner only on the phone; the menu entry everywhere. */}
+      {narrow && <InstallBanner />}
       <div className="flex flex-1 min-h-0">
         <Sidebar />
         <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && "pb-28")} data-testid="main-content">
@@ -50,6 +51,7 @@ export function AppShell() {
         <DialogContent title={t("nav.menu")} side="left" className={cn(shell === "field" && "theme-field")}>
           {isAspRole(role) && <div className="mb-4 sm:hidden"><LocationChip /></div>}
           <SideNav onNavigate={() => setDrawer(false)} />
+          <InstallNavItem className="mt-4 border-t border-border pt-2" />
         </DialogContent>
       </Dialog>
     </div>

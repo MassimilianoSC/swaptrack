@@ -3,8 +3,9 @@ import { ACCOUNTS, signIn, tr } from "./helpers";
 
 // Demo path 7 (DA_FARE P-6): installing the app (SPEC §7.4.5). Android and desktop Chrome/Edge offer installation
 // through `beforeinstallprompt` (simulated here: headless Chromium never fires it): the "Install the app" button on the
-// sign-in page and the banner inside the app call the browser prompt. iPhone has no prompt: the button shows the
-// Share → "Add to Home Screen" steps, and inside the app a reminder stays until the app is installed. Read-only.
+// sign-in page and, inside the app, the entry at the bottom of the side menu call the browser prompt (D-59: no banner on
+// the computer). iPhone has no prompt: the button and the menu entry show the Share → "Add to Home Screen" steps, and
+// inside the app a reminder stays until the app is installed. Read-only.
 
 // Fires a fake install prompt; `window.__installPrompted` tells whether the app called prompt().
 async function offerInstall(page: Page): Promise<void> {
@@ -18,7 +19,7 @@ async function offerInstall(page: Page): Promise<void> {
 const prompted = (page: Page) => page.evaluate(() => (window as unknown as { __installPrompted?: boolean }).__installPrompted === true);
 
 test.describe("Percorso 7 — installazione dell'app", () => {
-  test("Android e computer: pulsante «Installa l'app» all'accesso e striscia nell'app, che aprono la richiesta del browser", async ({ page }) => {
+  test("computer: pulsante «Installa l'app» all'accesso e voce nel menu laterale (nessuna striscia), che aprono la richiesta del browser", async ({ page }) => {
     await page.goto("/signin");
     await expect(page.getByTestId("install-app-button")).toHaveCount(0); // nothing offered yet: no button
     await offerInstall(page);
@@ -29,11 +30,14 @@ test.describe("Percorso 7 — installazione dell'app", () => {
     await expect(button).toHaveCount(0); // a prompt is used once
 
     await signIn(page, ACCOUNTS.clientOffice);
+    await expect(page.getByTestId("sidebar").getByTestId("nav-install")).toHaveCount(0); // nothing offered yet
     await offerInstall(page);
-    await expect(page.getByTestId("install-banner")).toContainText(tr("pwa.installHint"));
-    await page.getByTestId("install-banner").getByTestId("install-app-button").click();
+    const entry = page.getByTestId("sidebar").getByTestId("nav-install");
+    await expect(entry).toContainText(tr("pwa.install"));
+    await expect(page.getByTestId("install-banner")).toHaveCount(0); // D-59: never the banner on the computer
+    await entry.click();
     expect(await prompted(page)).toBe(true);
-    await expect(page.getByTestId("install-banner")).toHaveCount(0);
+    await expect(entry).toHaveCount(0);
   });
 
   test.describe("iPhone", () => {
@@ -50,6 +54,10 @@ test.describe("Percorso 7 — installazione dell'app", () => {
       await expect(hint).toContainText(tr("pwa.iosInstall"));
       await page.getByTestId("ios-install-hint-close").click();
       await expect(hint).toHaveCount(0);
+      // D-59: the side menu has the entry, which shows the same steps.
+      await page.getByTestId("topbar-menu-button").click();
+      await page.getByTestId("nav-install").click();
+      await expect(page.getByTestId("nav-install-ios-steps")).toHaveText(tr("pwa.iosInstall"));
     });
   });
 });

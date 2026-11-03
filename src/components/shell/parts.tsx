@@ -14,6 +14,7 @@ import { ALERT_READER_ROLES } from "@/lib/alertState";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Menu, MenuTrigger, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "../ui/menu";
+import { InstallNavItem } from "./banners";
 
 // The barcode mark of the previous app (orange bars on dark), kept as SwapTrack's default mark.
 // Bars follow the primary token, so a client's branding colour applies to it too.
@@ -66,7 +67,8 @@ export function Sidebar() {
   return (
     <aside className={cn("hidden md:flex flex-col border-r border-border bg-surface p-2 gap-2 transition-[width]", collapsed ? "w-16" : "w-60")} data-testid="sidebar">
       <SideNav collapsed={collapsed} />
-      <Button variant="ghost" size="icon" className="mt-auto" onClick={toggle} aria-label={t(collapsed ? "nav.expand" : "nav.collapse")} data-testid="sidebar-toggle">
+      <div className="mt-auto"><InstallNavItem collapsed={collapsed} /></div>
+      <Button variant="ghost" size="icon" onClick={toggle} aria-label={t(collapsed ? "nav.expand" : "nav.collapse")} data-testid="sidebar-toggle">
         {collapsed ? <ChevronsRight className="h-5 w-5" /> : <ChevronsLeft className="h-5 w-5" />}
       </Button>
     </aside>

@@ -427,7 +427,8 @@
     "reload": "Ricarica",
     "iosInstall": "Installa l'app nella schermata Home: tocca Condividi, poi \"Aggiungi alla schermata Home\". Come scheda di Safari, iOS può cancellare le letture non ancora inviate e l'elenco dei siti offline.",
     "install": "Installa l'app",
-    "installHint": "Installa SwapTrack sul dispositivo: si apre come un'app e funziona anche senza rete."
+    "installHint": "Installa SwapTrack sul dispositivo: si apre come un'app e funziona anche senza rete.",
+    "later": "Più tardi"
   },
   "gate": {
     "owner_unreadable": {

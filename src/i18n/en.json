@@ -427,7 +427,8 @@
     "reload": "Reload",
     "iosInstall": "Install the app on the Home Screen: tap Share, then \"Add to Home Screen\". As a Safari tab, iOS can delete scans not yet sent and the offline site list.",
     "install": "Install the app",
-    "installHint": "Install SwapTrack on this device: it opens like an app and works offline too."
+    "installHint": "Install SwapTrack on this device: it opens like an app and works offline too.",
+    "later": "Later"
   },
   "gate": {
     "owner_unreadable": {
