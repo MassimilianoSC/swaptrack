@@ -63,7 +63,15 @@ export function isProductCode(raw: string, materialCodes: string[]): boolean {
 const QUICK_MS = 2000;
 const late = <T,>(): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), QUICK_MS));
 const quickDoc = (ref: DocumentReference): Promise<DocumentSnapshot> => Promise.race([getDoc(ref), late<DocumentSnapshot>()]).catch(() => getDocFromCache(ref));
-const quickDocs = (q: Query): Promise<QuerySnapshot> => Promise.race([getDocs(q), late<QuerySnapshot>()]).catch(() => getDocsFromCache(q));
+// D-58 A3: the server for QUICK_MS, else the cache; when the cache was used because the server was late, onLate receives the server's answer
+// as soon as it arrives (a DDT or a BOM created after the cache was loaded is not missed until the next load).
+function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<QuerySnapshot> {
+  const server = getDocs(q);
+  return Promise.race([server, late<QuerySnapshot>()]).catch(() => {
+    if (onLate) server.then((s) => { if (!s.metadata.fromCache) onLate(s); }, () => undefined);
+    return getDocsFromCache(q);
+  });
+}
 
 // Item of a code (codes/items of the ASP, DECISIONS b7): from the server when it answers at once, else from the cache.
 export async function cachedItemForCode(raw: string): Promise<Record<string, unknown> | null> {
@@ -119,26 +127,29 @@ async function loadInPages(q: Query): Promise<boolean> {
 // §12.2 / P-24: the open DDTs of a warehouse (never chosen by themselves: the user picks one); P-78: a DDT created
 // after the cache was loaded is offered too. The aspId filter lets the rules accept the query.
 export interface CachedDdt { id: string; number: string; lines: Array<Record<string, unknown>> }
-export async function cachedOpenDdtsForWarehouse(locationId: string, orgId: string): Promise<CachedDdt[]> {
+const openDdts = (snap: QuerySnapshot): CachedDdt[] => snap.docs.filter((d) => d.get("status") === "open")
+  .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [] }))
+  .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+export async function cachedOpenDdtsForWarehouse(locationId: string, orgId: string, onLate?: (list: CachedDdt[]) => void): Promise<CachedDdt[]> {
   try {
     const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("locationId", "==", locationId));
-    const snap = await quickDocs(q);
-    return snap.docs.filter((d) => d.get("status") === "open")
-      .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [] }))
-      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+    return openDdts(await quickDocsLate(q, onLate && ((s) => onLate(openDdts(s)))));
   } catch { return []; }
 }
 
 // §12.1: BOM for a site, open or checked, highest version (server first, briefly, else the cache: P-78).
-export async function cachedBomForSite(locationId: string, orgId: string): Promise<{ id: string; lines: Array<Record<string, unknown>>; createdAtMs: number } | null> {
+export interface CachedBom { id: string; lines: Array<Record<string, unknown>>; createdAtMs: number }
+const newestBom = (snap: QuerySnapshot): CachedBom | null => {
+  const docs = snap.docs.filter((d) => ["open", "checked"].includes(d.get("status") as string));
+  if (!docs.length) return null;
+  docs.sort((a, b) => (b.get("version") ?? 0) - (a.get("version") ?? 0));
+  const d = docs[0];
+  return { id: d.id, lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [], createdAtMs: (d.get("createdAt") as Timestamp | null)?.toMillis?.() ?? 0 };
+};
+export async function cachedBomForSite(locationId: string, orgId: string, onLate?: (bom: CachedBom | null) => void): Promise<CachedBom | null> {
   try {
     const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "bom"), where("locationId", "==", locationId));
-    const snap = await quickDocs(q);
-    const docs = snap.docs.filter((d) => ["open", "checked"].includes(d.get("status") as string));
-    if (!docs.length) return null;
-    docs.sort((a, b) => (b.get("version") ?? 0) - (a.get("version") ?? 0));
-    const d = docs[0];
-    return { id: d.id, lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [], createdAtMs: (d.get("createdAt") as Timestamp | null)?.toMillis?.() ?? 0 };
+    return newestBom(await quickDocsLate(q, onLate && ((s) => onLate(newestBom(s)))));
   } catch { return null; }
 }
 

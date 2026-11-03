@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
-import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type RejectedScan } from "@/lib/data/events";
+import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type CachedBom, type RejectedScan } from "@/lib/data/events";
 import { listModels, watchDoc, loadFieldLocations, type Row, type Model } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId } from "@/lib/codeId.js";
@@ -161,7 +161,9 @@ export default function Scan() {
   React.useEffect(() => {
     if (!ddtOffered || !location || !claims?.orgId) { setDdts([]); return; }
     let aborted = false;
-    void cachedOpenDdtsForWarehouse(location.id, claims.orgId).then((list) => { if (!aborted) setDdts(list); });
+    // D-58 A3: a late answer of the server replaces the cache's list.
+    const take = (list: CachedDdt[]) => { if (!aborted) setDdts(list); };
+    void cachedOpenDdtsForWarehouse(location.id, claims.orgId, take).then(take);
     return () => { aborted = true; };
   }, [ddtOffered, location, fieldCacheAt, claims?.orgId]);
 
@@ -208,7 +210,10 @@ export default function Scan() {
   // §12.1: load the BOM of the current site (if any) from the ASP cache; direction filters the lines shown.
   React.useEffect(() => {
     if (!location || !bomDirection || location.type !== "site" || !claims?.orgId) { setBom(null); return; }
-    void cachedBomForSite(location.id, claims.orgId).then(async (b) => {
+    let aborted = false;
+    // D-58 A3: the server's answer, when it comes after the cache's, replaces it.
+    const take = async (b: CachedBom | null) => {
+      if (aborted) return;
       if (!b) { setBom(null); return; }
       const expected: Array<{ codeRaw: string; codeId: string }> = [];
       for (const raw of b.lines) {
@@ -217,8 +222,10 @@ export default function Scan() {
         const cid = l.codeId || (await computeCodeId(l.codeRaw));
         expected.push({ codeRaw: l.codeRaw, codeId: cid });
       }
-      setBom({ id: b.id, expected, createdAtMs: b.createdAtMs });
-    });
+      if (!aborted) setBom({ id: b.id, expected, createdAtMs: b.createdAtMs });
+    };
+    void cachedBomForSite(location.id, claims.orgId, (b) => void take(b)).then(take);
+    return () => { aborted = true; };
   }, [location, bomDirection, fieldCacheAt, claims?.orgId]);
 
   // §12.1: ticks are computed on the device from the user's own events (local, including pending writes).
