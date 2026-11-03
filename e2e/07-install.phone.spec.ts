@@ -26,7 +26,7 @@ test.describe("Installazione dell'app (telefono)", () => {
     await expect(page.getByTestId("topbar")).toBeVisible({ timeout: 30_000 });
     await offerInstall(page);
     await page.getByTestId("topbar-menu-button").click();
-    await expect(page.getByTestId("nav-install")).toContainText(tr("pwa.install"));
+    await expect(page.getByRole("dialog").getByTestId("nav-install")).toContainText(tr("pwa.install"));
     await expect(banner).toHaveCount(0);
   });
 });

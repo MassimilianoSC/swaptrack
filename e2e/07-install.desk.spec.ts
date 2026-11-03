@@ -56,7 +56,7 @@ test.describe("Percorso 7 — installazione dell'app", () => {
       await expect(hint).toHaveCount(0);
       // D-59: the side menu has the entry, which shows the same steps.
       await page.getByTestId("topbar-menu-button").click();
-      await page.getByTestId("nav-install").click();
+      await page.getByRole("dialog").getByTestId("nav-install").click(); // the open menu (the hidden sidebar has one too)
       await expect(page.getByTestId("nav-install-ios-steps")).toHaveText(tr("pwa.iosInstall"));
     });
   });
