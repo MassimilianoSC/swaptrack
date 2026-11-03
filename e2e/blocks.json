@@ -1,0 +1,62 @@
+{
+  "blocks": [
+    {
+      "name": "percorsi",
+      "seed": "full",
+      "files": [
+        "01-technician-offline.phone.spec.ts",
+        "02-ddt-arrival.desk.spec.ts",
+        "02-ddt-arrival.phone.spec.ts",
+        "03-removed-sorting.phone.spec.ts",
+        "04-return.desk.spec.ts",
+        "06-confidentiality.phone.spec.ts",
+        "07-install.desk.spec.ts",
+        "demo-docs.desk.spec.ts",
+        "return-elsewhere.desk.spec.ts",
+        "row-actions.desk.spec.ts",
+        "ddt-late.desk.spec.ts",
+        "excel-mapping-slow.desk.spec.ts"
+      ]
+    },
+    {
+      "name": "scrivania-letture",
+      "seed": "full",
+      "files": [
+        "05-client-office.desk.spec.ts",
+        "06-confidentiality.desk.spec.ts",
+        "names.desk.spec.ts",
+        "items-filters.desk.spec.ts"
+      ]
+    },
+    {
+      "name": "scrivania-documenti",
+      "seed": "full",
+      "files": [
+        "admin-pages.desk.spec.ts",
+        "ai-reading.desk.spec.ts",
+        "desk-fixes.desk.spec.ts",
+        "documents-files.desk.spec.ts",
+        "offline-pages.desk.spec.ts",
+        "texts-files.desk.spec.ts"
+      ]
+    },
+    {
+      "name": "telefono",
+      "seed": "full",
+      "files": [
+        "camera-repeat.phone.spec.ts",
+        "scan-data.phone.spec.ts",
+        "photos.phone.spec.ts",
+        "signout-safety.phone.spec.ts",
+        "sorting-confirm.phone.spec.ts",
+        "sorting-offline.phone.spec.ts",
+        "deactivated.phone.spec.ts",
+        "model-search.phone.spec.ts",
+        "phone-width.phone.spec.ts",
+        "signin-speed.phone.spec.ts",
+        "site-list-retry.phone.spec.ts",
+        "site-list-slow.phone.spec.ts"
+      ]
+    }
+  ]
+}
