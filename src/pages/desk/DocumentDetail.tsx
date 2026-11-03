@@ -73,7 +73,9 @@ export default function DocumentDetail() {
       // A line keeps its direction (P-74): saving again never drops it.
       if (d.kind === "bom") setBomLines(splitByDirection(lines)); else setRawLines(linesToText(lines));
       setLinesSource(d.linesSource ?? "manual");
-    }, (e: { code?: string }) => setUnavailable(!navigator.onLine || e?.code === "unavailable" ? "offline" : "error"));
+    }, (e: { code?: string }) => setUnavailable(!navigator.onLine || e?.code === "unavailable" ? "offline"
+      // A document that does not exist (or of another ASP) is refused by the rules: "not found", never revealed.
+      : e?.code === "permission-denied" ? "missing" : "error"));
   }, [id, isNew, reloadKey]);
 
   // P-103: only the buttons the server accepts (saveDocument, markDocumentChecked); the client office and the client

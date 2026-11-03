@@ -35,6 +35,8 @@ export default function Alerts() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const names = useNames();
+  // P-127: only the row being marked or closed waits (a hook: before any early return).
+  const { pending, runFor } = useRowAction();
   // P-100: the object of an alert by kind and place, never by id.
   const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
   const [all, setAll] = React.useState<Row<Alert>[] | null>(null);
@@ -45,8 +47,6 @@ export default function Alerts() {
   const canClose = ["client_admin", "asp_admin", "client_warehouse"].includes(claims?.role ?? "");
   // P-103: the alert of a shipment (return, transfer) opens the shipment, also when a DDT is attached to it.
   const link = (a: Row<Alert>) => a.shipmentId ? `/shipments/${a.shipmentId}` : a.documentId ? `/documents/${a.documentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
-  // P-127: only the row being marked or closed waits.
-  const { pending, runFor } = useRowAction();
   const seen = (id: string) => runFor(`seen-${id}`, () => call("markAlertSeen", { alertId: id }));
   // P-116 (n.20): cancelling the note (X, Esc) does not close the alert.
   const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (note === null || !canClose) return; await runFor(`close-${id}`, () => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
