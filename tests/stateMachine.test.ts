@@ -147,6 +147,14 @@ describe("general rules", () => {
     expect(r.s).toMatchObject({ currentAspId: "A", currentLocationId: "W1" });
     expect(r.a).toBe("code_of_another_asp");
   });
+  // Censimento n.37: relabel is an event of an ASP role like the others; the destination ASP of a transfer may relabel.
+  it("another ASP's piece: a relabel is code_of_another_asp too", () => {
+    const r = run(ev("arrive_at_warehouse"), ev("relabel", { aspId: "B", locationId: "WB", locationAspId: "B" }));
+    expect(r.s).toMatchObject({ currentAspId: "A", currentLocationId: "W1" });
+    expect(r.a).toBe("code_of_another_asp");
+    const t = sh({ toAspId: "B", toLocationId: "WB" });
+    expect(run(ev("arrive_at_warehouse"), ev("transfer_out", { shipment: t }), ev("relabel", { aspId: "B", locationId: "WB", locationAspId: "B" })).a).toBeUndefined();
+  });
   it("after returned: event_after_end_of_flow", () => {
     expect(run(ev("return_confirm", { source: "server" }), ev("relabel")).a).toBe("event_after_end_of_flow");
   });
