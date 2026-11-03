@@ -20,6 +20,7 @@ const DOC_FILE_TYPES: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx", "text/csv": "csv",
 };
 const FILE_MAX = 5 * 1024 * 1024; // 5 MB per file (§7.3)
+const MAX_FILES = 10; // pages of one version (D-47: kept + new)
 
 // §3.3: a document belongs to the ASP of its location, whoever uploads it (client_admin uploads BOMs and DDTs
 // for an ASP). Returns that aspId; an ASP role writes only at its own locations.
@@ -105,6 +106,7 @@ export const documents = {
       linesSource: z.enum(["excel", "manual"]),
       lines: z.array(lineSchema).max(5000),
       files: z.array(fileSchema).max(10).optional(),
+      keepFiles: z.array(z.string()).max(10).optional(),
       shipmentId: z.string().optional(),
     }),
     handler: async (ctx, d) => {
@@ -124,12 +126,17 @@ export const documents = {
       const duplicates = await db.collection("documents").where("kind", "==", d.kind).where("aspId", "==", aspId).where("number", "==", d.number).limit(5).get();
       const dup = duplicates.docs.find((x) => x.id !== ref.id);
       let paths: string[] = [];
+      // D-47: the pages of the previous version stay unless the page says which ones to keep; a page left out stays in
+      // history (never deleted). At most MAX_FILES in all. Checked before anything is stored.
+      const previous: string[] = Array.isArray(prev?.files) ? prev!.files : [];
+      const kept = d.keepFiles ?? previous;
+      if (kept.some((p) => !previous.includes(p)) || kept.length + (d.files?.length ?? 0) > MAX_FILES) fail("invalid-argument", "invalid_data");
       if (d.files && d.files.length) paths = await storeFiles(aspId, d.kind, ref.id, (prev?.version ?? 0) + 1, d.files);
       const history = Array.isArray(prev?.history) ? prev!.history : [];
       if (prev) history.push({ at: Timestamp.now(), by: ctx.uid, lines: prev.lines, files: prev.files });
       await db.runTransaction(async (tx) => {
         tx.set(ref, {
-          kind: d.kind, number: d.number, aspId, locationId: d.locationId, files: paths.length ? paths : (prev?.files ?? []),
+          kind: d.kind, number: d.number, aspId, locationId: d.locationId, files: [...kept, ...paths],
           lines: normalized, linesSource: d.linesSource, version: (prev?.version ?? 0) + 1,
           status: prev?.status ?? "open", createdAt: prev?.createdAt ?? FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
           history, duplicateOf: dup?.id ?? null, shipmentId: d.shipmentId ?? prev?.shipmentId ?? null,
