@@ -21,6 +21,8 @@ const MODES: Record<string, string[]> = {
   asp_warehouse: ["arrive_at_warehouse", "classify", "return_ship", "transfer_out"],
   asp_admin: ["arrive_at_warehouse", "classify", "return_ship", "transfer_out"],
 };
+// P-98: how long the camera ignores the code it just read (the phone held still on the label).
+const CAMERA_REPEAT_MS = 3000;
 
 function beep(muted: boolean) {
   if (muted) return;
@@ -64,6 +66,8 @@ export default function Scan() {
   // The sorting rules as loaded: a reading made right after the screen opens waits for them, so its suggestion is
   // never computed on an empty list (P-25).
   const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[] }> | null>(null);
+  // P-98: the last code the camera read (or recorded) and when.
+  const cameraLast = React.useRef<{ code: string; at: number } | null>(null);
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
@@ -230,12 +234,20 @@ export default function Scan() {
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
     setSession((s) => [{ id, code, type: mode }, ...s]);
     setLastEventId(id);
+    if (source === "camera") cameraLast.current = { code, at: Date.now() };
     if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
   };
 
   const onCode = async (raw: string, source: Source) => {
     const code = raw.trim();
     if (!code) return;
+    if (source === "camera") {
+      // P-98: the camera restarts 0.9 s after a reading (burst) and forgets what it read (webEngine.js, frozen). The
+      // same code is ignored while it stays in view and for CAMERA_REPEAT_MS after it was last seen or recorded.
+      const last = cameraLast.current, now = Date.now();
+      cameraLast.current = { code, at: now };
+      if (last && last.code === code && now - last.at < CAMERA_REPEAT_MS) { setTimeout(() => ctrl.current?.resume(), 300); return; }
+    }
     if (pendingSerial) { const p = pendingSerial; setPendingSerial(null); return record(p.code, p.source, code); }
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
     if (suggests) {
