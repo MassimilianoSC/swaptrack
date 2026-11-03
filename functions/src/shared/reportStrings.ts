@@ -8,6 +8,9 @@ export const REPORT_STRINGS: Record<Lang, Record<string, string>> = {
     "report.scope": "Ambito",
     "report.allAsps": "Tutte le ASP",
     "report.generatedAt": "Generato",
+    // P-120: when the end-of-month waiting numbers were taken (monthly job) or computed (a month without them).
+    "report.dataAt": "Dati al {at}",
+    "report.computedAt": "Calcolato il {at}",
     "report.summary": "Riepilogo",
     "report.indicator": "Indicatore",
     "report.count": "Conteggio",
@@ -79,6 +82,8 @@ export const REPORT_STRINGS: Record<Lang, Record<string, string>> = {
     "report.scope": "Scope",
     "report.allAsps": "All ASPs",
     "report.generatedAt": "Generated",
+    "report.dataAt": "Data as of {at}",
+    "report.computedAt": "Computed on {at}",
     "report.summary": "Summary",
     "report.indicator": "Indicator",
     "report.count": "Count",

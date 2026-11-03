@@ -13,6 +13,7 @@ const pdfPrinter = (): PdfPrinterCtor => require("pdfmake");
 const excel = (): any => require("exceljs");
 import { reportT, Lang } from "../shared/reportStrings";
 import type { ReportData } from "./reportData";
+import { romeDateTime } from "./reportMonth";
 
 const HELVETICA_FONTS = {
   Helvetica: {
@@ -34,7 +35,13 @@ export interface ReportOpts {
   scopeName?: string | null;
   month: string;
   data: ReportData;
+  // P-120: the end-of-month waiting numbers: taken by the monthly job (snapshot) or computed at generation.
+  waitingAsOf?: { snapshot: boolean; at: Date };
 }
+
+const asOfLine = (o: ReportOpts) => (o.waitingAsOf
+  ? reportT(o.lang, o.waitingAsOf.snapshot ? "report.dataAt" : "report.computedAt", { at: romeDateTime(o.waitingAsOf.at) })
+  : null);
 
 const scopeLabelOf = (o: ReportOpts) => (o.scope === "client" ? reportT(o.lang, "report.allAsps") : o.scopeName || o.scope);
 
@@ -72,7 +79,8 @@ export async function buildReportPdf(o: ReportOpts): Promise<Buffer> {
       { text: reportT(lang, "report.title"), style: "h1" },
       { text: `${reportT(lang, "report.scope")}: ${scopeLabelOf(o)}`, margin: [0, 6, 0, 0] },
       { text: `${reportT(lang, "report.month")}: ${month}` },
-      { text: `${reportT(lang, "report.generatedAt")}: ${dateStr}`, margin: [0, 0, 0, 10] },
+      { text: `${reportT(lang, "report.generatedAt")}: ${dateStr}`, margin: [0, 0, 0, asOfLine(o) ? 0 : 10] },
+      ...(asOfLine(o) ? [{ text: asOfLine(o)!, margin: [0, 0, 0, 10] }] : []),
       { text: reportT(lang, "report.summary"), style: "h2", margin: [0, 10, 0, 4] },
       table(reportT(lang, "report.indicator"), reportT(lang, "report.count"), summaryRows(o)),
       ...sections(o).flatMap(([title, first, rows]) => [
@@ -106,6 +114,7 @@ export async function buildReportXlsx(o: ReportOpts): Promise<Buffer> {
   sum.getRow(1).font = { bold: true };
   sum.addRow({ k: reportT(lang, "report.scope"), n: scopeLabelOf(o) });
   sum.addRow({ k: reportT(lang, "report.month"), n: month });
+  if (asOfLine(o)) sum.addRow({ k: asOfLine(o)! });
   for (const [k, n] of summaryRows(o)) sum.addRow({ k, n });
   for (const [title, , rows] of sections(o)) {
     sum.addRow({});

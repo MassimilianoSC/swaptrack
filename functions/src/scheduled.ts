@@ -132,17 +132,19 @@ export async function runDailyChecks(now = Date.now()) {
 // §13.4: 1st of every month at 06:00 Europe/Rome; one PDF+Excel per scope.
 export async function runMonthlyReports(now = new Date()) {
   const { label: month, start, end } = previousReportMonth(now);
-  await produceReport("client", month, start, end).catch((e) => logger.warn("report:client", { e: String(e) }));
+  // P-120: the job of the 1st takes the end-of-month numbers, kept for every later generation of the month.
+  const opts = { snapshot: true, now };
+  await produceReport("client", month, start, end, opts).catch((e) => logger.warn("report:client", { e: String(e) }));
   const asps = await db.collection("organizations").where("type", "==", "asp").get();
   for (const a of asps.docs) {
-    await produceReport(a.id, month, start, end).catch((e) => logger.warn("report:asp", { aspId: a.id, e: String(e) }));
+    await produceReport(a.id, month, start, end, opts).catch((e) => logger.warn("report:asp", { aspId: a.id, e: String(e) }));
   }
   logger.info("monthlyReports", { month, aspCount: asps.size });
 }
 
 // §13.4 (D-38): the report of one scope, each ASP only with its own data (R7). The numbers are computed by
 // shared/reportData.ts from the events of the month; here only the data is loaded.
-export async function produceReport(scope: string, month: string, start: Date, end: Date) {
+export async function produceReport(scope: string, month: string, start: Date, end: Date, opts: { snapshot?: boolean; now?: Date } = {}) {
   const range = (field: string) => db.collection(field === "scannedAt" ? "events" : "alerts")
     .where(field, ">=", Timestamp.fromDate(start)).where(field, "<", Timestamp.fromDate(end)).get();
   const events: ReportEvent[] = (await range("scannedAt")).docs.map((d) => {
@@ -157,8 +159,7 @@ export async function produceReport(scope: string, month: string, start: Date, e
   const lang = await getOrgLanguage(scope);
   const items = await docsByIds("items", own.map((e) => e.itemId ?? ""));
   const ofScope = (aspId: unknown) => scope === "client" || aspId === scope;
-  const { staleDays } = await getSettings("thresholds");
-  const stale = await staleItems(Timestamp.fromMillis(end.getTime() - staleDays * DAY));
+  const waiting = await endOfMonthWaiting(scope, month, end, opts);
   const alertsIn = async (field: string) => (await range(field)).docs.filter((d) => ofScope(d.get("aspId"))).length;
   const data = computeReport({
     scope, events, returnShipmentAsp,
@@ -166,15 +167,14 @@ export async function produceReport(scope: string, month: string, start: Date, e
     places: await placesByIds(own.map((e) => e.locationId ?? "")),
     categories: await categoryLabels(lang),
     orgNames: await orgNames(),
-    waiting: { newPieces: stale.new.filter((d) => ofScope(d.get("currentAspId"))).length,
-      removedPieces: stale.removed.filter((d) => ofScope(d.get("currentAspId"))).length, thresholdDays: staleDays },
+    waiting: waiting.numbers,
     alerts: { opened: await alertsIn("createdAt"), closed: await alertsIn("closedAt") },
   }, lang);
   const summary = data.summary;
   // P-64: an ASP's report shows its own name (the client's covers all ASPs and names none).
   const scopeName = scope === "client" ? null : ((await db.collection("organizations").doc(scope).get()).get("name") as string | undefined) ?? null;
-  const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, data });
-  const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, data });
+  const pdfBuf = await buildReportPdf({ lang, scope, scopeName, month, data, waitingAsOf: waiting.asOf });
+  const xlsxBuf = await buildReportXlsx({ lang, scope, scopeName, month, data, waitingAsOf: waiting.asOf });
   // P-114 n.26: every generation has its own files (a month generated again never overwrites the earlier report);
   // the name the user sees when downloading is given by the app.
   const stamp = `${month}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -182,7 +182,29 @@ export async function produceReport(scope: string, month: string, start: Date, e
   const xlsxPath = `reports/${scope}/${stamp}.xlsx`;
   await bucket().file(pdfPath).save(pdfBuf, { contentType: "application/pdf", resumable: false });
   await bucket().file(xlsxPath).save(xlsxBuf, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", resumable: false });
-  await db.collection("reports").add({ scope, month, language: lang, pdfPath, xlsxPath, summary, createdAt: FieldValue.serverTimestamp() });
+  await db.collection("reports").add({ scope, month, language: lang, pdfPath, xlsxPath, summary,
+    waitingAsOf: { snapshot: waiting.asOf.snapshot, at: Timestamp.fromDate(waiting.asOf.at) }, createdAt: FieldValue.serverTimestamp() });
+}
+
+// P-120 (census n.27): "waiting at the end of the month" depends on the states of the pieces, which change. The
+// monthly job (1st, 06:00) takes it once into reportSnapshots/{scope}_{month}; every later generation of that month
+// uses it ("Dati al …"). A month without it is computed from the states of now ("Calcolato il …").
+async function endOfMonthWaiting(scope: string, month: string, end: Date, opts: { snapshot?: boolean; now?: Date }) {
+  type Numbers = { newPieces: number; removedPieces: number; thresholdDays: number };
+  const ref = db.collection("reportSnapshots").doc(`${scope}_${month}`);
+  const saved = (await ref.get()).data();
+  if (saved) return { numbers: saved.waiting as Numbers, asOf: { snapshot: true, at: (saved.takenAt as Timestamp).toDate() } };
+  const { staleDays } = await getSettings("thresholds");
+  const stale = await staleItems(Timestamp.fromMillis(end.getTime() - staleDays * DAY));
+  const ofScope = (aspId: unknown) => scope === "client" || aspId === scope;
+  const numbers: Numbers = { newPieces: stale.new.filter((d) => ofScope(d.get("currentAspId"))).length,
+    removedPieces: stale.removed.filter((d) => ofScope(d.get("currentAspId"))).length, thresholdDays: staleDays };
+  const at = opts.now ?? new Date();
+  if (!opts.snapshot) return { numbers, asOf: { snapshot: false, at } };
+  // Taken once: a retry of the job keeps the first numbers.
+  await ref.create({ scope, month, waiting: numbers, takenAt: Timestamp.fromDate(at) }).catch(() => undefined);
+  const kept = (await ref.get()).data()!;
+  return { numbers: kept.waiting as Numbers, asOf: { snapshot: true, at: (kept.takenAt as Timestamp).toDate() } };
 }
 
 // §13.1 nightly recount: rewrites `aggregates/*` from `items`.

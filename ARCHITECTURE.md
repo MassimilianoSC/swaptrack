@@ -50,7 +50,8 @@ the caller's `orgId`. Composite indexes: `firestore.indexes.json`, checked by `t
 | `documentMappings/{kind}_{scope}` | kind, scope, mapping, updatedAt (column mapping of imports) | client_admin; ASP admin/warehouse own and `*_client` default |
 | `sortingCategories/{id}`, `sortingRules/{id}` | labels, active, order / category, site, model, equipmentType, priority (§10) | active users |
 | `aggregates/{scope}_{dimension}_{shard}` | scope, dimension, shard (10 shards), counts {key: n} (§13.1) | client_admin/office all; asp_admin own scope |
-| `reports/{id}` | scope, month (`YYYY-MM`), language, pdfPath, xlsxPath, summary, createdAt | client_admin/office all; asp_admin own scope |
+| `reports/{id}` | scope, month (`YYYY-MM`), language, pdfPath, xlsxPath, summary, waitingAsOf {snapshot, at}, createdAt | client_admin/office all; asp_admin own scope |
+| `reportSnapshots/{scope}_{month}` | waiting (newPieces, removedPieces, thresholdDays), takenAt: the end-of-month "waiting" numbers taken once by the monthly job (P-120); later generations of the month reuse them ("Dati al …"), a month without it is computed at generation ("Calcolato il …") | server only |
 | `exports/{id}` | scope, filter, language, path, rowCount, createdAt, createdBy | only the creator (client_admin, client_office, asp_admin) |
 | `adminLog/{id}` | actor, action, target, details, at | read client_admin |
 | `accessLog/{id}` | actor, eventId, at (every `revealEventAuthor`) | none |
