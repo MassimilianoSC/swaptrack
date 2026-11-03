@@ -27,12 +27,23 @@ export function watchItem(id: string, cb: (v: Row<Item> | null) => void, onError
   return onSnapshot(doc(db, "items", id), (s) => cb(s.exists() ? ({ id: s.id, ...(s.data() as Item) }) : null), (e) => onError?.(e));
 }
 
-// Watches items scoped to the current ASP (own) or all (client).
-export function watchItems(scope: { role: string; orgId: string }, cb: (v: Row<Item>[]) => void, max = 500) {
-  const base = collection(db, "items");
+// §13.1 / §13.2 (P-101): filters of the items list; every one is an equality, the list is ordered by last reading.
+export interface ItemFilters { status?: string; aspId?: string; locationId?: string; modelId?: string }
+export const ITEMS_PAGE = 200;
+
+// Watches the items of the current ASP (always its own: the rules refuse anything else) or, for client roles, all
+// items or those of one ASP. Each filter has its own index (field, lastScannedAt desc) in firestore.indexes.json:
+// Firestore merges them for any combination of filters.
+export function watchItems(scope: { role: string; orgId: string }, filters: ItemFilters, max: number, cb: (v: Row<Item>[]) => void, onError?: (e: Error) => void) {
   const client = scope.role === "client_admin" || scope.role === "client_office" || scope.role === "client_warehouse";
-  const q = client ? query(base, limit(max)) : query(base, where("currentAspId", "==", scope.orgId), limit(max));
-  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Item) }))));
+  const asp = client ? filters.aspId : scope.orgId;
+  const q = query(collection(db, "items"),
+    ...(asp ? [where("currentAspId", "==", asp)] : []),
+    ...(filters.status ? [where("status", "==", filters.status)] : []),
+    ...(filters.locationId ? [where("currentLocationId", "==", filters.locationId)] : []),
+    ...(filters.modelId ? [where("modelId", "==", filters.modelId)] : []),
+    orderBy("lastScannedAt", "desc"), limit(max));
+  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Item) }))), (e) => onError?.(e));
 }
 
 // §6.4 / §12.2: "to complete" list — pieces with needsModel: true, warehouse and client roles.

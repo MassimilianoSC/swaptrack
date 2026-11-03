@@ -17,6 +17,12 @@ const NEEDED: Array<{ query: string; collection: string; fields: Field[] }> = [
   { query: "documents.ts own exports: createdBy ==, orderBy createdAt desc", collection: "exports", fields: [["createdBy", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   { query: "items.ts anomalies of a piece: itemId ==, orderBy openedAt desc", collection: "anomalies", fields: [["itemId", "ASCENDING"], ["openedAt", "DESCENDING"]] },
   { query: "shipments.ts client_warehouse returns: kind ==, orderBy createdAt desc", collection: "shipments", fields: [["kind", "ASCENDING"], ["createdAt", "DESCENDING"]] },
+  // items.ts watchItems (P-101): any combination of these equalities, orderBy lastScannedAt desc. One index per
+  // field: Firestore merges them for the combinations (the emulators check neither; tried by hand online).
+  { query: "items.ts list of an ASP: currentAspId ==, orderBy lastScannedAt desc", collection: "items", fields: [["currentAspId", "ASCENDING"], ["lastScannedAt", "DESCENDING"]] },
+  { query: "items.ts list by status: status ==, orderBy lastScannedAt desc", collection: "items", fields: [["status", "ASCENDING"], ["lastScannedAt", "DESCENDING"]] },
+  { query: "items.ts list by place: currentLocationId ==, orderBy lastScannedAt desc", collection: "items", fields: [["currentLocationId", "ASCENDING"], ["lastScannedAt", "DESCENDING"]] },
+  { query: "items.ts list by model: modelId ==, orderBy lastScannedAt desc", collection: "items", fields: [["modelId", "ASCENDING"], ["lastScannedAt", "DESCENDING"]] },
   { query: "shipments.ts ASP sent (P-77): fromAspId ==, orderBy createdAt desc", collection: "shipments", fields: [["fromAspId", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   { query: "shipments.ts ASP received (P-77): toAspId ==, orderBy createdAt desc", collection: "shipments", fields: [["toAspId", "ASCENDING"], ["createdAt", "DESCENDING"]] },
   // Functions (functions/src/)
