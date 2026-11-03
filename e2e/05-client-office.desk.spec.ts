@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { ACCOUNTS, signIn, tr, collectRows, fileStart } from "./helpers";
 import { SEED } from "./seed";
+import { fileNamePart } from "../src/lib/fileNames";
 
 // Demo path 5 (DA_FARE P-6): the client's office on a computer. Reads only, plus an export and a report
 // it generates for itself (new documents of its own; nothing shared is changed).
@@ -59,7 +60,8 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     await expect(download).toBeVisible();
     // D-35: the file is read with the Storage rules (getBlob) and saved by the browser, never through a public URL.
     const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
-    expect(file.suggestedFilename().endsWith(".xlsx")).toBe(true);
+    // P-106: a readable name, from the creation time; the Storage path is unchanged.
+    expect(file.suggestedFilename()).toMatch(/^SwapTrack-export-\d{4}-\d{2}-\d{2}-\d{4}\.xlsx$/);
     expect((await fileStart(file, 2))).toBe("PK"); // an .xlsx file is a zip
   });
 
@@ -95,7 +97,22 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     const pdf = page.getByTestId("reports-table-row").first().locator("[data-testid^='reports-pdf-']");
     await expect(pdf).toBeVisible();
     const [file] = await Promise.all([page.waitForEvent("download"), pdf.click()]);
-    expect(file.suggestedFilename().endsWith(".pdf")).toBe(true);
+    expect(file.suggestedFilename()).toMatch(/^SwapTrack-resoconto-\d{4}-\d{2}-cliente\.pdf$/); // P-106
+    expect((await fileStart(file, 4))).toBe("%PDF");
+  });
+
+  // §13.4 / P-99: the client office also sees and generates the report of one ASP.
+  test("resoconto mensile di un'ASP: Nord", async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.goto("/reports");
+    await page.getByTestId("reports-scope").selectOption(SEED.nord.orgId);
+    const aspName = (await page.getByTestId("reports-scope").locator(`option[value="${SEED.nord.orgId}"]`).textContent())!.trim();
+    await page.getByTestId("reports-generate").click();
+    await expect(page.getByText(tr("reports.generated")).first()).toBeVisible({ timeout: 120_000 });
+    const row = page.getByTestId("reports-table-row").first();
+    await expect(row).toContainText(aspName);
+    const [file] = await Promise.all([page.waitForEvent("download"), row.locator("[data-testid^='reports-pdf-']").click()]);
+    expect(file.suggestedFilename()).toMatch(new RegExp(`^SwapTrack-resoconto-\\d{4}-\\d{2}-${fileNamePart(aspName)}\\.pdf$`)); // P-106
     expect((await fileStart(file, 4))).toBe("%PDF");
   });
 

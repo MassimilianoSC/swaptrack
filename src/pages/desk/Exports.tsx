@@ -6,6 +6,7 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { listMyExports, type SwExport } from "@/lib/data/documents";
 import { downloadFile } from "@/lib/data/storage";
+import { exportFileName } from "@/lib/fileNames";
 import { toast } from "sonner";
 import { listModels, listLocationsFor, listOrganizations, type Row, type Model, type Location, type Organization } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
@@ -58,7 +59,10 @@ export default function Exports() {
     }), t("exports.created"));
   };
   const lang = i18n.language as "it" | "en";
-  const download = async (path: string) => { if (!(await downloadFile(path))) toast.error(t("errors.load_failed")); };
+  const download = async (r: Row<SwExport>) => {
+    const at = r.createdAt?.toDate?.();
+    if (!(await downloadFile(r.path, at ? exportFileName(at) : undefined))) toast.error(t("errors.load_failed"));
+  };
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">
@@ -97,7 +101,7 @@ export default function Exports() {
           { key: "at", header: t("exports.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
           { key: "scope", header: t("dashboard.scope"), value: (r) => r.scope === "client" ? t("dashboard.allAsps") : r.scope },
           { key: "n", header: t("exports.rows"), value: (r) => r.rowCount, className: "tabular" },
-          { key: "d", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r.path)} data-testid={`exports-download-${r.id}`}><Download className="h-4 w-4" />{t("common.download")}</Button> },
+          { key: "d", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r)} data-testid={`exports-download-${r.id}`}><Download className="h-4 w-4" />{t("common.download")}</Button> },
         ]} />
       )}
     </div>

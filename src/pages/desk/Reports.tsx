@@ -6,9 +6,10 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { listReports, type SwReport } from "@/lib/data/documents";
 import { downloadFile } from "@/lib/data/storage";
+import { reportFileName } from "@/lib/fileNames";
 import { toast } from "sonner";
 import { isClientRole } from "@shared/roles";
-import type { Row } from "@/lib/data/db";
+import { listOrganizations, getOrganization, type Row, type Organization } from "@/lib/data/db";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, Field } from "@/components/ui/form";
@@ -25,18 +26,34 @@ export default function Reports() {
   const [month, setMonth] = React.useState(new Date().getUTCMonth() + 1);
   const [list, setList] = React.useState<Row<SwReport>[] | null>(null);
   const client = isClientRole(claims?.role ?? "");
-  const scope = client ? "client" : claims?.orgId ?? "";
+  // §13.4 / P-99: the client roles see and generate the report of all the ASPs or of one ASP; an ASP its own.
+  const [clientScope, setClientScope] = React.useState("client");
+  const scope = client ? clientScope : claims?.orgId ?? "";
   const refresh = React.useCallback(async () => setList(await listReports(scope)), [scope]);
   React.useEffect(() => { void refresh(); }, [refresh, busy]);
+  // The ASPs by name: the scope choice, the scope column and the saved file name (P-106). An ASP reads only its own.
+  const [asps, setAsps] = React.useState<Row<Organization>[]>([]);
+  React.useEffect(() => {
+    const orgs = client ? listOrganizations() : claims?.orgId ? getOrganization(claims.orgId).then((o) => (o ? [o] : [])) : Promise.resolve([]);
+    void orgs.then((l) => setAsps(l.filter((o) => o.type === "asp"))).catch(() => undefined);
+  }, [client, claims?.orgId]);
+  const aspNames: Record<string, string> = Object.fromEntries(asps.map((o) => [o.id, o.name]));
   const generate = async () => { await run(() => call("generateReport", { scope, year, month }), t("reports.generated")); await refresh(); };
-  const download = async (path: string) => { if (!(await downloadFile(path))) toast.error(t("errors.load_failed")); };
+  const download = async (r: Row<SwReport>, ext: "pdf" | "xlsx") => {
+    const name = reportFileName(r.month, r.scope === "client" ? t("reports.fileScopeClient") : aspNames[r.scope] ?? r.scope, ext);
+    if (!(await downloadFile(ext === "pdf" ? r.pdfPath : r.xlsxPath, name))) toast.error(t("errors.load_failed"));
+  };
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">
       <PageHeader title={t("nav.reports")} subtitle={t("reports.subtitle")} />
       {client && (
         <Card>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
+            <Field label={t("dashboard.scope")} htmlFor="r-s"><Select id="r-s" value={clientScope} onChange={(e) => setClientScope(e.target.value)} data-testid="reports-scope">
+              <option value="client">{t("dashboard.allAsps")}</option>
+              {asps.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </Select></Field>
             <Field label={t("reports.year")} htmlFor="r-y"><Select id="r-y" value={String(year)} onChange={(e) => setYear(Number(e.target.value))} data-testid="reports-year">
               {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
             </Select></Field>
@@ -49,11 +66,11 @@ export default function Reports() {
       )}
       {list.length === 0 ? <Empty title={t("reports.empty")} /> : (
         <DataTable testId="reports-table" rows={list} columns={[
-          { key: "s", header: t("dashboard.scope"), render: (r) => <Badge>{r.scope === "client" ? t("dashboard.allAsps") : r.scope}</Badge> },
+          { key: "s", header: t("dashboard.scope"), render: (r) => <Badge>{r.scope === "client" ? t("dashboard.allAsps") : aspNames[r.scope] ?? r.scope}</Badge> },
           { key: "m", header: t("reports.monthLabel"), value: (r) => r.month, className: "font-mono" },
           { key: "at", header: t("exports.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
-          { key: "p", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r.pdfPath)} data-testid={`reports-pdf-${r.id}`}><Download className="h-4 w-4" />PDF</Button> },
-          { key: "x", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r.xlsxPath)} data-testid={`reports-xlsx-${r.id}`}><Download className="h-4 w-4" />XLSX</Button> },
+          { key: "p", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r, "pdf")} data-testid={`reports-pdf-${r.id}`}><Download className="h-4 w-4" />PDF</Button> },
+          { key: "x", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r, "xlsx")} data-testid={`reports-xlsx-${r.id}`}><Download className="h-4 w-4" />XLSX</Button> },
         ]} />
       )}
     </div>

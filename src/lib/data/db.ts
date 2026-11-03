@@ -1,6 +1,6 @@
 // Firestore reads used by pages (R2). Every write that is not an event goes through call.ts (R3).
 import {
-  collection, doc, getDocs, getDocsFromCache, onSnapshot, query, where, orderBy, limit, waitForPendingWrites,
+  collection, doc, getDoc, getDocs, getDocsFromCache, onSnapshot, query, where, orderBy, limit, waitForPendingWrites,
   type DocumentData, type QueryConstraint,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -35,6 +35,11 @@ export interface Model { materialCode: string; model: string; manufacturer: stri
 export interface AdminLogEntry { actor: string; action: string; target: string | null; at?: { toDate(): Date }; details?: Record<string, unknown> }
 
 export const listOrganizations = () => listQuery<Organization>("organizations");
+// One organization (an ASP reads only its own, the client roles all of them).
+export async function getOrganization(id: string): Promise<Row<Organization> | null> {
+  const s = await getDoc(doc(db, "organizations", id));
+  return s.exists() ? { id: s.id, ...(s.data() as Organization) } : null;
+}
 export const watchOrganizations = (cb: (v: Row<Organization>[]) => void, err?: (e: Error) => void) => watchQuery<Organization>("organizations", [], cb, err);
 export const watchUsers = (orgId: string | null, cb: (v: Row<UserProfile>[]) => void, err?: (e: Error) => void) =>
   watchQuery<UserProfile>("users", orgId ? [where("orgId", "==", orgId)] : [], cb, err);

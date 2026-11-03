@@ -14,13 +14,14 @@ export async function fileBlobUrl(path: string): Promise<string | null> {
   try { return URL.createObjectURL(await getBlob(ref(storage, path))); } catch { return null; }
 }
 
-// Saves a private file on the device under its own name; the local URL is revoked right after.
-export async function downloadFile(path: string): Promise<boolean> {
+// Saves a private file on the device, under `name` when given (P-106), else under its own; the local URL is revoked
+// right after.
+export async function downloadFile(path: string, name?: string): Promise<boolean> {
   const url = await fileBlobUrl(path);
   if (!url) return false;
   const a = document.createElement("a");
   a.href = url;
-  a.download = path.split("/").pop() || "file";
+  a.download = name || path.split("/").pop() || "file";
   document.body.appendChild(a);
   a.click();
   a.remove();
