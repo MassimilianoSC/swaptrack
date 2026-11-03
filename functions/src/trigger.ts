@@ -9,6 +9,7 @@ import { bomCheckForSite } from "./shared/bomCheck";
 const { computeCodeId, normalizeBarcode } = require("./codeId.node.js");
 
 const TYPES = ["remove_at_site", "install_at_site", "site_done", "arrive_at_warehouse", "classify", "transfer_out", "return_ship", "relabel", "void", "return_confirm", "force_state"];
+const SHIPPING = ["transfer_out", "return_ship"];
 const CLOCK_MS = 3 * 60 * 1000;
 const DAY = 24 * 3600 * 1000;
 const SITE_DONE_WAITS = 10;
@@ -52,9 +53,16 @@ async function replayItem(tx: Transaction, itemRef: DocumentReference, current: 
   const evSnap = await tx.get(db.collection("events").where("itemId", "==", itemRef.id));
   const all = evSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Doc[];
   if (current && !all.some((x) => x.id === current.id)) all.push(current);
-  const machine = await Promise.all(all.filter((x) => !x.voided && x.type !== "site_done" && x.type !== "void").map((x) => toMachine(x, locs, ships, tx)));
+  const live = all.filter((x) => !x.voided && x.type !== "site_done" && x.type !== "void");
+  const machine = await Promise.all(live.map((x) => toMachine(x, locs, ships, tx)));
   const r = replay(machine, current?.id);
-  return { before: itemSnap.exists ? (itemSnap.data() as Doc) : null, state: r.state, anomaly: r.anomaly };
+  // §9.3: a shipment line is a piece read into it by a transfer_out / return_ship not voided (§8.2).
+  const readingsIn = new Map<string, number>();
+  for (const x of live) {
+    const sid = x.payload?.shipmentId as string | undefined;
+    if (sid && SHIPPING.includes(x.type)) readingsIn.set(sid, (readingsIn.get(sid) ?? 0) + 1);
+  }
+  return { before: itemSnap.exists ? (itemSnap.data() as Doc) : null, state: r.state, anomaly: r.anomaly, readingsIn };
 }
 
 function catalogFrom(e: Doc, model: Doc | null) {
@@ -245,7 +253,8 @@ export async function processEvent(id: string): Promise<void> {
       }
       if (sh && sid) {
         tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { codeRaw: e.codeRaw, model: r.before?.model ?? model?.model ?? null, addedAt: FieldValue.serverTimestamp(), fromAspId: sh.fromAspId, toAspId: sh.toAspId ?? null, kind: sh.kind }, { merge: true });
-        tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
+        // A piece read again into the same shipment is the same line (P-90): counted only at its first reading.
+        if ((r.readingsIn.get(sid) ?? 0) <= 1) tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
       }
       if (sid && e.type === "arrive_at_warehouse") tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { arrivedAt: FieldValue.serverTimestamp() }, { merge: true });
       // §9.2 (D-30): a piece confirmed at the client as extra of one return shipment while it was in another one:
