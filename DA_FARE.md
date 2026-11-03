@@ -95,6 +95,25 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 **Misura:** lettura riuscita su entrambi; nome del motore mostrato; torcia solo dove c'è; suono e lampo di conferma; errore di permesso spiegato.
 **Note:** se su iPhone la lettura fallisce, il primo sospettato sono le versioni fissate di `barcode-detector` e `zxing-wasm` (`consegna/README.md`).
 
+### Prova guidata (preparata da o3 il 03/11, per l'app online dopo il lotto 2)
+Account: tecnico Nord (sito), magazziniere Nord (arrivo); la password la sa il committente. Per ogni passo: FAI / VEDI / RIFERISCI. Testi tra «…» esatti dell'app.
+0. Prima (amministratore cliente, al computer): Impostazioni → «Funzioni» → spunta «Lettura automatica documenti e codici delle etichette rovinate (AI)» → «Salva» («Salvato»); a prova finita la toglie. Tre etichette: A e B leggibili, C rovinata o coperta da un dito.
+1. Installazione. Android (Chrome): menu ⋮ → «Installa app» (o «Aggiungi a schermata Home»). iPhone (Safari): Condividi → «Aggiungi alla schermata Home» → «Aggiungi». Vede l'icona; l'app si apre a tutto schermo. Riferisce modello e sistema, icona, tutto schermo.
+2. Accesso dall'icona, «Accedi», informativa «Ho letto e accetto». Vede «Scegli il sito» con l'elenco e «Online». Riferisce i secondi da «Accedi» all'elenco; se qualcosa è rimasto su «Caricamento…» oltre 10 s.
+3. Sito, «Leggi», «Smonta», «Consenti» la fotocamera. Vede la fotocamera col riquadro e «Motore nativo» o «Motore di riserva». Riferisce il motore e se la fotocamera si apre subito.
+4. Lettura singola (Raffica spenta): A → suono, lampo verde, «Leggi il prossimo»; B inquadrata non si registra finché non si preme «Leggi il prossimo». Riferisce i due esiti.
+5. Pezzo sconosciuto: chiuso con la X (o indietro su Android) → la lettura c'è e la fotocamera riparte. Con un'altra etichetta nuova: ricerca del modello per nome, tocco, «Conferma». Riferisce i due esiti.
+6. Raffica: spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»; A poi C in fila, il numero sale; chiusa e riaperta l'app, «Raffica» resta spuntata.
+7. «Già letto»: fermo 5 s sull'etichetta appena letta → «Già letto. Per rileggerlo allontana il telefono per 3 secondi.», il numero non sale.
+8. Foto dopo una lettura: «Foto in coda per l'invio»; prima di ogni lettura «Foto» sembra spento con «Leggi un pezzo, poi scatta la foto».
+9. Con la rete: secondi da «Da inviare» a «Inviata» in «Le mie letture di oggi».
+10. Modalità aereo: 2 letture e «Ho finito in questo sito»; «Offline» e «2 da inviare»; «Esci» bloccato con la spiegazione.
+11. Ritorno della rete con l'app aperta: «Online», tutte «Inviata», sparisce «da inviare». Secondi.
+12. Modalità aereo, app chiusa e riaperta: l'elenco dei siti c'è e la ricerca funziona; cosa dice «aggiornati».
+13. AI, con la rete: «Leggi dalla foto dell'etichetta» su C → «Codici letti dalla foto», caratteri incerti evidenziati, correzione, «Conferma» → lampo verde e «Foto in coda per l'invio». In modalità aereo il pulsante spiega che serve la connessione. Riferisce se il codice era giusto, i secondi, la chiarezza del messaggio.
+14. Magazziniere, se c'è tempo: «Arrivo», poi «Smista / classifica»: «Categoria suggerita: …» in grande con «Conferma» e le altre come pulsanti; «Annulla» → «… non smistato».
+Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il numero del passo, eventuali foto dello schermo.
+
 ## P-22 Foto con la coda senza rete
 
 **Cosa:** scatto in modalità aereo → coda in IndexedDB → ritorno in rete → caricamento su Storage → `attachPhotos`. Mai provato con l'emulatore Storage acceso.
