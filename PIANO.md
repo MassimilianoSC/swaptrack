@@ -28,6 +28,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-25 | Categoria suggerita anche in «Arrivo» (D-27, interruttore spento per difetto): sul ramo `o3-completo`, e2e rossa per la lentezza dopo l'accesso (P-78) | o3 |
 | P-86 | Pezzo NUOVO finito «smistato» se l'arrivo porta una categoria (D-39): server fatto (811f995); Scan che la azzera al cambio di flusso e la manda solo per lo smontato (o3, con P-25) | o2 + o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server con l'emulatore Storage (o2, stima 2 ore, via dato il 03/11) e parte schermata (o3, dopo `o3-completo`) | o2 + o3 |
+| P-87 | Telefono condiviso (D-40). **a)** «Esci da tutti i dispositivi» e «Esci» dell'informativa nuova saltavano il blocco dell'uscita con letture o foto in coda (SPEC riga 201); la coda foto partiva prima del controllo del proprietario (foto di un altro utente caricate e lasciate orfane). Prima della demo. **b)** Dopo un'uscita forzata, se entra un altro utente le letture e foto non inviate del precedente si perdono senza avviso: avviso con due scelte. Dopo la demo; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
@@ -56,6 +57,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-66 | Risultati attesi del lotto 1, scritti in DA_FARE (P-30) | o2 + reg | 30/10/2026 |
 | P-75 | Esportazioni e resoconti scaricati con `getBlob`, non con indirizzi aperti (D-35); la parte delle foto va con P-70 | o3 | 02/11/2026 (ea09bb8, lotto 1) |
 | P-68 | Foto (server): agganciate anche in grazia, anche prima che il trigger elabori l'evento, senza sostituire le precedenti | o2 | 30/10/2026 (59f58df, lotto 1) |
+| P-88 | Controlli del committente online sul lotto 1: accesso come magazziniere Nord dal PC senza blocchi, dati per lavorare offline scaricati; indice `shipments (kind, createdAt desc)` abilitato | committente | 03/11/2026 |
 | P-85 | Accesso non più fermo su «Caricamento…»: la cache parte dopo profilo e informativa, e dopo 8 s la schermata si apre comunque (informativa obbligatoria rispettata) | o3 | 02/11/2026 (3ef1bbb) |
 | P-84 | `scripts/setDemoPassword.mjs` (password nuova a tutti gli account demo, nascosta, mai salvata) e seed che non la rimette sul progetto vero | o2 | 02/11/2026 (3e54adf) |
 | P-82 | `deployBatch.mjs --yes` salta il giro delle prove già superato sullo stesso commit (24 ore); git, installazione e build sempre | o2 | 02/11/2026 (893679a) |
