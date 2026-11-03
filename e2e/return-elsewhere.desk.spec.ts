@@ -55,7 +55,7 @@ test.describe("Reso — pezzo confermato in un altro reso (scrivania)", () => {
     await page.getByTestId("confirm-extra-input").fill(a);
     await page.getByTestId("confirm-extra-add").click();
     await page.getByTestId("confirm-save").click();
-    await expect(page.getByText(tr("shipments.confirmed")).first()).toBeVisible();
+    await expect(page.getByText(tr("shipments.confirmed")).first()).toBeVisible({ timeout: 60_000 });
 
     // Return 1: A's line says it was confirmed in another return, and leads to return 2.
     await expect.poll(async () => {

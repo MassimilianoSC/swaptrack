@@ -1,6 +1,18 @@
 {
   "blocks": [
     {
+      "name": "dati-propri",
+      "seed": "base",
+      "files": [
+        "return-elsewhere.desk.spec.ts",
+        "07-install.desk.spec.ts",
+        "demo-docs.desk.spec.ts",
+        "row-actions.desk.spec.ts",
+        "ddt-late.desk.spec.ts",
+        "excel-mapping-slow.desk.spec.ts"
+      ]
+    },
+    {
       "name": "percorsi",
       "seed": "full",
       "files": [
@@ -9,13 +21,7 @@
         "02-ddt-arrival.phone.spec.ts",
         "03-removed-sorting.phone.spec.ts",
         "04-return.desk.spec.ts",
-        "06-confidentiality.phone.spec.ts",
-        "07-install.desk.spec.ts",
-        "demo-docs.desk.spec.ts",
-        "return-elsewhere.desk.spec.ts",
-        "row-actions.desk.spec.ts",
-        "ddt-late.desk.spec.ts",
-        "excel-mapping-slow.desk.spec.ts"
+        "06-confidentiality.phone.spec.ts"
       ]
     },
     {
