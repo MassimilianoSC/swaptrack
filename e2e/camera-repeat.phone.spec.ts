@@ -5,7 +5,9 @@ import { SEED } from "./seed";
 // The camera of the scanning screen with the phone held on a label (criterion 2).
 // No fake camera device (it saturated the machine, e25c963): the page gets a tiny canvas stream as its camera and a
 // BarcodeDetector that "sees" window.__fakeCode, so the real engine (webEngine.js, native path) runs unchanged.
-async function fakeCamera(page: Page): Promise<void> {
+// burst: the camera restarts by itself after a reading (P-121, off by default); the tests of burst behaviour turn it on.
+async function fakeCamera(page: Page, burst = true): Promise<void> {
+  if (burst) await page.addInitScript(() => { try { localStorage.setItem("swaptrack.burst", "1"); } catch { /* no storage */ } });
   await page.addInitScript(() => {
     const w = window as unknown as { __fakeCode: string | null; BarcodeDetector: unknown };
     w.__fakeCode = null;
@@ -109,6 +111,42 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("scan-session-count")).toHaveText("2");
     await expect(page.getByTestId("scan-today-row").filter({ hasText: b })).toHaveCount(1);
+    await frame(page, null);
+  });
+
+  // D-55 / P-121: burst mode off (the default): after a reading the camera waits for "Read the next"; turned on, it reads
+  // the next label by itself, and the phone remembers the choice. Fixed category in "Sort": no window, one reading each.
+  test("Raffica: spenta aspetta «Leggi il prossimo», accesa legge da sola e la scelta resta", async ({ page }) => {
+    test.setTimeout(240_000);
+    const [a, b, c, d] = [uniqueCode("R"), uniqueCode("R"), uniqueCode("R"), uniqueCode("R")];
+    await fakeCamera(page, false);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=classify");
+    await page.getByTestId("scan-category-select").selectOption("cat_reuse");
+    await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
+    await expect(page.getByTestId("scan-burst")).not.toBeChecked();
+    const count = page.getByTestId("scan-session-count");
+
+    await frame(page, a);
+    await expect(count).toHaveText("1");
+    await frame(page, b);
+    await page.waitForTimeout(3000);
+    await expect(count).toHaveText("1"); // the camera waits
+    await page.getByTestId("scan-next").click();
+    await expect(count).toHaveText("2");
+
+    // Burst on: the next label is read without touching anything; the choice survives a reload.
+    await page.getByTestId("scan-burst").check();
+    await page.reload();
+    await expect(page.getByTestId("scan-burst")).toBeChecked();
+    await page.getByTestId("scan-category-select").selectOption("cat_reuse");
+    await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
+    await frame(page, c);
+    await expect(count).toHaveText("1");
+    await frame(page, d);
+    await expect(count).toHaveText("2", { timeout: 10_000 });
+    await expect(page.getByTestId("scan-next")).toHaveCount(0);
     await frame(page, null);
   });
 });

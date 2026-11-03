@@ -405,7 +405,9 @@
     "notSorted": "{{code}} non smistato.",
     "confirmEachPiece": "Conferma a ogni pezzo (nessuna categoria fissa)",
     "sortTitle": "Smista {{code}}",
-    "sortHint": "Conferma la categoria suggerita o scegline un'altra. Per una serie di pezzi uguali scegli una categoria fissa nella tendina: si registrano senza conferma."
+    "sortHint": "Conferma la categoria suggerita o scegline un'altra. Per una serie di pezzi uguali scegli una categoria fissa nella tendina: si registrano senza conferma.",
+    "burst": "Raffica (la fotocamera riparte da sola dopo ogni lettura)",
+    "readNext": "Leggi il prossimo"
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

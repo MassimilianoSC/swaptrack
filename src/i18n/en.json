@@ -405,7 +405,9 @@
     "notSorted": "{{code}} not sorted.",
     "confirmEachPiece": "Confirm each piece (no fixed category)",
     "sortTitle": "Sort {{code}}",
-    "sortHint": "Confirm the suggested category or choose another. For a series of identical pieces choose a fixed category in the list: they are recorded without confirmation."
+    "sortHint": "Confirm the suggested category or choose another. For a series of identical pieces choose a fixed category in the list: they are recorded without confirmation.",
+    "burst": "Burst (the camera restarts by itself after every reading)",
+    "readNext": "Read the next"
   },
   "pwa": {
     "newVersion": "A new version is available.",

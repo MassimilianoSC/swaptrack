@@ -23,6 +23,7 @@ const MODES: Record<string, string[]> = {
 };
 // P-98: how long the camera ignores the code it just read (the phone held still on the label).
 const CAMERA_REPEAT_MS = 3000;
+const BURST_KEY = "swaptrack.burst";
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
 
@@ -233,8 +234,17 @@ export default function Scan() {
     setFlash({ text, tone });
     beep(muted);
     if (tone === "ok") navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
-    setTimeout(() => { setFlash(null); ctrl.current?.resume(); }, 900);
+    setTimeout(() => setFlash(null), 900);
   };
+  // D-55 / P-121: after a camera reading the camera reads again by itself only in burst mode; otherwise it waits for
+  // "Read the next". The choice is kept on this phone (off when nothing is saved).
+  const [burst, setBurstState] = React.useState(() => { try { return localStorage.getItem(BURST_KEY) === "1"; } catch { return false; } });
+  const burstRef = React.useRef(burst);
+  burstRef.current = burst;
+  const setBurst = (on: boolean) => { setBurstState(on); try { localStorage.setItem(BURST_KEY, on ? "1" : "0"); } catch { /* storage unavailable */ } };
+  const [awaitingNext, setAwaitingNext] = React.useState(false);
+  const afterCameraReading = () => { if (burstRef.current) ctrl.current?.resume(); else setAwaitingNext(true); };
+  const readNext = () => { setAwaitingNext(false); ctrl.current?.resume(); };
 
   // P-102: a sorting chosen in the confirmation window (one tap) wins over the screen's choices.
   type SortChoice = { categoryId?: string; newClass?: string };
@@ -284,11 +294,14 @@ export default function Scan() {
   // way a camera reading ends (an error, a refused shipment, a message), it restarts here too; only while the model of
   // an unknown piece is asked it stays paused, and closing that window records the reading (skipModelPick).
   const onCode = async (raw: string, source: Source) => {
-    let asked = false;
-    try { asked = (await handleCode(raw, source)) === "asked"; }
-    finally { if (source === "camera" && !asked) setTimeout(() => ctrl.current?.resume(), 950); }
+    let r: "asked" | "continue" | void;
+    try { r = await handleCode(raw, source); }
+    finally {
+      // The second code of a reading (the product code after the serial) is read at once, also without burst mode.
+      if (source === "camera" && r! !== "asked") setTimeout(() => (r === "continue" ? ctrl.current?.resume() : afterCameraReading()), 950);
+    }
   };
-  const handleCode = async (raw: string, source: Source): Promise<"asked" | void> => {
+  const handleCode = async (raw: string, source: Source): Promise<"asked" | "continue" | void> => {
     const code = raw.trim();
     if (!code) return;
     if (source === "camera") {
@@ -316,7 +329,7 @@ export default function Scan() {
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
     }
-    if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return; }
+    if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
     // §10 / P-102: in "Sort" without a fixed category the suggestion is confirmed with one tap, or another one chosen;
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
     if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, suggested: suggestedRef.current }); return "asked"; }
@@ -382,13 +395,14 @@ export default function Scan() {
     if (!p) return;
     setPendingSort(null);
     await record(p.code, p.source, undefined, undefined, choice);
+    if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   const cancelSort = () => {
     const p = pendingSort;
     if (!p) return;
     setPendingSort(null);
     toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
-    setTimeout(() => ctrl.current?.resume(), 300);
+    if (p.source === "camera") setTimeout(afterCameraReading, 300);
   };
   // The piece waiting for its model is taken first, so a double tap (or "Save" and then the X) records it once.
   const confirmModelPick = async () => {
@@ -396,6 +410,7 @@ export default function Scan() {
     if (!p) return;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second, modelPickId || undefined);
+    if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   // D-50 (P-112): closing the window (X, a tap outside, the back key) is "Skip": the reading is recorded without a model
   // (needsModel, "To complete", §6.4) and the camera reads again. A wrong reading has "Undo last".
@@ -404,6 +419,7 @@ export default function Scan() {
     if (!p) return;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second);
+    if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared")); };
 
@@ -473,6 +489,8 @@ export default function Scan() {
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : "bg-warning text-black")} role="status" data-testid="scan-flash">{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
       </div>
+      {/* D-55 / P-121: single reading: the camera waits until the worker asks for the next piece. */}
+      {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}
       {/* §7.2 burst mode, P-20 (D-11): counter and running list of this session's readings, below the camera, never over it. */}
       <section className="rounded border border-border p-3" data-testid="scan-session">
         <p className="flex items-baseline gap-2">
@@ -536,6 +554,7 @@ export default function Scan() {
         <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
         {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
+        <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
         <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
       </div>
       {lostCount > 0 && <div className="rounded bg-warning/15 text-warning text-xs p-2 flex gap-2 items-center" data-testid="scan-lost-photos">{t("scan.photosLost", { count: lostCount })} <Button size="sm" variant="ghost" onClick={clearLost} data-testid="scan-lost-clear">{t("common.close")}</Button></div>}
