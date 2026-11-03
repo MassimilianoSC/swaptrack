@@ -25,10 +25,13 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await page.getByTestId("document-kind").selectOption("bom");
     await page.getByTestId("document-number").fill(bomNumber);
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.site}`);
-    await page.getByTestId("document-lines").fill(codes.map((c) => `${c} [remove]`).join("\n"));
+    // §11.2 / P-92: every BOM line says whether the piece is removed or installed; here, the box "To remove".
+    await page.getByTestId("document-lines-remove").fill(codes.join("\n"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     const bomId = page.url().split("/").pop()!;
+    await expect(page.getByTestId("document-lines-remove")).toHaveValue(codes.join("\n"));
+    await expect(page.getByTestId("document-lines-install")).toHaveValue("");
     await page.getByTestId("document-save").click(); // version 2: the newest BOM of the site
     await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
     await signOut(page);
@@ -50,8 +53,12 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await expect(page.getByTestId("site-picker-selected")).toContainText(SEED.nord.site);
     await page.getByTestId("scan-fab").click();
     await expect(page.getByTestId("scan-screen")).toBeVisible();
+    // The BOM of the site, from the offline cache: the two pieces to remove (P-92: before, lines without direction
+    // were dropped and the list was empty).
+    await expect(page.getByTestId("scan-bom-count")).toHaveText("0/2");
     // Unknown pieces: the model is picked from the catalog in the offline cache (before P-73 the list was empty).
     for (const c of codes) await scanManual(page, c, { withModel: true });
+    await expect(page.getByTestId("scan-bom-count")).toHaveText("2/2");
     for (const c of codes) await expect(page.getByTestId("scan-today-row").filter({ hasText: c })).toContainText(tr("scan.waiting"));
     await page.getByTestId("scan-site-done").click();
     await expect(page.getByText(tr("scan.siteDone")).first()).toBeVisible();

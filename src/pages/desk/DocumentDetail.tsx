@@ -32,6 +32,9 @@ export default function DocumentDetail() {
   const [number, setNumber] = React.useState("");
   const [locationId, setLocationId] = React.useState("");
   const [rawLines, setRawLines] = React.useState("");
+  // §11.2 / P-92: the lines of a BOM in two boxes, to remove and to install; every line takes its box's direction.
+  // A BOM saved before has lines without direction: they wait in a third box until moved (the server refuses them).
+  const [bomLines, setBomLines] = React.useState<{ remove: string; install: string; none: string }>({ remove: "", install: "", none: "" });
   const [compare, setCompare] = React.useState<Compare | null>(null);
   // Bumped after every write, so status and lines on screen follow the server (the button "mark checked" disappears).
   const [reloadKey, setReloadKey] = React.useState(0);
@@ -42,16 +45,20 @@ export default function DocumentDetail() {
     void loadDocument(id).then((d) => {
       if (!d) return;
       setDoc(d); setKind(d.kind); setNumber(d.number); setLocationId(d.locationId);
-      // A serial line keeps its direction too (P-74): saving again must not drop "[remove]" / "[install]" from a BOM.
-      setRawLines((d.lines as Line[]).map((l) => l.kind === "serial" ? `${l.codeRaw}${l.direction ? ` [${l.direction}]` : ""}` : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}${l.direction ? ` [${l.direction}]` : ""}`).join("\n"));
+      const lines = d.lines as Line[];
+      const text = (ls: Line[]) => ls.map((l) => l.kind === "serial" ? l.codeRaw : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}`).join("\n");
+      // A line keeps its direction (P-74): saving again never drops it.
+      if (d.kind === "bom") setBomLines({ remove: text(lines.filter((l) => l.direction === "remove")), install: text(lines.filter((l) => l.direction === "install")), none: text(lines.filter((l) => !l.direction)) });
+      else setRawLines(text(lines));
     });
   }, [id, isNew, reloadKey]);
 
-  const parseLines = (text: string): Line[] => text.split("\n").map((s) => s.trim()).filter(Boolean).map((s) => {
-    const m = s.match(/^#(\d+)(?:\s+(\S+))?(?:\s+\[(remove|install)\])?/);
-    if (m) return { kind: "quantity", quantity: Number(m[1]), materialCode: m[2] ?? null, direction: m[3] as "remove" | "install" | undefined };
-    const direction = kind === "bom" ? (s.match(/\[(remove|install)\]$/)?.[1] as "remove" | "install" | undefined) : undefined;
-    return { kind: "serial", codeRaw: s.replace(/\s*\[(remove|install)\]\s*$/, ""), direction };
+  // One line per row: a serial, or a quantity "#3 MC-A". A "[remove]" / "[install]" written by hand is ignored: the
+  // direction comes from the box.
+  const parseLines = (text: string, direction?: "remove" | "install"): Line[] => text.split("\n").map((s) => s.replace(/\s*\[(remove|install)\]\s*$/, "").trim()).filter(Boolean).map((s) => {
+    const m = s.match(/^#(\d+)(?:\s+(\S+))?$/);
+    if (m) return { kind: "quantity", quantity: Number(m[1]), materialCode: m[2] ?? null, direction };
+    return { kind: "serial", codeRaw: s, direction };
   });
 
   // P-103: only the buttons the server accepts (saveDocument, markDocumentChecked); the client office and the client
@@ -65,7 +72,8 @@ export default function DocumentDetail() {
 
   const save = async () => {
     if (!number.trim() || !locationId) { toast.error(t("errors.invalid_data")); return; }
-    const lines = parseLines(rawLines);
+    if (kind === "bom" && bomLines.none.trim()) { toast.error(t("errors.bom_direction_required")); return; }
+    const lines = kind === "bom" ? [...parseLines(bomLines.remove, "remove"), ...parseLines(bomLines.install, "install")] : parseLines(rawLines);
     const r = await run(() => call<{ documentId: string; duplicateOf: string | null }>("saveDocument", {
       documentId: isNew ? undefined : id, kind, number: number.trim(), locationId, linesSource: "manual", lines,
     }), t("common.saved"));
@@ -108,7 +116,19 @@ export default function DocumentDetail() {
             {locations.filter(siteOrWarehouse).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
           </Select></Field>
         </div>
-        <Field label={t("documents.lines")} htmlFor="d-lines"><Textarea id="d-lines" rows={10} value={rawLines} onChange={(e) => setRawLines(e.target.value)} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines" /></Field>
+        {kind === "bom" ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label={t("documents.linesRemove")} htmlFor="d-lines-r"><Textarea id="d-lines-r" rows={10} value={bomLines.remove} onChange={(e) => setBomLines((b) => ({ ...b, remove: e.target.value }))} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines-remove" /></Field>
+            <Field label={t("documents.linesInstall")} htmlFor="d-lines-i"><Textarea id="d-lines-i" rows={10} value={bomLines.install} onChange={(e) => setBomLines((b) => ({ ...b, install: e.target.value }))} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines-install" /></Field>
+            {bomLines.none && (
+              <div className="md:col-span-2">
+                <Field label={t("documents.linesNoDirection")} htmlFor="d-lines-n"><Textarea id="d-lines-n" rows={4} value={bomLines.none} onChange={(e) => setBomLines((b) => ({ ...b, none: e.target.value }))} className="font-mono text-xs border-warning" data-testid="document-lines-none" /></Field>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Field label={t("documents.lines")} htmlFor="d-lines"><Textarea id="d-lines" rows={10} value={rawLines} onChange={(e) => setRawLines(e.target.value)} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines" /></Field>
+        )}
         {isNew && <div className="flex justify-end"><Button onClick={save} disabled={busy || !number.trim() || !locationId} data-testid="document-save-new">{t("common.save")}</Button></div>}
       </Card>
       {compare && (

@@ -84,7 +84,7 @@
     "number": "Numero",
     "version": "Versione",
     "lines": "Righe",
-    "linesPlaceholder": "Un seriale per riga, oppure quantità come #3 MC-A [remove]",
+    "linesPlaceholder": "Un seriale per riga, oppure una quantità come #3 MC-A",
     "markChecked": "Segna verificato",
     "compare": "Confronta",
     "close": "Chiudi",
@@ -110,7 +110,10 @@
       "open": "Aperto",
       "checked": "Verificato",
       "closed": "Chiuso"
-    }
+    },
+    "linesRemove": "Da smontare",
+    "linesInstall": "Da installare",
+    "linesNoDirection": "Righe senza direzione: spostale in «Da smontare» o «Da installare»"
   },
   "alerts": {
     "subtitle": "Un avviso per oggetto (documento, spedizione, luogo).",

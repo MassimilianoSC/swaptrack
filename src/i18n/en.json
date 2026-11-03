@@ -84,7 +84,7 @@
     "number": "Number",
     "version": "Version",
     "lines": "Lines",
-    "linesPlaceholder": "Serial per line, or quantity like #3 MC-A [remove]",
+    "linesPlaceholder": "One serial per line, or a quantity like #3 MC-A",
     "markChecked": "Mark checked",
     "compare": "Compare",
     "close": "Close",
@@ -110,7 +110,10 @@
       "open": "Open",
       "checked": "Checked",
       "closed": "Closed"
-    }
+    },
+    "linesRemove": "To remove",
+    "linesInstall": "To install",
+    "linesNoDirection": "Lines without direction: move them to «To remove» or «To install»"
   },
   "alerts": {
     "subtitle": "One alert per object (document, shipment, place).",
