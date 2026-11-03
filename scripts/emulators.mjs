@@ -11,6 +11,8 @@
 //                                              that data and run <cmd>. Imported data starts no trigger, so the
 //                                              ~10,000 seeded events (already processed) never queue onEventCreated
 //                                              runs in front of the events of the tests.
+//                                              D-57: the base seed alone (--seed "yarn seed") writes no events, so
+//                                              it runs in the emulators started for <cmd>: no second start and stop.
 // The stop kills the process tree this script started, recorded while the CLI was alive (on Windows the CLI
 // leaves its Java emulators running after it exits, and they are no longer linked to it).
 import { spawn } from "node:child_process";
@@ -35,6 +37,9 @@ const TRIGGER_RUN = /Beginning execution of "[^"]*onEventCreated"/g;
 const argOf = (name) => { const i = process.argv.indexOf(name); return i >= 0 ? process.argv[i + 1] : undefined; };
 const COMMAND = argOf("--run");
 const SEED = argOf("--seed");
+// D-57: a seed that writes no events (the base seed: organizations, users through the Admin SDK, places, models,
+// settings) wakes no trigger: it runs in place, after the start (measured: about 22 s saved out of 130).
+const SEED_IN_PLACE = !!SEED && SEED.split("&&").every((c) => c.trim() === "yarn seed");
 if ((process.argv.includes("--run") && !COMMAND) || (process.argv.includes("--seed") && (!SEED || !COMMAND))) {
   console.error('emulators: usage: node scripts/emulators.mjs [--seed "<seed command>"] --run "<command>"');
   process.exit(2);
@@ -140,7 +145,7 @@ async function main() {
     process.exit(2);
   }
   const t0 = Date.now();
-  const seeded = SEED ? await seedPhase() : null;
+  const seeded = SEED && !SEED_IN_PLACE ? await seedPhase() : null;
   let t = Date.now();
   const data = seeded ? ["--import", seeded] : COMMAND ? [] : ["--import", DATA, "--export-on-exit", DATA];
   if (!COMMAND) mkdirSync(`${ROOT}.emulator-data`, { recursive: true });
@@ -150,6 +155,14 @@ async function main() {
 
   if (COMMAND) {
     if (seeded) console.log(`emulators: data imported; onEventCreated runs so far: ${(cli.log.match(TRIGGER_RUN) ?? []).length}`);
+    if (SEED_IN_PLACE) {
+      t = Date.now();
+      const seedCode = await runCommand(SEED);
+      lap("seed command, in place", t);
+      const runs = (cli.log.match(TRIGGER_RUN) ?? []).length;
+      if (runs) console.error(`emulators: the seed in place woke onEventCreated ${runs} time(s): use a seed that writes no events.`);
+      if (seedCode !== 0) { await cli.stop("emulators --run"); process.exit(seedCode); }
+    }
     await warmUpTrigger();
     t = Date.now();
     const code = await runCommand(COMMAND);
