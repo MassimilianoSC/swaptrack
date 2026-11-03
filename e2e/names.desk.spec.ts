@@ -47,4 +47,16 @@ test.describe("Nomi al posto degli id (scrivania)", () => {
     await expect(page.getByTestId("document-missing")).not.toHaveText("0");
     await expect(page.getByTestId("document-list-missing")).toBeVisible();
   });
+
+  // P-126: the scope of an ASP's export is its name, never its internal code.
+  test("amministratore ASP: l'ambito delle sue esportazioni è il nome dell'ASP", async ({ page }) => {
+    test.setTimeout(180_000);
+    await signIn(page, ACCOUNTS.aspAdminNord);
+    await page.goto("/exports");
+    await page.getByTestId("exports-create").click();
+    const row = page.getByTestId("exports-table-row").first();
+    await expect(row).toBeVisible({ timeout: 120_000 });
+    await expect(row).not.toContainText("…");
+    await expect(row).not.toContainText(RAW_ID);
+  });
 });

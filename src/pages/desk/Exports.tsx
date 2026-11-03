@@ -16,11 +16,13 @@ import { Select, Input, Field } from "@/components/ui/form";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
 
 // §13.3 Excel export with the filters of the specification (P-81).
 export default function Exports() {
   const { t, i18n } = useTranslation();
   const { user, claims } = useSession();
+  const names = useNames();
   const { busy, run } = useAction();
   // §13.3 (P-81): site or warehouse, model, period, ASP (client roles), status, sorting category.
   const [status, setStatus] = React.useState("");
@@ -101,7 +103,7 @@ export default function Exports() {
       {list.length === 0 ? <Empty title={t("exports.empty")} /> : (
         <DataTable testId="exports-table" rows={list} columns={[
           { key: "at", header: t("exports.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
-          { key: "scope", header: t("dashboard.scope"), value: (r) => r.scope === "client" ? t("dashboard.allAsps") : r.scope },
+          { key: "scope", header: t("dashboard.scope"), value: (r) => r.scope === "client" ? t("dashboard.allAsps") : names.org(r.scope) }, // P-126: the ASP by name
           { key: "n", header: t("exports.rows"), value: (r) => r.rowCount, className: "tabular",
             render: (r) => <span>{r.rowCount}{(r as Row<SwExport> & { truncated?: boolean }).truncated && <Badge tone="warning" className="ml-2" data-testid={`exports-truncated-${r.id}`}>{t("exports.truncatedShort")}</Badge>}</span> },
           { key: "d", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r)} data-testid={`exports-download-${r.id}`}><Download className="h-4 w-4" />{t("common.download")}</Button> },
