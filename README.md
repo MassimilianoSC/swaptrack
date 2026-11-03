@@ -28,7 +28,8 @@ yarn e2e         # end-to-end tests of the demo paths (e2e/): builds functions, 
 # One profile or one file (build functions first with yarn build:functions):
 #   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only --project=desk"
 #   node scripts/emulators.mjs --seed "yarn seed && yarn seed:full" --run "yarn e2e:only e2e/03-removed-sorting.phone.spec.ts"
-# --seed seeds without the functions emulator, exports and re-imports the data, so the seed queues no triggers.
+# --seed "yarn seed" seeds into the running emulators (the base seed writes no events); with seed:full the data still goes through export and import, so the seed queues no triggers.
+# Before a merge (D-57): only the e2e files written or changed for that item, with the small seed when enough.
 # (yarn e2e --project=desk does NOT filter.) First time: npx playwright install chromium
 ```
 Unit tests cover pure logic (state machine, sorting precedence, document comparison, code parity, report month, Firestore indexes, emulator ports). The tests on the emulators cover the security rules (Firestore and Storage), the trigger and replay, the scheduled jobs.
@@ -54,6 +55,9 @@ Password for all, on the emulators only: `SwapDemo2026`. The demo project online
 **Base seed (`yarn seed`)**: 4 organizations, 12 users, 1 client warehouse, 6 ASP warehouses, 1,500 sites, 20 models, default settings. The privacy notice must be accepted at first sign-in.
 
 **Full demo seed (`yarn seed:full`)**: on top of the base seed, ~5,000 pieces across every state of both flows (installed / received / sorted / defective / leftover / removed_at_site / returned / in_transfer / in_return, with `previousFlow: new` on about 10%), 10 DDTs (3 checked), 5 return DDTs, 10 BOMs, 5 within-ASP transfers (3 received), 3 between-ASP transfers, 5 return shipments (2 confirmed, 1 complete), 6 alerts, 6 anomalies, two months of history, aggregate recount for `client` and each ASP across every dimension including status × region.
+
+## Invented demo documents
+`node scripts/demoDocs.mjs` (from the project folder, after `yarn install`) writes into `demo-docs/` invented documents for the demo: DDTs as PDF, Excel and photo, a BOM as Excel and PDF, and barcode labels, clean and damaged, all marked «DOCUMENTO DI PROVA». `demo-docs/LEGGIMI.txt` explains each file and the demo path (DDT TD-2026-0412 at Magazzino ASP Nord 1: arrived, missing, unexpected). It needs the test browser (`yarn playwright install chromium`, once, if missing).
 
 ## Progetto Firebase della demo / Firebase project of the demo installation
 
