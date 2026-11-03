@@ -7,7 +7,7 @@ import { isClientRole } from "../shared/roles";
 import { produceReport } from "../scheduled";
 import { getOrgLanguage } from "../core/orgLang";
 import { buildExportXlsx } from "../shared/reportBuilders";
-import { exportRow, inPeriod, type ExportItem } from "../shared/reportData";
+import { exportRow, inPeriod, capRows, type ExportItem } from "../shared/reportData";
 import { placesByIds, orgNames, categoryLabels } from "../core/lookup";
 import { reportMonth } from "../shared/reportMonth";
 
@@ -112,8 +112,8 @@ export const desk = {
       if (d.modelId) q = q.where("modelId", "==", d.modelId);
       if (d.sortingCategoryId) q = q.where("sortingCategoryId", "==", d.sortingCategoryId);
       if (d.aspId && d.scope === "client") q = q.where("currentAspId", "==", d.aspId);
-      const items: ExportItem[] = (await q.get()).docs.map((x) => ({ id: x.id, ...x.data(), lastScannedAt: x.get("lastScannedAt")?.toMillis?.() ?? null }) as ExportItem)
-        .filter((it) => inPeriod(it.lastScannedAt, d.from, d.to)).slice(0, EXPORT_MAX_ROWS);
+      const { rows: items, truncated } = capRows((await q.get()).docs.map((x) => ({ id: x.id, ...x.data(), lastScannedAt: x.get("lastScannedAt")?.toMillis?.() ?? null }) as ExportItem)
+        .filter((it) => inPeriod(it.lastScannedAt, d.from, d.to)), EXPORT_MAX_ROWS);
       const lang = d.language ?? (await getOrgLanguage(d.scope));
       const maps = {
         codes: await activeCodes(items.map((it) => it.id)),
@@ -125,8 +125,9 @@ export const desk = {
       const buf = await buildExportXlsx({ lang, rows });
       const path = `exports/${d.scope}/${Date.now()}.xlsx`;
       await bucket().file(path).save(buf, { contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", resumable: false });
-      const ref = await db.collection("exports").add({ scope: d.scope, filter: d, language: lang, path, rowCount: rows.length, createdAt: FieldValue.serverTimestamp(), createdBy: ctx.uid });
-      return { exportId: ref.id, path, rowCount: rows.length };
+      const ref = await db.collection("exports").add({ scope: d.scope, filter: d, language: lang, path, rowCount: rows.length, truncated, createdAt: FieldValue.serverTimestamp(), createdBy: ctx.uid });
+      // The page says when the export stopped at EXPORT_MAX_ROWS (P-114 n.36).
+      return { exportId: ref.id, path, rowCount: rows.length, truncated };
     },
   }),
 

@@ -42,8 +42,8 @@ const sheet = async (path: string) => {
 
 describe("createExport (§13.3)", () => {
   it("period = last scan within [from, to] and sorting category, both applied", async () => {
-    const r = await desk.createExport.handler(CA, { scope: "client", from: OCT(1), to: OCT(20), sortingCategoryId: "cat_ref", language: "it" }) as { path: string; rowCount: number };
-    expect(r.rowCount).toBe(1);
+    const r = await desk.createExport.handler(CA, { scope: "client", from: OCT(1), to: OCT(20), sortingCategoryId: "cat_ref", language: "it" }) as { path: string; rowCount: number; truncated: boolean };
+    expect([r.rowCount, r.truncated]).toEqual([1, false]); // P-114 n.36: the export says it was not cut
     const rows = await sheet(r.path);
     expect(rows.map((x) => x.at(-1))).toEqual(["i_in"]);
   });

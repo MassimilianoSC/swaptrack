@@ -92,6 +92,9 @@ export function computeReport(input: ReportInput, lang: Lang): ReportData {
 export const inPeriod = (ms: number | null, from?: number, to?: number) =>
   (from === undefined || (ms !== null && ms >= from)) && (to === undefined || (ms !== null && ms <= to));
 
+// P-114 n.36: an export keeps at most `max` rows and says when some were left out.
+export const capRows = <T>(list: T[], max: number): { rows: T[]; truncated: boolean } => ({ rows: list.slice(0, max), truncated: list.length > max });
+
 export interface ExportItem {
   id: string; status?: string | null; flow?: string | null; model?: string | null; materialCode?: string | null; manufacturer?: string | null;
   equipmentType?: string | null; currentLocationId?: string | null; currentAspId?: string | null; sortingCategoryId?: string | null; lastScannedAt: number | null;

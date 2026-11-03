@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeReport, exportRow, inPeriod, type ReportEvent, type ReportInput } from "../functions/src/shared/reportData";
+import { computeReport, exportRow, inPeriod, capRows, type ReportEvent, type ReportInput } from "../functions/src/shared/reportData";
 
 // SPEC §13.4 (D-38) and §13.3 (P-79, D-37). Expectations from the specification: received, installed, removed,
 // sorted per category, returned, waiting beyond the threshold, alerts opened and closed, top models and sites,
@@ -65,6 +65,11 @@ describe("export (§13.3)", () => {
     expect(inPeriod(100, 101)).toBe(false);
     expect(inPeriod(null, 1)).toBe(false);
     expect(inPeriod(null)).toBe(true);
+  });
+  // P-114 n.36: the export stops at a maximum of rows and says so. Red before: no capRows, the cut was silent.
+  it("at most `max` rows, and truncated says whether some were left out", () => {
+    expect(capRows([1, 2, 3], 3)).toEqual({ rows: [1, 2, 3], truncated: false });
+    expect(capRows([1, 2, 3, 4], 3)).toEqual({ rows: [1, 2, 3], truncated: true });
   });
   it("a row in the user's language: code, status and flow in words, place, ASP and category by name", () => {
     const row = exportRow({ id: "it1", status: "received_at_asp", flow: "new", model: "RX-100", currentLocationId: "loc_WH", currentAspId: NORD,
