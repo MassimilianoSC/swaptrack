@@ -24,16 +24,12 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi |
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
-| P-22 | Foto scattate senza rete, da capo a fondo: parte server con l'emulatore Storage (o2, stima 2 ore, via dato il 03/11) e parte schermata (o3, dopo `o3-completo`) | o2 + o3 |
+| P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
 | P-87 | Telefono condiviso (D-40). **a)** «Esci da tutti i dispositivi» e «Esci» dell'informativa nuova saltavano il blocco dell'uscita con letture o foto in coda (SPEC riga 201); la coda foto partiva prima del controllo del proprietario (foto di un altro utente caricate e lasciate orfane). Prima della demo. **b)** Dopo un'uscita forzata, se entra un altro utente le letture e foto non inviate del precedente si perdono senza avviso: avviso con due scelte. Dopo la demo; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
-| P-14 | Funzioni bloccanti con Identity Platform vero: `scripts/checkBlocking.mjs` pronto (sei passi per il committente, in REGISTRO); da eseguire dopo il lotto 1 | committente |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-89 | (C1) Scarico di export, resoconti e foto online con getBlob: probabilmente manca la regola CORS del bucket Storage. o2 prepara `scripts/storage-cors.json`; prima il committente prova l'export online; poi lancia lui il comando gcloud | o2 + committente |
-| P-90 | (S1) Il numero di pezzi della spedizione cresce a ogni lettura, anche ripetuta o vietata (trigger.ts) | o2 |
-| P-91 | (S2) «Annulla l'ultima» in un reso non toglie la riga dalla spedizione: il pezzo può risultare reso senza essere partito, o nasce un avviso falso; vale anche per i trasferimenti | o2 |
-| P-92 | (S3) Righe BOM con direzione obbligatoria (SPEC §11.2): il server oggi le accetta senza, il tecnico vede la BOM vuota. o2 server + o3 pagina, insieme | o2 + o3 |
-| P-93 | (S4, D-41) Rileggere un pezzo già nella stessa spedizione è una ripetizione, senza anomalia | o2 |
+| P-89 | (C1) Scarico di export, resoconti e foto online con getBlob: probabilmente manca la regola CORS del bucket Storage. `scripts/storage-cors.json` pronto (57753c4), comando nel README; prima il committente prova l'export online; poi lancia lui il comando gcloud | o2 + committente |
+| P-92 | (S3) Righe BOM con direzione obbligatoria (SPEC §11.2): il server oggi le accetta senza, il tecnico vede la BOM vuota. Server pronto sul ramo o2-p92 (codice nuovo `bom_direction_required`), esce con la pagina di o3 | o2 + o3 |
 | P-96 | (A1, A2, A9) Testi grezzi nella Home dell'ufficio cliente, in Anomalie ed Esportazioni; tre errori del server senza traduzione; foto del DDT non compressa | o3 |
 | P-97 | (A3) Magazzino cliente: menu Documenti gira all'infinito (ricerca negata dalle regole); filtro per tipo (o3) e indice (o2) | o3 + o2 |
 | P-98 | (A4) Raffica col telefono vero: lo stesso pezzo può registrarsi due volte se la fotocamera resta sul codice | o3 |
@@ -73,6 +69,10 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-25 | Categoria suggerita anche in «Arrivo» di materiale smontato, «Smista nello stesso passaggio» (D-27); suggerimento anche alla prima lettura (le regole di smistamento arrivavano dopo la lettura, anche in «Smista») | o3 | 03/11/2026 (40075fb, 40f0cc5) |
 | P-86 | Materiale nuovo mai «smistato» da un arrivo con categoria (D-39): server e app | o2 + o3 | 03/11/2026 (811f995, 40f0cc5) |
 | P-70 | Pagina del pezzo con le sue foto (SPEC §13.2, D-32), lette con getBlob (D-35) | o3 | 03/11/2026 (d155dc3, 540788e) |
+| P-90 | Il numero di pezzi della spedizione cresce solo alla prima lettura del pezzo (3 rosse prima) | o2 | 03/11/2026 (e50f90e) |
+| P-91 | «Annulla l'ultima» in un reso o trasferimento toglie la riga e fa scendere il conteggio; riga già confermata o arrivata resta | o2 | 03/11/2026 (9eeba8a) |
+| P-93 | Rilettura di un pezzo nella stessa spedizione senza anomalia (D-41) | o2 | 03/11/2026 (6bcee66) |
+| P-14 | Funzioni bloccanti sul progetto vero: registrate in europe-west1; `checkBlocking.mjs` tre OK (attivo entra, disattivato respinto da beforeSignIn, registrazione da soli respinta da beforeCreate); tecnico di Sud riattivato | committente | 03/11/2026 |
 | P-1 | Sito Hosting predefinito `kronos-caffe-sito.web.app` (vecchio sito del bar) spento con `firebase hosting:disable`; in incognito non si apre più | committente | 03/11/2026 |
 | P-88 | Controlli del committente online sul lotto 1: accesso come magazziniere Nord dal PC senza blocchi, dati per lavorare offline scaricati; indice `shipments (kind, createdAt desc)` abilitato | committente | 03/11/2026 |
 | P-85 | Accesso non più fermo su «Caricamento…»: la cache parte dopo profilo e informativa, e dopo 8 s la schermata si apre comunque (informativa obbligatoria rispettata) | o3 | 02/11/2026 (3ef1bbb) |

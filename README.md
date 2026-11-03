@@ -61,7 +61,8 @@ Password for all, on the emulators only: `SwapDemo2026`. The demo project online
 
 > In italiano: il nome «kronos-caffe-sito» è un **escamotage** per aggirare il limite di progetti Firebase dell'account del titolare. Il progetto è stato riusato e rinominato «SwapTrack Demo»; l'identificativo non si può cambiare. Non ha nessun legame con SwapTrack.
 
-- App URL: **https://swaptrack-demo.web.app** (a dedicated Hosting site, target `app` in `.firebaserc`). The default site `kronos-caffe-sito.web.app` hosts the old café site and is not used (it can be disabled: `firebase hosting:disable --site kronos-caffe-sito --project kronos-caffe-sito`).
+- App URL: **https://swaptrack-demo.web.app** (a dedicated Hosting site, target `app` in `.firebaserc`). The default site `kronos-caffe-sito.web.app` (old café site) was disabled on 03/11/2026 with `firebase hosting:disable --site kronos-caffe-sito --project demo`.
+- Storage CORS: downloads of exports, reports and photos read the files with `getBlob` (D-35), so the bucket must allow the app's domains. Once per project, from the repository folder: `gcloud storage buckets update gs://kronos-caffe-sito.firebasestorage.app --cors-file=scripts/storage-cors.json`; check with `gcloud storage buckets describe gs://kronos-caffe-sito.firebasestorage.app --format="default(cors_config)"`. A new Hosting site needs its domains added to `scripts/storage-cors.json`.
 - Web configuration: `.env.demo` (public values), build with `yarn build:demo`. `VITE_FIREBASE_AUTH_DOMAIN` is `swaptrack-demo.web.app`, the domain the app is served from.
 - Functions configuration: `functions/.env.kronos-caffe-sito` (`APP_URL`).
 - Alias: `demo` → `kronos-caffe-sito` (`firebase deploy --project demo`).
