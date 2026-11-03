@@ -399,10 +399,14 @@ export default function Scan() {
         </Select>
       )}
       {ddtApplies && (
-        <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => setDdtId(e.target.value)} data-testid="scan-ddt-select">
-          <option value="">{t("scan.ddt.none")}</option>
-          {ddts.map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number })}</option>)}
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => setDdtId(e.target.value)} data-testid="scan-ddt-select">
+            <option value="">{t("scan.ddt.none")}</option>
+            {ddts.map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number })}</option>)}
+          </Select>
+          {/* §12.2 / P-105: the DDT can also be uploaded from here, as a file or a photo of the paper. */}
+          <Link to={`/documents/new?kind=ddt_in&location=${location!.id}`} className="shrink-0 text-sm text-primary hover:underline" data-testid="scan-ddt-upload">{t("scan.ddt.upload")}</Link>
+        </div>
       )}
       {(mode === "classify" || (mode === "arrive_at_warehouse" && flow === "removed")) && (
         <div className="space-y-2">

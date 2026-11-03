@@ -10,6 +10,15 @@ export interface SwDocument {
   duplicateOf?: string | null; shipmentId?: string | null;
 }
 
+// §11.2: the saved column mapping of an Excel document, documentMappings/{kind}_{scope} (scope: an ASP or "client").
+// null when there is none or the rules refuse it.
+export async function loadDocumentMapping(kind: SwDocument["kind"], scope: string): Promise<Record<string, string> | null> {
+  try {
+    const s = await getDoc(doc(db, "documentMappings", `${kind}_${scope}`));
+    return s.exists() ? ((s.data().mapping as Record<string, string>) ?? null) : null;
+  } catch { return null; }
+}
+
 export const loadDocument = async (id: string): Promise<Row<SwDocument> | null> => {
   const s = await getDoc(doc(db, "documents", id));
   return s.exists() ? ({ id: s.id, ...(s.data() as SwDocument) }) : null;

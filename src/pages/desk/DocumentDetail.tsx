@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Save, Check, Lock, Scale } from "lucide-react";
 import { useSession } from "@/app/session";
@@ -7,6 +7,11 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
 import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
+import { readTable, type Sheet } from "@/lib/import/readTable";
+import { parseLines, linesToText, splitByDirection, carryModels, type DocLine } from "@/lib/documents/lines";
+import { isClientRole } from "@shared/roles";
+import { FilesPanel, type PendingFile } from "@/components/documents/FilesPanel";
+import { ExcelMapping } from "@/components/documents/ExcelMapping";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
@@ -14,13 +19,17 @@ import { Loading } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Line = { kind: "serial"; codeRaw: string; materialCode?: string | null; modelId?: string | null; direction?: "remove" | "install" } |
-           { kind: "quantity"; materialCode?: string | null; modelId?: string | null; quantity: number; direction?: "remove" | "install" };
+type Kind = SwDocument["kind"];
 type Compare = { arrived: string[]; missing: string[]; unexpected: string[]; arrivedModelUnknown: string[]; quantities: Array<{ key: string; expected: number; counted: number }>; totals: { arrived: number; missing: number; unexpected: number; arrivedModelUnknown: number } };
+const KINDS: Kind[] = ["ddt_in", "ddt_return", "bom"];
 
-// §11: new / edit document, mark checked, close, compare.
+const toBase64 = (b: Blob) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(b); });
+
+// §11: new / edit document (lines typed, pasted or read from an Excel; files and their preview, P-105), mark checked,
+// close, compare.
 export default function DocumentDetail() {
   const { id } = useParams();
+  const [params] = useSearchParams();
   const nav = useNavigate();
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
@@ -28,13 +37,21 @@ export default function DocumentDetail() {
   const isNew = id === "new";
   const [doc, setDoc] = React.useState<Row<SwDocument> | null>(null);
   const [locations, setLocations] = React.useState<Row<Location>[]>([]);
-  const [kind, setKind] = React.useState<"ddt_in" | "ddt_return" | "bom">("ddt_in");
+  // A new document can arrive with its kind and place (the arrival screen opens "new DDT" for its warehouse).
+  const [kind, setKind] = React.useState<Kind>(() => (isNew && KINDS.includes(params.get("kind") as Kind) ? params.get("kind") as Kind : "ddt_in"));
   const [number, setNumber] = React.useState("");
-  const [locationId, setLocationId] = React.useState("");
+  const [locationId, setLocationId] = React.useState(() => (isNew ? params.get("location") ?? "" : ""));
   const [rawLines, setRawLines] = React.useState("");
   // §11.2 / P-92: the lines of a BOM in two boxes, to remove and to install; every line takes its box's direction.
   // A BOM saved before has lines without direction: they wait in a third box until moved (the server refuses them).
   const [bomLines, setBomLines] = React.useState<{ remove: string; install: string; none: string }>({ remove: "", install: "", none: "" });
+  // P-105: files added and not saved yet, saved files taken out of the next version (D-47), the Excel being mapped,
+  // and lines read from a file: they wait in the same boxes for the user's check and "Save", like typed lines.
+  const [pending, setPending] = React.useState<PendingFile[]>([]);
+  const [removed, setRemoved] = React.useState<string[]>([]);
+  const [sheet, setSheet] = React.useState<Sheet | null>(null);
+  const [linesSource, setLinesSource] = React.useState<"manual" | "excel">("manual");
+  const [toConfirm, setToConfirm] = React.useState<{ count: number; skipped: number } | null>(null);
   const [compare, setCompare] = React.useState<Compare | null>(null);
   // Bumped after every write, so status and lines on screen follow the server (the button "mark checked" disappears).
   const [reloadKey, setReloadKey] = React.useState(0);
@@ -45,21 +62,12 @@ export default function DocumentDetail() {
     void loadDocument(id).then((d) => {
       if (!d) return;
       setDoc(d); setKind(d.kind); setNumber(d.number); setLocationId(d.locationId);
-      const lines = d.lines as Line[];
-      const text = (ls: Line[]) => ls.map((l) => l.kind === "serial" ? l.codeRaw : `#${l.quantity}${l.materialCode ? ` ${l.materialCode}` : ""}`).join("\n");
+      const lines = d.lines as DocLine[];
       // A line keeps its direction (P-74): saving again never drops it.
-      if (d.kind === "bom") setBomLines({ remove: text(lines.filter((l) => l.direction === "remove")), install: text(lines.filter((l) => l.direction === "install")), none: text(lines.filter((l) => !l.direction)) });
-      else setRawLines(text(lines));
+      if (d.kind === "bom") setBomLines(splitByDirection(lines)); else setRawLines(linesToText(lines));
+      setLinesSource(d.linesSource ?? "manual");
     });
   }, [id, isNew, reloadKey]);
-
-  // One line per row: a serial, or a quantity "#3 MC-A". A "[remove]" / "[install]" written by hand is ignored: the
-  // direction comes from the box.
-  const parseLines = (text: string, direction?: "remove" | "install"): Line[] => text.split("\n").map((s) => s.replace(/\s*\[(remove|install)\]\s*$/, "").trim()).filter(Boolean).map((s) => {
-    const m = s.match(/^#(\d+)(?:\s+(\S+))?$/);
-    if (m) return { kind: "quantity", quantity: Number(m[1]), materialCode: m[2] ?? null, direction };
-    return { kind: "serial", codeRaw: s, direction };
-  });
 
   // P-103: only the buttons the server accepts (saveDocument, markDocumentChecked); the client office and the client
   // warehouse read and compare. The ASP warehouse never writes a BOM (§3.3, P-62).
@@ -69,17 +77,42 @@ export default function DocumentDetail() {
   const canClose = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
   // §3.3 (P-65): a BOM is uploaded only by client_admin and asp_admin; the server refuses it to the others.
   const canUploadBom = ["client_admin", "asp_admin"].includes(claims?.role ?? "");
+  const editable = isNew ? writerRole : canWrite && doc!.status !== "closed";
+  // §11.2: an ASP reads and saves its own column mappings; client_admin the client's default.
+  const mappingScope = isClientRole(claims?.role ?? "") ? "client" : claims?.orgId ?? "";
+
+  const onExcel = (f: File) => { void readTable(f).then((s) => setSheet(s.headers.length ? s : null)).catch(() => toast.error(t("errors.unsupported_file_type"))); };
+  const applyExcel = (r: { lines: DocLine[]; skipped: number }) => {
+    const add = (box: string, lines: DocLine[]) => [box.trim(), linesToText(lines)].filter(Boolean).join("\n");
+    if (kind === "bom") {
+      const split = splitByDirection(r.lines);
+      setBomLines((b) => ({ remove: [b.remove.trim(), split.remove].filter(Boolean).join("\n"), install: [b.install.trim(), split.install].filter(Boolean).join("\n"), none: [b.none.trim(), split.none].filter(Boolean).join("\n") }));
+    } else setRawLines((x) => add(x, r.lines));
+    setLinesSource("excel");
+    setToConfirm({ count: r.lines.length, skipped: r.skipped });
+    setSheet(null);
+  };
 
   const save = async () => {
     if (!number.trim() || !locationId) { toast.error(t("errors.invalid_data")); return; }
     if (kind === "bom" && bomLines.none.trim()) { toast.error(t("errors.bom_direction_required")); return; }
-    const lines = kind === "bom" ? [...parseLines(bomLines.remove, "remove"), ...parseLines(bomLines.install, "install")] : parseLines(rawLines);
-    const r = await run(() => call<{ documentId: string; duplicateOf: string | null }>("saveDocument", {
-      documentId: isNew ? undefined : id, kind, number: number.trim(), locationId, linesSource: "manual", lines,
-    }), t("common.saved"));
-    if (r?.duplicateOf) toast.message(t("documents.duplicateWarning"));
-    if (r?.documentId && isNew) nav(`/documents/${r.documentId}`);
-    else if (r) setReloadKey((k) => k + 1);
+    const typed = kind === "bom" ? [...parseLines(bomLines.remove, "remove"), ...parseLines(bomLines.install, "install")] : parseLines(rawLines);
+    const lines = carryModels(typed, (doc?.lines ?? []) as DocLine[]);
+    const r = await run(async () => {
+      const files = await Promise.all(pending.map(async (p) => ({ base64: await toBase64(p.blob), contentType: p.contentType })));
+      return call<{ documentId: string; duplicateOf: string | null }>("saveDocument", {
+        documentId: isNew ? undefined : id, kind, number: number.trim(), locationId, linesSource, lines,
+        files: files.length ? files : undefined,
+        // D-47: without keepFiles the server keeps every saved file; with it, only those listed.
+        keepFiles: !isNew && removed.length ? doc!.files.filter((f) => !removed.includes(f)) : undefined,
+      });
+    }, t("common.saved"));
+    if (!r) return;
+    pending.forEach((p) => URL.revokeObjectURL(p.url));
+    setPending([]); setRemoved([]); setToConfirm(null);
+    if (r.duplicateOf) toast.message(t("documents.duplicateWarning"));
+    if (r.documentId && isNew) nav(`/documents/${r.documentId}`);
+    else setReloadKey((k) => k + 1);
   };
   const mark = async () => {
     if (await run(() => call("markDocumentChecked", { documentId: id }), t("documents.marked")) !== undefined) setReloadKey((k) => k + 1);
@@ -94,6 +127,9 @@ export default function DocumentDetail() {
   if (!isNew && !doc) return <Loading />;
   const siteOrWarehouse = (l: Row<Location>) =>
     kind === "bom" ? l.type === "site" : l.type === "asp_warehouse";
+  const box = (label: string, value: string, onChange: (v: string) => void, testId: string, extra = "") => (
+    <Field label={label} htmlFor={testId}><Textarea id={testId} rows={10} value={value} onChange={(e) => onChange(e.target.value)} readOnly={!editable} className={`font-mono text-xs ${extra}`} placeholder={t("documents.linesPlaceholder")} data-testid={testId} /></Field>
+  );
   return (
     <div className="space-y-6">
       <PageHeader title={isNew ? t("documents.new") : t("documents.title", { n: doc?.number })}
@@ -107,7 +143,7 @@ export default function DocumentDetail() {
       />
       <Card>
         <div className="grid gap-3 md:grid-cols-3">
-          <Field label={t("documents.kind")} htmlFor="d-k"><Select id="d-k" value={kind} onChange={(e) => setKind(e.target.value as never)} disabled={!isNew} data-testid="document-kind">
+          <Field label={t("documents.kind")} htmlFor="d-k"><Select id="d-k" value={kind} onChange={(e) => setKind(e.target.value as Kind)} disabled={!isNew} data-testid="document-kind">
             <option value="ddt_in">{t("documents.kinds.ddt_in")}</option><option value="ddt_return">{t("documents.kinds.ddt_return")}</option>{(canUploadBom || !isNew) && <option value="bom">{t("documents.kinds.bom")}</option>}
           </Select></Field>
           <Field label={t("documents.number")} htmlFor="d-n"><Input id="d-n" value={number} onChange={(e) => setNumber(e.target.value)} className="font-mono" data-testid="document-number" /></Field>
@@ -116,21 +152,28 @@ export default function DocumentDetail() {
             {locations.filter(siteOrWarehouse).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
           </Select></Field>
         </div>
-        {kind === "bom" ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field label={t("documents.linesRemove")} htmlFor="d-lines-r"><Textarea id="d-lines-r" rows={10} value={bomLines.remove} onChange={(e) => setBomLines((b) => ({ ...b, remove: e.target.value }))} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines-remove" /></Field>
-            <Field label={t("documents.linesInstall")} htmlFor="d-lines-i"><Textarea id="d-lines-i" rows={10} value={bomLines.install} onChange={(e) => setBomLines((b) => ({ ...b, install: e.target.value }))} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines-install" /></Field>
-            {bomLines.none && (
-              <div className="md:col-span-2">
-                <Field label={t("documents.linesNoDirection")} htmlFor="d-lines-n"><Textarea id="d-lines-n" rows={4} value={bomLines.none} onChange={(e) => setBomLines((b) => ({ ...b, none: e.target.value }))} className="font-mono text-xs border-warning" data-testid="document-lines-none" /></Field>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Field label={t("documents.lines")} htmlFor="d-lines"><Textarea id="d-lines" rows={10} value={rawLines} onChange={(e) => setRawLines(e.target.value)} className="font-mono text-xs" placeholder={t("documents.linesPlaceholder")} data-testid="document-lines" /></Field>
-        )}
-        {isNew && <div className="flex justify-end"><Button onClick={save} disabled={busy || !number.trim() || !locationId} data-testid="document-save-new">{t("common.save")}</Button></div>}
       </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="space-y-3">
+          <FilesPanel existing={doc?.files ?? []} removed={removed} onRemoved={setRemoved} pending={pending} onPending={setPending} onExcel={onExcel} canAdd={editable} />
+          {sheet && editable && <ExcelMapping sheet={sheet} kind={kind} scope={mappingScope} onApply={applyExcel} onCancel={() => setSheet(null)} />}
+        </Card>
+        <Card className="space-y-3">
+          {toConfirm && (
+            <p className="rounded border border-warning p-2 text-sm text-warning" data-testid="document-lines-to-confirm">
+              {t("documents.linesToConfirm", { count: toConfirm.count, skipped: toConfirm.skipped })}
+            </p>
+          )}
+          {kind === "bom" ? (
+            <>
+              {box(t("documents.linesRemove"), bomLines.remove, (v) => setBomLines((b) => ({ ...b, remove: v })), "document-lines-remove")}
+              {box(t("documents.linesInstall"), bomLines.install, (v) => setBomLines((b) => ({ ...b, install: v })), "document-lines-install")}
+              {bomLines.none && box(t("documents.linesNoDirection"), bomLines.none, (v) => setBomLines((b) => ({ ...b, none: v })), "document-lines-none", "border-warning")}
+            </>
+          ) : box(t("documents.lines"), rawLines, setRawLines, "document-lines")}
+          {isNew && <div className="flex justify-end"><Button onClick={save} disabled={busy || !number.trim() || !locationId} data-testid="document-save-new">{t("common.save")}</Button></div>}
+        </Card>
+      </div>
       {compare && (
         <Card>
           <h2 className="font-semibold mb-3">{t("documents.compareResult")}</h2>
