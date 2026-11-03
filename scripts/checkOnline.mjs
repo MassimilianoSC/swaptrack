@@ -1,6 +1,7 @@
 // P-67: READ-ONLY check before publishing batch 1. Prints counts only, never data of people:
 //   - events with no processedAt (never processed by the trigger), by type;
-//   - documents with aspId null (saved by a client role before P-49), by kind.
+//   - documents with aspId null (saved by a client role before P-49), by kind;
+//   - BOMs with lines without direction (P-92), and how many lines.
 // Target: the emulators by default (project demo-swaptrack). The real demo project only with BOTH
 //   CHECK_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
 // (PowerShell: $env:CHECK_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: CHECK_REAL_PROJECT=kronos-caffe-sito node ...)
@@ -30,6 +31,10 @@ console.log(`Events read: ${events.size}`);
 print("Events never processed (no processedAt), by type", countBy(pending, "type"));
 const docs = await db.collection("documents").where("aspId", "==", null).select("kind").get();
 print("Documents with aspId null, by kind", countBy(docs.docs, "kind"));
-console.log(pending.length || docs.size
+// P-92 (§11.2): BOM lines must have a direction; lines saved without one are not shown to the technician.
+const boms = await db.collection("documents").where("kind", "==", "bom").select("lines").get();
+const undirected = boms.docs.map((d) => (d.get("lines") ?? []).filter((l) => !l?.direction).length).filter((n) => n > 0);
+console.log(`\nBOMs read: ${boms.size}; BOMs with lines without direction: ${undirected.length} (${undirected.reduce((a, b) => a + b, 0)} lines)`);
+console.log(pending.length || docs.size || undirected.length
   ? "\nSend these numbers to the team: something must be fixed before or right after the batch."
-  : "\nNothing to fix: no unprocessed event, no document without ASP.");
+  : "\nNothing to fix: no unprocessed event, no document without ASP, no BOM line without direction.");
