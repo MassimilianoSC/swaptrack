@@ -2,7 +2,7 @@ import * as React from "react";
 import { Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useSession } from "@/app/session";
-import { useNarrow } from "@/app/hooks";
+import { useNarrow, useOnline } from "@/app/hooks";
 import { shellFor, isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -29,6 +29,7 @@ export function AppShell() {
   const role = claims?.role ?? "";
   const shell = shellFor(role, narrow);
   const [drawer, setDrawer] = React.useState(false);
+  const online = useOnline();
   const loc = useLocation();
   React.useEffect(() => { setDrawer(false); }, [loc.pathname]);
   useInactivity(shell === "desk" && !narrow && authSettings.inactivityEnabled, authSettings.inactivityMinutes, safeSignOut);
@@ -40,6 +41,8 @@ export function AppShell() {
       <IosInstallHint />
       {/* D-59: the install banner only on the phone; the menu entry everywhere. */}
       {narrow && <InstallBanner />}
+      {/* D-58 B1: desk pages read the server once; without network what they show may be old. */}
+      {shell === "desk" && !online && <div role="status" className="border-b border-border bg-warning/15 px-4 py-2 text-sm" data-testid="desk-offline-strip">{t("status.offlineStrip")}</div>}
       <div className="flex flex-1 min-h-0">
         <Sidebar />
         <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && "pb-28")} data-testid="main-content">

@@ -55,13 +55,20 @@ export function watchToComplete(scope: { role: string; orgId: string }, cb: (v: 
 }
 
 // Lookup an item by any of its codes (serial or replacement label).
+// D-58 B2: a code that could not be checked with the server (no network) is "not available", never "not found".
+export class LookupUnavailable extends Error {}
+const checked = <T,>(p: Promise<T>): Promise<T> => p.catch((e: { code?: string }) => { throw e?.code === "unavailable" ? new LookupUnavailable() : e; });
+
 export async function searchItemByCode(raw: string): Promise<Row<Item> | null> {
   if (!raw.trim()) return null;
   const codeId = await computeCodeId(raw.trim());
-  const s = await getDoc(doc(db, "codes", codeId));
-  if (!s.exists()) return null;
+  const s = await checked(getDoc(doc(db, "codes", codeId)));
+  if (!s.exists()) { if (s.metadata.fromCache) throw new LookupUnavailable(); return null; }
   const itemId = s.get("itemId") as string | undefined;
-  return itemId ? loadItem(itemId) : null;
+  if (!itemId) return null;
+  const it = await checked(getDoc(doc(db, "items", itemId)));
+  if (!it.exists()) { if (it.metadata.fromCache) throw new LookupUnavailable(); return null; }
+  return { id: it.id, ...(it.data() as Item) };
 }
 
 // All codes attached to an item (for the detail page).

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { useSession } from "@/app/session";
-import { watchItems, searchItemByCode, ITEMS_PAGE, type Item, type ItemFilters } from "@/lib/data/items";
+import { watchItems, searchItemByCode, LookupUnavailable, ITEMS_PAGE, type Item, type ItemFilters } from "@/lib/data/items";
 import { listLocationsFor, listModels, listOrganizations, type Row, type Location, type Model, type Organization } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
 import { STATUSES } from "@shared/stateMachine";
@@ -73,8 +73,10 @@ export default function Items() {
   const codeSearch = async () => {
     if (!q.trim()) return;
     // A code the rules do not let this user read is "not found" for them (R7: existence is not revealed), never a silent failure.
-    const found = await searchItemByCode(q).catch(() => null);
-    if (found) window.location.href = `/items/${found.id}`;
+    // D-58 B2: without network the answer is "not available", never "not found".
+    const found = await searchItemByCode(q).catch((e) => e instanceof LookupUnavailable ? "unavailable" as const : null);
+    if (found === "unavailable") toast.error(t("errors.offlineUnavailable"));
+    else if (found) window.location.href = `/items/${found.id}`;
     else toast.error(t("items.notFound"));
   };
   const anyFilter = FILTER_KEYS.some((k) => params.get(k) && !(k === "asp" && !client));

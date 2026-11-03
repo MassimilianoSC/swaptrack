@@ -266,7 +266,8 @@
     "offline": "Offline",
     "pending": "{{count}} waiting to be sent",
     "pendingEvents": "Scans waiting to be sent: {{count}}",
-    "pendingPhotos": "Photos waiting to be sent: {{count}}"
+    "pendingPhotos": "Photos waiting to be sent: {{count}}",
+    "offlineStrip": "You are offline: the data may not be up to date."
   },
   "auth": {
     "signOut": "Sign out",

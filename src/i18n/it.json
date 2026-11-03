@@ -266,7 +266,8 @@
     "offline": "Offline",
     "pending": "{{count}} da inviare",
     "pendingEvents": "Letture da inviare: {{count}}",
-    "pendingPhotos": "Foto da inviare: {{count}}"
+    "pendingPhotos": "Foto da inviare: {{count}}",
+    "offlineStrip": "Sei offline: i dati possono non essere aggiornati."
   },
   "auth": {
     "signOut": "Esci",

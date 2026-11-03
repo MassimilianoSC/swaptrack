@@ -5,7 +5,7 @@ import { Eye, Pencil, Shuffle, MapPin, Wrench, Shield } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction, useOnline } from "@/app/hooks";
 import { call } from "@/lib/data/call";
-import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
+import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, LookupUnavailable, type Item, type Code } from "@/lib/data/items";
 import { listModels, listLocationsFor, listOrganizations, type Model, type Location, type Organization } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
 import { fileBlobUrl } from "@/lib/data/storage";
@@ -134,7 +134,8 @@ export default function ItemDetail() {
     }
   };
   const doMerge = async () => {
-    const other = await searchItemByCode(mergeOtherCode);
+    const other = await searchItemByCode(mergeOtherCode).catch((e) => e instanceof LookupUnavailable ? "unavailable" as const : null);
+    if (other === "unavailable") { toast.error(t("errors.offlineUnavailable")); return; }
     if (!other) { toast.error(t("items.notFound")); return; }
     if (other.id === id) { toast.error(t("errors.invalid_data")); return; }
     if (await run(() => call("mergeItems", { fromItemId: other.id, intoItemId: id, reason: mergeReason }), t("common.saved"))) {
