@@ -16,9 +16,14 @@ const NORD = "org_asp_nord", SITE = "loc_TT-SITO-POLICY";
 const BOM_AT = Date.UTC(2026, 9, 10, 8);
 const ca = { uid: "tt_ca", role: "client_admin", orgId: "org_client", ip: "test", token: {} } as Parameters<Handlers["compareDocument"]["handler"]>[0];
 let n = 0;
-const install = (code: string, at: number) => env.admin.db.collection("events").doc(`ev_pol_${n++}`).set({
-  type: "install_at_site", codeRaw: code, codeId: computeCodeId(code), locationId: SITE, aspId: NORD, scannedAt: Timestamp.fromMillis(at), voided: false, payload: {},
-});
+// Each reading has its piece, with a known model: the comparison then counts only arrived, missing and unexpected.
+const install = async (code: string, at: number) => {
+  const itemId = `it_pol_${n}`;
+  await env.admin.db.collection("items").doc(itemId).set({ needsModel: false, modelId: "mdl_pol", materialCode: "MC-POL", currentAspId: NORD });
+  await env.admin.db.collection("events").doc(`ev_pol_${n++}`).set({
+    type: "install_at_site", codeRaw: code, codeId: computeCodeId(code), itemId, locationId: SITE, aspId: NORD, scannedAt: Timestamp.fromMillis(at), voided: false, payload: {},
+  });
+};
 const bom = (id: string, codes: string[]) => env.admin.db.collection("documents").doc(id).set({
   kind: "bom", number: id, aspId: NORD, locationId: SITE, status: "open", version: 1, createdAt: Timestamp.fromMillis(BOM_AT),
   lines: codes.map((c) => ({ kind: "serial", codeRaw: c, codeId: computeCodeId(c), direction: "install" })),
