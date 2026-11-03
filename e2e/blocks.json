@@ -6,6 +6,7 @@
       "files": [
         "return-elsewhere.desk.spec.ts",
         "07-install.desk.spec.ts",
+        "07-install.phone.spec.ts",
         "demo-docs.desk.spec.ts",
         "row-actions.desk.spec.ts",
         "ddt-late.desk.spec.ts",
