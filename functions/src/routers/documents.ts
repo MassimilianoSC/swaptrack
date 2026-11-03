@@ -34,7 +34,7 @@ async function ensureCanWrite(ctx: Ctx, kind: DocKind, locationId: string): Prom
   return loc!.aspId as string;
 }
 
-async function storeFiles(aspId: string, kind: DocKind, documentId: string, files: Array<{ base64: string; contentType: string }>): Promise<string[]> {
+async function storeFiles(aspId: string, kind: DocKind, documentId: string, version: number, files: Array<{ base64: string; contentType: string }>): Promise<string[]> {
   const paths: string[] = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
@@ -43,7 +43,9 @@ async function storeFiles(aspId: string, kind: DocKind, documentId: string, file
     const bytes = Buffer.from(f.base64, "base64");
     if (bytes.length > FILE_MAX) fail("invalid-argument", "file_too_large");
     // DECISIONS b5 / D29 (step 4 revision): kind is in the path so storage.rules gate reads by kind.
-    const path = `documents/${aspId}/${kind}/${documentId}/${i + 1}.${ext}`;
+    // §11.2: each version has its own files ({version}-{n}), so history keeps the previous pages (one path segment:
+    // the Storage rules stay the same).
+    const path = `documents/${aspId}/${kind}/${documentId}/${version}-${i + 1}.${ext}`;
     await bucket().file(path).save(bytes, { contentType: f.contentType, resumable: false });
     paths.push(path);
   }
@@ -122,7 +124,7 @@ export const documents = {
       const duplicates = await db.collection("documents").where("kind", "==", d.kind).where("aspId", "==", aspId).where("number", "==", d.number).limit(5).get();
       const dup = duplicates.docs.find((x) => x.id !== ref.id);
       let paths: string[] = [];
-      if (d.files && d.files.length) paths = await storeFiles(aspId, d.kind, ref.id, d.files);
+      if (d.files && d.files.length) paths = await storeFiles(aspId, d.kind, ref.id, (prev?.version ?? 0) + 1, d.files);
       const history = Array.isArray(prev?.history) ? prev!.history : [];
       if (prev) history.push({ at: Timestamp.now(), by: ctx.uid, lines: prev.lines, files: prev.files });
       await db.runTransaction(async (tx) => {

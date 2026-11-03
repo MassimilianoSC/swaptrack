@@ -18,7 +18,7 @@ service firebase.storage {
         && (request.auth.token.role in ['client_admin', 'client_office', 'client_warehouse'] || request.auth.token.orgId == aspId);
     }
 
-    // §11.2 / DECISIONS b5: documents live at documents/{aspId}/{kind}/{documentId}/{n}.{ext}, aspId being the
+    // §11.2 / DECISIONS b5: documents live at documents/{aspId}/{kind}/{documentId}/{version}-{n}.{ext}, aspId being the
     // ASP of the document's location (P-49). Writes always go through the server (Admin SDK). Reads are gated by
     // kind so technicians can see BOMs of their own ASP and client_warehouse can see return DDTs, as in §3.3.
     match /documents/{scope}/{kind}/{documentId}/{file} {

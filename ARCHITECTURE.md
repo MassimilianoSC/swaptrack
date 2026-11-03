@@ -59,7 +59,7 @@ Claims: `role`, `orgId`, `active`, `disabledAt` (ms or null), set only by functi
 Decided by path and claims only (`storage.rules`, tests in `functions/test/rules/storage.test.ts`). No client writes except photos.
 - `branding/logo.{ext}`: public read, written by `settings.saveSettings`.
 - `photos/{aspId}/{eventId}/{n}.jpg`: created by an ASP role of that ASP (also in grace), images under 5 MB; read by client roles and that ASP.
-- `documents/{aspId}/{kind}/{documentId}/{n}.{ext}`: written by `documents.saveDocument`; `aspId` is always the ASP of the document's location, also when `client_admin` uploads. Read like the Firestore document: client_admin/client_office all, ASP admin/warehouse own ASP, technicians BOMs of own ASP, client_warehouse `ddt_return`.
+- `documents/{aspId}/{kind}/{documentId}/{version}-{n}.{ext}`: written by `documents.saveDocument` (each version its own files, so `history` keeps the previous pages); `aspId` is always the ASP of the document's location, also when `client_admin` uploads. Read like the Firestore document: client_admin/client_office all, ASP admin/warehouse own ASP, technicians BOMs of own ASP, client_warehouse `ddt_return`.
 - `exports/{scope}/…`, `reports/{scope}/…`: client_admin/client_office all, asp_admin own scope.
 
 ## Security rules: reads decided with a `get()`
