@@ -230,7 +230,9 @@
     "asp": "ASP",
     "category": "Sorting category",
     "from": "Scanned from",
-    "to": "Scanned until"
+    "to": "Scanned until",
+    "truncated": "Export truncated: it holds only the first {{count}} rows. Narrow the filters to get everything.",
+    "truncatedShort": "truncated"
   },
   "reports": {
     "subtitle": "Monthly reports: automatic on the 1st; on demand (client roles).",
@@ -254,7 +256,9 @@
     "site": "Site",
     "siteCode": "Site code (optional)",
     "category": "Category",
-    "precedence": "Most specific wins: site + model > site + equipment type > model > equipment type > site."
+    "precedence": "Most specific wins: site + model > site + equipment type > model > equipment type > site.",
+    "editCategory": "Edit category",
+    "editRule": "Edit rule"
   },
   "status": {
     "online": "Online",
@@ -696,7 +700,11 @@
       "site_reassigned": "Site reassigned",
       "model_created": "Model created",
       "model_updated": "Model updated",
-      "models_deactivated": "Models deactivated"
+      "models_deactivated": "Models deactivated",
+      "document_saved": "Document saved",
+      "items_merged": "Pieces merged",
+      "event_location_corrected": "Location of a reading corrected",
+      "anomaly_resolved": "Anomaly resolved"
     }
   },
   "settings": {

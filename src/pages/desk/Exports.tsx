@@ -10,7 +10,7 @@ import { exportFileName } from "@/lib/fileNames";
 import { toast } from "sonner";
 import { listModels, listLocationsFor, listOrganizations, type Row, type Model, type Location, type Organization } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
-import { PageHeader, Card } from "@/components/ui/card";
+import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, Input, Field } from "@/components/ui/form";
 import { DataTable } from "@/components/DataTable";
@@ -52,11 +52,13 @@ export default function Exports() {
   const dayStart = (d: string) => (d ? new Date(`${d}T00:00:00`).getTime() : undefined);
   const dayEnd = (d: string) => (d ? new Date(`${d}T23:59:59.999`).getTime() : undefined);
   const create = async () => {
-    await run(() => call("createExport", {
+    const res = await run(() => call<{ rowCount: number; truncated?: boolean }>("createExport", {
       scope, status: status || undefined, modelId: modelId || undefined, locationId: locationId || undefined,
       aspId: client ? aspId || undefined : undefined, sortingCategoryId: categoryId || undefined, from: dayStart(from), to: dayEnd(to),
       language: i18n.language as "it" | "en",
     }), t("exports.created"));
+    // P-117 n.36: the server stops at its maximum of rows and says so; the user is told to narrow the filters.
+    if (res?.truncated) toast.warning(t("exports.truncated", { count: res.rowCount }));
   };
   const lang = i18n.language as "it" | "en";
   const download = async (r: Row<SwExport>) => {
@@ -100,7 +102,8 @@ export default function Exports() {
         <DataTable testId="exports-table" rows={list} columns={[
           { key: "at", header: t("exports.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
           { key: "scope", header: t("dashboard.scope"), value: (r) => r.scope === "client" ? t("dashboard.allAsps") : r.scope },
-          { key: "n", header: t("exports.rows"), value: (r) => r.rowCount, className: "tabular" },
+          { key: "n", header: t("exports.rows"), value: (r) => r.rowCount, className: "tabular",
+            render: (r) => <span>{r.rowCount}{(r as Row<SwExport> & { truncated?: boolean }).truncated && <Badge tone="warning" className="ml-2" data-testid={`exports-truncated-${r.id}`}>{t("exports.truncatedShort")}</Badge>}</span> },
           { key: "d", header: "", render: (r) => <Button size="sm" variant="ghost" onClick={() => download(r)} data-testid={`exports-download-${r.id}`}><Download className="h-4 w-4" />{t("common.download")}</Button> },
         ]} />
       )}

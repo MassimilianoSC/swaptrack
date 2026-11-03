@@ -5,7 +5,7 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchUsers, watchOrganizations, watchDoc, type Row, type UserProfile, type Organization } from "@/lib/data/db";
-import { CLIENT_ROLES, ASP_ROLES } from "@shared/roles";
+import { CLIENT_ROLES, ASP_ROLES, canManageUser } from "@shared/roles";
 import { DataTable } from "@/components/DataTable";
 import { Badge, PageHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -134,7 +134,9 @@ export default function UsersPage() {
           ...(isClientAdmin ? [{ key: "org", header: t("users.organization"), value: (u: U) => orgName(u.orgId) }] : []),
           { key: "role", header: t("users.role"), value: (u) => t(`roles.${u.role}`) },
           { key: "status", header: t("common.status"), value: (u) => status(u)[0], render: (u) => { const [s, tone] = status(u); return <Badge tone={tone}>{t(`users.status.${s}`)}</Badge>; } },
-          { key: "actions", header: "", render: (u) => (
+          // §3.3 (P-117 n.30): the menu only on the rows this admin may manage, as the server decides (canManageUser):
+          // an ASP admin manages the warehouse workers and technicians of its own ASP, not other admins.
+          { key: "actions", header: "", render: (u) => !canManageUser({ role: claims!.role!, orgId: claims!.orgId! }, u) ? null : (
             <Menu>
               <MenuTrigger asChild><Button size="icon" variant="ghost" aria-label={t("common.actions")} data-testid={`user-actions-${u.id}`}><MoreHorizontal className="h-5 w-5" /></Button></MenuTrigger>
               <MenuContent>

@@ -63,7 +63,7 @@ export default function Sorting() {
         ]} />
       </section>
       <Dialog open={!!cat} onOpenChange={(o) => { if (!o) setCat(null); }}>
-        <DialogContent title={t("sorting.newCategory")}>
+        <DialogContent title={t(cat?.id ? "sorting.editCategory" : "sorting.newCategory")}>
           {cat && <div className="space-y-3">
             <Field label={t("sorting.labelIt")} htmlFor="c-it"><Input id="c-it" value={cat.labels?.it ?? ""} onChange={(e) => setCat({ ...cat, labels: { ...cat.labels!, it: e.target.value } })} data-testid="sorting-category-it" /></Field>
             <Field label={t("sorting.labelEn")} htmlFor="c-en"><Input id="c-en" value={cat.labels?.en ?? ""} onChange={(e) => setCat({ ...cat, labels: { ...cat.labels!, en: e.target.value } })} data-testid="sorting-category-en" /></Field>
@@ -74,7 +74,7 @@ export default function Sorting() {
         </DialogContent>
       </Dialog>
       <Dialog open={!!rule} onOpenChange={(o) => { if (!o) setRule(null); }}>
-        <DialogContent title={t("sorting.newRule")} description={t("sorting.precedence")}>
+        <DialogContent title={t(rule?.id ? "sorting.editRule" : "sorting.newRule")} description={t("sorting.precedence")}>
           {rule && <div className="space-y-3">
             <Field label={t("sorting.siteCode")} htmlFor="r-site"><Input id="r-site" className="font-mono" value={rule.siteCode ?? ""} onChange={(e) => setRule({ ...rule, siteCode: e.target.value })} data-testid="sorting-rule-site" /></Field>
             <Field label={t("models.model")} htmlFor="r-model"><Select id="r-model" value={rule.modelId ?? ""} onChange={(e) => setRule({ ...rule, modelId: e.target.value })} data-testid="sorting-rule-model">

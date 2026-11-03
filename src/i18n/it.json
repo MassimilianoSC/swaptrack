@@ -230,7 +230,9 @@
     "asp": "ASP",
     "category": "Categoria di smistamento",
     "from": "Letti dal",
-    "to": "Letti fino al"
+    "to": "Letti fino al",
+    "truncated": "Esportazione troncata: contiene solo le prime {{count}} righe. Restringi i filtri per avere tutto.",
+    "truncatedShort": "troncata"
   },
   "reports": {
     "subtitle": "Rapporti mensili: automatici il 1°; su richiesta (ruoli cliente).",
@@ -254,7 +256,9 @@
     "site": "Sito",
     "siteCode": "Codice sito (facoltativo)",
     "category": "Categoria",
-    "precedence": "Vince la più specifica: sito + modello > sito + tipo apparato > modello > tipo apparato > sito."
+    "precedence": "Vince la più specifica: sito + modello > sito + tipo apparato > modello > tipo apparato > sito.",
+    "editCategory": "Modifica categoria",
+    "editRule": "Modifica regola"
   },
   "status": {
     "online": "Online",
@@ -696,7 +700,11 @@
       "site_reassigned": "Sito riassegnato",
       "model_created": "Modello creato",
       "model_updated": "Modello modificato",
-      "models_deactivated": "Modelli disattivati"
+      "models_deactivated": "Modelli disattivati",
+      "document_saved": "Documento salvato",
+      "items_merged": "Pezzi uniti",
+      "event_location_corrected": "Luogo di una lettura corretto",
+      "anomaly_resolved": "Anomalia risolta"
     }
   },
   "settings": {

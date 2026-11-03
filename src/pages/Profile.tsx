@@ -19,8 +19,9 @@ export default function Profile() {
 
   const savePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await run(() => changePassword(cur, next), t("profile.passwordChanged"));
-    if (ok !== undefined) { setCur(""); setNext(""); }
+    // changePassword returns nothing: success is "true" here, so the fields are emptied (P-117 n.35).
+    const ok = await run(async () => { await changePassword(cur, next); return true; }, t("profile.passwordChanged"));
+    if (ok) { setCur(""); setNext(""); }
   };
 
   return (
