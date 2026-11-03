@@ -41,7 +41,8 @@ export default function Items() {
   React.useEffect(() => { setMax(ITEMS_PAGE); }, [filterKey]);
   React.useEffect(() => {
     if (!claims?.orgId) return;
-    setItems(null); setFailed(false);
+    // The rows shown stay until the new ones arrive (changing a filter or "show more" does not blank the page).
+    setFailed(false);
     return watchItems({ role: claims.role!, orgId: claims.orgId }, filters, max, setItems, () => setFailed(true));
   }, [claims, filterKey, max]);
   React.useEffect(() => {
@@ -77,6 +78,9 @@ export default function Items() {
     else toast.error(t("items.notFound"));
   };
   const anyFilter = FILTER_KEYS.some((k) => params.get(k) && !(k === "asp" && !client));
+  // As before P-101, the page (code search included) opens once the list has answered: a search sent while the
+  // tab's database connection is still starting could answer "not found" for a piece that exists.
+  if (!items && !failed) return <Loading />;
 
   return (
     <div className="space-y-6">
@@ -119,7 +123,7 @@ export default function Items() {
         {anyFilter && <Button type="button" variant="secondary" onClick={() => setParams(new URLSearchParams(), { replace: true })} data-testid="items-filter-clear">{t("items.filters.clear")}</Button>}
       </div>
 
-      {failed ? <ErrorState message={t("errors.load_failed")} /> : !items ? <Loading /> : (
+      {failed || !items ? <ErrorState message={t("errors.load_failed")} /> : (
         <>
           <DataTable testId="items-table" rows={items} columns={[
             { key: "model", header: t("items.model"), render: (r) => <Link to={`/items/${r.id}`} data-testid={`items-row-link-${r.id}`} className="hover:underline">{r.model ?? "—"}</Link> },

@@ -23,9 +23,11 @@ test.describe("Pezzi — filtri e numeri del cruscotto (scrivania)", () => {
     await expect(option).toHaveCount(1);
     await page.getByTestId("items-filter-model").selectOption((await option.getAttribute("value"))!);
     await expect(page).toHaveURL(/modelId=/);
-    const byModel = await collectRows(page, "items-table");
-    expect(byModel.length).toBeGreaterThan(0);
-    for (const r of byModel) expect(r.text).toContain(SEED.firstModel.model);
+    // The previous rows stay on screen until the filtered ones arrive.
+    await expect.poll(async () => {
+      const rows = await collectRows(page, "items-table");
+      return rows.length > 0 && rows.every((r) => r.text.includes(SEED.firstModel.model));
+    }, { timeout: 30_000 }).toBe(true);
 
     await page.goto(`/items?locationId=loc_${SEED.nord.warehouse}`);
     await expect(page.getByTestId("items-filter-location")).toHaveValue(new RegExp(`^${SEED.nord.warehouse} · `));
