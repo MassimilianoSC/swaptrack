@@ -3,6 +3,12 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { OpError } from "@/lib/data/call";
 
+type T_ = ReturnType<typeof useTranslation>["t"];
+const errorToast = (t: T_, e: unknown) => {
+  const code = e instanceof OpError ? e.code : (e as Error).message;
+  toast.error(t(`errors.${code}`, { defaultValue: t("errors.unexpected") }));
+};
+
 // Runs an async action with a busy flag and translated error toast.
 export function useAction() {
   const { t } = useTranslation();
@@ -14,14 +20,33 @@ export function useAction() {
       if (success) toast.success(success);
       return r;
     } catch (e) {
-      const code = e instanceof OpError ? e.code : (e as Error).message;
-      toast.error(t(`errors.${code}`, { defaultValue: t("errors.unexpected") }));
+      errorToast(t, e);
       return undefined;
     } finally {
       setBusy(false);
     }
   }, [t]);
   return { busy, run };
+}
+
+// P-127: an action on one row of a table (key: which row and which action): only that row waits, the others stay usable.
+export function useRowAction() {
+  const { t } = useTranslation();
+  const [pending, setPending] = React.useState<ReadonlySet<string>>(() => new Set());
+  const runFor = React.useCallback(async <T,>(key: string, fn: () => Promise<T>, success?: string): Promise<T | undefined> => {
+    setPending((p) => new Set(p).add(key));
+    try {
+      const r = await fn();
+      if (success) toast.success(success);
+      return r;
+    } catch (e) {
+      errorToast(t, e);
+      return undefined;
+    } finally {
+      setPending((p) => { const n = new Set(p); n.delete(key); return n; });
+    }
+  }, [t]);
+  return { pending, runFor };
 }
 
 export function useOnline() {

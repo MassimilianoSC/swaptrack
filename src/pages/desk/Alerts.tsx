@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Eye, Lock } from "lucide-react";
 import { useSession } from "@/app/session";
-import { useAction } from "@/app/hooks";
+import { useRowAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchAlerts, type Alert } from "@/lib/data/documents";
 import { hasNoDifferenceNow, isAlertToWatch } from "@/lib/alertState";
@@ -36,8 +36,7 @@ export default function Alerts() {
   const { claims } = useSession();
   const names = useNames();
   // P-100: the object of an alert by kind and place, never by id.
-  const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
-  const { busy, run } = useAction();
+  const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
   const [all, setAll] = React.useState<Row<Alert>[] | null>(null);
   const [showClosed, setShowClosed] = React.useState(false);
   React.useEffect(() => claims?.orgId ? watchAlerts({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
@@ -46,9 +45,11 @@ export default function Alerts() {
   const canClose = ["client_admin", "asp_admin", "client_warehouse"].includes(claims?.role ?? "");
   // P-103: the alert of a shipment (return, transfer) opens the shipment, also when a DDT is attached to it.
   const link = (a: Row<Alert>) => a.shipmentId ? `/shipments/${a.shipmentId}` : a.documentId ? `/documents/${a.documentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
-  const seen = (id: string) => run(() => call("markAlertSeen", { alertId: id }));
+  // P-127: only the row being marked or closed waits.
+  const { pending, runFor } = useRowAction();
+  const seen = (id: string) => runFor(`seen-${id}`, () => call("markAlertSeen", { alertId: id }));
   // P-116 (n.20): cancelling the note (X, Esc) does not close the alert.
-  const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (note === null || !canClose) return; await run(() => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
+  const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (note === null || !canClose) return; await runFor(`close-${id}`, () => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
   return (
     <div className="space-y-6">
       <PageHeader title={t("nav.alerts")} subtitle={t("alerts.subtitle")}
@@ -61,8 +62,8 @@ export default function Alerts() {
           { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{objectLabel(a)}</Link> },
           { key: "codes", header: t("alerts.codes"), render: (a) => <AlertCodes detail={a.detail} testId={`alerts-codes-${a.id}`} /> },
           { key: "at", header: t("alerts.updated"), value: (a) => formatInstant(a.updatedAt?.toDate?.() ?? null, i18n.language) },
-          { key: "seen", header: "", render: (a) => <Button size="sm" variant="ghost" onClick={() => seen(a.id)} disabled={busy || !!a.seenAt} data-testid={`alerts-seen-${a.id}`}><Eye className="h-4 w-4" />{a.seenAt ? t("alerts.seen") : t("alerts.markSeen")}</Button> },
-          { key: "close", header: "", render: (a) => canClose && !a.closedAt ? <Button size="sm" variant="ghost" onClick={() => close(a.id)} disabled={busy} data-testid={`alerts-close-${a.id}`}><Lock className="h-4 w-4" />{t("common.close")}</Button> : null },
+          { key: "seen", header: "", render: (a) => <Button size="sm" variant="ghost" onClick={() => seen(a.id)} disabled={pending.has(`seen-${a.id}`) || !!a.seenAt} aria-busy={pending.has(`seen-${a.id}`) || undefined} data-testid={`alerts-seen-${a.id}`}><Eye className="h-4 w-4" />{a.seenAt ? t("alerts.seen") : t("alerts.markSeen")}</Button> },
+          { key: "close", header: "", render: (a) => canClose && !a.closedAt ? <Button size="sm" variant="ghost" onClick={() => close(a.id)} disabled={pending.has(`close-${a.id}`)} aria-busy={pending.has(`close-${a.id}`) || undefined} data-testid={`alerts-close-${a.id}`}><Lock className="h-4 w-4" />{t("common.close")}</Button> : null },
         ]} />
       )}
       <Card>

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
-import { useAction } from "@/app/hooks";
+import { useAction, useRowAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchOrganizations, type Row, type Organization } from "@/lib/data/db";
 import { DataTable } from "@/components/DataTable";
@@ -45,6 +45,8 @@ function CreateAspDialog({ open, onClose, onDone }: { open: boolean; onClose: ()
 export default function Organizations() {
   const { t } = useTranslation();
   const { busy, run } = useAction();
+  // P-127: the report language of one row waits alone.
+  const { pending, runFor } = useRowAction();
   const [orgs, setOrgs] = React.useState<Row<Organization>[] | null>(null);
   const [error, setError] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
@@ -64,8 +66,8 @@ export default function Organizations() {
           { key: "name", header: t("orgs.name") },
           { key: "type", header: t("orgs.type"), value: (o) => t(`orgs.types.${o.type}`) },
           { key: "language", header: t("orgs.reportLanguage"), render: (o) => (
-            <Select aria-label={t("orgs.reportLanguage")} className="w-36" value={o.language} disabled={busy} data-testid={`org-language-${o.id}`}
-              onChange={(e) => run(() => call("setLanguage", { target: "organization", orgId: o.id, language: e.target.value }), t("common.saved"))}>
+            <Select aria-label={t("orgs.reportLanguage")} className="w-36" value={o.language} disabled={pending.has(o.id)} data-testid={`org-language-${o.id}`}
+              onChange={(e) => runFor(o.id, () => call("setLanguage", { target: "organization", orgId: o.id, language: e.target.value }), t("common.saved"))}>
               <option value="it">Italiano</option><option value="en">English</option>
             </Select>) },
           { key: "active", header: t("common.status"), value: (o) => (o.active ? 1 : 0), render: (o) => <Badge tone={o.active ? "success" : "danger"}>{t(o.active ? "common.active" : "common.inactive")}</Badge> },
