@@ -77,7 +77,7 @@ function Gate() {
         <Route index element={<Home />} />
         <Route path="profile" element={<Profile />} />
         <Route path="guide" element={<Guide />} />
-        <Route path="scan" element={<Scan />} />
+        <Route path="scan" element={<RoleRoute roles={["asp_technician", "asp_warehouse", "asp_admin"]}><Scan /></RoleRoute>} />
         <Route path="dashboard" element={<RoleRoute roles={dash}><Dashboard /></RoleRoute>} />
         <Route path="items" element={<RoleRoute roles={deskRead}><Items /></RoleRoute>} />
         <Route path="items/to-complete" element={<RoleRoute roles={["client_admin", "client_office", "asp_admin", "asp_warehouse"]}><ToComplete /></RoleRoute>} />

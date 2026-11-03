@@ -854,7 +854,6 @@
     "forceState": "Office force",
     "forceStateHint": "Writes an office correction (force_state) to the item.",
     "changeAsp": "Change ASP (client_admin only)",
-    "aspIdHint": "Organization id of the destination ASP",
     "applyForce": "Apply correction",
     "merge": "Merge",
     "mergeHint": "Merge another piece into this one. Codes and events are re-pointed; the trigger follows mergedInto.",
@@ -864,7 +863,6 @@
     "correctLocation": "Correct location",
     "correctLocationHint": "The event keeps its original location in `correction`; the item state is recomputed.",
     "previousLocation": "Previous location",
-    "newLocationId": "New location id",
     "flows": {
       "new": "New material",
       "removed": "Removed material"
@@ -890,7 +888,10 @@
       "clear": "Clear filters",
       "showMore": "Show more",
       "moreAvailable": "Showing the first {{count}} pieces, latest first: use the filters or \"Show more\"."
-    }
+    },
+    "historyNotForRole": "The history of the piece is not available for your role.",
+    "sameAsp": "Same ASP",
+    "newLocation": "New place"
   },
   "shipments": {
     "subtitle": "Return shipments to the client and transfers.",

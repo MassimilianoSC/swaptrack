@@ -28,7 +28,8 @@ export default function Alerts() {
   // P-103: the alert of a shipment (return, transfer) opens the shipment, also when a DDT is attached to it.
   const link = (a: Row<Alert>) => a.shipmentId ? `/shipments/${a.shipmentId}` : a.documentId ? `/documents/${a.documentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
   const seen = (id: string) => run(() => call("markAlertSeen", { alertId: id }));
-  const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (!canClose) return; await run(() => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
+  // P-116 (n.20): cancelling the note (X, Esc) does not close the alert.
+  const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (note === null || !canClose) return; await run(() => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
   return (
     <div className="space-y-6">
       <PageHeader title={t("nav.alerts")} subtitle={t("alerts.subtitle")}

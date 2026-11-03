@@ -854,7 +854,6 @@
     "forceState": "Forzatura d'ufficio",
     "forceStateHint": "Scrive una correzione d'ufficio (force_state) sul pezzo.",
     "changeAsp": "Cambia ASP (solo client_admin)",
-    "aspIdHint": "Id organizzazione dell'ASP di destinazione",
     "applyForce": "Applica",
     "merge": "Unisci",
     "mergeHint": "Unisce un altro pezzo in questo. Codici ed eventi vengono ripuntati; il trigger segue mergedInto.",
@@ -864,7 +863,6 @@
     "correctLocation": "Correggi luogo",
     "correctLocationHint": "L'evento conserva il luogo originale in `correction`; lo stato del pezzo viene ricalcolato.",
     "previousLocation": "Luogo precedente",
-    "newLocationId": "Nuovo id luogo",
     "flows": {
       "new": "Nuovo",
       "removed": "Smontato"
@@ -890,7 +888,10 @@
       "clear": "Togli i filtri",
       "showMore": "Mostra altri",
       "moreAvailable": "Mostrati i primi {{count}} pezzi, dal più recente: usa i filtri o «Mostra altri»."
-    }
+    },
+    "historyNotForRole": "La storia del pezzo non è disponibile per il tuo ruolo.",
+    "sameAsp": "Stessa ASP",
+    "newLocation": "Nuovo luogo"
   },
   "shipments": {
     "subtitle": "Spedizioni di reso al cliente e trasferimenti.",

@@ -12,6 +12,15 @@ export interface Column<T> {
   className?: string;
 }
 
+// The text a rendered cell shows (badges, links, plain text), for filtering and sorting.
+function nodeText(n: React.ReactNode): string {
+  if (n == null || typeof n === "boolean") return "";
+  if (typeof n === "string" || typeof n === "number") return String(n);
+  if (Array.isArray(n)) return n.map(nodeText).join(" ");
+  if (React.isValidElement(n)) return nodeText((n.props as { children?: React.ReactNode }).children);
+  return "";
+}
+
 // Desk table: sorting, text filter, pagination (§15).
 export function DataTable<T extends { id: string }>({ rows, columns, testId, toolbar, pageSize = 25, empty }: {
   rows: T[]; columns: Column<T>[]; testId: string; toolbar?: React.ReactNode; pageSize?: number; empty?: React.ReactNode;
@@ -20,7 +29,8 @@ export function DataTable<T extends { id: string }>({ rows, columns, testId, too
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [page, setPage] = React.useState(0);
-  const val = (c: Column<T>, r: T) => (c.value ? c.value(r) : (r as Record<string, unknown>)[c.key]) as string | number | null;
+  // P-116 (n.39): filter and sort on what the cell shows: its value, else the text of what it renders, else the field.
+  const val = (c: Column<T>, r: T) => (c.value ? c.value(r) : c.render ? nodeText(c.render(r)) : (r as Record<string, unknown>)[c.key]) as string | number | null;
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();

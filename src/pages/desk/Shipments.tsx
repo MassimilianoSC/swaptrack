@@ -39,6 +39,8 @@ export default function Shipments() {
   const warehousesOfOwn = locations.filter((l) => l.type === "asp_warehouse" && l.aspId === claims?.orgId && l.active);
   const clientWarehouses = locations.filter((l) => l.type === "client_warehouse" && l.active);
   const asps = React.useMemo(() => Array.from(new Set(locations.filter((l) => l.type === "asp_warehouse").map((l) => l.aspId))).filter(Boolean) as string[], [locations]);
+  // P-116 (n.29): the client admin transfers only between two ASPs (shipments.ts): the destination is another ASP's.
+  const fromAsp = locations.find((l) => l.id === fromLoc)?.aspId;
   const warehousesByAsp = (aspId: string) => locations.filter((l) => l.type === "asp_warehouse" && l.aspId === aspId && l.active);
 
   const openCreate = (kind: "return" | "transfer") => { setNewKind(kind); setFromLoc(""); setToLoc(""); };
@@ -68,14 +70,14 @@ export default function Shipments() {
         { key: "to", header: t("shipments.to"), value: (s) => client ? s.toLocationId : (s.toAspId === claims?.orgId || s.kind === "return" ? s.toLocationId : t("items.anotherOrg")), className: "font-mono text-xs" },
         { key: "n", header: t("shipments.lineCount"), value: (s) => s.itemCount ?? 0 },
         { key: "ddt", header: t("shipments.ddtNumber"), value: (s) => s.ddtNumber ?? "—", className: "font-mono text-xs" },
-        { key: "at", header: t("shipments.created"), value: (s) => formatInstant(s.createdAt?.toDate?.() ?? null, i18n.language) },
+        { key: "at", header: t("shipments.created_at"), value: (s) => formatInstant(s.createdAt?.toDate?.() ?? null, i18n.language) },
         { key: "a", header: "", render: (s) => <Link to={`/shipments/${s.id}`} className="text-primary hover:underline" data-testid={`shipments-row-${s.id}`}><PackageCheck className="inline h-4 w-4" /> {t("common.open")}</Link> },
       ]} />
       <Dialog open={!!newKind} onOpenChange={(o) => { if (!o) setNewKind(null); }}>
         <DialogContent title={newKind === "return" ? t("shipments.newReturn") : t("shipments.newTransfer")} description={t("shipments.createHint")}>
           <div className="space-y-3">
             <Field label={t("shipments.from")} htmlFor="s-f">
-              <Select id="s-f" value={fromLoc} onChange={(e) => setFromLoc(e.target.value)} data-testid="shipments-from-select">
+              <Select id="s-f" value={fromLoc} onChange={(e) => { setFromLoc(e.target.value); setToLoc(""); }} data-testid="shipments-from-select">
                 <option value="">{t("common.choose")}</option>
                 {(canTransferBetween && newKind === "transfer" ? locations.filter((l) => l.type === "asp_warehouse" && l.active) : warehousesOfOwn).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
               </Select>
@@ -84,7 +86,7 @@ export default function Shipments() {
               <Select id="s-t" value={toLoc} onChange={(e) => setToLoc(e.target.value)} data-testid="shipments-to-select">
                 <option value="">{t("common.choose")}</option>
                 {newKind === "return" ? clientWarehouses.map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)
-                  : (canTransferBetween ? asps.flatMap((a) => warehousesByAsp(a)) : warehousesOfOwn).filter((l) => l.id !== fromLoc).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
+                  : (canTransferBetween ? asps.filter((a) => a !== fromAsp).flatMap((a) => warehousesByAsp(a)) : warehousesOfOwn).filter((l) => l.id !== fromLoc).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
               </Select>
             </Field>
             <div className="flex justify-end"><Button disabled={busy || !fromLoc || !toLoc} onClick={create} data-testid="shipments-create">{t("shipments.create")}</Button></div>

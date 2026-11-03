@@ -194,7 +194,8 @@ export default function DocumentDetail() {
               {bomLines.none && box(t("documents.linesNoDirection"), bomLines.none, (v) => setBomLines((b) => ({ ...b, none: v })), "document-lines-none", "border-warning")}
             </>
           ) : box(t("documents.lines"), rawLines, setRawLines, "document-lines")}
-          {isNew && <div className="flex justify-end"><Button onClick={save} disabled={busy || !number.trim() || !locationId} data-testid="document-save-new">{t("common.save")}</Button></div>}
+          {/* P-116 (censimento n.6): a new document is saved only by the roles the server accepts. */}
+          {isNew && editable && <div className="flex justify-end"><Button onClick={save} disabled={busy || !number.trim() || !locationId} data-testid="document-save-new">{t("common.save")}</Button></div>}
         </Card>
       </div>
       {compare && (

@@ -6,11 +6,11 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
-import { listModels, type Model } from "@/lib/data/db";
+import { listModels, listLocationsFor, listOrganizations, type Model, type Location, type Organization } from "@/lib/data/db";
 import { loadSorting, type Category } from "@/lib/data/events";
 import { fileBlobUrl } from "@/lib/data/storage";
 import type { Row } from "@/lib/data/db";
-import { isAdminRole, isClientRole } from "@shared/roles";
+import { isAdminRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
@@ -32,7 +32,7 @@ export default function ItemDetail() {
   const [loadError, setLoadError] = React.useState(false);
   const [missing, setMissing] = React.useState(false);
   const [codes, setCodes] = React.useState<Row<Code>[]>([]);
-  const [history, setHistory] = React.useState<HistoryEvent[] | null>(null);
+  const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -52,6 +52,18 @@ export default function ItemDetail() {
   const [correctOpen, setCorrectOpen] = React.useState<HistoryEvent | null>(null);
   const [correctLoc, setCorrectLoc] = React.useState("");
   const [correctReason, setCorrectReason] = React.useState("");
+  // P-116: places and ASPs by name, for the location correction and the change of ASP.
+  const [places, setPlaces] = React.useState<Row<Location>[]>([]);
+  const [asps, setAsps] = React.useState<Row<Organization>[]>([]);
+  const [locQuery, setLocQuery] = React.useState("");
+  React.useEffect(() => {
+    if (!claims?.orgId) return;
+    void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then((l) => setPlaces(l.filter((x) => x.active))).catch(() => undefined);
+    if (claims.role === "client_admin") void listOrganizations().then((o) => setAsps(o.filter((x) => x.type === "asp" && x.active))).catch(() => undefined);
+  }, [claims]);
+  const fold = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const locMatches = locQuery.trim() ? places.filter((l) => fold(`${l.code} ${l.name}`).includes(fold(locQuery.trim()))).slice(0, 8) : [];
+  const locationLabel = (lid: string | null) => { const l = places.find((x) => x.id === lid); return l ? `${l.code} · ${l.name}` : lid ?? ""; };
 
   const role = claims?.role ?? "";
   const canEdit = role === "client_admin" || role === "asp_admin" || role === "asp_warehouse";
@@ -64,11 +76,12 @@ export default function ItemDetail() {
     if (!id) return;
     const [c, h, a] = await Promise.all([
       listCodesOf(id),
-      call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => []),
+      // P-116 (n.12): the history is not for the client warehouse (itemHistory refuses it): said, never shown as empty.
+      claims?.role === "client_warehouse" ? Promise.resolve("not_for_role" as const) : call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => []),
       listAnomaliesOf(id).catch(() => []),
     ]);
     setCodes(c); setHistory(h); setAnomalies(a);
-  }, [id]);
+  }, [id, claims?.role]);
 
   React.useEffect(() => {
     if (!id) return;
@@ -123,8 +136,8 @@ export default function ItemDetail() {
     }
   };
   const doCorrect = async () => {
-    if (!correctOpen || !correctLoc.trim() || !correctReason.trim()) { toast.error(t("errors.invalid_data")); return; }
-    if (await run(() => call("correctEventLocation", { eventId: correctOpen.id, locationId: correctLoc.trim(), reason: correctReason }), t("common.saved"))) {
+    if (!correctOpen || !correctLoc || !correctReason.trim()) { toast.error(t("errors.invalid_data")); return; }
+    if (await run(() => call("correctEventLocation", { eventId: correctOpen.id, locationId: correctLoc, reason: correctReason }), t("common.saved"))) {
       setCorrectOpen(null); setCorrectLoc(""); setCorrectReason(""); await reload();
     }
   };
@@ -174,7 +187,7 @@ export default function ItemDetail() {
             {anomalies.map((a) => (
               <li key={a.id} className="flex items-center gap-2">
                 <Badge tone={a.resolution ? "neutral" : "warning"}>{t(`anomalies.types.${a.type}`, { defaultValue: String(a.type) })}</Badge>
-                {!a.resolution && a.type === "code_of_another_asp" && isClientRole(role) && (
+                {!a.resolution && a.type === "code_of_another_asp" && role === "client_admin" && (
                   <ResolveAnomalyButton anomalyId={a.id} onDone={reload} />
                 )}
               </li>
@@ -200,7 +213,7 @@ export default function ItemDetail() {
 
       <Card>
         <h2 className="font-semibold mb-3">{t("items.history")}</h2>
-        {history.length === 0 ? <Empty title={t("items.historyEmpty")} /> : (
+        {history === "not_for_role" ? <p className="text-sm text-muted" data-testid="item-history-not-for-role">{t("items.historyNotForRole")}</p> : history.length === 0 ? <Empty title={t("items.historyEmpty")} /> : (
           <ol className="space-y-2 text-sm" data-testid="item-history">
             {history.map((h) => (
               <li key={h.id} className={`border-l-2 pl-3 ${h.voided ? "border-muted opacity-60" : "border-primary"}`}>
@@ -213,7 +226,7 @@ export default function ItemDetail() {
                   {h.source === "server" && <Badge tone="neutral">{t("items.serverEvent")}</Badge>}
                   <span className="ml-auto flex gap-1">
                     {canReveal && isAdminRole(role) && h.source !== "server" && <Button size="sm" variant="ghost" onClick={() => reveal(h.id)} aria-label={t("items.revealAuthor")} data-testid={`item-reveal-${h.id}`}><Eye className="h-4 w-4" /></Button>}
-                    {canCorrect && h.locationId && <Button size="sm" variant="ghost" onClick={() => { setCorrectOpen(h); setCorrectLoc(h.locationId!); }} aria-label={t("items.correctLocation")} data-testid={`item-correct-${h.id}`}><MapPin className="h-4 w-4" /></Button>}
+                    {canCorrect && h.locationId && <Button size="sm" variant="ghost" onClick={() => { setCorrectOpen(h); setCorrectLoc(""); setLocQuery(""); }} aria-label={t("items.correctLocation")} data-testid={`item-correct-${h.id}`}><MapPin className="h-4 w-4" /></Button>}
                   </span>
                 </div>
                 {h.locationId && <p className="text-xs text-muted font-mono">{h.locationId}</p>}
@@ -241,7 +254,11 @@ export default function ItemDetail() {
             <Field label={t("items.status")} htmlFor="f-s"><Select id="f-s" value={forceStatus} onChange={(e) => setForceStatus(e.target.value)} data-testid="item-force-status">
               {["removed_at_site","received_at_asp","sorted","installed","defective","leftover","in_transfer","in_return","returned"].map((s) => <option key={s} value={s}>{t(`items.statuses.${s}`)}</option>)}
             </Select></Field>
-            {role === "client_admin" && <Field label={t("items.changeAsp")} htmlFor="f-a"><Input id="f-a" value={forceAsp} onChange={(e) => setForceAsp(e.target.value)} className="font-mono" placeholder={t("items.aspIdHint")} data-testid="item-force-asp" /></Field>}
+            {/* P-116: the ASP chosen by name, never typed as an internal id. */}
+            {role === "client_admin" && <Field label={t("items.changeAsp")} htmlFor="f-a"><Select id="f-a" value={forceAsp} onChange={(e) => setForceAsp(e.target.value)} data-testid="item-force-asp">
+              <option value="">{t("items.sameAsp")}</option>
+              {asps.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </Select></Field>}
             <Field label={t("common.reason")} htmlFor="f-r"><Textarea id="f-r" value={forceReason} onChange={(e) => setForceReason(e.target.value)} data-testid="item-force-reason" /></Field>
             <div className="flex justify-end"><Button variant="danger" onClick={doForce} disabled={busy} data-testid="item-force-save">{t("items.applyForce")}</Button></div>
           </div>
@@ -261,8 +278,17 @@ export default function ItemDetail() {
       <Dialog open={!!correctOpen} onOpenChange={(o) => { if (!o) setCorrectOpen(null); }}>
         <DialogContent title={t("items.correctLocation")} description={t("items.correctLocationHint")}>
           <div className="space-y-3">
-            <Field label={t("items.previousLocation")} htmlFor="c-p"><Input id="c-p" readOnly className="font-mono bg-surface-2" value={correctOpen?.locationId ?? ""} /></Field>
-            <Field label={t("items.newLocationId")} htmlFor="c-n"><Input id="c-n" value={correctLoc} onChange={(e) => setCorrectLoc(e.target.value)} className="font-mono" data-testid="item-correct-loc" /></Field>
+            <Field label={t("items.previousLocation")} htmlFor="c-p"><Input id="c-p" readOnly className="bg-surface-2" value={locationLabel(correctOpen?.locationId ?? null)} /></Field>
+            {/* P-116: the new place is searched by code or name among the places of whoever corrects (listLocationsFor). */}
+            <Field label={t("items.newLocation")} htmlFor="c-n"><Input id="c-n" value={locQuery} onChange={(e) => setLocQuery(e.target.value)} placeholder={t("location.search")} data-testid="item-correct-search" /></Field>
+            {locMatches.length > 0 && (
+              <ul className="grid gap-1 max-h-48 overflow-y-auto">
+                {locMatches.map((l) => (
+                  <li key={l.id}><Button type="button" variant={correctLoc === l.id ? "primary" : "secondary"} className="w-full justify-start" onClick={() => setCorrectLoc(l.id)} data-testid="item-correct-result">{l.code} · {l.name}</Button></li>
+                ))}
+              </ul>
+            )}
+            {correctLoc && <p className="text-sm" data-testid="item-correct-chosen">{t("items.newLocation")}: {locationLabel(correctLoc)}</p>}
             <Field label={t("common.reason")} htmlFor="c-r"><Textarea id="c-r" value={correctReason} onChange={(e) => setCorrectReason(e.target.value)} data-testid="item-correct-reason" /></Field>
             <div className="flex justify-end"><Button onClick={doCorrect} disabled={busy} data-testid="item-correct-save">{t("common.save")}</Button></div>
           </div>
