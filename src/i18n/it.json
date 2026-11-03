@@ -505,33 +505,44 @@
   },
   "guide": {
     "client_admin": [
-      "Crea le ASP e il loro primo amministratore da Organizzazioni.",
-      "Importa siti e magazzini, e il catalogo dei modelli.",
-      "Invita e gestisci gli utenti; il Registro amministrativo registra ogni azione.",
-      "Imposta marchio, opzioni di accesso e informativa privacy in Impostazioni."
+      "Prima installazione: Impostazioni, poi Organizzazioni (le ASP e il loro primo amministratore), Siti e magazzini, Catalogo modelli, Smistamento, Utenti.",
+      "Importa siti, magazzini e modelli da Excel con «Importa»: prima guarda l'Anteprima.",
+      "Crei i trasferimenti tra due ASP da Spedizioni; i resi li confermi come il Magazzino cliente.",
+      "Correggi i pezzi dalla loro scheda: Forzatura d'ufficio, Unisci, Accetta spostamento.",
+      "Ogni azione di gestione resta nel Registro amministrativo."
     ],
     "client_office": [
-      "Il tuo ruolo vede tutto e non modifica nulla.",
-      "Cruscotti, pezzi e report arriveranno nelle prossime versioni."
+      "Il Cruscotto mostra i pezzi di tutte le ASP o di una sola: tocca un numero per aprire l'elenco.",
+      "In Pezzi cerchi per codice completo o filtri per stato, ASP, luogo e modello.",
+      "In Documenti premi «Confronta» per vedere arrivati, mancanti e inattesi di un DDT o di una BOM.",
+      "Negli Avvisi premi «Segna visto»; chiudere gli avvisi spetta agli amministratori.",
+      "Esportazioni e Rapporti: scarichi i dati in Excel e il rapporto del mese, anche di una sola ASP."
     ],
     "client_warehouse": [
-      "Confermi l'arrivo delle spedizioni di reso al magazzino del cliente.",
-      "La schermata di conferma arriverà nelle prossime versioni."
+      "In Spedizioni apri il reso «Inviata» e premi «Conferma».",
+      "Togli la spunta ai pezzi che non sono arrivati; scrivi il codice dei pezzi in più e premi «Aggiungi».",
+      "Se un pezzo arriva dopo, riapri lo stesso reso e conferma di nuovo: i pezzi già confermati non si contano due volte.",
+      "Gli Avvisi «DDT (reso) differenza» ti dicono cosa non torna: chiudili solo quando è chiarito."
     ],
     "asp_admin": [
-      "Invita le persone della tua ASP da Persone: magazzinieri e tecnici.",
-      "Disattiva chi lascia; usa Blocca subito solo per un telefono perso.",
-      "Puoi anche fare tutto ciò che fa un magazziniere."
+      "Invita magazzinieri e tecnici da Persone; per chi lascia usa «Disattiva», «Blocca subito» solo per un telefono perso.",
+      "Carica le BOM dei siti da Documenti: ogni riga va in «Da smontare» o «Da installare».",
+      "Correggi i pezzi della tua ASP dalla loro scheda, sempre con un motivo.",
+      "Puoi fare tutto ciò che fa il Magazzino ASP; Cruscotto, Esportazioni e Rapporti mostrano solo la tua ASP."
     ],
     "asp_warehouse": [
-      "Scegli il tuo magazzino: resta selezionato per la sessione.",
-      "Arrivi, smistamento e spedizioni si registrano leggendo i codici.",
-      "Controlla la barra in alto: online/offline e letture da inviare."
+      "Scegli il magazzino in Home e controllalo in alto prima di leggere: ogni lettura si registra lì.",
+      "«Arrivo»: scegli Materiale nuovo o smontato e, per il nuovo, il DDT; poi leggi i pezzi (accendi «Raffica» per leggerli di fila).",
+      "«Smista / classifica»: conferma con un tocco la categoria suggerita o toccane un'altra; per tanti pezzi uguali fissa una categoria.",
+      "Resi e trasferimenti: crea la bozza in Spedizioni, premi «Leggi i pezzi», poi «Invia».",
+      "Completa i pezzi senza modello da «Da completare»."
     ],
     "asp_technician": [
-      "Cerca il sito per codice o nome: funziona anche offline.",
-      "Scegli Smonta o Installa e leggi i pezzi.",
-      "Installa l'app nella schermata Home e non uscire mentre ci sono letture da inviare."
+      "Cerca il sito per codice o nome: funziona anche senza rete.",
+      "Premi «Leggi», scegli «Smonta» o «Installa» e leggi i pezzi uno dopo l'altro.",
+      "Pezzo sconosciuto: scegli il modello o premi «Salta», il pezzo è registrato lo stesso.",
+      "A lavoro finito premi «Ho finito in questo sito».",
+      "Installa l'app sul telefono e non uscire finché in alto c'è «da inviare»."
     ]
   },
   "users": {

@@ -505,33 +505,44 @@
   },
   "guide": {
     "client_admin": [
-      "Create the ASPs and their first administrator from Organizations.",
-      "Import sites and warehouses, and the catalog of models.",
-      "Invite and manage users; the Admin log records every action.",
-      "Set branding, sign-in options and the privacy notice in Settings."
+      "First setup: Settings, then Organizations (the ASPs and their first admin), Sites and warehouses, Model catalog, Sorting, Users.",
+      "Import sites, warehouses and models from Excel with «Import»: check the Preview first.",
+      "You create transfers between two ASPs from Shipments; you confirm returns like the Client warehouse.",
+      "Correct pieces from their page: Office force, Merge, Accept move.",
+      "Every management action is kept in the Admin log."
     ],
     "client_office": [
-      "Your role sees everything and changes nothing.",
-      "Dashboards, items and reports arrive in the next versions."
+      "The Dashboard shows the pieces of all ASPs or of one: tap a number to open the list.",
+      "In Pieces search by full code or filter by status, ASP, location and model.",
+      "In Documents press «Compare» to see arrived, missing and unexpected pieces of a DDT or a BOM.",
+      "In Alerts press «Mark seen»; closing alerts is up to the admins.",
+      "Exports and Reports: download data in Excel and the monthly report, also for a single ASP."
     ],
     "client_warehouse": [
-      "You confirm the arrival of return shipments at the client warehouse.",
-      "The confirmation screen arrives in the next versions."
+      "In Shipments open the «Sent» return and press «Confirm».",
+      "Untick the pieces that did not arrive; type the code of extra pieces and press «Add».",
+      "If a piece arrives later, reopen the same return and confirm again: confirmed pieces are not counted twice.",
+      "«DDT (return) difference» alerts tell you what does not match: close them only once it is clear."
     ],
     "asp_admin": [
-      "Invite the people of your ASP from People: warehouse workers and technicians.",
-      "Deactivate someone who leaves; use Block now only for a lost phone.",
-      "You can also do everything a warehouse worker does."
+      "Invite warehouse staff and technicians from People; for someone leaving use «Deactivate», «Block now» only for a lost phone.",
+      "Upload the sites' BOMs from Documents: each line goes in «To remove» or «To install».",
+      "Correct your ASP's pieces from their page, always with a reason.",
+      "You can do everything the ASP warehouse does; Dashboard, Exports and Reports show only your ASP."
     ],
     "asp_warehouse": [
-      "Choose your warehouse: it stays selected for the session.",
-      "Arrivals, sorting and shipments are recorded by scanning.",
-      "Watch the top bar: online/offline and scans waiting to be sent."
+      "Choose the warehouse in Home and check it at the top before scanning: every scan is recorded there.",
+      "«Arrival»: choose New or Removed material and, for new material, the DDT; then scan the pieces (turn on «Burst» to scan them in a row).",
+      "«Sort / classify»: confirm the suggested category with one tap or tap another; for many identical pieces set a fixed category.",
+      "Returns and transfers: create the draft in Shipments, press «Scan pieces», then «Send».",
+      "Complete pieces without a model from «To complete»."
     ],
     "asp_technician": [
-      "Search the site by code or name: it works offline.",
-      "Choose Remove or Install and scan the pieces.",
-      "Install the app on the Home Screen and do not sign out while scans are waiting."
+      "Search the site by code or name: it works offline too.",
+      "Press «Scan», choose «Remove» or «Install» and scan the pieces one after another.",
+      "Unknown piece: choose the model or press «Skip», the piece is recorded anyway.",
+      "When the work is done press «I have finished at this site».",
+      "Install the app on your phone and do not sign out while «waiting to be sent» shows at the top."
     ]
   },
   "users": {
