@@ -54,14 +54,20 @@
         "scan-data.phone.spec.ts",
         "photos.phone.spec.ts",
         "signout-safety.phone.spec.ts",
-        "sorting-confirm.phone.spec.ts",
-        "sorting-offline.phone.spec.ts",
         "deactivated.phone.spec.ts",
         "model-search.phone.spec.ts",
         "phone-width.phone.spec.ts",
         "signin-speed.phone.spec.ts",
         "site-list-retry.phone.spec.ts",
         "site-list-slow.phone.spec.ts"
+      ]
+    },
+    {
+      "name": "telefono-smistamento",
+      "seed": "full",
+      "files": [
+        "sorting-confirm.phone.spec.ts",
+        "sorting-offline.phone.spec.ts"
       ]
     }
   ]
