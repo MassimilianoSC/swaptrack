@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle } from "lucide-react";
+import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
 import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type RejectedScan } from "@/lib/data/events";
@@ -15,6 +15,9 @@ import { Input, Select, Checkbox, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Empty } from "@/components/states";
 import { toast } from "sonner";
+import { useOnline } from "@/app/hooks";
+import { compressImage } from "@/lib/imageCompress.js";
+import { extractLabelCodes, type LabelCode } from "@/lib/documents/extract";
 
 const MODES: Record<string, string[]> = {
   asp_technician: ["remove_at_site", "install_at_site"],
@@ -96,6 +99,17 @@ export default function Scan() {
   const [lostCount, setLostCount] = React.useState(0);
   const [lastPieceBadge, setLastPieceBadge] = React.useState<"previously_new" | null>(null);
   const photoInput = React.useRef<HTMLInputElement>(null);
+  // D-49: the photo of a damaged label read by the automatic reading. The codes are proposed, checked, corrected and
+  // confirmed by the worker; only then the reading starts, as if typed (source "manual", payload.aiAssisted), and the
+  // same photo goes to the photo queue with it.
+  const online = useOnline();
+  const [aiOn, setAiOn] = React.useState(false);
+  React.useEffect(() => watchDoc<{ aiDocumentExtraction?: boolean }>("settings/features", (v) => setAiOn(!!v?.aiDocumentExtraction)), []);
+  const labelInput = React.useRef<HTMLInputElement>(null);
+  const manualInput = React.useRef<HTMLInputElement>(null);
+  const [labelBusy, setLabelBusy] = React.useState(false);
+  const [label, setLabel] = React.useState<{ codes: Array<LabelCode & { value: string }>; warnings: string[]; blob: Blob } | null>(null);
+  const aiAssist = React.useRef<{ blob: Blob } | null>(null);
   const [photoNum, setPhotoNum] = React.useState<Record<string, number>>({});
   // P-115 (n.5): the setting is settings/photos, where the Settings page saves it (readable by every role).
   const [photoMandatoryDefective, setPhotoMandatoryDefective] = React.useState(false);
@@ -281,7 +295,14 @@ export default function Scan() {
     if (mode === "return_ship" || mode === "transfer_out") {
       if (!shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
     }
+    const assisted = source === "manual" ? aiAssist.current : null;
+    aiAssist.current = null;
+    if (assisted) payload.aiAssisted = true;
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
+    if (assisted) {
+      setPhotoNum((m) => ({ ...m, [id]: 1 }));
+      void enqueuePhoto(id, claims.orgId, assisted.blob, 1).then(() => { void flushQueue(); }, () => toast.error(t("scan.photoFailed")));
+    }
     setSession((s) => [{ id, code, type: mode }, ...s]);
     setLastEventId(id);
     // §12.2 / P-115 (n.5): a new defective with the setting on asks for its photo until one is queued.
@@ -373,6 +394,33 @@ export default function Scan() {
   const siteDone = () => user && location && claims?.orgId && writeEvent({ type: "site_done", locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source: "manual", engine: null }).then(() => show(t("scan.siteDone"), "ok"));
 
   const takePhoto = () => photoInput.current?.click();
+  const readLabel = () => {
+    if (!online) { toast.message(t("scan.aiLabelOffline"), { id: "scan-ai-label-offline" }); manualInput.current?.focus(); return; }
+    labelInput.current?.click();
+  };
+  const onLabelFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setLabelBusy(true);
+    try {
+      const blob = await compressImage(file).catch(() => { throw Object.assign(new Error("image_unreadable"), { code: "image_unreadable" }); });
+      const base64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(blob); });
+      const r = await extractLabelCodes(base64);
+      if (!r.codes.length) toast.message(t("scan.aiLabelNone"));
+      else setLabel({ codes: r.codes.map((c) => ({ ...c, value: c.code })), warnings: r.warnings, blob });
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? (err as Error).message;
+      toast.error(t(`errors.${code}`, { defaultValue: t("errors.unexpected") }));
+    } finally { setLabelBusy(false); }
+  };
+  const useLabelCode = (value: string) => {
+    const code = value.trim();
+    if (!code || !label) return;
+    aiAssist.current = { blob: label.blob };
+    setLabel(null);
+    void onCode(code, "manual");
+  };
   const onPhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -401,6 +449,7 @@ export default function Scan() {
     const p = pendingSort;
     if (!p) return;
     setPendingSort(null);
+    aiAssist.current = null;
     toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
     if (p.source === "camera") setTimeout(afterCameraReading, 300);
   };
@@ -554,6 +603,12 @@ export default function Scan() {
         <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
         {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
+        {aiOn && (
+          <>
+            <Button variant="secondary" onClick={readLabel} disabled={labelBusy} data-testid="scan-ai-label"><Sparkles className="h-5 w-5" /> {labelBusy ? t("scan.aiLabelReading") : t("scan.aiLabel")}</Button>
+            <input ref={labelInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void onLabelFile(e)} data-testid="scan-ai-label-input" />
+          </>
+        )}
         <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
         <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
       </div>
@@ -562,7 +617,7 @@ export default function Scan() {
         <Input inputMode="none" autoFocus aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono" />
       </form>
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void onCode(manual, "manual"); setManual(""); }}>
-        <Input inputMode="text" aria-label={t("scan.manual")} placeholder={t("scan.manual")} value={manual} onChange={(e) => setManual(e.target.value)} data-testid="scan-manual-input" className="font-mono" />
+        <Input ref={manualInput} inputMode="text" aria-label={t("scan.manual")} placeholder={t("scan.manual")} value={manual} onChange={(e) => setManual(e.target.value)} data-testid="scan-manual-input" className="font-mono" />
         <Button type="submit" data-testid="scan-manual-submit">{t("common.confirm")}</Button>
       </form>
       <section>
@@ -617,6 +672,27 @@ export default function Scan() {
           )}
         </section>
       )}
+
+      <Dialog open={!!label} onOpenChange={(o) => { if (!o) setLabel(null); }}>
+        <DialogContent title={t("scan.aiLabelTitle")} description={t("scan.aiLabelHint")}>
+          <ul className="space-y-3" data-testid="scan-ai-label-codes">
+            {label?.codes.map((c, i) => (
+              <li key={i} className="space-y-1">
+                {/* The doubtful characters are underlined and coloured: nothing to translate. */}
+                <p className="font-mono text-lg" data-testid={`scan-ai-label-code-${i}`}>
+                  {[...c.code].map((ch, k) => <span key={k} className={c.uncertainAt.includes(k) ? "text-warning underline decoration-2 font-bold" : undefined} data-uncertain={c.uncertainAt.includes(k) || undefined}>{ch}</span>)}
+                </p>
+                <div className="flex gap-2">
+                  <Input value={c.value} onChange={(e) => setLabel((l) => l && { ...l, codes: l.codes.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })} className="font-mono" aria-label={t("scan.manual")} data-testid={`scan-ai-label-input-${i}`} />
+                  <Button onClick={() => useLabelCode(c.value)} disabled={!c.value.trim()} data-testid={`scan-ai-label-use-${i}`}>{t("common.confirm")}</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {label && label.warnings.length > 0 && <ul className="text-sm text-warning list-disc pl-5">{label.warnings.map((w) => <li key={w}>{t(`scan.aiLabelWarn.${w}`, { defaultValue: t("documents.aiWarnings") })}</li>)}</ul>}
+          <div className="flex justify-end"><Button variant="ghost" onClick={() => setLabel(null)} data-testid="scan-ai-label-cancel">{t("common.cancel")}</Button></div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!pendingSort} onOpenChange={(o) => { if (!o) cancelSort(); }}>
         <DialogContent title={t("scan.sortTitle", { code: pendingSort?.code ?? "" })} description={t("scan.sortHint")}>

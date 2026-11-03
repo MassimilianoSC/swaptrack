@@ -407,7 +407,17 @@
     "sortTitle": "Sort {{code}}",
     "sortHint": "Confirm the suggested category or choose another. For a series of identical pieces choose a fixed category in the list: they are recorded without confirmation.",
     "burst": "Burst (the camera restarts by itself after every reading)",
-    "readNext": "Read the next"
+    "readNext": "Read the next",
+    "aiLabel": "Read from the label photo",
+    "aiLabelReading": "Reading the photo…",
+    "aiLabelOffline": "Reading the photo needs the network: type the code by hand below.",
+    "aiLabelNone": "No code was found in the photo: try again or type it by hand.",
+    "aiLabelTitle": "Codes read from the photo",
+    "aiLabelHint": "Check the code, correct it if needed and confirm: only then the reading starts. The highlighted characters are uncertain.",
+    "aiLabelWarn": {
+      "ai_codes_dropped": "Some codes were not readable and are missing.",
+      "ai_no_codes": "No readable code in the photo."
+    }
   },
   "pwa": {
     "newVersion": "A new version is available.",

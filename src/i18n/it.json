@@ -407,7 +407,17 @@
     "sortTitle": "Smista {{code}}",
     "sortHint": "Conferma la categoria suggerita o scegline un'altra. Per una serie di pezzi uguali scegli una categoria fissa nella tendina: si registrano senza conferma.",
     "burst": "Raffica (la fotocamera riparte da sola dopo ogni lettura)",
-    "readNext": "Leggi il prossimo"
+    "readNext": "Leggi il prossimo",
+    "aiLabel": "Leggi dalla foto dell'etichetta",
+    "aiLabelReading": "Lettura della foto…",
+    "aiLabelOffline": "Serve la connessione per leggere la foto: scrivi il codice a mano qui sotto.",
+    "aiLabelNone": "Nella foto non è stato trovato nessun codice: riprova o scrivilo a mano.",
+    "aiLabelTitle": "Codici letti dalla foto",
+    "aiLabelHint": "Controlla il codice, correggilo se serve e conferma: solo allora la lettura parte. I caratteri evidenziati sono incerti.",
+    "aiLabelWarn": {
+      "ai_codes_dropped": "Alcuni codici non erano leggibili e non compaiono.",
+      "ai_no_codes": "Nessun codice leggibile nella foto."
+    }
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",
