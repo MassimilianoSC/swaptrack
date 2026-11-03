@@ -136,16 +136,18 @@ export default function Scan() {
     return user ? watchMyScansToday(user.uid, setToday) : undefined;
   }, [user, claims]);
 
-  // P-24: the open DDTs of this warehouse are offered only for an arrival of new material; the choice is the user's.
-  const ddtApplies = mode === "arrive_at_warehouse" && flow === "new" && location?.type === "asp_warehouse";
+  // P-24: the open DDTs of this warehouse; the choice is the user's. P-104: offered at every arrival in an ASP warehouse,
+  // also before choosing "new": choosing a DDT sets the flow to new material.
+  const ddtOffered = mode === "arrive_at_warehouse" && location?.type === "asp_warehouse";
+  const ddtApplies = ddtOffered && flow === "new";
   // The list comes from the cache the session loads at sign-in (P-73); it is read again when that load completes.
-  React.useEffect(() => { setDdtId(""); }, [ddtApplies, location]);
+  React.useEffect(() => { setDdtId(""); }, [ddtOffered, location]);
   React.useEffect(() => {
-    if (!ddtApplies || !location || !claims?.orgId) { setDdts([]); return; }
+    if (!ddtOffered || !location || !claims?.orgId) { setDdts([]); return; }
     let aborted = false;
     void cachedOpenDdtsForWarehouse(location.id, claims.orgId).then((list) => { if (!aborted) setDdts(list); });
     return () => { aborted = true; };
-  }, [ddtApplies, location, fieldCacheAt, claims?.orgId]);
+  }, [ddtOffered, location, fieldCacheAt, claims?.orgId]);
 
   // The serial lines of the chosen DDT, by codeId (the same identity the trigger uses, R8).
   React.useEffect(() => {
@@ -254,7 +256,7 @@ export default function Scan() {
     return payload;
   };
   // D-39: a category chosen (or suggested) for removed material never stays behind when the flow changes.
-  const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); };
+  const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); if (v !== "new") setDdtId(""); };
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string) => {
@@ -310,7 +312,11 @@ export default function Scan() {
     }
     if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
-    if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !await cachedItemForCode(code)) {
+    // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
+    // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
+    const cid = ddtApplies && ddtId ? await computeCodeId(code) : null;
+    const inChosenDdt = !!cid && ddtExpected.some((e) => e.codeId === cid);
+    if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !inChosenDdt && !await cachedItemForCode(code)) {
       setModelPick({ code, source }); setModelPickId(""); setModelQuery(""); return "asked";
     }
     await record(code, source);
@@ -398,9 +404,9 @@ export default function Scan() {
           <option value="removed">{t("scan.flowRemoved")}</option><option value="new">{t("scan.flowNew")}</option>
         </Select>
       )}
-      {ddtApplies && (
+      {ddtOffered && (
         <div className="flex items-center gap-2">
-          <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => setDdtId(e.target.value)} data-testid="scan-ddt-select">
+          <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => { const v = e.target.value; if (v && flow !== "new") changeFlow("new"); setDdtId(v); }} data-testid="scan-ddt-select">
             <option value="">{t("scan.ddt.none")}</option>
             {ddts.map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number })}</option>)}
           </Select>

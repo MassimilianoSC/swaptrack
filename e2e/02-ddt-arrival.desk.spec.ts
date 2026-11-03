@@ -26,19 +26,28 @@ test.describe("Percorso 2 — arrivo di materiale nuovo con DDT (scrivania)", ()
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/);
     const docId = page.url().split("/").pop()!;
 
-    // 2. On the scanning screen the open DDTs of this warehouse are offered, none chosen by itself.
+    // 2. On the scanning screen the open DDTs of this warehouse are offered, none chosen by itself; P-104: also before
+    //    choosing "new", and choosing one sets the flow to new material.
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
-    await page.getByTestId("scan-flow-select").selectOption("new");
+    await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
     const ddtSelect = page.getByTestId("scan-ddt-select");
     await expect(ddtSelect).toHaveValue("");
     await expect(page.getByTestId("scan-ddt-section")).toHaveCount(0);
     await expect(ddtSelect.locator(`option[value="${docId}"]`)).toHaveText(new RegExp(ddtNumber));
     await ddtSelect.selectOption(docId);
+    await expect(page.getByTestId("scan-flow-select")).toHaveValue("new");
 
-    // 3. Two pieces of the DDT and one outside it (burst, a model for each): the live comparison on the device.
-    await scanManual(page, codes[0], { withModel: true });
-    await scanManual(page, codes[1], { withModel: true });
+    // 3. Two pieces of the DDT and one outside it (burst): the live comparison on the device. P-104: the pieces of the
+    //    DDT are recorded without the unknown-piece window (their model comes from the DDT line; these lines have none,
+    //    so the pieces go "to complete" until the document gets it, §6.4); the piece outside the DDT still asks.
+    for (const c of codes.slice(0, 2)) {
+      await page.getByTestId("scan-manual-input").fill(c);
+      await page.getByTestId("scan-manual-input").press("Enter");
+      await expect(page.getByTestId("scan-flash")).toContainText(c);
+      await expect(page.getByTestId("scan-modelpick-skip")).toHaveCount(0);
+      await expect(page.getByTestId("scan-flash")).toBeHidden();
+    }
     await scanManual(page, outside, { withModel: true });
     await expect(page.getByTestId("scan-ddt-arrived")).toHaveText("2");
     await expect(page.getByTestId("scan-ddt-missing")).toHaveText("1");
