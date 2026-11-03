@@ -24,13 +24,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
-| P-126 | Esportazioni: per i ruoli ASP la colonna «Ambito» mostra il codice dell'ASP invece del nome | o3 |
-| P-127 | Avvisi (e altre tabelle): premendo un pulsante di una riga si spengono quelli di tutte le righe (segnalato dal committente) | o3 |
-| P-128 | Scelta delle colonne dell'Excel: la scelta salvata arriva dopo e sovrascrive quella dell'utente, che la vede tornare a «—» (trovato da o2) | o3 |
 | P-129 | Avviso di installazione (D-59): sul computer voce «Installa l'app» nel menu al posto della barra; sul telefono barra con «Più tardi» per 7 giorni più la voce nel menu. Circa 1 h | o3 |
-| P-125 | Letture che prendono la cache per il server (D-58), prima del lotto 2: elenco dei luoghi vuoto con «aggiornati» falso e senza nuovo tentativo; categorie e regole di smistamento assenti senza rete; DDT e BOM non aggiornati se il server tarda; «Caricamento…» infinito di documento e pezzo senza rete. Circa 3–3,5 h | o3 |
 | P-87 | Telefono condiviso (D-40). **a)** fatta (abaa679, 36b8439): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra. **b)** dopo la demo: avviso con due scelte se entra un altro utente con dati del precedente non inviati; intanto nella guida | o3 |
-| P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
@@ -40,7 +35,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|---|
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-31 | Guida completa per ruolo (D-52): censimento fatto (bf65dfc, 39 incongruenze nelle voci P-114…P-117); prima versione di `GUIDA.md` (sha 69e14f14e5c4) da far leggere al committente; versione HTML `GUIDA.html` fatta (stesso testo, controllato parola per parola) e i testi brevi della pagina «Guida» nell'app, da passare a o3. Da aggiornare a ogni lotto con le funzioni riparate | reg | 3 |
+| P-31 | Guida per ruolo: `GUIDA.md` aggiornata al lotto 2 (app 4b01f26, sha c291fbf733da); `GUIDA.html` da rigenerare; risposte del commerciale alla pagina delle domande da inserire; aggiornare a ogni lotto | reg | 3 |
 
 ## Fatto
 
@@ -66,6 +61,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
 | P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
 | P-31a | Testi nuovi della pagina «Guida» nell'app, per ruolo | reg + o3 | 03/11/2026 (976d8c4) |
+| P-125 | Letture che prendevano la cache per il server (D-58): elenco dei luoghi che riprova da solo, smistamento senza rete, DDT e BOM in ritardo, «non disponibile senza rete» | o3 | 03/11/2026 (7c71b1f…6dcd313) |
+| P-126 | Esportazioni con il nome dell'ASP | o3 | 03/11/2026 (e7a83ab) |
+| P-127 | Un pulsante di riga fa aspettare solo la sua riga | o3 | 03/11/2026 (d061109) |
+| P-128 | La scelta salvata delle colonne dell'Excel non sovrascrive quella dell'utente | o3 | 03/11/2026 (6538a58) |
+| P-59 | «Confermata in un altro reso» nella spedizione | o3 | 03/11/2026 (60b6056) |
 | P-122 | Con poco segnale, dopo l'accesso, l'elenco dei siti non compariva per minuti (la richiesta dei luoghi era in coda dietro il caricamento della cache): ora i luoghi vengono prima, la cache aspetta al massimo 20 s. Misurato: prima oltre 400 s, dopo 6,5 s | o3 | 03/11/2026 (1f0ba54) |
 | P-115 | Letture con i dati giusti: lettura rifiutata che lo dice, Foto dopo Annulla, spunte BOM del sito, foto obbligatoria, luogo dalla spedizione, messaggio di disattivazione vero | o3 | 03/11/2026 (fbf681c) |
 | P-105 | DDT e BOM da Excel (colonne ricordate), PDF o foto, con anteprima e righe da confermare (D-43, D-47) | o3 + o2 | 03/11/2026 (345a681) |
@@ -145,7 +145,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 **Luogo indicato da un superiore (D-48, P-110):** dopo la demo, un superiore può indicare all'operaio dove lavorerà. Da progettare con il committente: chi assegna, durata, cambio da parte dell'operaio, offline, chi la vede (criterio 1).
 
-**Dal censimento, dopo la demo (stime di o2 del 03/11):** campi extra che alimentano «Da completare» (n.14: campo calcolato sul pezzo e ricalcolo a blocchi, o2 3–4 h + o3 3 h + ricalcolo online del committente); rietichettatura con la sua schermata (n.37: server già pronto, o2 45 min + o3 2–3 h; domanda al cliente ancora aperta). Il n.27 (fotografia di fine mese nel resoconto, proposta A di o2: 2–3 h, solo server) va prima della demo, P-120.
+**Dal censimento, dopo la demo (stime di o2 del 03/11):** campi extra che alimentano «Da completare» (n.14: server fatto sul ramo o2-n14, 8f04914, prove sugli emulatori al primo turno dopo il lotto; o3 3 h per lista, colonna «cosa manca» e modulo; migrazione online: salvare una volta Impostazioni → Campi extra); rietichettatura con la sua schermata (n.37: server già pronto, o2 45 min + o3 2–3 h; domanda al cliente ancora aperta). Il n.27 (fotografia di fine mese nel resoconto, proposta A di o2: 2–3 h, solo server) va prima della demo, P-120.
 
 **Scrivania senza rete (D-58, dopo la demo):** striscia «Sei offline: i dati possono non essere aggiornati»; ricerca del pezzo che dice «non disponibile senza rete» invece di «non trovato». 1–1,5 h, o3.
 

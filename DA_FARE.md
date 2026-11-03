@@ -172,6 +172,19 @@ Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il n
   15. DDT caricato come foto (P-105, D-47, se nel lotto; §11.2). Magazziniere Nord: nuovo DDT con 2 foto → salva; aggiunge una terza: 3 pagine; tolta una, resta nella storia.
   16. Lettura con l'AI (D-45, se nel lotto; dopo i passi di messa a punto). Interruttore spento: nessun pulsante «Leggi automaticamente». Acceso: righe proposte da confermare, nulla salvato senza conferma.
 
+### Lotto 2: prima prova dell'AI online (procedura preparata da o2 il 03/11)
+Serve: lotto 2 pubblicato (con 69df411, registro «ai_call»), i file di `node scripts/demoDocs.mjs` in `demo-docs/`, circa 30 minuti, un cronometro.
+1. Amministratore cliente: Impostazioni → «Funzioni» → «Lettura automatica documenti e codici delle etichette rovinate (AI)» → «Salva». Limite 20 letture al giorno a persona (contano anche quelle fallite); la prova ne usa 6.
+2. Amministratore ASP Nord: «Nuovo documento», DDT (arrivo), numero AI-PROVA-1, luogo MAG-NORD-01; file DDT-TD-2026-0412-foto.jpg → «Salva» → «Leggi automaticamente». Atteso: «10 righe proposte…» con TD260412001…008 (MC400100, …107, …114, …121, …128, …135, …142, …149), «#3 MC400170», «#2 MC400205». Non salvare. Annotare secondi, righe giuste/sbagliate/mancanti, avvisi.
+3. Come 2 con AI-PROVA-2 e DDT-TD-2026-0412.pdf: stesse 10 righe.
+4. Come 2 con AI-PROVA-3 e DDT-TD-2026-0413.pdf: 46 righe (44 seriali TD260413001…044, codice che riparte da MC400100 alla riga 21, poi «#4 MC400184», «#6 MC400219»); controllare prime 3, righe 21–23, ultime 3.
+5. BOM AI-PROVA-BOM, luogo SITO-00013, file BOM-SITO-00013.pdf: «Da smontare» TD26R13001…005 (MC400100…128), «Da installare» TD26I13001…004 (MC400135…156) e «#2 MC400177», nessuna «Righe senza direzione». Attenzione alla lettera I di «TD26I».
+6. Magazzino ASP Nord, MAG-NORD-01, «Leggi» → «Arrivo» → «Leggi dalla foto dell'etichetta»: etichetta-4-sfocata-TD260412004.jpg → primo codice TD260412004; etichetta-5-strappata-TD260412005.jpg → TD260412005, probabilmente evidenziato lo «0» macchiato. Sempre «Annulla».
+7. Pulizia: chiudere AI-PROVA-1, -2, -3, -BOM (altrimenti compaiono nella tendina «DDT»).
+8. Se compare «Il servizio di lettura automatica non risponde…»: Esplora log del progetto, query `resource.type="cloud_run_revision"`, `resource.labels.service_name="documents"`, `jsonPayload.message=~"ai_call"`. «ai_call»: ms e token; «ai_call_failed»: status ed error (403 permesso, 404 o «not found in location eu» modello assente sull'endpoint eu → decisione su D-46, 429 troppe richieste).
+9. Il giorno dopo: Fatturazione → Report, servizio Vertex AI, raggruppato per SKU, giorno della prova.
+Da riferire: una riga per passo (secondi, righe giuste/sbagliate/mancanti, avvisi, note), le righe del registro, il costo.
+
 ## P-31 Documentazione per l'utente e il collaudo
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.

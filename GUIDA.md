@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit bf65dfc · Testo della guida: sha 69e14f14e5c4 · Data: 03/11/2026
+App descritta: commit 4b01f26 · Testo della guida: sha c291fbf733da · Data: 03/11/2026
 
 ## Come usare questa guida
 
@@ -21,7 +21,7 @@ SwapTrack segue i **pezzi** (gli apparati) leggendo il loro codice a barre. Segu
 
 - **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra).
 - **La campanella**: quanti avvisi aperti ci sono (non compare al Tecnico ASP).
-- **«Online» o «Offline»**: se il telefono ha rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.
+- **La rete**: sul computer vedi «Online» o «Offline»; sul telefono vedi solo l'icona del segnale, barrata quando non c'è rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.
 - **L'icona della lingua**: «Italiano» o «English».
 - **Il «Menu utente»** (icona della persona): il tuo nome e ruolo, «Profilo», «Guida», «Esci».
 
@@ -85,14 +85,16 @@ Per cambiare la password:
 
 Se vedi «Accedi di nuovo e riprova.» o «Password errata.», esci, rientra e riprova.
 
+Nel profilo trovi anche «Esci da tutti i dispositivi»: «Chiude le sessioni su tutti i dispositivi. Le letture non ancora inviate dagli altri dispositivi vanno perse.» Se su questo dispositivo ci sono ancora letture o foto da inviare, l'app non ti fa uscire (vedi la domanda successiva).
+
 ### Come esco? Perché a volte l'app non mi lascia uscire?
 
 1. Apri il «Menu utente» e premi «Esci».
 2. Se tutto è stato inviato, l'app si chiude e torna ad «Accedi».
 
-Se vedi «Non puoi ancora uscire» con «Alcune letture o foto non sono ancora arrivate al server. Collegati alla rete e attendi che vengano inviate.», l'app ti protegge: sul telefono ci sono ancora letture o foto da mandare («Letture da inviare: 2», «Foto da inviare: 1»). Collegati alla rete, aspetta che in alto sparisca «da inviare» e riprova.
+Se vedi «Non puoi ancora uscire» con «Alcune letture o foto non sono ancora arrivate al server. Collegati alla rete e attendi che vengano inviate.», l'app ti protegge: sul telefono ci sono ancora letture o foto da mandare («Letture da inviare: 2», «Foto da inviare: 1»). Collegati alla rete, aspetta che in alto sparisca «da inviare» e riprova. Lo stesso controllo vale per «Esci» nella pagina dell'informativa privacy e per «Esci da tutti i dispositivi» nel profilo.
 
-**Telefono condiviso.** Prima di passare il telefono a un collega, esci sempre con «Esci» dal «Menu utente». Quando entra un'altra persona, l'app cancella dal telefono i dati della persona precedente.
+**Telefono condiviso.** Prima di passare il telefono a un collega, esci sempre con «Esci» dal «Menu utente». Quando entra un'altra persona, l'app cancella dal telefono i dati della persona precedente, e le foto della persona precedente non vengono mai inviate a nome di chi entra.
 
 Se l'app all'apertura dice «L'app non può aprirsi» o «Chiudi le altre schede», segui il messaggio (chiudi le altre finestre dell'app, disattiva la navigazione privata, chiudi e riapri) e premi «Riprova». Se succede ancora, chiama l'amministratore.
 
@@ -128,24 +130,37 @@ Non funziona senza rete (vedi «Sei offline: questa azione richiede la rete.»):
 - il primo accesso;
 - creare, inviare o confermare spedizioni;
 - salvare documenti, esportazioni, rapporti, modifiche di amministrazione;
+- la lettura automatica dei documenti e delle etichette;
 - vedere la cronologia di un pezzo e le foto già inviate.
 
+Se apri una pagina che senza rete non si può mostrare, vedi «Non disponibile senza rete: riprova quando sei collegato.»
+
 **Cosa vuol dire «da inviare».** In alto vedi, per esempio, «4 da inviare»: sono letture e foto fatte ma non ancora arrivate. Quando arrivano, il numero sparisce. Accanto a ogni lettura vedi «Da inviare» oppure «Inviata». «Inviata» vuol dire che la lettura è arrivata, non che è tutto in regola: eventuali problemi li vede l'ufficio, nelle pagine «Anomalie» e «Avvisi».
+
+**Se una lettura viene rifiutata.** Raramente il server non accetta una lettura: nell'elenco sotto la fotocamera la riga diventa «Rifiutata» e compare «Lettura di … rifiutata dal server», con il motivo:
+- «Non è permessa per il tuo ruolo o per questo luogo. Controlla il luogo scelto e rileggila, oppure avvisa l'ufficio.»
+- oppure «Rileggila; se succede ancora, avvisa l'ufficio.»
 
 **Prima di andare dove non c'è rete**, apri l'app quando hai ancora rete: scarica l'elenco dei luoghi e dei pezzi. Nella Home vedi «12 disponibili offline · aggiornati …» con la data dell'ultimo aggiornamento.
 
 ### Cosa succede se il mio account viene disattivato o bloccato?
 
-- Se l'amministratore ti **disattiva**, l'app mostra «Il tuo accesso è stato disattivato» e «Invio delle letture rimanenti… Tieni l'app aperta e collegata.» Tieni l'app aperta con la rete: prova a inviare ciò che resta, poi pulisce il telefono e ti riporta ad «Accedi». Le letture fatte senza rete prima della disattivazione vengono ancora accettate per 7 giorni.
+- Se l'amministratore ti **disattiva**, l'app mostra «Il tuo accesso è stato disattivato» e «Invio delle letture rimanenti… Tieni l'app aperta e collegata.» Tieni l'app aperta con la rete: prova a inviare ciò che resta, poi pulisce il telefono e ti riporta ad «Accedi». Lì leggi com'è andata:
+  - «Il tuo accesso è stato disattivato. Le letture rimanenti sono state inviate e questo dispositivo è stato ripulito.»: è arrivato tutto;
+  - «Il tuo accesso è stato disattivato e questo dispositivo è stato ripulito, ma alcune letture o foto non sono state inviate. Avvisa l'ufficio.»: qualcosa non è partito; avvisa l'ufficio.
+
+  Le letture fatte senza rete prima della disattivazione vengono ancora accettate per 7 giorni.
 - Se l'amministratore ti **blocca subito** (per esempio per un telefono perso), all'accesso vedi «Questo account è bloccato.». Le letture non ancora inviate da quel telefono vanno perse.
 - In entrambi i casi, per tornare a lavorare chiedi al tuo amministratore di riattivarti.
 
 ### Come funzionano le tabelle?
 
 In quasi tutte le pagine d'ufficio i dati sono in tabelle:
-- «Filtra» cerca tra le righe già mostrate in quella pagina, non in tutto l'archivio;
-- tocca il titolo di una colonna per ordinare;
+- «Filtra» cerca nel testo che vedi nelle righe già mostrate in quella pagina, non in tutto l'archivio;
+- tocca il titolo di una colonna per ordinare (l'ordine segue il testo che vedi nella colonna);
 - 25 righe per pagina: usa «Pagina precedente» e «Pagina successiva»; vedi «Righe: …» e «Pagina 1 di 3».
+
+Luoghi e organizzazioni compaiono sempre con il loro nome (per un luogo: codice e nome). Se lavori per un'ASP, un luogo di un'altra ASP compare come «Luogo di un'altra ASP» e un'altra ASP come «Altra ASP».
 
 ---
 
@@ -164,7 +179,7 @@ In quasi tutte le pagine d'ufficio i dati sono in tabelle:
 3. Tocca la riga del sito. Compare «Luogo selezionato».
 4. Per cambiarlo, premi «Cambia luogo».
 
-Il sito resta scelto finché non chiudi l'app. Funziona anche senza rete, con l'elenco già scaricato.
+Il sito resta scelto finché non chiudi l'app. Funziona anche senza rete, con l'elenco già scaricato. Se vedi «Elenco non ancora aggiornato dal server: è quello salvato sul telefono. Riprovo da solo quando torna la rete.», puoi lavorare lo stesso: l'elenco si aggiorna da solo quando torna la rete.
 
 Se qualcosa va storto:
 - «Nessun luogo disponibile» con «La tua organizzazione non ha ancora luoghi attivi. Chiedi all'amministratore.»: avvisa il tuo amministratore.
@@ -173,12 +188,14 @@ Se qualcosa va storto:
 
 ### Come leggo un codice a barre?
 
-Ci sono tre modi, nella schermata che si apre con «Leggi».
+Ci sono tre modi, nella schermata che si apre con «Leggi», più un quarto se l'ufficio l'ha acceso.
 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
 2. Quando la lettura riesce, lo schermo diventa verde con il codice, senti un suono e il telefono vibra (se lo permette).
-3. Dopo meno di un secondo puoi leggere il pezzo successivo: non serve premere nulla (è la «raffica»).
+3. La fotocamera si ferma e compare «Leggi il prossimo»: premilo quando inquadri il pezzo successivo.
+
+**Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
 
 Aiuti: «Torcia» accende la luce (se il telefono la ha); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante («Suono sì/no») spegne o accende il suono.
 
@@ -186,10 +203,22 @@ Aiuti: «Torcia» accende la luce (se il telefono la ha); il cursore «Sole» sc
 
 **A mano.** Scrivi le cifre nel campo «Digita le cifre sotto il codice a barre» e premi «Conferma».
 
+**Dalla foto dell'etichetta.** Il pulsante «Leggi dalla foto dell'etichetta» c'è solo se l'Amministratore cliente ha acceso la lettura automatica nelle «Impostazioni» (scheda «Funzioni»). Serve per un'etichetta rovinata, che la fotocamera non riesce a leggere, e serve la rete.
+1. Premi «Leggi dalla foto dell'etichetta» e fotografa l'etichetta. Mentre l'app la legge vedi «Lettura della foto…».
+2. Si apre «Codici letti dalla foto». I caratteri evidenziati sono incerti: controlla sempre il codice sull'etichetta e correggilo se serve.
+3. Premi «Conferma» accanto al codice giusto. Solo allora la lettura parte, come se l'avessi scritta a mano, e la foto dell'etichetta resta collegata alla lettura. «Annulla» chiude senza registrare nulla.
+
+Messaggi possibili (in tutti questi casi scrivi il codice a mano):
+- «Serve la connessione per leggere la foto: scrivi il codice a mano qui sotto.»
+- «Nella foto non è stato trovato nessun codice: riprova o scrivilo a mano.»
+- «Alcuni codici non erano leggibili e non compaiono.»
+- «Hai raggiunto le letture automatiche di oggi.»
+- «Il servizio di lettura automatica non risponde, riprova più tardi.»
+
 Da sapere:
-- Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte: per qualche secondo la ignora. È normale.
+- Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte e scrive «Già letto. Per rileggerlo allontana il telefono per 3 secondi.» È normale.
 - Se l'app dice «Questo è il codice prodotto: leggi il numero di serie», hai letto il codice del modello (uguale su tutti i pezzi dello stesso tipo). Cerca sull'etichetta il numero di serie del singolo pezzo e leggi quello.
-- Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto», poi leggi il codice prodotto. È sempre un solo pezzo.
+- Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto», poi leggi il codice prodotto (la fotocamera è subito pronta, anche se non leggi di fila). È sempre un solo pezzo.
 
 Se qualcosa va storto:
 - «Fotocamera non consentita. Su iPhone: Impostazioni > Safari > Fotocamera (o le impostazioni dell'app installata). Puoi digitare il codice qui sotto.»: dai il permesso della fotocamera, oppure scrivi il codice a mano.
@@ -205,9 +234,9 @@ Se qualcosa va storto:
 Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture in questa sessione», e l'elenco dei codici con «Da inviare» o «Inviata». Più sotto, «Le mie letture di oggi» elenca tutte le tue letture della giornata.
 
 **Se compare «Pezzo sconosciuto».** L'app dice «Il codice … è nuovo. Scegli un modello per aiutare l'ufficio a completarlo, oppure salta.»
-- Se sai che modello è, sceglilo nella tendina «Modello» e premi «Conferma».
-- Se non lo sai, premi «Salta»: il pezzo viene registrato lo stesso e l'ufficio completerà il modello.
-- Usa sempre uno di questi due pulsanti.
+- Se sai che modello è, scrivi una parte del nome o del codice in «Cerca modello o codice» e tocca il risultato giusto (oppure scegli il modello nella tendina «Modello»), poi premi «Conferma».
+- Se non lo sai, premi «Salta»: il pezzo viene registrato lo stesso e l'ufficio completerà il modello. Anche chiudere la finestra con la X vale come «Salta».
+- «Nessun modello trovato: puoi saltare.»: nessun modello corrisponde a ciò che hai scritto.
 
 ### Come registro l'installazione dei pezzi nuovi?
 
@@ -218,14 +247,25 @@ Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture i
 
 I pezzi nuovi arrivano dal magazzino della tua ASP: se un codice non è conosciuto, l'app lo registra lo stesso e l'ufficio lo vedrà tra le anomalie.
 
+### Come controllo i pezzi previsti nel sito (la BOM)?
+
+Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la «Lista BOM»:
+- con «Smonta» vedi i «Pezzi da smontare», con «Installa» i «Pezzi da installare»;
+- ogni pezzo della lista che leggi prende la spunta; accanto al titolo vedi il conto, per esempio 3/10 (letti su previsti);
+- se leggi pezzi che non sono nella lista, compaiono sotto, per esempio «2 pezzi non attesi dalla BOM»;
+- «Nessuna riga per questa direzione.»: la BOM non prevede pezzi da smontare (o da installare).
+
+La lista conta solo le tue letture di oggi in quel sito, fatte dopo il caricamento della BOM. Il controllo completo lo fa l'ufficio.
+
 ### Come annullo una lettura sbagliata?
 
 1. Premi «Annulla l'ultima». Vedi «Ultima lettura annullata».
 2. Puoi premerlo di nuovo per annullare la lettura precedente, e così via.
 
 Da sapere:
-- Il pulsante è spento se in questa sessione non hai ancora letto nulla.
+- Il pulsante è spento (con il bordo tratteggiato) se in questa sessione non hai ancora letto nulla.
 - La lettura non sparisce dalla storia: in «Le mie letture di oggi» resta barrata con «annullata».
+- Se annulli l'unica lettura di un pezzo che l'app non conosceva prima, il pezzo sparisce anche da «Pezzi» e dai conteggi.
 - Puoi annullare solo le tue letture, nello stesso luogo, entro 24 ore. Altrimenti l'ufficio vedrà «Annullamento non permesso»: chiedi all'ufficio di correggere.
 
 ### Come faccio una foto a un pezzo?
@@ -235,9 +275,10 @@ Da sapere:
 3. Vedi «Foto in coda per l'invio»: la foto parte appena c'è rete.
 
 Da sapere:
-- La foto si collega all'ultima lettura fatta in questa schermata. Il pulsante «Foto» è spento finché non hai letto almeno un pezzo.
-- «Foto: solo il pezzo, mai persone.» La foto viene rimpicciolita e perde i dati di posizione prima di partire.
-- La foto è facoltativa: puoi registrare il pezzo anche senza.
+- La foto si collega all'ultima lettura fatta in questa schermata. Prima della prima lettura il pulsante «Foto» è spento, con il bordo tratteggiato, e sotto c'è scritto «Leggi un pezzo, poi scatta la foto.»
+- Dopo «Annulla l'ultima» la foto va alla lettura precedente; se non ce ne sono più, «Foto» si spegne.
+- «Foto: solo il pezzo, mai persone». La foto viene rimpicciolita e perde i dati di posizione prima di partire.
+- La foto è facoltativa: puoi registrare il pezzo anche senza. L'unica eccezione sono i pezzi difettosi, se l'Amministratore cliente ha reso la foto obbligatoria (vedi [Come smisto il materiale smontato?](#come-smisto-il-materiale-smontato)).
 
 Se qualcosa va storto:
 - «La foto non può essere salvata su questo dispositivo.»: il telefono non ha spazio o non lo permette; riprova o continua senza foto.
@@ -264,9 +305,9 @@ Premilo solo quando hai davvero finito: non c'è una domanda di conferma. Il sit
 
 **Cosa trovi nel menu.** «Home» (la scelta del magazzino), «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Guida». In basso a destra c'è il pulsante «Leggi».
 
-**Cosa non vedi.** Vedi solo i pezzi, i documenti, le spedizioni e gli avvisi della tua ASP, più i pezzi che un'altra ASP ti sta trasferendo. Nelle spedizioni, il magazzino di un'altra ASP compare come «altra organizzazione».
+**Cosa non vedi.** Vedi solo i pezzi, i documenti, le spedizioni e gli avvisi della tua ASP, più i pezzi che un'altra ASP ti sta trasferendo. Nelle spedizioni, il magazzino di un'altra ASP compare come «altra organizzazione»; nelle altre pagine un luogo di un'altra ASP compare come «Luogo di un'altra ASP».
 
-La lettura dei codici (fotocamera, pistola, a mano, «Annulla l'ultima», «Foto», «Pezzo sconosciuto») funziona come per il Tecnico ASP: vedi [Come leggo un codice a barre?](#come-leggo-un-codice-a-barre), [Come annullo una lettura sbagliata?](#come-annullo-una-lettura-sbagliata) e [Come faccio una foto a un pezzo?](#come-faccio-una-foto-a-un-pezzo).
+La lettura dei codici (fotocamera, lettura di fila, pistola, a mano, foto dell'etichetta, «Annulla l'ultima», «Foto», «Pezzo sconosciuto») funziona come per il Tecnico ASP: vedi [Come leggo un codice a barre?](#come-leggo-un-codice-a-barre), [Come registro lo smontaggio dei pezzi in un sito?](#come-registro-lo-smontaggio-dei-pezzi-in-un-sito) (per il «Pezzo sconosciuto»), [Come annullo una lettura sbagliata?](#come-annullo-una-lettura-sbagliata) e [Come faccio una foto a un pezzo?](#come-faccio-una-foto-a-un-pezzo).
 
 ### Come scelgo il magazzino?
 
@@ -288,14 +329,39 @@ Controlla sempre il magazzino scelto (in alto) prima di leggere: ogni lettura vi
 
 Se compare «Pezzo sconosciuto», scegli il modello e premi «Conferma», oppure premi «Salta».
 
+### Come preparo un documento e allego file o foto?
+
+I documenti (DDT e BOM) si preparano in «Documenti» con «Nuovo documento». Oltre alle «Righe» scritte a mano, puoi allegare il documento vero e farne leggere le righe all'app.
+
+**Allegare file o foto.**
+1. Nel riquadro «File del documento» premi «Aggiungi file o foto» e scegli PDF, foto (JPEG, PNG, WebP), Excel o CSV. Se non c'è ancora nulla vedi «Nessun file. Puoi aggiungere foto, PDF o l'Excel del documento.»
+2. I file nuovi mostrano «da salvare» finché non premi «Salva». Le foto vengono rimpicciolite prima di partire.
+3. Tocca il nome di un file per vederlo accanto alle righe; «Apri il file» lo apre da solo (utile sull'iPhone).
+4. Per togliere un file salvato premi la X accanto al nome: vedi «1 file tolto da questa versione (resta nella storia).» con «Annulla» per ripensarci. Il file sparisce dalla versione nuova quando premi «Salva».
+
+Limiti: «Al massimo 10 file per documento.»; ogni file al massimo 5 MB («File troppo grande: massimo 5 MB.»); i file nuovi di un salvataggio insieme al massimo 6 MB («I file nuovi insieme superano 6 MB: salva in due volte o usa foto più leggere.»). Un tipo di file diverso dà «Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.»
+
+**Righe da un Excel o CSV.** Quando aggiungi un Excel o un CSV si apre «Colonne dell'Excel»: «Scegli quale colonna contiene ogni dato. La scelta viene ricordata per il prossimo file.» Se vedi «Carico la scelta delle colonne salvata… Le colonne che scegli tu restano.», l'app sta recuperando la scelta dell'ultima volta: puoi già scegliere.
+1. Scegli la colonna del «Seriale», oppure quelle del «Codice materiale» e della «Quantità».
+2. Sotto vedi quante righe sono pronte, per esempio «12 righe pronte, 1 non lette.»
+3. Premi «Usa queste righe». Le righe si aggiungono a quelle già scritte e vedi, per esempio, «12 righe lette dal file (1 non lette): controllale, poi Salva.»
+4. Controlla le righe e premi «Salva».
+
+**Lettura automatica.** Il pulsante «Leggi automaticamente» c'è solo se l'Amministratore cliente ha acceso la lettura automatica nelle «Impostazioni» (scheda «Funzioni»), e solo su un documento già salvato con almeno una foto o un PDF. Serve la rete.
+1. Aggiungi le foto o il PDF del documento e premi «Salva». Se ci sono file non ancora salvati vedi «Salva prima i file nuovi, poi usa la lettura automatica.»
+2. Premi «Leggi automaticamente». Le righe proposte si aggiungono a quelle già scritte: vedi per esempio «8 righe proposte dalla lettura automatica: controllale, poi Salva.»
+3. Controlla sempre ogni riga con il documento di carta, correggi ciò che serve e premi «Salva». Finché non salvi, nulla viene registrato.
+
+Avvisi possibili: «Alcune righe non sono state capite e non compaiono: confrontale con il documento.»; «Un file non si può leggere automaticamente (per esempio un Excel): usa la scelta delle colonne.»; «Il documento ha troppe righe: ne è stata letta solo una parte.»; «Nel documento non è stata trovata nessuna riga.» Se vedi «Hai raggiunto le letture automatiche di oggi.» o «Il servizio di lettura automatica non risponde, riprova più tardi.», scrivi le righe a mano o usa l'Excel.
+
 ### Come registro l'arrivo di materiale nuovo con il DDT?
 
 Prima prepara il DDT nell'app (una volta per ogni DDT):
-1. Apri «Documenti» e premi «Nuovo documento».
+1. Apri «Documenti» e premi «Nuovo documento». In alternativa, nella schermata «Leggi» in «Arrivo» premi «Carica DDT»: si apre «Nuovo documento» già impostato con «DDT (arrivo)» e il tuo magazzino.
 2. «Tipo»: «DDT (arrivo)».
 3. «Numero»: il numero scritto sul DDT di carta.
 4. «Luogo»: il tuo magazzino.
-5. «Righe»: un numero di serie per riga, copiato dal DDT. Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio `#3 MC-A`).
+5. «Righe»: un numero di serie per riga, copiato dal DDT (puoi scrivere anche «seriale codice-materiale»: il numero di serie, uno spazio e il codice materiale). Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio `#3 MC-A`). Puoi anche allegare il DDT e leggerne le righe da un Excel o con la lettura automatica: vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto).
 6. Premi «Salva». Vedi «Salvato».
 
 Se vedi «Esiste già un documento con questo numero per questa ASP.», hai già inserito quel DDT: controlla in «Documenti» prima di continuare.
@@ -303,15 +369,16 @@ Se vedi «Esiste già un documento con questo numero per questa ASP.», hai già
 Poi registra l'arrivo:
 1. Scegli il magazzino e premi «Leggi».
 2. Premi «Arrivo».
-3. Nella tendina «Materiale» scegli «Materiale nuovo».
-4. Nella tendina «DDT» scegli «DDT …» con il numero giusto. (Se lasci «Nessun DDT (solo arrivo)», i pezzi arrivano ma non vengono confrontati con il DDT.)
-5. Leggi i codici dei pezzi.
+3. Nella tendina «DDT» scegli «DDT …» con il numero giusto: la tendina «Materiale» passa da sola a «Materiale nuovo». (Se lasci «Nessun DDT (solo arrivo)» con «Materiale nuovo», i pezzi arrivano ma non vengono confrontati con il DDT.)
+4. Leggi i codici dei pezzi.
+
+I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare».
 
 Cosa vedi dopo: il riquadro «Confronto con il DDT …» con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.
 
 Infine, controlla e chiudi il confronto:
 1. Apri «Documenti» e premi «Apri» sul DDT.
-2. Premi «Confronta»: vedi «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto» e, per le quantità, contati/attesi.
+2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», sotto ogni numero l'elenco dei codici e, per le quantità, contati/attesi.
 3. Quando l'arrivo è completo, premi «Segna verificato». Vedi «Segnato verificato».
 
 Da sapere: dopo «Segna verificato» il DDT non compare più nella tendina «DDT» del telefono. Se qualcosa non torna, l'app crea un avviso «DDT (arrivo) differenza» (vedi «Avvisi»).
@@ -320,33 +387,35 @@ Da sapere: dopo «Segna verificato» il DDT non compare più nella tendina «DDT
 
 1. Scegli il magazzino e premi «Leggi».
 2. Premi «Smista / classifica».
-3. Nella tendina «Categoria»:
-   - lascia «Usa la categoria suggerita» per usare il suggerimento: per ogni pezzo letto l'app applica subito la categoria suggerita e te la mostra in grande («Suggerita: …»);
-   - oppure scegli tu una categoria: vale per tutti i pezzi che leggi dopo, finché non la cambi.
-4. Leggi i codici.
+3. Nella tendina «Categoria» lascia «Conferma a ogni pezzo (nessuna categoria fissa)».
+4. Leggi un codice: si apre la finestra «Smista …» con il codice del pezzo.
+5. Se l'app ha un suggerimento, vedi in grande «Suggerita: …»: premi «Conferma» per usarla. Altrimenti tocca un'altra categoria, oppure «Difettoso» o «Avanzo».
 
-Se accanto alla categoria compare «nuovo installato», quel pezzo era stato installato nuovo e poi smontato.
+Il pezzo viene registrato solo quando tocchi una scelta. Se l'app non ha un suggerimento, la finestra mostra solo le categorie: tocca quella giusta. Se chiudi la finestra con «Annulla» o con la X, il pezzo non viene registrato: vedi «… non smistato.» e puoi leggerlo di nuovo.
 
-**Materiale nuovo difettoso o avanzato.** Nella seconda tendina («Materiale smontato (categoria)») scegli «Difettoso» o «Avanzo», poi leggi i pezzi.
+**Tanti pezzi uguali.** Scegli una categoria nella tendina «Categoria»: diventa fissa e ogni pezzo che leggi dopo viene registrato con quella, senza finestra, finché non la cambi.
+
+Se accanto alla categoria suggerita compare «nuovo installato», quel pezzo era stato installato nuovo e poi smontato.
+
+**Materiale nuovo difettoso o avanzato.** Nella finestra tocca «Difettoso» o «Avanzo». Per tanti pezzi di fila, scegli «Difettoso» o «Avanzo» nella seconda tendina («Materiale smontato (categoria)»), poi leggi i pezzi.
+
+**Foto dei difettosi.** Se l'Amministratore cliente ha reso obbligatoria la foto dei pezzi difettosi, scegliendo «Difettoso» nella tendina vedi «La foto è obbligatoria per i pezzi difettosi (impostazione).», e dopo ogni pezzo difettoso l'app scrive «Foto obbligatoria per il difettoso: scattala ora.»: premi «Foto» accanto al messaggio e scatta.
 
 Se qualcosa va storto:
-- «Scegli prima una categoria»: l'app non ha un suggerimento per quel pezzo e tu non hai scelto una categoria. Il pezzo NON è stato registrato: scegli una categoria e rileggilo.
-- Hai applicato la categoria sbagliata: premi «Annulla l'ultima», scegli la categoria giusta e rileggi il pezzo.
+- Hai applicato la categoria sbagliata: premi «Annulla l'ultima» e rileggi il pezzo scegliendo la categoria giusta.
 
 ### Come preparo un reso al cliente?
 
-1. In «Home» scegli il magazzino da cui parte il reso.
-2. Apri «Spedizioni» e premi «Nuovo reso».
-3. «Da»: il tuo magazzino (lo stesso scelto in Home). «A»: il magazzino del cliente. Premi «Crea». Vedi «Spedizione creata» e si apre la scheda del reso, nello stato «Bozza».
-4. Premi «Leggi i pezzi»: si apre la lettura in modalità «Spedizione reso».
-5. Leggi i codici dei pezzi che metti nel reso. Ogni pezzo diventa «In reso» e compare tra le «Righe» del reso.
-6. Torna alla scheda del reso (da «Spedizioni», «Apri»). Controlla «Righe» e «Pezzi».
-7. Se vuoi, conserva una copia del DDT con «Allega file DDT» (PDF o foto). Vedi «File DDT allegato».
-8. Premi «Invia», scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi «Invia». Vedi «Spedizione inviata».
+1. Apri «Spedizioni» e premi «Nuovo reso».
+2. «Da»: il tuo magazzino da cui parte il reso. «A»: il magazzino del cliente. Premi «Crea». Vedi «Spedizione creata» e si apre la scheda del reso, nello stato «Bozza».
+3. Premi «Leggi i pezzi»: si apre la lettura in modalità «Spedizione reso», già nel magazzino di partenza del reso (lo vedi in alto).
+4. Leggi i codici dei pezzi che metti nel reso. Ogni pezzo diventa «In reso» e compare tra le «Righe» del reso.
+5. Torna alla scheda del reso (da «Spedizioni», «Apri»). Controlla «Righe» e «Pezzi».
+6. Se vuoi, conserva una copia del DDT con «Allega file DDT» (PDF o foto). Vedi «File DDT allegato». Il file diventa un documento «DDT (reso)» in «Documenti»: dopo la conferma del cliente, il suo «Confronta» mette a confronto i pezzi del reso con quelli che il cliente ha confermato.
+7. Premi «Invia», scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi «Invia». Vedi «Spedizione inviata».
 
 Da sapere:
 - Usa sempre «Leggi i pezzi» dalla scheda del reso: i pulsanti «Spedizione reso» e «Trasferimento» nella schermata «Leggi» funzionano solo se arrivi da una spedizione (altrimenti vedi «Spedizione non trovata.»).
-- «Leggi i pezzi» non cambia il magazzino scelto: per questo al passo 1 scegli il magazzino giusto.
 - Leggere due volte lo stesso pezzo nello stesso reso non lo conta due volte.
 - Per togliere un pezzo letto per errore, premi subito «Annulla l'ultima».
 
@@ -366,22 +435,20 @@ Funziona solo finché la spedizione è in «Bozza».
 
 ### Come trasferisco pezzi a un altro magazzino della mia ASP?
 
-1. In «Home» scegli il magazzino da cui partono i pezzi.
-2. Apri «Spedizioni» e premi «Nuovo trasferimento».
-3. «Da»: il magazzino di partenza. «A»: l'altro tuo magazzino. Premi «Crea».
-4. Nella scheda premi «Leggi i pezzi» (modalità «Trasferimento») e leggi i pezzi. Ogni pezzo diventa «In trasferimento».
-5. Torna alla scheda e premi «Invia» («Invia il trasferimento. Il magazzino ricevente registrerà l'arrivo.»), poi «Invia». Vedi «Spedizione inviata».
+1. Apri «Spedizioni» e premi «Nuovo trasferimento».
+2. «Da»: il magazzino di partenza. «A»: l'altro tuo magazzino. Premi «Crea».
+3. Nella scheda premi «Leggi i pezzi»: si apre la lettura in modalità «Trasferimento», già nel magazzino «Da». Leggi i pezzi. Ogni pezzo diventa «In trasferimento».
+4. Torna alla scheda e premi «Invia» («Invia il trasferimento. Il magazzino ricevente registrerà l'arrivo.»), poi «Invia». Vedi «Spedizione inviata».
 
 I trasferimenti verso un'altra ASP li crea solo l'Amministratore cliente; tu li prepari e li invii come sopra, dalla bozza che trovi in «Spedizioni».
 
 ### Come registro l'arrivo di un trasferimento?
 
-1. In «Home» scegli il magazzino che riceve.
-2. Apri «Spedizioni», cerca il «Trasferimento» nello stato «Inviata» e premi «Apri».
-3. Premi «Leggi i pezzi»: si apre la lettura in «Arrivo».
-4. Leggi i pezzi arrivati.
+1. Apri «Spedizioni», cerca il «Trasferimento» nello stato «Inviata» e premi «Apri».
+2. Premi «Leggi i pezzi»: si apre la lettura in «Arrivo», già nel magazzino che riceve.
+3. Leggi i pezzi arrivati.
 
-Cosa vedi dopo: nella scheda del trasferimento ogni riga arrivata mostra «Arrivato». Dopo l'arrivo il pezzo passa alla tua ASP. Se dopo alcuni giorni (7, salvo diversa impostazione) mancano ancora righe, compare l'avviso «Trasferimento in ritardo» all'ASP che ha spedito.
+Cosa vedi dopo: nella scheda del trasferimento ogni riga arrivata mostra «Arrivato». Dopo l'arrivo il pezzo passa alla tua ASP. Quando sono arrivati tutti i pezzi, il trasferimento passa a «Ricevuta» (con la data nel «Riepilogo») e «Leggi i pezzi» sparisce. Se dopo alcuni giorni (7, salvo diversa impostazione) mancano ancora righe, compare l'avviso «Trasferimento in ritardo» all'ASP che ha spedito.
 
 ### Come completo un pezzo senza modello?
 
@@ -401,11 +468,11 @@ Se vedi «Nulla da completare.», non ci sono pezzi senza modello.
 
 L'elenco mostra i pezzi più recenti, 200 alla volta: «Mostra altri» ne aggiunge altri 200.
 
-Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici», «Foto», «Cronologia» (le letture, con data e ora, senza il nome di chi le ha fatte) e «Anomalie».
+Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici», «Foto», «Cronologia» e «Anomalie». Nella «Cronologia» ogni lettura ha data e ora, il luogo, l'organizzazione e il ruolo di chi l'ha fatta, mai il nome della persona.
 
 ### Come guardo avvisi e anomalie?
 
-- **«Avvisi»**: le differenze da controllare (DDT, BOM, trasferimenti in ritardo, materiale fermo da troppi giorni). Un avviso per documento, spedizione o luogo, con il «Conteggio». Tocca l'«Oggetto» per aprire ciò a cui si riferisce. Premi «Segna visto» per far sapere che l'hai guardato: diventa «Visto» per tutti. «Mostra chiusi» fa vedere anche quelli chiusi. «Nessuna differenza ora» vuol dire che il problema oggi non c'è più. Gli avvisi non arrivano per e-mail: stanno solo nell'app.
+- **«Avvisi»**: le differenze da controllare (DDT, BOM, trasferimenti in ritardo, materiale fermo da troppi giorni). Un avviso per documento, spedizione o luogo, con il «Conteggio». L'«Oggetto» dice a cosa si riferisce («Documento», «Spedizione» o «Luogo») e il luogo: toccalo per aprirlo. La colonna «Codici» mostra i primi 3 codici «Mancanti», «Non attesi» o con «Modello sconosciuto» e quanti altri ce ne sono (per esempio «e altri 5»). Premi «Segna visto» per far sapere che l'hai guardato: diventa «Visto» per tutti. «Mostra chiusi» fa vedere anche quelli chiusi. «Nessuna differenza ora» vuol dire che il problema oggi non c'è più. Gli avvisi non arrivano per e-mail: stanno solo nell'app.
 - **«Anomalie»**: letture che non tornano con lo stato del pezzo (per esempio «Pezzo di un'altra ASP», «Transizione proibita»). Da questa pagina puoi solo guardarle e aprire il pezzo. Per correggerle, chiama il tuo Amministratore ASP.
 
 ---
@@ -418,7 +485,7 @@ Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici
 
 **Cosa non vedi.** Solo i dati della tua ASP. Non vedi le altre ASP, né i loro pezzi (salvo quelli che stanno arrivando a te).
 
-**Dal Magazzino ASP:** arrivi, DDT, smistamento, resi, trasferimenti, pezzi da completare, ricerca dei pezzi, avvisi e anomalie funzionano allo stesso modo. Vedi la [parte Magazzino ASP](#magazzino-asp).
+**Dal Magazzino ASP:** arrivi, documenti e file allegati, DDT, smistamento, resi, trasferimenti, pezzi da completare, ricerca dei pezzi, avvisi e anomalie funzionano allo stesso modo. Vedi la [parte Magazzino ASP](#magazzino-asp).
 
 Sul telefono l'app ha l'aspetto «da campo» (come per i magazzinieri); sul computer ha l'aspetto da ufficio.
 
@@ -439,7 +506,7 @@ Se qualcosa va storto: «Esiste già un account con questa e-mail.»; «Questo r
 
 ### Come gestisco le persone della mia ASP?
 
-In «Persone», sulla riga della persona, apri «Azioni». Puoi gestire solo i ruoli «Magazzino ASP» e «Tecnico ASP»: su un altro amministratore l'app rifiuta l'azione («Non hai il permesso di farlo.»).
+In «Persone», sulla riga della persona, apri «Azioni». Il menu c'è solo sulle righe con ruolo «Magazzino ASP» o «Tecnico ASP»: sulle righe degli amministratori non compare.
 
 - **«Invia di nuovo l'invito»**: se la persona non ha ricevuto o ha perso il link.
 - **«Cambia ruolo»**: scegli il nuovo ruolo e premi «Salva». «La modifica vale dal prossimo rinnovo del token (entro 10 minuti).»: cioè entro 10 minuti.
@@ -455,10 +522,14 @@ Ogni azione chiede una conferma. Non puoi disattivare, bloccare o eliminare te s
 
 1. Apri «Documenti» e premi «Nuovo documento».
 2. «Tipo»: «BOM». «Numero»: il riferimento della lista. «Luogo»: il sito.
-3. «Righe»: un numero di serie per riga, **seguito sempre** da `[remove]` (da smontare) o `[install]` (da installare). Per esempio `SERIALE [remove]`. Una riga senza `[remove]` o `[install]` non viene usata nel controllo.
+3. Scrivi i pezzi nei due riquadri «Da smontare» e «Da installare»: un numero di serie per riga (oppure una riga di quantità, come `#3 MC-A`).
 4. Premi «Salva».
 
-Cosa succede dopo: quando il tecnico preme «Ho finito in questo sito», e ogni notte, l'app confronta i pezzi letti nel sito con la BOM. Se qualcosa non torna, compare l'avviso «BOM differenza».
+**Da un file.** Puoi allegare la BOM e leggerne le righe (vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto)). Per un Excel o un CSV, in «Colonne dell'Excel» c'è anche «Smontare o installare»: scegli la colonna che lo dice e poi, in «Valore che vuol dire «smontare»» e «Valore che vuol dire «installare»», il valore usato nel file; oppure scegli «Tutte da smontare» o «Tutte da installare». Con la lettura automatica, le righe di cui l'app non capisce la direzione finiscono nel riquadro «Righe senza direzione: spostale in «Da smontare» o «Da installare»», con l'avviso «Alcune righe della BOM non dicono se smontare o installare: spostale nella casella giusta.»
+
+**Righe senza direzione.** Anche una BOM salvata in passato può mostrare il riquadro «Righe senza direzione: spostale in «Da smontare» o «Da installare»». Sposta ogni riga nel riquadro giusto: finché ne resta una, «Salva» risponde «Ogni riga della BOM deve dire se il pezzo va smontato o installato.»
+
+Cosa succede dopo: quando il tecnico preme «Ho finito in questo sito», e ogni notte, l'app confronta con la BOM i pezzi letti nel sito **dopo** il caricamento della BOM (lo stesso fa «Confronta»). Se qualcosa non torna, compare l'avviso «BOM differenza». Se l'Amministratore cliente ha scelto «Accetta in silenzio (senza avviso)» nelle «Impostazioni», i pezzi letti nel sito ma assenti dalla BOM non fanno nascere l'avviso.
 
 Ogni nuovo salvataggio dello stesso documento crea una nuova versione (la vedi accanto al tipo, per esempio «v2»).
 
@@ -482,6 +553,7 @@ Apri il pezzo (da «Pezzi» o da «Anomalie»). Oltre a «Modifica» (vedi [Come
 
 - **«Forzatura d'ufficio»**: scegli lo «Stato» giusto, scrivi il «Motivo» (obbligatorio) e premi «Applica». Usala quando lo stato del pezzo è sbagliato e una lettura non basta a correggerlo.
 - **«Unisci»**: quando lo stesso pezzo fisico è stato registrato con due codici. Scrivi il «Codice del pezzo da unire», il «Motivo», e premi «Unisci in questo». Puoi unire solo pezzi della tua ASP. Errore possibile: «Uno di questi pezzi era già stato unito.»
+- **«Correggi luogo»** (l'icona del segnaposto accanto a una lettura, nella «Cronologia»): per una lettura registrata nel luogo sbagliato. Vedi il «Luogo precedente»; in «Nuovo luogo» scrivi una parte del codice o del nome e tocca il luogo giusto; scrivi il «Motivo» e premi «Salva». Puoi scegliere solo tra i luoghi attivi che vedi.
 - **«Mostra autore»** (icona accanto a una lettura): mostra chi ha fatto quella lettura, se il dato è ancora disponibile («Autore non disponibile.» altrimenti). Ogni richiesta viene registrata e ne puoi fare al massimo 20 all'ora: usala solo quando serve davvero.
 
 Tutte le correzioni restano nella storia del pezzo.
@@ -490,7 +562,7 @@ Tutte le correzioni restano nella storia del pezzo.
 
 1. Apri «Cruscotto».
 2. Vedi quanti pezzi della tua ASP sono «Al magazzino ASP», «Installato», «Smontato in sito», «Reso», «Smistato», «Difettoso», «Avanzo», «In trasferimento». Tocca un numero per aprire l'elenco dei pezzi.
-3. Più sotto: «Per flusso e stato», «Per regione», «Modelli più presenti», «Per produttore», «Esito smistamento», «Magazzini».
+3. Più sotto: «Per flusso e stato», «Per regione», «Modelli più presenti», «Per produttore», «Esito smistamento» (con il nome di ogni categoria), «Smontati, di cui prima nuovi», «Magazzini».
 
 I numeri si aggiornano dopo le letture e ogni notte. Riapri la pagina per vedere gli ultimi.
 
@@ -499,7 +571,9 @@ I numeri si aggiornano dopo le letture e ogni notte. Riapri la pagina per vedere
 1. Apri «Esportazioni».
 2. Scegli i filtri che ti servono (tutti facoltativi): «Stato», «Modello», «Sito o magazzino», «Categoria di smistamento», «Letti dal», «Letti fino al». Le date si riferiscono all'ultima lettura di ogni pezzo.
 3. Premi «Crea esportazione». Vedi «Esportazione creata» e una nuova riga nell'elenco, con le «Righe» prodotte.
-4. Premi «Scarica» su quella riga: scarichi un file Excel.
+4. Premi «Scarica» su quella riga: scarichi un file Excel. Il nome del file contiene la data e l'ora dell'esportazione.
+
+Un'esportazione contiene al massimo 10.000 righe. Se i pezzi sono di più vedi «Esportazione troncata: contiene solo le prime 10000 righe. Restringi i filtri per avere tutto.» e sulla riga compare «troncata»: restringi i filtri (per esempio per periodo o per luogo) e crea più esportazioni.
 
 L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possibile caricare i dati.», riprova con la rete.
 
@@ -507,7 +581,7 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 
 1. Apri «Rapporti».
 2. Ogni mese, il giorno 1, l'app prepara da sola il rapporto del mese precedente per la tua ASP.
-3. Sulla riga del mese premi «PDF» o «XLSX».
+3. Sulla riga del mese premi «PDF» o «XLSX». Il nome del file contiene il mese e il nome della tua ASP.
 
 ---
 
@@ -517,7 +591,7 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 
 **Cosa trovi nel menu.** «Home», «Pezzi», «Spedizioni», «Documenti», «Avvisi», «Guida».
 
-**Cosa non vedi.** Vedi solo le spedizioni di reso (non i trasferimenti tra ASP) e solo gli avvisi sulle differenze dei resi.
+**Cosa non vedi.** Vedi solo le spedizioni di reso (non i trasferimenti tra ASP), solo i documenti «DDT (reso)» e solo gli avvisi sulle differenze dei resi.
 
 ### Come confermo un reso?
 
@@ -532,21 +606,28 @@ Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e 
 
 **Pezzi arrivati dopo.** Se un pezzo mancante arriva più tardi, riapri lo stesso reso, premi di nuovo «Conferma» e aggiungilo. I pezzi già confermati non vengono contati due volte.
 
+**Pezzo trovato in un altro reso.** Se un pezzo segnato mancante viene poi confermato in un altro reso, nella riga del primo reso compare «Confermata in un altro reso», con il collegamento a quel reso.
+
 Se qualcosa va storto: «La spedizione non è stata inviata.»: l'ASP non ha ancora inviato il reso, aspetta. Controlla sempre in «Spedizioni» che il reso compaia come «Confermata».
+
+### Come controllo il DDT di un reso?
+
+1. Apri «Documenti»: vedi solo i «DDT (reso)». Premi «Apri» sul documento.
+2. Premi «Confronta»: per un DDT allegato a un reso vedi quali pezzi del reso sono «Arrivati» (cioè confermati da te) e quali «Mancanti», con l'elenco dei codici sotto ogni numero.
 
 ### Come guardo e chiudo gli avvisi sui resi?
 
-1. Apri «Avvisi»: vedi gli avvisi «DDT (reso) differenza», con il «Conteggio» dei pezzi che non tornano.
+1. Apri «Avvisi»: vedi gli avvisi «DDT (reso) differenza», con il «Conteggio» dei pezzi che non tornano e, nella colonna «Codici», i primi codici.
 2. Premi «Segna visto» quando l'hai guardato.
 3. Quando la differenza è chiarita, premi «Chiudi», scrivi una nota se serve e conferma. Premilo solo quando sei sicuro: non si riapre a mano.
 
-Per vedere il reso a cui si riferisce l'avviso, aprilo da «Spedizioni».
+Per vedere il reso a cui si riferisce l'avviso, tocca l'«Oggetto»: si apre la scheda del reso, dove puoi premere «Conferma» per aggiungere i pezzi arrivati dopo.
 
 ### Come cerco un pezzo?
 
 1. Apri «Pezzi».
 2. Scrivi il codice completo in «Cerca per codice» e premi «Cerca».
-3. Nella scheda vedi stato, luogo e codici del pezzo.
+3. Nella scheda vedi stato, luogo e codici del pezzo. Al posto della cronologia vedi «La storia del pezzo non è disponibile per il tuo ruolo.»
 
 ---
 
@@ -573,9 +654,9 @@ Come in [Come cerco un pezzo?](#come-cerco-un-pezzo) del Magazzino ASP. In più 
 ### Come controllo un DDT o una BOM?
 
 1. Apri «Documenti» e premi «Apri» sul documento.
-2. Premi «Confronta»: vedi «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto».
+2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», e sotto ogni numero l'elenco dei codici.
 
-I documenti li inseriscono e verificano le ASP e l'Amministratore cliente.
+Per un «DDT (reso)» allegato a un reso, «Confronta» mette a confronto i pezzi del reso con quelli confermati dal magazzino del cliente. I documenti li inseriscono e verificano le ASP e l'Amministratore cliente.
 
 ### Come guardo avvisi e anomalie?
 
@@ -587,13 +668,13 @@ Come in [Come scarico un export?](#come-scarico-un-export) dell'Amministratore A
 
 ### Come preparo e scarico un rapporto mensile?
 
-Il giorno 1 di ogni mese l'app prepara da sola il rapporto complessivo del mese precedente. Per farne uno a richiesta:
+Il giorno 1 di ogni mese l'app prepara da sola il rapporto del mese precedente. Per farne uno a richiesta:
 1. Apri «Rapporti».
-2. Scegli «Anno» e «Mese».
-3. Premi «Genera». Vedi «Rapporto generato» e una nuova riga nell'elenco.
-4. Premi «PDF» o «XLSX» sulla riga.
+2. Nella tendina «Ambito» scegli «Tutte le ASP (cliente)» oppure una sola ASP. Scegli «Anno» e «Mese».
+3. Premi «Genera». Vedi «Rapporto generato» e una nuova riga nell'elenco. Ogni «Genera» crea un rapporto nuovo: quelli fatti prima restano nell'elenco.
+4. Premi «PDF» o «XLSX» sulla riga. Il nome del file contiene il mese e l'ambito (il cliente o il nome dell'ASP).
 
-Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel mese, materiale in attesa, avvisi, i modelli e i siti principali. Non contiene nomi di persone.
+Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel mese, materiale in attesa a fine mese, avvisi, i modelli e i siti principali. Non contiene nomi di persone. Per il materiale in attesa a fine mese il rapporto scrive a quando risalgono i numeri: quelli presi dall'app il giorno 1 del mese dopo oppure, se mancano, quelli calcolati nel momento in cui generi il rapporto.
 
 ---
 
@@ -606,7 +687,7 @@ Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel m
 Funzionano come per gli altri ruoli, e non le ripetiamo:
 - cruscotto, esportazioni e rapporti: vedi [Ufficio cliente](#ufficio-cliente);
 - conferma dei resi: vedi [Come confermo un reso?](#come-confermo-un-reso);
-- pezzi, documenti (DDT e BOM), correzioni dei pezzi, chiusura di documenti e avvisi: vedi [Amministratore ASP](#amministratore-asp) e [Magazzino ASP](#magazzino-asp).
+- pezzi, documenti (DDT e BOM, con file e lettura automatica), correzioni dei pezzi, chiusura di documenti e avvisi: vedi [Amministratore ASP](#amministratore-asp) e [Magazzino ASP](#magazzino-asp). In più, nella «Forzatura d'ufficio» puoi cambiare anche l'ASP del pezzo: in «Cambia ASP (solo Amministratore cliente)» scegli il nome dell'ASP, oppure lascia «Stessa ASP»;
 - verifica in due passaggi: vedi [Amministratore ASP](#amministratore-asp).
 
 ### Come preparo l'installazione la prima volta?
@@ -638,7 +719,7 @@ Se vedi «Esiste già un account con questa e-mail.», l'invito non è partito: 
 2. Scegli l'«Organizzazione» (il cliente o un'ASP attiva) e il «Ruolo» adatto a quell'organizzazione.
 3. Scrivi «Nome», «Cognome», «E-mail di lavoro», scegli la «Lingua» e conferma.
 
-Esito e azioni sulle persone («Cambia ruolo», «Disattiva», «Blocca subito», «Elimina»…) sono come in [Come gestisco le persone della mia ASP?](#come-gestisco-le-persone-della-mia-asp), ma per tutti gli utenti di tutte le organizzazioni. Se vedi «È l'ultimo amministratore attivo: non può essere rimosso né declassato.», prima nomina un altro amministratore.
+Esito e azioni sulle persone («Cambia ruolo», «Disattiva», «Blocca subito», «Elimina»…) sono come in [Come gestisco le persone della mia ASP?](#come-gestisco-le-persone-della-mia-asp), ma per tutti gli utenti di tutte le organizzazioni, amministratori compresi. Se vedi «È l'ultimo amministratore attivo: non può essere rimosso né declassato.», prima nomina un altro amministratore.
 
 ### Come gestisco siti e magazzini?
 
@@ -676,21 +757,21 @@ Il codice materiale non si cambia dopo la creazione. Un modello non si cancella:
 ### Come preparo categorie e regole di smistamento?
 
 **Categorie**
-1. Apri «Smistamento» e premi «Nuova categoria».
+1. Apri «Smistamento» e premi «Nuova categoria» (oppure «Modifica» sulla riga di una categoria: si apre «Modifica categoria»).
 2. Scrivi «Etichetta (italiano)» ed «Etichetta (inglese)» (tutte e due obbligatorie) e un «Ordine» (un numero da 0 a 999: decide la posizione nell'elenco). Spunta «Attivo».
 3. Premi «Salva».
 
 **Regole** (servono a suggerire la categoria al magazzino)
-1. Premi «Nuova regola» (serve almeno una categoria).
+1. Premi «Nuova regola» (serve almeno una categoria), oppure «Modifica» sulla riga di una regola: si apre «Modifica regola».
 2. Indica almeno uno tra «Codice sito (facoltativo)», «Modello», «Tipo di apparato», e scegli la «Categoria».
 3. Premi «Salva».
 
-Quando più regole valgono per lo stesso pezzo: «Vince la più specifica: sito + modello > sito + tipo apparato > modello > tipo apparato > sito.» Categorie e regole non si cancellano: si disattivano. Se disattivi una categoria, disattiva anche le regole che la usano. Errori possibili: «Esiste già una regola attiva con le stesse chiavi.», «Una regola richiede un sito, un modello o un tipo di apparato.».
+Quando più regole valgono per lo stesso pezzo: «Vince la più specifica: sito + modello > sito + tipo apparato > modello > tipo apparato > sito.» Categorie e regole non si cancellano: si disattivano. Errori possibili: «Esiste già una regola attiva con le stesse chiavi.», «Una regola richiede un sito, un modello o un tipo di apparato.».
 
 ### Come creo un trasferimento tra due ASP?
 
 1. Apri «Spedizioni» e premi «Nuovo trasferimento».
-2. «Da»: il magazzino dell'ASP che spedisce. «A»: un magazzino di un'**altra** ASP.
+2. «Da»: il magazzino dell'ASP che spedisce. «A»: un magazzino di un'**altra** ASP (l'elenco mostra solo quelli).
 3. Premi «Crea». Vedi «Spedizione creata».
 
 Poi il magazzino dell'ASP che spedisce trova la bozza in «Spedizioni», legge i pezzi e la invia; l'ASP che riceve registra l'arrivo (vedi [Come registro l'arrivo di un trasferimento?](#come-registro-larrivo-di-un-trasferimento)). Per i trasferimenti dentro la stessa ASP non serve il tuo intervento: li creano i magazzinieri. Puoi annullare una bozza con «Annulla bozza».
@@ -711,10 +792,13 @@ Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salv
 - **«App»**: «Versione minima» (vuoto = nessun blocco; se la scrivi, chi ha una versione più vecchia deve aggiornare). «L'invio delle e-mail è configurato (Trigger Email)»: spuntalo solo se l'invio delle e-mail è stato davvero preparato; altrimenti gli inviti ti mostrano il link da copiare.
 - **«Privacy»**: «Testo dell'informativa (italiano)» e «(inglese)». Cambiando un testo, tutti dovranno accettarlo di nuovo. «Chiedi a tutti di accettare di nuovo (nuova versione)» lo richiede anche senza cambiare il testo. «Rimuovi l'autore dagli eventi vecchi» con «Dopo quanti giorni» (da 30 a 3650): toglie dalle letture vecchie l'indicazione di chi le ha fatte.
 - **«Soglie»**: «Giorni per stale_material» (dopo quanti giorni il materiale fermo genera l'avviso «Materiale fermo»; predefinito 30) e «Giorni per transfer_difference» (dopo quanti giorni un trasferimento incompleto genera «Trasferimento in ritardo»; predefinito 7).
+- **«Foto»**: «Foto obbligatoria per i pezzi difettosi». Se la spunti, quando un magazziniere smista un pezzo come «Difettoso» l'app gli chiede subito la foto (vedi [Come smisto il materiale smontato?](#come-smisto-il-materiale-smontato)).
+- **«Regole campo»**: «Un pezzo trovato al sito ma non in BOM». Scegli «Accetta e crea un avviso» (è la scelta di partenza) oppure «Accetta in silenzio (senza avviso)». In tutti e due i casi la lettura viene accettata; cambia solo se nasce l'avviso «BOM differenza» per quei pezzi.
+- **«Funzioni»**: «Lettura automatica documenti e codici delle etichette rovinate (AI)». «Propone le righe di DDT e BOM leggendo foto e PDF, e i codici delle etichette rovinate dalla loro foto. Le righe e i codici si salvano solo dopo il controllo di chi carica il documento o legge il pezzo.» Se la accendi, compaiono «Leggi automaticamente» nei documenti e «Leggi dalla foto dell'etichetta» nella schermata «Leggi»; per usarle serve la rete. Ogni persona può fare al massimo 20 letture automatiche al giorno (documenti ed etichette insieme); questo numero non si cambia da questa pagina.
 
 ### Come leggo il registro amministrativo?
 
-Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», «Azione», «Da», «Oggetto», «Dettagli». Il registro non si modifica e non si cancella. Non registra il lavoro quotidiano dei tecnici e dei magazzinieri.
+Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», «Azione», «Da», «Oggetto», «Dettagli». Oltre alla gestione di utenti, ASP, luoghi, modelli e impostazioni, trovi anche «Documento salvato», «Pezzi uniti», «Luogo di una lettura corretto» e «Anomalia risolta». Il registro non si modifica e non si cancella. Non registra le letture dei tecnici e dei magazzinieri.
 
 ---
 
@@ -731,7 +815,7 @@ Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», �
 - **Materiale nuovo**: pezzi nuovi che vanno dal cliente al magazzino ASP e poi al sito.
 - **Materiale smontato**: pezzi tolti dai siti, che tornano al magazzino ASP, vengono smistati e resi al cliente.
 - **DDT**: il documento di trasporto. «DDT (arrivo)» per il materiale nuovo che arriva; «DDT (reso)» per un reso al cliente.
-- **BOM**: la lista dei pezzi previsti in un sito, da smontare (`[remove]`) o installare (`[install]`).
+- **BOM**: la lista dei pezzi previsti in un sito, divisa in «Da smontare» e «Da installare».
 - **Smistamento**: assegnare a ogni pezzo smontato una categoria.
 - **Categoria**: il gruppo in cui finisce un pezzo smontato dopo lo smistamento (le decide l'Amministratore cliente).
 - **Difettoso / Avanzo**: materiale nuovo che non si installa perché guasto o perché in più.
@@ -740,8 +824,9 @@ Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», �
 - **Bozza**: una spedizione in preparazione, non ancora inviata.
 - **Avviso**: una differenza da guardare (su un documento, una spedizione o un luogo). Sta solo nell'app.
 - **Anomalia**: una lettura che non torna con la storia del pezzo. La vede l'ufficio.
-- **Lettura**: la registrazione di un codice letto (con fotocamera, pistola o a mano).
-- **Raffica**: leggere un pezzo dopo l'altro senza premere nulla tra una lettura e l'altra.
+- **Lettura**: la registrazione di un codice letto (con fotocamera, pistola, a mano o dalla foto dell'etichetta).
+- **Raffica**: leggere un pezzo dopo l'altro senza premere nulla tra una lettura e l'altra. Si accende con «Raffica (la fotocamera riparte da sola dopo ogni lettura)»; senza, dopo ogni lettura premi «Leggi il prossimo».
+- **Lettura automatica**: l'app propone le righe di un documento o il codice di un'etichetta rovinata leggendo una foto o un PDF. C'è solo se l'Amministratore cliente l'ha accesa; ciò che propone va sempre controllato e confermato.
 - **«Da inviare»**: letture o foto fatte sul telefono ma non ancora arrivate. Partono da sole quando c'è rete.
 - **«Inviata»**: la lettura è arrivata. Non vuol dire che sia tutto in regola.
 - **«Da completare»**: pezzi a cui manca il modello.
