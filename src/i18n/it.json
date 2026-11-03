@@ -152,7 +152,8 @@
       "ai_direction_missing": "Alcune righe della BOM non dicono se smontare o installare: spostale nella casella giusta.",
       "ai_too_many_lines": "Il documento ha troppe righe: ne è stata letta solo una parte.",
       "ai_no_lines": "Nel documento non è stata trovata nessuna riga."
-    }
+    },
+    "excelLoadingSaved": "Carico la scelta delle colonne salvata… Le colonne che scegli tu restano."
   },
   "alerts": {
     "subtitle": "Un avviso per oggetto (documento, spedizione, luogo).",

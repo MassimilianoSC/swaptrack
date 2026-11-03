@@ -152,7 +152,8 @@
       "ai_direction_missing": "Some BOM lines do not say remove or install: move them to the right box.",
       "ai_too_many_lines": "The document has too many lines: only part of them was read.",
       "ai_no_lines": "No line was found in the document."
-    }
+    },
+    "excelLoadingSaved": "Loading the saved column choice… The columns you choose stay."
   },
   "alerts": {
     "subtitle": "One alert per object (document, shipment, place).",

@@ -17,18 +17,29 @@ export function ExcelMapping({ sheet, kind, scope, onApply, onCancel }: {
   const { t } = useTranslation();
   const bom = kind === "bom";
   const [map, setMap] = React.useState<LineMapping>({});
+  // P-128: the saved mapping may arrive after the user has chosen some columns (slow network): it fills only the
+  // fields the user has not touched, and the page says it is still coming.
+  const touched = React.useRef(new Set<string>());
+  const [loadingSaved, setLoadingSaved] = React.useState(true);
   React.useEffect(() => {
     let gone = false;
+    setLoadingSaved(true);
     void (async () => {
       const saved = (scope !== "client" ? await loadDocumentMapping(kind, scope) : null) ?? await loadDocumentMapping(kind, "client");
       // A saved column that this file does not have is left empty.
       const fit = Object.fromEntries(Object.entries(saved ?? {}).filter(([k, v]) => !["serial", "materialCode", "quantity", "direction"].includes(k) || sheet.headers.includes(v) || v === ALL_REMOVE || v === ALL_INSTALL));
-      if (!gone) setMap(fit);
-    })();
+      if (gone) return;
+      setMap((m) => {
+        const out: LineMapping = { ...m };
+        for (const [k, v] of Object.entries(fit)) if (!touched.current.has(k)) (out as Record<string, string>)[k] = v;
+        return out;
+      });
+      setLoadingSaved(false);
+    })().catch(() => { if (!gone) setLoadingSaved(false); });
     return () => { gone = true; };
   }, [kind, scope, sheet]);
 
-  const set = (k: keyof LineMapping, v: string) => setMap((m) => ({ ...m, [k]: v || undefined }));
+  const set = (k: keyof LineMapping, v: string) => { touched.current.add(k); setMap((m) => ({ ...m, [k]: v || undefined })); };
   const columns = (k: keyof LineMapping, label: string) => (
     <Field label={label} htmlFor={`xm-${k}`}>
       <Select id={`xm-${k}`} value={map[k] ?? ""} onChange={(e) => set(k, e.target.value)} data-testid={`excel-map-${k}`}>
@@ -52,6 +63,7 @@ export function ExcelMapping({ sheet, kind, scope, onApply, onCancel }: {
     <div className="space-y-3 rounded border border-border p-3" data-testid="excel-mapping">
       <h2 className="font-semibold">{t("documents.excelTitle")}</h2>
       <p className="text-sm text-muted">{t("documents.excelHint")}</p>
+      {loadingSaved && <p className="text-xs text-muted" data-testid="excel-map-loading">{t("documents.excelLoadingSaved")}</p>}
       <div className="grid gap-3 md:grid-cols-3">
         {columns("serial", t("documents.excelSerial"))}
         {columns("materialCode", t("documents.excelMaterialCode"))}
