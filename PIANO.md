@@ -14,8 +14,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi poi |
 |---|---|---|
-| P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel repository: README e `memory/test_credentials.md`) | committente in console; poi reg toglie la password dai documenti |
-| P-3 | Via alla pulizia dei residui di Emergent: `memory/`, `test_result.md`, `test_reports/`, `tests/__init__.py` | reg (documenti) e o2 (`tests/__init__.py`) |
+| P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel README; `memory/test_credentials.md` cancellato con P-3, ma resta nella storia di git) | committente in console; poi reg toglie la password dai documenti |
 | P-4 | Elenco delle differenze notate rispetto all'app vecchia («la raffica» e «altre cose») | reg le divide in errori / specifica non fatta / scelte da valutare |
 | P-50 | Dire se nella demo online ha caricato documenti (BOM o DDT) come `client_admin`: nascevano senza ASP (P-49). Se sì, lo script `scripts/fixDocumentAsp.mjs` è pronto (solo elenco di default, `--apply` dopo aver visto l'elenco; comandi in REGISTRO) | committente |
 
@@ -25,10 +24,11 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|
 | P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
+| P-107 | Lettura automatica con l'AI di foto e PDF di DDT e BOM (D-45): callable `extractDocument` con Gemini su Vertex AI, modello finto nelle prove (o2, 5–7 h, dopo P-77); pulsante «Leggi automaticamente» e righe da confermare (o3, 3–4 h, dopo P-105); passi in console del committente (API, ruolo, regione, budget) e chiamate vere di messa a punto | o2 + o3 + committente |
+| P-106 | Nome leggibile dei file scaricati (oggi «1793695363191.xlsx»): «SwapTrack-export-AAAA-MM-GG-hhmm.xlsx», «SwapTrack-resoconto-AAAA-MM-<ambito>.xlsx» | o3 |
 | P-87 | Telefono condiviso (D-40). **a)** «Esci da tutti i dispositivi» e «Esci» dell'informativa nuova saltavano il blocco dell'uscita con letture o foto in coda (SPEC riga 201); la coda foto partiva prima del controllo del proprietario (foto di un altro utente caricate e lasciate orfane). Prima della demo. **b)** Dopo un'uscita forzata, se entra un altro utente le letture e foto non inviate del precedente si perdono senza avviso: avviso con due scelte. Dopo la demo; intanto nella guida | o3 |
 | P-59 | Pezzo extra trovato in un altro reso: lato server su main (3f26623); resta da mostrarlo nella pagina della spedizione | o3 |
 | P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
-| P-89 | (C1) Scarico di export, resoconti e foto online con getBlob: probabilmente manca la regola CORS del bucket Storage. `scripts/storage-cors.json` pronto (57753c4), comando nel README; prima il committente prova l'export online; poi lancia lui il comando gcloud | o2 + committente |
 | P-92 | (S3) Righe BOM con direzione obbligatoria (SPEC §11.2): il server oggi le accetta senza, il tecnico vede la BOM vuota. Server pronto sul ramo o2-p92 (codice nuovo `bom_direction_required`), esce con la pagina di o3 | o2 + o3 |
 | P-96 | (A1, A2, A9) Testi grezzi nella Home dell'ufficio cliente, in Anomalie ed Esportazioni; tre errori del server senza traduzione; foto del DDT non compressa | o3 |
 | P-97 | (A3) Magazzino cliente: menu Documenti gira all'infinito (ricerca negata dalle regole); filtro per tipo (o3) e indice (o2) | o3 + o2 |
@@ -37,12 +37,12 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-103 | (A10) L'avviso del reso apre il DDT invece della spedizione, con pulsanti che il server rifiuta | o3 |
 | P-100 | (A6) Nomi al posto degli id (luoghi, ASP, categorie, da/a) in varie pagine; da controllare anche per il criterio 1 (id di un'altra ASP visibile) | o3 |
 | P-102 | (A8, SPEC §10) In «Smista» la categoria suggerita si conferma con un tocco o se ne sceglie un'altra | o3 |
-| P-101 | (A7) Pezzi: i filtri del cruscotto sono ignorati; mancano ricerca per sito e modello (§13.1, §13.2) | o3 |
+| P-101 | (A7) Pezzi: i filtri del cruscotto sono ignorati; mancano ricerca per sito e modello (§13.1, §13.2). Passata a o2 (D-44) | o2 |
 | P-104 | (A11) Arrivo col DDT: finestra del modello anche per pezzi del DDT; il DDT compare solo dopo aver scelto «Nuovo» | o3 |
 | P-94 | (S5) Storia del pezzo con organizzazione e ruolo (§13.2), mai il nome della persona | o2 + o3 |
 | P-95 | (S6) Avviso del DDT controllato con l'elenco dei seriali (§11.4) | o2 + o3 |
-| P-105 | (A12) Caricare il DDT come file o foto (§12.2, mappatura Excel §11.2): per ultimo, salvo decisione del committente | o3 |
-| P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione | o3 |
+| P-105 | (A12) Caricare il DDT come file o foto (§12.2, mappatura Excel §11.2): PRIMA della demo (D-43). Server: file delle versioni precedenti conservati (o2, sul ramo). App 5–7 h (o3) | o3 + o2 |
+| P-77 | `watchShipments` per un'ASP ascolta in diretta due ricerche senza limite: aggiungere un limite o una paginazione. Passata a o2 (D-44) | o2 |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
@@ -72,6 +72,8 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-90 | Il numero di pezzi della spedizione cresce solo alla prima lettura del pezzo (3 rosse prima) | o2 | 03/11/2026 (e50f90e) |
 | P-91 | «Annulla l'ultima» in un reso o trasferimento toglie la riga e fa scendere il conteggio; riga già confermata o arrivata resta | o2 | 03/11/2026 (9eeba8a) |
 | P-93 | Rilettura di un pezzo nella stessa spedizione senza anomalia (D-41) | o2 | 03/11/2026 (6bcee66) |
+| P-3 | Residui di Emergent cancellati: `memory/`, `test_result.md`, `test_reports/` (reg); `tests/__init__.py` a o2. Restano nella storia di git | reg + o2 | 03/11/2026 |
+| P-89 | Scarico online di export, resoconti e foto: mancava la regola CORS del bucket (errore visto in console dal committente); `scripts/storage-cors.json` (57753c4) applicato dal committente con gcloud, export scaricato | o2 + committente | 03/11/2026 |
 | P-14 | Funzioni bloccanti sul progetto vero: registrate in europe-west1; `checkBlocking.mjs` tre OK (attivo entra, disattivato respinto da beforeSignIn, registrazione da soli respinta da beforeCreate); tecnico di Sud riattivato | committente | 03/11/2026 |
 | P-1 | Sito Hosting predefinito `kronos-caffe-sito.web.app` (vecchio sito del bar) spento con `firebase hosting:disable`; in incognito non si apre più | committente | 03/11/2026 |
 | P-88 | Controlli del committente online sul lotto 1: accesso come magazziniere Nord dal PC senza blocchi, dati per lavorare offline scaricati; indice `shipments (kind, createdAt desc)` abilitato | committente | 03/11/2026 |
@@ -118,6 +120,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 ## Più avanti (non in questa fase)
 
-**AI nell'app (30/10/2026, parere del committente):** integrarla non è difficile né vietato (Vertex AI in regione europea, Google unico subfornitore, nessun addestramento sui dati: compatibile con R12); la parte difficile è decidere **dove e cosa farle fare**. Decisione del committente, da riprendere quando vuole; il punto di innesto nel codice esiste (`src/lib/documents/extract.ts`, spento). Candidati finora: lettura automatica di DDT e BOM da PDF o foto; spiegazione in parole semplici di anomalie e differenze; lettura di etichette rovinate dalla foto. Resta aperta la domanda al cliente sulle sue regole per l'AI.
+**AI nell'app:** il 03/11/2026 il committente ha deciso la prima applicazione, la lettura di DDT e BOM (D-45, P-107). Altri candidati per dopo: spiegazione in parole semplici di anomalie e differenze; lettura di etichette rovinate dalla foto. Resta aperta la domanda al cliente sulle sue regole per l'AI.
 
 Risposte mancanti del cliente (PASSAGGIO_DI_CONSEGNE §5); estensione Trigger Email per gli inviti veri; App Check; MFA e accessi Google/Microsoft con provider veri; un progetto Firebase definitivo al posto dell'escamotage; app da store con Capacitor; divisione del bundle (avviso sopra 500 kB); scollegare Google Analytics dal progetto (facoltativo).

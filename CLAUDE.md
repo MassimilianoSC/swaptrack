@@ -41,7 +41,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 **memoria storica**
 - `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`, `README.md`, `.gitignore`, `.gitattributes`
 
-**Congelati (nessuno li modifica):** `SPEC.md` (gli scostamenti sono decisioni nel REGISTRO, non modifiche alla specifica); `consegna/` e i file consegnati elencati sopra (SPEC R18: la logica non si tocca; si può aggiungere un `.d.ts` accanto); `DECISIONS.md`, `NOT_DONE.md`, `PASSAGGIO_DI_CONSEGNE.md`, `memory/` (storici di Emergent e del passaggio).
+**Congelati (nessuno li modifica):** `SPEC.md` (gli scostamenti sono decisioni nel REGISTRO, non modifiche alla specifica); `consegna/` e i file consegnati elencati sopra (SPEC R18: la logica non si tocca; si può aggiungere un `.d.ts` accanto); `DECISIONS.md`, `NOT_DONE.md`, `PASSAGGIO_DI_CONSEGNE.md` (storici di Emergent e del passaggio; `memory/`, `test_result.md` e `test_reports/` cancellati il 03/11/2026, P-3: restano nella storia di git).
 
 **Punti di contatto** (chi cambia avvisa l'altra sessione, con la memoria storica in copia):
 - `functions/src/shared/` (o2) è importato dall'app con l'alias `@shared`: una firma che cambia si cerca in tutto il repository (`src/` compreso) e si avvisa o3.
