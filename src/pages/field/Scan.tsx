@@ -61,6 +61,9 @@ export default function Scan() {
   // recording (the state seen by onCode is the one of the previous reading).
   const suggestedRef = React.useRef<string | null>(null);
   const [sorting, setSorting] = React.useState<{ categories: Category[]; rules: SortingRule[] }>({ categories: [], rules: [] });
+  // The sorting rules as loaded: a reading made right after the screen opens waits for them, so its suggestion is
+  // never computed on an empty list (P-25).
+  const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[] }> | null>(null);
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
@@ -89,7 +92,9 @@ export default function Scan() {
 
   React.useEffect(() => {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined);
-    void loadSorting().then((s) => setSorting(s as never)).catch(() => undefined);
+    const load = loadSorting() as Promise<{ categories: Category[]; rules: SortingRule[] }>;
+    sortingLoad.current = load;
+    void load.then(setSorting).catch(() => undefined);
     void listLost().then((l) => setLostCount(l.length));
     return user ? watchMyScansToday(user.uid, setToday) : undefined;
   }, [user, claims]);
@@ -195,9 +200,12 @@ export default function Scan() {
     if (mode === "arrive_at_warehouse") {
       payload.flow = flow; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId;
       // Sorting in the same pass: the category chosen in the list, otherwise the piece's suggestion; none = arrival only.
-      const sug = sortsOnArrival ? suggestedRef.current : null;
-      if (category || sug) payload.categoryId = category || sug;
-      if (sug) payload.suggestedCategoryId = sug;
+      // D-39: only removed material is sorted; an arrival of new material never carries a category.
+      if (flow === "removed") {
+        const sug = sortsOnArrival ? suggestedRef.current : null;
+        if (category || sug) payload.categoryId = category || sug;
+        if (sug) payload.suggestedCategoryId = sug;
+      }
     }
     if (mode === "classify") {
       const sug = suggestedRef.current;
@@ -207,6 +215,8 @@ export default function Scan() {
     if ((mode === "return_ship" || mode === "transfer_out") && shipmentId) payload.shipmentId = shipmentId;
     return payload;
   };
+  // D-39: a category chosen (or suggested) for removed material never stays behind when the flow changes.
+  const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); };
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string) => {
@@ -230,7 +240,8 @@ export default function Scan() {
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
     if (suggests) {
       const it = await cachedItemForCode(code);
-      const s = it ? suggestCategory(sorting.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }) : null;
+      const rules = (await sortingLoad.current?.catch(() => null))?.rules ?? sorting.rules;
+      const s = it ? suggestCategory(rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }) : null;
       suggestedRef.current = s;
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
@@ -313,7 +324,7 @@ export default function Scan() {
         {role === "asp_technician" && <Button variant="outline" size="lg" onClick={siteDone} data-testid="scan-site-done">{t("scan.siteDoneButton")}</Button>}
       </div>
       {mode === "arrive_at_warehouse" && (
-        <Select aria-label={t("scan.flow")} value={flow} onChange={(e) => setFlow(e.target.value)} data-testid="scan-flow-select">
+        <Select aria-label={t("scan.flow")} value={flow} onChange={(e) => changeFlow(e.target.value)} data-testid="scan-flow-select">
           <option value="removed">{t("scan.flowRemoved")}</option><option value="new">{t("scan.flowNew")}</option>
         </Select>
       )}

@@ -76,6 +76,20 @@ export async function scanManual(page: Page, code: string, opts: { withModel?: b
   await expect(flash).toBeHidden();
 }
 
+// The page of a piece, found by its code once the trigger has created it. The search is repeated inside the app,
+// never by reloading it: a reload restarts the offline cache load and the photo queue of the session.
+export async function openPiece(page: Page, code: string): Promise<string> {
+  await page.goto("/items");
+  await expect.poll(async () => {
+    if (/\/items\/[^/]+$/.test(new URL(page.url()).pathname)) return page.url();
+    await page.getByTestId("items-search-input").fill(code);
+    await page.getByTestId("items-search-submit").click();
+    await page.waitForTimeout(1500);
+    return page.url();
+  }, { timeout: 60_000 }).toMatch(/\/items\/[^/]+$/);
+  return page.url().split("/").pop()!;
+}
+
 // Every row of a DataTable (text and link targets), walking through all its pages.
 export interface TableRow { text: string; hrefs: string[] }
 export async function collectRows(page: Page, tableId: string): Promise<TableRow[]> {

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, openPiece } from "./helpers";
 import { SEED } from "./seed";
 import { deflateSync, crc32 } from "node:zlib";
 
@@ -38,19 +38,22 @@ test.describe("Foto — dalla lettura alla pagina del pezzo (telefono)", () => {
     await expect(page.getByText(tr("scan.photoQueued")).first()).toBeVisible();
     await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
 
-    // The piece exists once the trigger has processed the reading; its page shows exactly one photo.
-    await expect.poll(async () => {
-      await page.goto("/items");
-      await page.getByTestId("items-search-input").fill(code);
-      await page.getByTestId("items-search-submit").click();
-      await page.waitForTimeout(1500);
-      return page.url();
-    }, { timeout: 60_000 }).toMatch(/\/items\/[^/]+$/);
-    await expect.poll(async () => {
-      await page.reload();
-      await expect(page.getByTestId("item-photos")).toBeVisible();
-      return page.getByTestId("item-photo").count();
-    }, { timeout: 90_000, intervals: [3000] }).toBe(1);
+    // The photo leaves the device: the queue in IndexedDB empties (upload and attach done). Only then the test
+    // leaves the scan screen, so no reload cuts the upload and sends the photo again.
+    await expect.poll(() => page.evaluate(() => new Promise<number>((resolve, reject) => {
+      const r = indexedDB.open("swaptrack-device");
+      r.onsuccess = () => {
+        const c = r.result.transaction("photos", "readonly").objectStore("photos").count();
+        c.onsuccess = () => { resolve(c.result); r.result.close(); };
+        c.onerror = () => reject(c.error);
+      };
+      r.onerror = () => reject(r.error);
+    })), { timeout: 90_000, intervals: [2000] }).toBe(0);
+
+    // The piece exists once the trigger has processed the reading; its page (live) shows exactly one photo.
+    await openPiece(page, code);
+    await expect(page.getByTestId("item-photos")).toBeVisible();
+    await expect(page.getByTestId("item-photo")).toHaveCount(1, { timeout: 90_000 });
     await expect(page.getByTestId("item-photo").locator("img")).toHaveJSProperty("complete", true);
     await expect(page.getByTestId("item-photos")).not.toContainText(tr("items.photosEmpty"));
   });

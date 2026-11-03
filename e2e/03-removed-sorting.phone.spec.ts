@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, openPiece } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 3 (DA_FARE P-6): arrival of removed material at the ASP warehouse and sorting with the suggested
@@ -9,18 +9,6 @@ async function signOut(page: Page): Promise<void> {
   await page.getByTestId("user-menu-trigger").click();
   await page.getByTestId("user-menu-signout").click();
   await expect(page.getByTestId("signin-submit-button")).toBeVisible({ timeout: 30_000 });
-}
-
-async function waitForPiece(page: Page, code: string): Promise<string> {
-  // The trigger creates the piece a moment after the scan: wait until the code search finds it.
-  await expect.poll(async () => {
-    await page.goto("/items");
-    await page.getByTestId("items-search-input").fill(code);
-    await page.getByTestId("items-search-submit").click();
-    await page.waitForTimeout(1500);
-    return page.url();
-  }, { timeout: 60_000 }).toMatch(/\/items\/[^/]+$/);
-  return page.url().split("/").pop()!;
 }
 
 test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefono)", () => {
@@ -38,7 +26,7 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
 
     // 2. The warehouse worker: the piece exists (trigger), then the arrival at the warehouse.
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    const itemId = await waitForPiece(page, code);
+    const itemId = await openPiece(page, code);
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
     await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
@@ -74,7 +62,7 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     await signOut(page);
 
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    const itemId = await waitForPiece(page, code);
+    const itemId = await openPiece(page, code);
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
     await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
@@ -89,5 +77,24 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     await page.goto(`/items/${itemId}`);
     await expect(page.getByTestId("item-status")).toContainText(tr("items.statuses.sorted"), { timeout: 60_000 });
     await expect(page.getByTestId("item-sorting-category")).toHaveText(SEED.sorting.radioCategoryLabelIt);
+  });
+
+  // D-39: only removed material is sorted. A category chosen with "removed" does not follow the worker to "new".
+  test("categoria scelta con «smontato», poi «nuovo»: il pezzo nuovo arriva al magazzino senza essere smistato", async ({ page }) => {
+    test.setTimeout(240_000);
+    const code = uniqueCode("N");
+
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=arrive_at_warehouse");
+    await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
+    await page.getByTestId("scan-category-select").selectOption(SEED.sorting.radioCategoryId);
+    await page.getByTestId("scan-flow-select").selectOption("new");
+    await scanManual(page, code, { withModel: true });
+    await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+
+    await openPiece(page, code);
+    await expect(page.getByTestId("item-status")).toContainText(tr("items.statuses.received_at_asp"), { timeout: 60_000 });
+    await expect(page.getByTestId("item-sorting-category")).not.toHaveText(SEED.sorting.radioCategoryLabelIt);
   });
 });
