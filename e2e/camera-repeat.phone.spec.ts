@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr } from "./helpers";
 import { SEED } from "./seed";
 
-// P-98 (criterion 2): in burst mode the camera restarts 0.9 s after a reading; with the phone held still on the
+// P-98, P-108, P-109 (criterion 2): in burst mode the camera restarts 0.9 s after a reading; with the phone held still on the
 // label the same code must not be recorded twice, nor reopen the model pick of the piece just recorded.
 // No fake camera device (it saturated the machine, e25c963): the page gets a tiny canvas stream as its camera and a
 // BarcodeDetector that "sees" window.__fakeCode, so the real engine (webEngine.js, native path) runs unchanged.
@@ -33,12 +33,23 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await page.getByTestId("scan-flow-select").selectOption("new");
     await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
 
+    // P-108: before the first reading the photo button is off, looks like a button (dashed border, not faded) and says why.
+    const photo = page.getByTestId("scan-photo-button");
+    await expect(photo).toBeDisabled();
+    await expect(page.getByTestId("scan-photo-hint")).toHaveText(tr("scan.photoHint"));
+    expect(await photo.evaluate((b) => [getComputedStyle(b).borderStyle, getComputedStyle(b).opacity])).toEqual(["dashed", "1"]);
+
     // The phone frames the label: unknown piece, the model is asked once and the reading is recorded.
     await page.evaluate((c) => { (window as unknown as { __fakeCode: string }).__fakeCode = c; }, code);
     await expect(page.getByTestId("scan-modelpick-select")).toBeVisible();
     await page.getByTestId("scan-modelpick-select").selectOption({ index: 1 });
     await page.getByTestId("scan-modelpick-save").click();
     await expect(page.getByTestId("scan-flash")).toContainText(code);
+    await expect(photo).toBeEnabled();
+    await expect(page.getByTestId("scan-photo-hint")).toHaveCount(0);
+
+    // P-109: the camera sees the code again after its restart: a short notice says why nothing is recorded.
+    await expect(page.getByText(tr("scan.alreadyRead"))).toBeVisible({ timeout: 5000 });
 
     // The phone stays on the label well past the camera restart (0.9 s): nothing else happens.
     await page.waitForTimeout(4000);

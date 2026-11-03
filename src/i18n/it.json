@@ -341,7 +341,9 @@
       },
       "noLines": "Nessuna riga per questa direzione.",
       "unexpectedTitle": "{{count}} pezzi non attesi dalla BOM"
-    }
+    },
+    "alreadyRead": "Già letto. Per rileggerlo allontana il telefono per 3 secondi.",
+    "photoHint": "Leggi un pezzo, poi scatta la foto."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

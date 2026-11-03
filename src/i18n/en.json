@@ -341,7 +341,9 @@
       },
       "noLines": "No lines for this direction.",
       "unexpectedTitle": "{{count}} pieces not expected by the BOM"
-    }
+    },
+    "alreadyRead": "Already read. To read it again, move the phone away for 3 seconds.",
+    "photoHint": "Read a piece, then take the photo."
   },
   "pwa": {
     "newVersion": "A new version is available.",

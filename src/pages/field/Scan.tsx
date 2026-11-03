@@ -23,6 +23,8 @@ const MODES: Record<string, string[]> = {
 };
 // P-98: how long the camera ignores the code it just read (the phone held still on the label).
 const CAMERA_REPEAT_MS = 3000;
+// P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
+const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
 
 function beep(muted: boolean) {
   if (muted) return;
@@ -67,7 +69,8 @@ export default function Scan() {
   // never computed on an empty list (P-25).
   const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[] }> | null>(null);
   // P-98: the last code the camera read (or recorded) and when.
-  const cameraLast = React.useRef<{ code: string; at: number } | null>(null);
+  // P-109: told shows that the user has been told once that this code was already read.
+  const cameraLast = React.useRef<{ code: string; at: number; told?: boolean } | null>(null);
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
@@ -245,8 +248,14 @@ export default function Scan() {
       // P-98: the camera restarts 0.9 s after a reading (burst) and forgets what it read (webEngine.js, frozen). The
       // same code is ignored while it stays in view and for CAMERA_REPEAT_MS after it was last seen or recorded.
       const last = cameraLast.current, now = Date.now();
-      cameraLast.current = { code, at: now };
-      if (last && last.code === code && now - last.at < CAMERA_REPEAT_MS) { setTimeout(() => ctrl.current?.resume(), 300); return; }
+      const repeat = !!last && last.code === code && now - last.at < CAMERA_REPEAT_MS;
+      cameraLast.current = { code, at: now, told: repeat && last!.told };
+      if (repeat) {
+        // P-109: said once, quietly (no beep, no vibration), not at every frame while the phone stays on the label.
+        if (!last!.told) { toast.message(t("scan.alreadyRead"), { id: "scan-already-read" }); cameraLast.current.told = true; }
+        setTimeout(() => ctrl.current?.resume(), 300);
+        return;
+      }
     }
     if (pendingSerial) { const p = pendingSerial; setPendingSerial(null); return record(p.code, p.source, code); }
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
@@ -432,8 +441,10 @@ export default function Scan() {
         {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
           <input type="range" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
         <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</Button>
-        <Button variant="secondary" disabled={!session.length} onClick={undo} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
-        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
+        {/* P-108: a button that cannot be used yet looks like one (dashed border, grey), and says why. */}
+        <Button variant="secondary" disabled={!session.length} onClick={undo} className={OFF} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
+        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
+        {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
         <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
       </div>
