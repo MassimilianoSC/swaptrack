@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Eye, Pencil, Shuffle, MapPin, Wrench, Shield } from "lucide-react";
 import { useSession } from "@/app/session";
-import { useAction } from "@/app/hooks";
+import { useAction, useOnline } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchItem, listCodesOf, listAnomaliesOf, searchItemByCode, type Item, type Code } from "@/lib/data/items";
 import { listModels, listLocationsFor, listOrganizations, type Model, type Location, type Organization } from "@/lib/data/db";
@@ -30,6 +30,7 @@ export default function ItemDetail() {
   const { claims } = useSession();
   const { busy, run } = useAction();
   const names = useNames();
+  const online = useOnline();
   const [item, setItem] = React.useState<Row<Item> | null>(null);
   // §15: a piece that cannot be read (rules) shows an error; an id that does not exist shows "not found".
   const [loadError, setLoadError] = React.useState(false);
@@ -108,6 +109,8 @@ export default function ItemDetail() {
   }, [photoKey]);
   React.useEffect(() => { if (item) { setEditModel(item.modelId ?? ""); setEditCondition(item.condition ?? ""); setForceStatus(item.status); } }, [item]);
 
+  // D-58 B3: without network a piece that is not on this device is "not available without network", never "not found".
+  if ((loadError || missing) && !online) return <ErrorState message={t("errors.offlineUnavailable")} />;
   if (loadError) return <ErrorState message={t("errors.load_failed")} />;
   if (missing) return <Empty title={t("items.notFound")} />;
   if (!id || !item || history === null) return <Loading />;

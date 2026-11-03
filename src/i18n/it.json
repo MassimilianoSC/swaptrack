@@ -857,7 +857,8 @@
     "bom_direction_required": "Ogni riga della BOM deve dire se il pezzo va smontato o installato.",
     "feature_disabled": "La lettura automatica non è attiva.",
     "ai_daily_limit": "Hai raggiunto le letture automatiche di oggi.",
-    "ai_unavailable": "Il servizio di lettura automatica non risponde, riprova più tardi."
+    "ai_unavailable": "Il servizio di lettura automatica non risponde, riprova più tardi.",
+    "offlineUnavailable": "Non disponibile senza rete: riprova quando sei collegato."
   },
   "items": {
     "title": "Pezzo {{id}}",

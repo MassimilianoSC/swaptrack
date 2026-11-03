@@ -857,7 +857,8 @@
     "bom_direction_required": "Every BOM line must say whether the piece is removed or installed.",
     "feature_disabled": "Automatic reading is not enabled.",
     "ai_daily_limit": "You have reached today's automatic readings.",
-    "ai_unavailable": "The automatic reading service is not responding, try again later."
+    "ai_unavailable": "The automatic reading service is not responding, try again later.",
+    "offlineUnavailable": "Not available without network: try again when you are connected."
   },
   "items": {
     "title": "Piece {{id}}",

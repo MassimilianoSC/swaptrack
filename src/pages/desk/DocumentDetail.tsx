@@ -16,7 +16,7 @@ import { ExcelMapping } from "@/components/documents/ExcelMapping";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
-import { Loading } from "@/components/states";
+import { Loading, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -59,18 +59,21 @@ export default function DocumentDetail() {
   const [compare, setCompare] = React.useState<Compare | null>(null);
   // Bumped after every write, so status and lines on screen follow the server (the button "mark checked" disappears).
   const [reloadKey, setReloadKey] = React.useState(0);
+  // D-58 B3: a document that cannot be read says why (no network, does not exist, refused), never "Loading" for ever.
+  const [unavailable, setUnavailable] = React.useState<"offline" | "missing" | "error" | null>(null);
 
   React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
   React.useEffect(() => {
     if (isNew || !id) return;
+    setUnavailable(null);
     void loadDocument(id).then((d) => {
-      if (!d) return;
+      if (!d) { setUnavailable("missing"); return; }
       setDoc(d); setKind(d.kind); setNumber(d.number); setLocationId(d.locationId);
       const lines = d.lines as DocLine[];
       // A line keeps its direction (P-74): saving again never drops it.
       if (d.kind === "bom") setBomLines(splitByDirection(lines)); else setRawLines(linesToText(lines));
       setLinesSource(d.linesSource ?? "manual");
-    });
+    }, (e: { code?: string }) => setUnavailable(!navigator.onLine || e?.code === "unavailable" ? "offline" : "error"));
   }, [id, isNew, reloadKey]);
 
   // P-103: only the buttons the server accepts (saveDocument, markDocumentChecked); the client office and the client
@@ -137,6 +140,9 @@ export default function DocumentDetail() {
   };
   const doCompare = async () => { const r = await run(() => call<Compare>("compareDocument", { documentId: id })); if (r) setCompare(r); };
 
+  if (!isNew && !doc && unavailable === "offline") return <ErrorState message={t("errors.offlineUnavailable")} onRetry={() => setReloadKey((k) => k + 1)} />;
+  if (!isNew && !doc && unavailable === "missing") return <ErrorState message={t("errors.document_not_found")} />;
+  if (!isNew && !doc && unavailable === "error") return <ErrorState message={t("errors.load_failed")} onRetry={() => setReloadKey((k) => k + 1)} />;
   if (!isNew && !doc) return <Loading />;
   const siteOrWarehouse = (l: Row<Location>) =>
     kind === "bom" ? l.type === "site" : l.type === "asp_warehouse";
