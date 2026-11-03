@@ -84,6 +84,7 @@ export default function Scan() {
   const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
+  const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; suggested: string | null } | null>(null);
   // P-113: the model search of the unknown-piece window (model, material code, manufacturer; case and accents ignored).
   const [modelQuery, setModelQuery] = React.useState("");
   const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -235,7 +236,9 @@ export default function Scan() {
     setTimeout(() => { setFlash(null); ctrl.current?.resume(); }, 900);
   };
 
-  const buildPayload = (): Record<string, unknown> => {
+  // P-102: a sorting chosen in the confirmation window (one tap) wins over the screen's choices.
+  type SortChoice = { categoryId?: string; newClass?: string };
+  const buildPayload = (choice?: SortChoice): Record<string, unknown> => {
     const payload: Record<string, unknown> = {};
     if (mode === "arrive_at_warehouse") {
       payload.flow = flow; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId;
@@ -249,7 +252,8 @@ export default function Scan() {
     }
     if (mode === "classify") {
       const sug = suggestedRef.current;
-      if (newClass) payload.newClass = newClass; else payload.categoryId = category || sug;
+      const nc = choice ? choice.newClass : newClass;
+      if (nc) payload.newClass = nc; else payload.categoryId = choice?.categoryId || category || sug;
       if (sug) payload.suggestedCategoryId = sug;
     }
     if ((mode === "return_ship" || mode === "transfer_out") && shipmentId) payload.shipmentId = shipmentId;
@@ -259,10 +263,10 @@ export default function Scan() {
   const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); if (v !== "new") setDdtId(""); };
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
-  const record = async (code: string, source: Source, second?: string, modelId?: string) => {
+  const record = async (code: string, source: Source, second?: string, modelId?: string, choice?: SortChoice) => {
     if (!location || !user || !claims?.orgId) return;
-    if (needsCategory()) { show(t("scan.chooseCategory"), "warn"); return; }
-    const payload = buildPayload();
+    if (!choice && needsCategory()) { show(t("scan.chooseCategory"), "warn"); return; }
+    const payload = buildPayload(choice);
     if (modelId) payload.modelId = modelId;
     if (mode === "return_ship" || mode === "transfer_out") {
       if (!shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
@@ -313,6 +317,9 @@ export default function Scan() {
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
     }
     if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return; }
+    // §10 / P-102: in "Sort" without a fixed category the suggestion is confirmed with one tap, or another one chosen;
+    // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
+    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, suggested: suggestedRef.current }); return "asked"; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
     // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
@@ -367,6 +374,21 @@ export default function Scan() {
     } catch {
       toast.error(t("scan.photoFailed"));
     }
+  };
+  // P-102: the tap records the reading with the chosen sorting; cancelling (button, X, a tap outside, the back key)
+  // records nothing, says so and lets the camera read again (P-112).
+  const confirmSort = async (choice: SortChoice) => {
+    const p = pendingSort;
+    if (!p) return;
+    setPendingSort(null);
+    await record(p.code, p.source, undefined, undefined, choice);
+  };
+  const cancelSort = () => {
+    const p = pendingSort;
+    if (!p) return;
+    setPendingSort(null);
+    toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
+    setTimeout(() => ctrl.current?.resume(), 300);
   };
   // The piece waiting for its model is taken first, so a double tap (or "Save" and then the X) records it once.
   const confirmModelPick = async () => {
@@ -427,7 +449,7 @@ export default function Scan() {
             </div>
           )}
           <Select aria-label={t("scan.category")} value={category} onChange={(e) => { setCategory(e.target.value); setNewClass(""); }} data-testid="scan-category-select">
-            <option value="">{suggests ? t("scan.useSuggested") : t("scan.sortLater")}</option>
+            <option value="">{mode === "classify" ? t("scan.confirmEachPiece") : suggests ? t("scan.useSuggested") : t("scan.sortLater")}</option>
             {sorting.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{c.labels[i18n.language as "it" | "en"]}</option>)}
           </Select>
           {mode === "classify" && (
@@ -576,6 +598,27 @@ export default function Scan() {
           )}
         </section>
       )}
+
+      <Dialog open={!!pendingSort} onOpenChange={(o) => { if (!o) cancelSort(); }}>
+        <DialogContent title={t("scan.sortTitle", { code: pendingSort?.code ?? "" })} description={t("scan.sortHint")}>
+          <div className="space-y-3" data-testid="scan-sort">
+            {pendingSort?.suggested && (
+              <div className="space-y-2">
+                <p className="text-2xl font-bold text-primary" data-testid="scan-sort-suggested">{t("scan.suggested")}: {catLabel(pendingSort.suggested)}</p>
+                <Button size="lg" className="w-full" onClick={() => void confirmSort({ categoryId: pendingSort.suggested! })} data-testid="scan-sort-confirm"><Check className="h-5 w-5" />{t("common.confirm")}</Button>
+              </div>
+            )}
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {sorting.categories.filter((c) => c.active && c.id !== pendingSort?.suggested).map((c) => (
+                <li key={c.id}><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ categoryId: c.id })} data-testid={`scan-sort-option-${c.id}`}>{c.labels[i18n.language as "it" | "en"]}</Button></li>
+              ))}
+              <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "defective" })} data-testid="scan-sort-defective">{t("scan.defective")}</Button></li>
+              <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "leftover" })} data-testid="scan-sort-leftover">{t("scan.leftover")}</Button></li>
+            </ul>
+            <div className="flex justify-end"><Button variant="ghost" onClick={cancelSort} data-testid="scan-sort-cancel">{t("common.cancel")}</Button></div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!modelPick} onOpenChange={(o) => { if (!o) void skipModelPick(); }}>
         <DialogContent title={t("scan.unknownPieceTitle")} description={t("scan.unknownPieceHint", { code: modelPick?.code })}>

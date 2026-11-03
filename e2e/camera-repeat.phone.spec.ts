@@ -70,6 +70,26 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await frame(page, null);
   });
 
+  // P-102: in "Sort" the confirmation window cancelled with Escape (like the back key) records nothing and the camera
+  // reads the next label at once.
+  test("Smista: annullare la conferma non ferma la fotocamera", async ({ page }) => {
+    test.setTimeout(180_000);
+    const [a, b] = [uniqueCode("K"), uniqueCode("K")];
+    await fakeCamera(page);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=classify");
+    await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
+    const dialog = page.getByRole("dialog");
+    await frame(page, a);
+    await expect(dialog).toContainText(a);
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("scan-session-count")).toHaveText("0");
+    await frame(page, b);
+    await expect(dialog).toContainText(b, { timeout: 10_000 });
+    await frame(page, null);
+  });
+
   // P-112 / D-50: closing the model window of an unknown piece (X, Escape like the back key) is "Skip": the reading is
   // recorded without a model and the camera reads the next label at once (before, it stayed paused for good).
   test("chiudere la scelta del modello registra la lettura e la fotocamera legge subito l'etichetta dopo", async ({ page }) => {

@@ -401,7 +401,11 @@
     "refusedToast": "Lettura di {{code}} rifiutata dal server",
     "refusedPermission": "Non è permessa per il tuo ruolo o per questo luogo. Controlla il luogo scelto e rileggila, oppure avvisa l'ufficio.",
     "refusedOther": "Rileggila; se succede ancora, avvisa l'ufficio.",
-    "defectivePhotoNow": "Foto obbligatoria per il difettoso: scattala ora."
+    "defectivePhotoNow": "Foto obbligatoria per il difettoso: scattala ora.",
+    "notSorted": "{{code}} non smistato.",
+    "confirmEachPiece": "Conferma a ogni pezzo (nessuna categoria fissa)",
+    "sortTitle": "Smista {{code}}",
+    "sortHint": "Conferma la categoria suggerita o scegline un'altra. Per una serie di pezzi uguali scegli una categoria fissa nella tendina: si registrano senza conferma."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

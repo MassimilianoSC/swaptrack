@@ -401,7 +401,11 @@
     "refusedToast": "Reading of {{code}} refused by the server",
     "refusedPermission": "It is not allowed for your role or for this place. Check the chosen place and read it again, or tell the office.",
     "refusedOther": "Read it again; if it happens again, tell the office.",
-    "defectivePhotoNow": "Photo required for the defective piece: take it now."
+    "defectivePhotoNow": "Photo required for the defective piece: take it now.",
+    "notSorted": "{{code}} not sorted.",
+    "confirmEachPiece": "Confirm each piece (no fixed category)",
+    "sortTitle": "Sort {{code}}",
+    "sortHint": "Confirm the suggested category or choose another. For a series of identical pieces choose a fixed category in the list: they are recorded without confirmation."
   },
   "pwa": {
     "newVersion": "A new version is available.",

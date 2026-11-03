@@ -33,13 +33,18 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     await scanManual(page, code);
     await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toContainText(tr("scan.sent"), { timeout: 60_000 });
 
-    // 3. Sorting: the suggested category appears in large type at the reading, and the reading confirms it.
+    // 3. Sorting (§10, P-102): the suggested category appears in large type at the reading and is confirmed with one tap;
+    //    nothing is recorded before the tap.
     await page.getByTestId("scan-mode-classify").click();
-    await scanManual(page, code);
-    const suggested = page.getByTestId("scan-suggested-category");
+    await page.getByTestId("scan-manual-input").fill(code);
+    await page.getByTestId("scan-manual-input").press("Enter");
+    const suggested = page.getByTestId("scan-sort-suggested");
     await expect(suggested).toContainText(SEED.sorting.radioCategoryLabelIt);
     const fontSize = await suggested.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
     expect(fontSize).toBeGreaterThanOrEqual(24);
+    await expect(page.getByTestId("scan-session-count")).toHaveText("1");
+    await page.getByTestId("scan-sort-confirm").click();
+    await expect(page.getByTestId("scan-flash")).toContainText(code);
     await expect(page.getByTestId("scan-session-count")).toHaveText("2");
 
     // 4. The piece is sorted into the suggested category, shown by its label, never the raw id (P-43).
