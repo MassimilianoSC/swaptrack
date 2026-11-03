@@ -277,6 +277,8 @@ export async function processEvent(id: string): Promise<void> {
       return { before: r.before, state: r.state, itemId: itemRef.id, cat: catalogFrom(e, model) };
     });
     if (result) { bumpLater.push([result.before, { ...result.state, ...(result.cat ?? {}) }, result.itemId]); await flushBumps(); }
+    const arrivalOf = e.type === "arrive_at_warehouse" ? (e.payload?.shipmentId as string | undefined) : undefined;
+    if (result && arrivalOf) await markTransferReceived(arrivalOf);
   } catch (err) {
     if (err instanceof Permanent) {
       await anomaly(null, "malformed_event", e);
@@ -285,6 +287,19 @@ export async function processEvent(id: string): Promise<void> {
     }
     throw err; // transient: retried
   }
+}
+
+// §9.4 (P-114 n.16): a sent transfer becomes received when all its lines have arrived. One transaction, so two
+// arrivals processed together cannot both miss the last line.
+async function markTransferReceived(shipmentId: string) {
+  const ref = db.collection("shipments").doc(shipmentId);
+  await db.runTransaction(async (tx) => {
+    const s = (await tx.get(ref)).data();
+    if (!s || s.kind !== "transfer" || s.status !== "sent") return;
+    const lines = await tx.get(ref.collection("lines"));
+    if (lines.empty || lines.docs.some((l) => !l.get("arrivedAt"))) return;
+    tx.update(ref, { status: "received", receivedAt: FieldValue.serverTimestamp() });
+  });
 }
 
 const bumpLater: [Doc | null, Doc, string][] = [];
