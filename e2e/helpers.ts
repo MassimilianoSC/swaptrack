@@ -70,6 +70,11 @@ export async function emulatorRead(path: string): Promise<Record<string, unknown
   if (!r.ok) throw new Error(`emulatorRead ${path}: ${r.status}`);
   return fromFs({ mapValue: await r.json() }) as Record<string, unknown>;
 }
+export async function emulatorList(collection: string, pageSize = 20): Promise<Array<Record<string, unknown> & { id: string }>> {
+  const r = await fetch(`${docsUrl(collection)}?pageSize=${pageSize}`, { headers: OWNER });
+  const docs = ((await r.json()) as { documents?: Array<{ name: string; fields?: Record<string, FsValue> }> }).documents ?? [];
+  return docs.map((d) => ({ id: d.name.split("/").pop()!, ...(fromFs({ mapValue: { fields: d.fields ?? {} } }) as Record<string, unknown>) }));
+}
 export async function emulatorFirstId(collection: string): Promise<string> {
   const r = await fetch(`${docsUrl(collection)}?pageSize=1`, { headers: OWNER });
   const name = ((await r.json()) as { documents?: Array<{ name: string }> }).documents?.[0]?.name ?? "";

@@ -8,11 +8,13 @@ import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
 
 // §8.3 Anomalies inbox.
 export default function Anomalies() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
+  const names = useNames();
   const [all, setAll] = React.useState<Row<Anomaly>[] | null>(null);
   const [showResolved, setShowResolved] = React.useState(false);
   React.useEffect(() => claims?.orgId ? watchAnomalies({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
@@ -25,7 +27,7 @@ export default function Anomalies() {
       {list.length === 0 ? <Empty title={t("anomalies.empty")} /> : (
         <DataTable testId="anomalies-table" rows={list} columns={[
           { key: "t", header: t("alerts.kind"), render: (a) => <Badge tone={a.resolution ? "neutral" : "warning"}>{t(`anomalies.types.${a.type}`, { defaultValue: a.type })}</Badge> },
-          { key: "loc", header: t("items.location"), value: (a) => a.locationId ?? "—", className: "font-mono text-xs" },
+          { key: "loc", header: t("items.location"), value: (a) => names.place(a.locationId) },
           { key: "it", header: t("nav.items"), render: (a) => a.itemId ? <Link to={`/items/${a.itemId}`} className="text-primary hover:underline font-mono text-xs" data-testid={`anomalies-row-item-${a.id}`}>{a.itemId.slice(0, 8)}</Link> : "—" },
           { key: "at", header: t("anomalies.opened"), value: (a) => formatInstant(a.openedAt?.toDate?.() ?? null, i18n.language) },
           { key: "r", header: "", render: (a) => a.resolution ? <Badge tone="neutral">{t(`anomalies.resolutions.${a.resolution}`, { defaultValue: a.resolution })}</Badge> : null },

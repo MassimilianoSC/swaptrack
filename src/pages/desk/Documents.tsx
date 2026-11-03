@@ -10,11 +10,13 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Loading, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
 
 // §11 Documents list (ddt_in, ddt_return, bom).
 export default function Documents() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
+  const names = useNames();
   const [all, setAll] = React.useState<Row<SwDocument>[] | null>(null);
   const [loadError, setLoadError] = React.useState(false);
   React.useEffect(() => claims?.orgId ? watchDocuments({ role: claims.role!, orgId: claims.orgId }, setAll, () => setLoadError(true)) : undefined, [claims]);
@@ -27,7 +29,7 @@ export default function Documents() {
       <DataTable testId="documents-table" rows={all} columns={[
         { key: "k", header: t("documents.kind"), render: (r) => <Badge>{t(`documents.kinds.${r.kind}`)}</Badge> },
         { key: "n", header: t("documents.number"), value: (r) => r.number, className: "font-mono" },
-        { key: "loc", header: t("items.location"), value: (r) => r.locationId, className: "font-mono text-xs" },
+        { key: "loc", header: t("items.location"), value: (r) => names.place(r.locationId) },
         { key: "v", header: t("documents.version"), value: (r) => r.version },
         { key: "s", header: t("common.status"), render: (r) => <Badge tone={r.status === "open" ? "warning" : r.status === "checked" ? "primary" : "success"}>{t(`documents.statuses.${r.status}`)}</Badge> },
         { key: "a", header: t("shipments.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },

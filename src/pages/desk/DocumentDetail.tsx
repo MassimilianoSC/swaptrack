@@ -207,6 +207,16 @@ export default function DocumentDetail() {
             <div><Badge tone="warning">{t("documents.unexpected")}</Badge><p className="text-2xl font-bold tabular" data-testid="document-unexpected">{compare.totals.unexpected}</p></div>
             <div><Badge tone="warning">{t("documents.unknownModel")}</Badge><p className="text-2xl font-bold tabular" data-testid="document-unknown-model">{compare.totals.arrivedModelUnknown}</p></div>
           </div>
+          {/* P-100 (n.11): which codes, not only how many. */}
+          <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm">
+            {([["arrived", compare.arrived], ["missing", compare.missing], ["unexpected", compare.unexpected], ["unknownModel", compare.arrivedModelUnknown]] as Array<[string, string[]]>)
+              .filter(([, codes]) => codes.length > 0).map(([k, codes]) => (
+                <div key={k} data-testid={`document-list-${k}`}>
+                  <p className="text-muted">{t(`documents.${k}`)}</p>
+                  <p className="font-mono text-xs break-words">{codes.join(", ")}</p>
+                </div>
+              ))}
+          </div>
           {compare.quantities.length > 0 && <ul className="mt-3 text-sm" data-testid="document-quantities">{compare.quantities.map((q) => <li key={q.key}>{q.key}: {q.counted}/{q.expected}</li>)}</ul>}
         </Card>
       )}

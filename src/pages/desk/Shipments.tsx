@@ -15,11 +15,13 @@ import { Select, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loading } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
 
 // §9.3 / §9.4: shipments list — return + transfer. Create actions depend on role.
 export default function Shipments() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
+  const names = useNames();
   const { busy, run } = useAction();
   const [all, setAll] = React.useState<Row<Shipment>[] | null>(null);
   const [locations, setLocations] = React.useState<Row<Location>[]>([]);
@@ -66,8 +68,8 @@ export default function Shipments() {
       <DataTable testId="shipments-table" rows={all} columns={[
         { key: "kind", header: t("shipments.kind"), render: (s) => <Badge>{t(`shipments.kinds.${s.kind}`)}</Badge> },
         { key: "status", header: t("common.status"), render: (s) => <Badge tone={toneFor(s.status) as "warning" | "neutral" | "primary" | "success"}>{t(`shipments.statuses.${s.status}`)}</Badge> },
-        { key: "from", header: t("shipments.from"), value: (s) => client ? s.fromLocationId : (s.fromAspId === claims?.orgId ? s.fromLocationId : t("items.anotherOrg")), className: "font-mono text-xs" },
-        { key: "to", header: t("shipments.to"), value: (s) => client ? s.toLocationId : (s.toAspId === claims?.orgId || s.kind === "return" ? s.toLocationId : t("items.anotherOrg")), className: "font-mono text-xs" },
+        { key: "from", header: t("shipments.from"), value: (s) => client || s.fromAspId === claims?.orgId ? names.place(s.fromLocationId) : t("items.anotherOrg") },
+        { key: "to", header: t("shipments.to"), value: (s) => client || s.toAspId === claims?.orgId || s.kind === "return" ? names.place(s.toLocationId) : t("items.anotherOrg") },
         { key: "n", header: t("shipments.lineCount"), value: (s) => s.itemCount ?? 0 },
         { key: "ddt", header: t("shipments.ddtNumber"), value: (s) => s.ddtNumber ?? "—", className: "font-mono text-xs" },
         { key: "at", header: t("shipments.created_at"), value: (s) => formatInstant(s.createdAt?.toDate?.() ?? null, i18n.language) },

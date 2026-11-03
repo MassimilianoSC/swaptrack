@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useSession } from "@/app/session";
 import { readAggregate } from "@/lib/data/documents";
+import { loadSorting, type Category } from "@/lib/data/events";
 import { isClientRole } from "@shared/roles";
 import { listLocationsFor, listModels, listOrganizations, type Row, type Location, type Model, type Organization } from "@/lib/data/db";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -12,12 +13,14 @@ import { Loading } from "@/components/states";
 
 // §13.1 Dashboard: reads aggregates (never items). Every number drills down to /items with filters.
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const [scope, setScope] = React.useState<string>("client");
   const [asps, setAsps] = React.useState<Row<Organization>[]>([]);
   const [locations, setLocations] = React.useState<Row<Location>[]>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  React.useEffect(() => { void loadSorting().then((x) => setCategories(x.categories)).catch(() => undefined); }, []);
   const [byFlow, setByFlow] = React.useState<Record<string, number> | null>(null);
   const [byRegion, setByRegion] = React.useState<Record<string, number> | null>(null);
   const [bySortingCategory, setBySortingCategory] = React.useState<Record<string, number> | null>(null);
@@ -63,6 +66,8 @@ export default function Dashboard() {
     return g;
   };
   const modelLabel = (id: string) => models.find((m) => m.id === id)?.model ?? id;
+  // P-100: the sorting categories by their label, never by id ("cat_refurbish").
+  const catLabel = (id: string) => categories.find((c) => c.id === id)?.labels[i18n.language as "it" | "en"] ?? id;
   const drill = (status?: string, extra: Record<string, string> = {}) => {
     const p = new URLSearchParams();
     if (status) p.set("status", status);
@@ -122,7 +127,7 @@ export default function Dashboard() {
         <Card>
           <h2 className="font-semibold mb-3">{t("dashboard.sortingOutcome")}</h2>
           <ul className="text-sm" data-testid="dashboard-sorting-outcome">
-            {bySortingCategory && [...groupByFirst(bySortingCategory).entries()].map(([k, v]) => <li key={k} className="flex justify-between border-b border-border py-1"><span>{k === "none" ? "—" : k}</span><span className="tabular font-bold">{v}</span></li>)}
+            {bySortingCategory && [...groupByFirst(bySortingCategory).entries()].map(([k, v]) => <li key={k} className="flex justify-between border-b border-border py-1" data-testid="dashboard-category"><span>{k === "none" ? "—" : catLabel(k)}</span><span className="tabular font-bold">{v}</span></li>)}
           </ul>
         </Card>
         <Card>

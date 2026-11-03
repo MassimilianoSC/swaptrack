@@ -175,6 +175,13 @@
       "bom_difference": "BOM differenza",
       "transfer_difference": "Trasferimento in ritardo",
       "stale_material": "Materiale fermo"
+    },
+    "codes": "Codici",
+    "more": "e altri {{n}}",
+    "objects": {
+      "shipment": "Spedizione",
+      "document": "Documento",
+      "place": "Luogo"
     }
   },
   "anomalies": {
@@ -941,5 +948,10 @@
       "confirmed": "Confermata",
       "cancelled": "Annullata"
     }
+  },
+  "names": {
+    "otherPlace": "Luogo di un'altra ASP",
+    "otherAsp": "Altra ASP",
+    "client": "Cliente"
   }
 }

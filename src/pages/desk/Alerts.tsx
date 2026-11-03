@@ -13,11 +13,30 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
+
+// P-100 (n.11, P-95): the codes listed in a document alert (missing, unexpected, unknown model), the first few of each.
+function AlertCodes({ detail, testId }: { detail: Record<string, unknown>; testId: string }) {
+  const { t } = useTranslation();
+  const lists: Array<[string, string[]]> = [["missing", detail?.missingCodes as string[]], ["unexpected", detail?.unexpectedCodes as string[]], ["unknownModel", detail?.modelUnknownCodes as string[]]]
+    .filter((x): x is [string, string[]] => Array.isArray(x[1]) && x[1].length > 0);
+  if (!lists.length) return null;
+  return (
+    <ul className="space-y-0.5 text-xs" data-testid={testId}>
+      {lists.map(([k, codes]) => (
+        <li key={k}><span className="text-muted">{t(`documents.${k}`)}:</span> <span className="font-mono">{codes.slice(0, 3).join(", ")}</span>{codes.length > 3 && ` ${t("alerts.more", { n: codes.length - 3 })}`}</li>
+      ))}
+    </ul>
+  );
+}
 
 // §11.4 Alerts inbox.
 export default function Alerts() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
+  const names = useNames();
+  // P-100: the object of an alert by kind and place, never by id.
+  const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
   const { busy, run } = useAction();
   const [all, setAll] = React.useState<Row<Alert>[] | null>(null);
   const [showClosed, setShowClosed] = React.useState(false);
@@ -39,7 +58,8 @@ export default function Alerts() {
           { key: "kind", header: t("alerts.kind"), render: (a) => <Badge tone={isAlertToWatch(a) ? "warning" : "neutral"}>{t(`alerts.kinds.${a.kind}`, { defaultValue: a.kind })}</Badge> },
           { key: "n", header: t("alerts.count"), value: (a) => hasNoDifferenceNow(a) ? t("alerts.noDifferenceNow") : a.count, className: "tabular",
             render: (a) => hasNoDifferenceNow(a) ? <span className="text-muted" data-testid={`alerts-no-difference-${a.id}`}>{t("alerts.noDifferenceNow")}</span> : <>{a.count}</> },
-          { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{a.shipmentId ?? a.documentId ?? a.locationId ?? "—"}</Link> },
+          { key: "obj", header: t("alerts.object"), render: (a) => <Link to={link(a)} className="text-primary hover:underline font-mono text-xs" data-testid={`alerts-row-link-${a.id}`}>{objectLabel(a)}</Link> },
+          { key: "codes", header: t("alerts.codes"), render: (a) => <AlertCodes detail={a.detail} testId={`alerts-codes-${a.id}`} /> },
           { key: "at", header: t("alerts.updated"), value: (a) => formatInstant(a.updatedAt?.toDate?.() ?? null, i18n.language) },
           { key: "seen", header: "", render: (a) => <Button size="sm" variant="ghost" onClick={() => seen(a.id)} disabled={busy || !!a.seenAt} data-testid={`alerts-seen-${a.id}`}><Eye className="h-4 w-4" />{a.seenAt ? t("alerts.seen") : t("alerts.markSeen")}</Button> },
           { key: "close", header: "", render: (a) => canClose && !a.closedAt ? <Button size="sm" variant="ghost" onClick={() => close(a.id)} disabled={busy} data-testid={`alerts-close-${a.id}`}><Lock className="h-4 w-4" />{t("common.close")}</Button> : null },

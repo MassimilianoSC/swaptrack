@@ -16,12 +16,14 @@ import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { compressImage } from "@/lib/imageCompress.js";
 import { toast } from "sonner";
+import { useNames } from "@/lib/names";
 
 // §9.3 / §9.4: shipment detail — send/cancel draft, confirm (return), see arrivals (transfer).
 export default function ShipmentDetail() {
   const { id } = useParams();
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
+  const names = useNames();
   const { busy, run } = useAction();
   const nav = useNavigate();
   const [shipment, setShipment] = React.useState<Row<Shipment> | null>(null);
@@ -105,8 +107,8 @@ export default function ShipmentDetail() {
       <Card>
         <h2 className="font-semibold mb-3">{t("shipments.summary")}</h2>
         <dl className="grid grid-cols-2 gap-2 text-sm max-w-xl">
-          <dt className="text-muted">{t("shipments.from")}</dt><dd className="font-mono text-xs">{(client || isOwnSender) ? shipment.fromLocationId : t("items.anotherOrg")}</dd>
-          <dt className="text-muted">{t("shipments.to")}</dt><dd className="font-mono text-xs">{(client || isOwnReceiver || shipment.kind === "return") ? shipment.toLocationId : t("items.anotherOrg")}</dd>
+          <dt className="text-muted">{t("shipments.from")}</dt><dd data-testid="shipment-from">{(client || isOwnSender) ? names.place(shipment.fromLocationId) : t("items.anotherOrg")}</dd>
+          <dt className="text-muted">{t("shipments.to")}</dt><dd data-testid="shipment-to">{(client || isOwnReceiver || shipment.kind === "return") ? names.place(shipment.toLocationId) : t("items.anotherOrg")}</dd>
           <dt className="text-muted">{t("shipments.lineCount")}</dt><dd>{shipment.itemCount ?? lines.length}</dd>
           {shipment.ddtNumber && (<><dt className="text-muted">{t("shipments.ddtNumber")}</dt><dd className="font-mono">{shipment.ddtNumber}</dd></>)}
           {shipment.sentAt && (<><dt className="text-muted">{t("shipments.sentAt")}</dt><dd>{formatInstant(shipment.sentAt.toDate(), i18n.language)}</dd></>)}

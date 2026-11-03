@@ -11,6 +11,7 @@ import { loadSorting, type Category } from "@/lib/data/events";
 import { fileBlobUrl } from "@/lib/data/storage";
 import type { Row } from "@/lib/data/db";
 import { isAdminRole } from "@shared/roles";
+import { useNames } from "@/lib/names";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
@@ -19,7 +20,8 @@ import { Loading, Empty, ErrorState } from "@/components/states";
 import { toast } from "sonner";
 import { formatInstant } from "@/lib/utils";
 
-type HistoryEvent = { id: string; type: string; scannedAt: number | null; source: string; locationId: string | null; aspId: string | null; organization: string; voided: boolean; corrected: boolean; payload: Record<string, unknown> };
+type HistoryEvent = { id: string; type: string; scannedAt: number | null; source: string; locationId: string | null; aspId: string | null; organization: string; voided: boolean; corrected: boolean; payload: Record<string, unknown>;
+  locationName?: string | null; organizationName?: string | null; role?: string | null };
 
 // §13.2 / §6.5: item detail — history (no userId), reveal author, edit, forceState, merge, location correction.
 export default function ItemDetail() {
@@ -27,6 +29,7 @@ export default function ItemDetail() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const { busy, run } = useAction();
+  const names = useNames();
   const [item, setItem] = React.useState<Row<Item> | null>(null);
   // §15: a piece that cannot be read (rules) shows an error; an id that does not exist shows "not found".
   const [loadError, setLoadError] = React.useState(false);
@@ -163,8 +166,8 @@ export default function ItemDetail() {
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="text-muted">{t("items.status")}</dt><dd data-testid="item-status"><Badge>{t(`items.statuses.${item.status}`, { defaultValue: item.status })}</Badge></dd>
             <dt className="text-muted">{t("items.flow")}</dt><dd>{t(`items.flows.${item.flow}`, { defaultValue: item.flow })}{item.previousFlow && ` (${t("items.previously")} ${t(`items.flows.${item.previousFlow}`, { defaultValue: item.previousFlow })})`}</dd>
-            <dt className="text-muted">{t("items.location")}</dt><dd className="font-mono text-xs" data-testid="item-location">{item.currentLocationId ?? "—"}</dd>
-            <dt className="text-muted">{t("items.aspOwner")}</dt><dd className="font-mono text-xs">{item.currentAspId ?? "—"}{item.pendingAspId && ` → ${item.pendingAspId}`}</dd>
+            <dt className="text-muted">{t("items.location")}</dt><dd data-testid="item-location">{names.place(item.currentLocationId)}</dd>
+            <dt className="text-muted">{t("items.aspOwner")}</dt><dd data-testid="item-asp">{names.org(item.currentAspId)}{item.pendingAspId && ` → ${names.org(item.pendingAspId)}`}</dd>
             <dt className="text-muted">{t("items.sortingCategory")}</dt><dd data-testid="item-sorting-category">{categoryLabel(item.sortingCategoryId)}</dd>
             <dt className="text-muted">{t("items.lastScanned")}</dt><dd>{formatInstant(item.lastScannedAt?.toDate?.() ?? null, i18n.language)}</dd>
             {item.mergedInto && (<><dt className="text-muted">{t("items.mergedInto")}</dt><dd className="font-mono text-xs"><Link to={`/items/${item.mergedInto}`} className="hover:underline">{item.mergedInto}</Link></dd></>)}
@@ -229,7 +232,12 @@ export default function ItemDetail() {
                     {canCorrect && h.locationId && <Button size="sm" variant="ghost" onClick={() => { setCorrectOpen(h); setCorrectLoc(""); setLocQuery(""); }} aria-label={t("items.correctLocation")} data-testid={`item-correct-${h.id}`}><MapPin className="h-4 w-4" /></Button>}
                   </span>
                 </div>
-                {h.locationId && <p className="text-xs text-muted font-mono">{h.locationId}</p>}
+                {/* P-100 (n.13): place, organization and role of the event (P-94), never the person. */}
+                {(h.locationId || h.organizationName || h.role) && (
+                  <p className="text-xs text-muted" data-testid="item-history-who">
+                    {[h.locationId ? h.locationName ?? names.place(h.locationId) : null, h.organizationName, h.role ? t(`roles.${h.role}`, { defaultValue: h.role }) : null].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </li>
             ))}
           </ol>
