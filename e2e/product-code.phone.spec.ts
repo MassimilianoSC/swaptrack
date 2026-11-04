@@ -65,6 +65,7 @@ test.describe("Codice prodotto dopo il seriale (telefono)", () => {
     await page.goto("/scan?mode=classify");
     await page.getByTestId("scan-ask-product").check();
     await type(page, c);
+    await expect(page.getByTestId("scan-flash")).toContainText(tr("scan.nowProductCode"));
     await type(page, PRODUCT);
     await expect(page.getByTestId("scan-sort")).toBeVisible();
     await page.getByTestId("scan-sort-defective").click();

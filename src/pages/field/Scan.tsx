@@ -298,8 +298,10 @@ export default function Scan() {
   };
   // D-39: a category chosen (or suggested) for removed material never stays behind when the flow changes.
   const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); if (v !== "new") setDdtId(""); };
-  // D-66: without the model catalog on the phone a product code cannot be told from a serial: the option is off.
-  const productOn = askProduct && materialCodes.length > 0;
+  // D-66: without the model catalog on the phone a product code cannot be told from a serial: the option is off. While
+  // the catalog is still loading the option can be ticked (a reading meanwhile is never taken as a product code).
+  const noCatalog = catalogKnown && materialCodes.length === 0;
+  const productOn = askProduct && !noCatalog;
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string, choice?: SortChoice) => {
@@ -597,8 +599,8 @@ export default function Scan() {
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
         <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
         <div className="basis-full">
-          <Checkbox id="scan-product" label={t("scan.askProduct")} checked={productOn} onChange={setAskProduct} disabled={catalogKnown && materialCodes.length === 0} testId="scan-ask-product" />
-          {catalogKnown && materialCodes.length === 0
+          <Checkbox id="scan-product" label={t("scan.askProduct")} checked={productOn} onChange={setAskProduct} disabled={noCatalog} testId="scan-ask-product" />
+          {noCatalog
             ? <p className="text-xs text-warning" data-testid="scan-ask-product-nocatalog">{t("scan.askProductNoCatalog")}</p>
             : <p className="text-xs text-muted" data-testid="scan-ask-product-hint">{t("scan.askProductHint")}</p>}
         </div>
