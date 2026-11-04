@@ -162,6 +162,9 @@ function keepSeed(dir) {
 }
 
 async function main() {
+  // D-67: Ctrl+C reaches every process of the window. With --run this script is not stopped by it: the command ends
+  // by itself, then the emulators are stopped as always, so no Java process is left on the ports (P-46).
+  if (COMMAND) process.on("SIGINT", () => console.log("emulators: Ctrl+C — the emulators are stopped when the command ends…"));
   const busy = await busyPorts(PORTS);
   if (busy.length) {
     console.error(`emulators: port(s) ${busy.join(", ")} already in use. Another SwapTrack emulator instance is running (CLAUDE.md §5: one at a time).`);
