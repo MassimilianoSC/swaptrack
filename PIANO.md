@@ -32,7 +32,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|---|
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-31 | Guida per ruolo: `GUIDA.md` e `GUIDA.html` al lotto 3 (app ffd72a3, sha 07673d04e9f7); risposte del commerciale da inserire; copione della demo per l'11/11 da scrivere | reg | 3 |
+| P-31 | Guida per ruolo: `GUIDA.md` e `GUIDA.html` al lotto 3 (app ffd72a3, sha 07673d04e9f7); bozza inglese `GUIDE_en.md` (o2, 896 testi verificati su en.json, sha 5cf593256bad) da far rileggere a chi parla inglese; risposte del commerciale da inserire; copione della demo per l'11/11 da scrivere | reg | 3 |
 
 ## Fatto
 

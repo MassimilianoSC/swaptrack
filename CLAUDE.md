@@ -39,7 +39,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - `e2e/` e `playwright.config.ts` (da creare)
 
 **memoria storica**
-- `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`, `README.md`, `GUIDA.md`, `GUIDA.html`, `.gitignore`, `.gitattributes`
+- `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`, `README.md`, `GUIDA.md`, `GUIDA.html`, `GUIDE_en.md`, `.gitignore`, `.gitattributes`
 
 **Congelati (nessuno li modifica):** `SPEC.md` (gli scostamenti sono decisioni nel REGISTRO, non modifiche alla specifica); `consegna/` e i file consegnati elencati sopra (SPEC R18: la logica non si tocca; si può aggiungere un `.d.ts` accanto); `DECISIONS.md`, `NOT_DONE.md`, `PASSAGGIO_DI_CONSEGNE.md` (storici di Emergent e del passaggio; `memory/`, `test_result.md` e `test_reports/` cancellati il 03/11/2026, P-3: restano nella storia di git).
 
@@ -114,4 +114,4 @@ Prima riga: `[o2] commit <hash> — <titolo>`. Poi: cosa è stato fatto; prove (
 | Funzioni esportate, router, collezioni, regole, Storage | `ARCHITECTURE.md` | o2 |
 | Scelte fatte da Emergent (D1–D39) e cosa non ha verificato | `DECISIONS.md`, `NOT_DONE.md` | nessuno (storici) |
 | File consegnati da non riscrivere | `consegna/README.md` | nessuno |
-| Guida per gli utenti, per ruolo | `GUIDA.md` (in testa: commit dell'app descritto e sha del testo, D-52) e la sua versione `GUIDA.html` (rigenerata da un agente a ogni aggiornamento) | memoria storica |
+| Guida per gli utenti, per ruolo | `GUIDA.md` (in testa: commit dell'app descritto e sha del testo, D-52) e la sua versione `GUIDA.html` (rigenerata da un agente a ogni aggiornamento); in inglese `GUIDE_en.md` | memoria storica |
