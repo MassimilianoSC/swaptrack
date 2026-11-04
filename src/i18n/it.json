@@ -1005,5 +1005,8 @@
     "otherPlace": "Luogo di un'altra ASP",
     "otherAsp": "Altra ASP",
     "client": "Cliente"
+  },
+  "guidePage": {
+    "openFull": "Apri la guida completa"
   }
 }

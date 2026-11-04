@@ -1,4 +1,4 @@
-import { defineConfig, type ProxyOptions } from "vite";
+import { defineConfig, type ProxyOptions, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { fileURLToPath } from "node:url";
@@ -23,6 +23,25 @@ const emulatorProxy: Record<string, ProxyOptions> = {
   "/__functions": to("functions", { rewrite: (p) => p.replace(/^\/__functions/, `/${projectId}/europe-west1`) }),
 };
 
+// P-135: the complete guide (GUIDA.html in the project root, written by the memoria storica) is the single source:
+// served at /guida.html by the dev server and copied into the build, so every publication carries the guide of its own
+// commit; the service worker precaches it like the other html files (offline). A missing file stops the build.
+const GUIDE = new URL("./GUIDA.html", import.meta.url);
+function completeGuide(): Plugin {
+  return {
+    name: "swaptrack-complete-guide",
+    configureServer(server) {
+      server.middlewares.use("/guida.html", (_req, res) => {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.end(readFileSync(GUIDE));
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "guida.html", source: readFileSync(GUIDE) });
+    },
+  };
+}
+
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   resolve: {
@@ -33,6 +52,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    completeGuide(),
     VitePWA({
       registerType: "prompt",
       injectRegister: false,
@@ -54,7 +74,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,woff,woff2,wasm}"],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/__/, /^\/v0\//, /^\/v1\//, /^\/emulator/, /googleapis/],
+        navigateFallbackDenylist: [/^\/guida\.html/, /^\/__/, /^\/v0\//, /^\/v1\//, /^\/emulator/, /googleapis/],
       },
     }),
   ],
