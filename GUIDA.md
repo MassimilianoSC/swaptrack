@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 4b01f26 · Testo della guida: sha c291fbf733da · Data: 03/11/2026
+App descritta: commit ffd72a3 · Testo della guida: sha 07673d04e9f7 · Data: 04/11/2026
 
 ## Come usare questa guida
 
@@ -19,9 +19,10 @@ SwapTrack segue i **pezzi** (gli apparati) leggendo il loro codice a barre. Segu
 
 ### Cosa vedi in alto
 
-- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra).
+- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra). In fondo al menu, finché l'app non è installata, c'è anche «Installa l'app» (vedi [Come installo l'app sul telefono?](#come-installo-lapp-sul-telefono)).
 - **La campanella**: quanti avvisi aperti ci sono (non compare al Tecnico ASP).
 - **La rete**: sul computer vedi «Online» o «Offline»; sul telefono vedi solo l'icona del segnale, barrata quando non c'è rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.
+- **Sul computer, senza rete**, sotto la barra compare la striscia «Sei offline: i dati possono non essere aggiornati.»: quello che vedi può essere vecchio; torna normale quando la rete torna.
 - **L'icona della lingua**: «Italiano» o «English».
 - **Il «Menu utente»** (icona della persona): il tuo nome e ruolo, «Profilo», «Guida», «Esci».
 
@@ -96,6 +97,12 @@ Se vedi «Non puoi ancora uscire» con «Alcune letture o foto non sono ancora a
 
 **Telefono condiviso.** Prima di passare il telefono a un collega, esci sempre con «Esci» dal «Menu utente». Quando entra un'altra persona, l'app cancella dal telefono i dati della persona precedente, e le foto della persona precedente non vengono mai inviate a nome di chi entra.
 
+Se la persona precedente ha lasciato letture o foto non ancora inviate (per esempio perché la sua sessione è stata chiusa da un altro telefono), chi entra vede «Ci sono dati dell'utente precedente», con quante sono, e due scelte:
+- «Esci e fai rientrare l'utente precedente»: non si cancella niente. Nella pagina di accesso leggi «Fai entrare l'utente precedente con la rete attiva: le sue letture e foto partiranno da sole. Poi potrai entrare tu.»;
+- «Cancella i suoi dati e continua»: quelle letture e foto vanno perse, e si entra.
+
+Nel dubbio, scegli la prima.
+
 Se l'app all'apertura dice «L'app non può aprirsi» o «Chiudi le altre schede», segui il messaggio (chiudi le altre finestre dell'app, disattiva la navigazione privata, chiudi e riapri) e premi «Riprova». Se succede ancora, chiama l'amministratore.
 
 ### Come installo l'app sul telefono?
@@ -104,7 +111,7 @@ Installarla è importante: così si apre come un'app e lavora anche senza rete.
 
 **Android**
 1. Apri l'indirizzo di SwapTrack nel browser.
-2. Se compare «Installa l'app», premilo e conferma nella finestra del browser.
+2. In alto compare la striscia «Installa SwapTrack sul dispositivo: si apre come un'app e funziona anche senza rete.» con «Installa l'app»: premilo e conferma nella finestra del browser. Se non vuoi farlo adesso, premi «Più tardi»: la striscia sparisce per 7 giorni, e «Installa l'app» resta comunque in fondo al menu.
 3. Usa Chrome. Se «Installa l'app» non compare, apri il menu di Chrome (i tre puntini in alto a destra) e scegli «Installa app» oppure «Aggiungi a schermata Home».
 4. Apri SwapTrack dall'icona sul telefono, non dal browser.
 
@@ -112,6 +119,10 @@ Installarla è importante: così si apre come un'app e lavora anche senza rete.
 1. Apri l'indirizzo di SwapTrack con Safari.
 2. Tocca «Condividi», poi «Aggiungi alla schermata Home».
 3. Apri SwapTrack dall'icona nella schermata Home, non da Safari.
+
+Anche la voce «Installa l'app» del menu mostra questi passi.
+
+**Computer** (Chrome o Edge): non c'è la striscia. Se il browser permette l'installazione, in fondo alla barra a sinistra trovi «Installa l'app».
 
 L'app stessa te lo ricorda: «Installa l'app nella schermata Home: tocca Condividi, poi "Aggiungi alla schermata Home". Come scheda di Safari, iOS può cancellare le letture non ancora inviate e l'elenco dei siti offline.»
 
@@ -463,7 +474,7 @@ Se vedi «Nulla da completare.», non ci sono pezzi senza modello.
 ### Come cerco un pezzo?
 
 1. Apri «Pezzi».
-2. Scrivi il codice **completo** in «Cerca per codice» e premi «Cerca». Si apre la scheda del pezzo. Se vedi «Nessun pezzo ha questo codice.», controlla il codice (una parte del codice non basta).
+2. Scrivi il codice **completo** in «Cerca per codice» e premi «Cerca». Si apre la scheda del pezzo. Se vedi «Nessun pezzo ha questo codice.», controlla il codice (una parte del codice non basta). Senza rete la ricerca dice invece «Non disponibile senza rete: riprova quando sei collegato.»: il codice non si può controllare finché non torni in rete.
 3. Oppure usa i filtri «Stato», «Sito o magazzino» («Scrivi il codice o il nome e scegli dall'elenco»), «Modello». «Togli i filtri» li azzera.
 
 L'elenco mostra i pezzi più recenti, 200 alla volta: «Mostra altri» ne aggiunge altri 200.

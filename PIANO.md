@@ -23,10 +23,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-23 | Prove end-to-end: secondo giro (12,9 min) 14 verdi, 5 rosse. Dimostrati: export Excel (P-61) e creazione del DDT. Rosse: DDT non offerto nella schermata di lettura (P-24, sul ramo); ricerca del pezzo, void della raffica, percorso 3 ×2 instabili fra un giro e l'altro (sospetto: macchina carica; da escludere un difetto della cache di Firestore). Giro dei soli percorsi 2 e 3 con l'altro progetto fermo (30/10): 4 rosse su 4, quindi NON è l'ambiente: causa trovata da o3: il seed completo fa girare nell'emulatore circa 10.000 trigger in fila per tutto il giro, e gli eventi delle prove aspettano dietro (P-71). Online non succede. P-24 verde nella parte nuova | o3 |
 | P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
-| P-87 | Telefono condiviso (D-40). **a)** fatta (abaa679, 36b8439). **b)** fatta sul ramo (de05b21: avviso con due scelte se entra un altro utente con dati del precedente non inviati), va su main per il lotto 3 | o3 |
-| P-30 | `scripts/deployBatch.mjs` pronto (senza `--yes` solo controlli; con `--yes` pubblica e verifica gli invoker); prima prova: il giro «solo controlli» del committente | o2 + reg + committente |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
@@ -35,7 +32,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|---|
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-31 | Guida per ruolo: `GUIDA.md` aggiornata al lotto 2 (app 4b01f26, sha c291fbf733da); `GUIDA.html` da rigenerare; risposte del commerciale alla pagina delle domande da inserire; aggiornare a ogni lotto | reg | 3 |
+| P-31 | Guida per ruolo: `GUIDA.md` e `GUIDA.html` al lotto 2 (app 4b01f26, sha c291fbf733da); righe del lotto 3 pronte in `swaptrack-guida/AGGIORNAMENTI_LOTTO3.md`; risposte del commerciale da inserire; copione della demo per l'11/11 da scrivere | reg | 3 |
 
 ## Fatto
 
@@ -61,6 +58,9 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
 | P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
 | P-31a | Testi nuovi della pagina «Guida» nell'app, per ruolo | reg + o3 | 03/11/2026 (976d8c4) |
+| P-87 | Telefono condiviso (D-40): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra, avviso con due scelte se entra un altro utente con dati del precedente non inviati | o3 | 03/11/2026 (abaa679, 36b8439, 3e1f5a8) |
+| P-30 | Procedura di pubblicazione: `deployBatch.mjs` usata per il lotto 1; lotto 2 pubblicato a mano con gli stessi comandi (D-61); giro a blocchi (D-60) | o2 + reg + committente | 03/11/2026 |
+| P-23 | Prove end-to-end: 84 prove in 5 blocchi (D-60), rosse solo per l'emulatore carico e verdi da sole | o3 + o2 | 03/11/2026 |
 | P-129 | Avviso di installazione: sul computer voce nel menu al posto della barra; sul telefono barra con «Più tardi» (D-59) | o3 | 03/11/2026 (56be5e7…61242ff) |
 | P-131 | Scrivania senza rete: striscia «Sei offline», ricerca «non disponibile» invece di «non trovato» (D-58 B1/B2) | o3 | 03/11/2026 (9beb0f1) |
 | P-132 | Giro e2e a blocchi con emulatori nuovi, controllo che ogni prova stia in un blocco, blocchi «dati-propri» e «telefono-smistamento» (D-60) | o2 + o3 | 03/11/2026 (1887717, 540c550, 2021329, 5d62385) |
