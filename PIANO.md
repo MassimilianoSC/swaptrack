@@ -7,6 +7,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | Lotto | Data | Cosa | Commit |
 |---|---|---|---|
+| 3 | 04/11/2026 | Avviso di installazione nel menu e barra con «Più tardi» (D-59), striscia «Sei offline» sulla scrivania e ricerca «non disponibile» senza rete, avviso del telefono condiviso con due scelte, prova della foto scattata senza rete, giro a blocchi e cache del seed. Pubblicato con `deployBatch.mjs --yes`: giro completo verde (89 su 89 e2e, 180 unitarie, 219 regole), 8 router raggiungibili | 2a1cf61 |
 | 2 | 03/11/2026 | Riparazioni del censimento (riservatezza, dati giusti, telefono con poco segnale, cache presa per il server), lettura singola e «Raffica», «Già letto», ricerca del modello, smistamento a un tocco, DDT e BOM da Excel, PDF o foto, lettura automatica con l'AI di documenti ed etichette (dietro l'interruttore), nomi al posto delle sigle, filtri della pagina Pezzi, resoconto per ASP con i numeri di fine mese, pagine di amministrazione allineate, rietichettatura sicura lato server, documenti inventati per la demo. Pubblicato a mano con i comandi di deployBatch (D-61): giro a blocchi con 3 rosse, tutte verdi da sole su emulatori nuovi; 8 router raggiungibili | 1887717 |
 | 1 | 02/11/2026 | Riparazioni di riservatezza (documenti riscrivibili, listEvents, forceState/correctEventLocation, ruoli oltre la matrice, Storage), trigger riparato (spedizioni e resi), chiamate con campi vuoti (DDT ed export), DDT nella schermata di lettura, «Smista» giusto, cache offline all'accesso, BOM, resoconto mensile completo ed export leggibile, file privati con getBlob, avvisi, indice dei resi. Pubblicato con `deployBatch.mjs --yes`: tutti i controlli verdi, otto router raggiungibili | e4a053b |
 | 0 | 29/10/2026 | Codice di Emergent più le correzioni locali (indici, installazione, logo), su https://swaptrack-demo.web.app (progetto `kronos-caffe-sito`) | 5e66bb4 (confermato dal committente il 30/10: logo e pulsante «Installa» sono online) |
@@ -31,7 +32,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 |---|---|---|---|
 | P-21 | Lettura con la fotocamera su telefoni veri (Android: motore nativo; iPhone: zxing): preparare la prova guidata, il committente la esegue sui telefoni | o3 + committente | 3 |
 | P-44 | Letture dell'app negate a ragione dalle regole: coperte dal commit 9a47902 di o3 (luoghi per ambito, resi del magazzino cliente, anomalie solo per chi le legge); resta da confermare col primo giro delle e2e | o3 | 1 |
-| P-31 | Guida per ruolo: `GUIDA.md` e `GUIDA.html` al lotto 2 (app 4b01f26, sha c291fbf733da); righe del lotto 3 pronte in `swaptrack-guida/AGGIORNAMENTI_LOTTO3.md`; risposte del commerciale da inserire; copione della demo per l'11/11 da scrivere | reg | 3 |
+| P-31 | Guida per ruolo: `GUIDA.md` e `GUIDA.html` al lotto 3 (app ffd72a3, sha 07673d04e9f7); risposte del commerciale da inserire; copione della demo per l'11/11 da scrivere | reg | 3 |
 
 ## Fatto
 
@@ -64,6 +65,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-129 | Avviso di installazione: sul computer voce nel menu al posto della barra; sul telefono barra con «Più tardi» (D-59) | o3 | 03/11/2026 (56be5e7…61242ff) |
 | P-131 | Scrivania senza rete: striscia «Sei offline», ricerca «non disponibile» invece di «non trovato» (D-58 B1/B2) | o3 | 03/11/2026 (9beb0f1) |
 | P-132 | Giro e2e a blocchi con emulatori nuovi, controllo che ogni prova stia in un blocco, blocchi «dati-propri» e «telefono-smistamento» (D-60) | o2 + o3 | 03/11/2026 (1887717, 540c550, 2021329, 5d62385) |
+| P-133 | Schermata di lettura troppo affollata (osservazione del committente): pagina di preparazione prima di leggere, da progettare con il committente. Inventario e 3 schermate misurate di o3 in `swaptrack-guida/INVENTARIO_SCAN.md` e `scan-oggi/`. Difetto collegato: «Spedizione reso» e «Trasferimento» toccati direttamente danno «spedizione non trovata» | committente + o3 |
 | P-125 | Letture che prendevano la cache per il server (D-58): elenco dei luoghi che riprova da solo, smistamento senza rete, DDT e BOM in ritardo, «non disponibile senza rete» | o3 | 03/11/2026 (7c71b1f…6dcd313) |
 | P-126 | Esportazioni con il nome dell'ASP | o3 | 03/11/2026 (e7a83ab) |
 | P-127 | Un pulsante di riga fa aspettare solo la sua riga | o3 | 03/11/2026 (d061109) |

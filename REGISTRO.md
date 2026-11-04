@@ -4,6 +4,7 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO
 
+- **04/11/2026: LOTTO 3 PUBBLICATO** (2a1cf61, `deployBatch.mjs --yes`, giro completo verde 89/89, 8 router OK). Main sbloccato. Prossimo: la schermata di lettura (P-133) con il committente; poi i suoi controlli a mano, la prova dell'AI, i telefoni.
 - **03/11/2026 sera — FERMATA PER OGGI (decisione del committente).** Finito il compito in corso, o2 e o3 si fermano del tutto fino a domani.
   - **Online:** lotto 2, commit 1887717, pubblicato a mano con i comandi di deployBatch (D-61); 8 router raggiungibili. Giro completo a blocchi con 3 rosse, tutte verdi da sole su emulatori nuovi (rallentamento dell'emulatore, D-60).
   - **Su main e non online (lotto 3):** P-129 (avviso di installazione, D-59), P-131 (scrivania senza rete), P-87b (telefono condiviso, 3e1f5a8), P-132 (giro a blocchi, cache del seed), prova del router. Le righe della guida per il lotto 3 sono in `swaptrack-guida/AGGIORNAMENTI_LOTTO3.md`.
