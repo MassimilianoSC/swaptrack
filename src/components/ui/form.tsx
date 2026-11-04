@@ -33,10 +33,10 @@ export function Field({ label, htmlFor, hint, children }: { label: string; htmlF
   );
 }
 
-export function Checkbox({ id, checked, onChange, label, testId }: { id: string; checked: boolean; onChange: (v: boolean) => void; label: string; testId?: string }) {
+export function Checkbox({ id, checked, onChange, label, testId, disabled }: { id: string; checked: boolean; onChange: (v: boolean) => void; label: string; testId?: string; disabled?: boolean }) {
   return (
-    <label htmlFor={id} className="flex items-center gap-3 min-h-touch cursor-pointer text-sm">
-      <input id={id} data-testid={testId} type="checkbox" className="h-5 w-5 accent-[rgb(var(--primary))]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    <label htmlFor={id} className={cn("flex items-center gap-3 min-h-touch text-sm", disabled ? "text-muted" : "cursor-pointer")}>
+      <input id={id} data-testid={testId} type="checkbox" disabled={disabled} className="h-5 w-5 accent-[rgb(var(--primary))]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
   );

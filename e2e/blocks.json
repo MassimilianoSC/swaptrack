@@ -13,7 +13,8 @@
         "excel-mapping-slow.desk.spec.ts",
         "shared-phone.phone.spec.ts",
         "scan-tidy.phone.spec.ts",
-        "guide-full.desk.spec.ts"
+        "guide-full.desk.spec.ts",
+        "product-code.phone.spec.ts"
       ]
     },
     {

@@ -79,6 +79,7 @@ export default function Scan() {
   // P-109: told shows that the user has been told once that this code was already read.
   const cameraLast = React.useRef<{ code: string; at: number; told?: boolean } | null>(null);
   const [materialCodes, setMaterialCodes] = React.useState<string[]>([]);
+  const [catalogKnown, setCatalogKnown] = React.useState(false);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
   const [session, setSession] = React.useState<{ id: string; code: string; type: string }[]>([]);
@@ -91,7 +92,9 @@ export default function Scan() {
   const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
-  const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; suggested: string | null } | null>(null);
+  const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; second?: string; suggested: string | null } | null>(null);
+  // D-66 (P-136c): a reading taken as a new piece while the window of the previous one is open: handled when it closes.
+  const afterDialog = React.useRef<{ code: string; source: Source } | null>(null);
   // P-113: the model search of the unknown-piece window (model, material code, manufacturer; case and accents ignored).
   const [modelQuery, setModelQuery] = React.useState("");
   const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -147,7 +150,7 @@ export default function Scan() {
   const [bomUnexpected, setBomUnexpected] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined);
+    void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined).finally(() => setCatalogKnown(true));
     const load = loadSorting() as Promise<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }>;
     sortingLoad.current = load;
     void load.then(setSorting).catch(() => undefined);
@@ -295,6 +298,8 @@ export default function Scan() {
   };
   // D-39: a category chosen (or suggested) for removed material never stays behind when the flow changes.
   const changeFlow = (v: string) => { setFlow(v); setCategory(""); suggestedRef.current = null; setSuggested(null); if (v !== "new") setDdtId(""); };
+  // D-66: without the model catalog on the phone a product code cannot be told from a serial: the option is off.
+  const productOn = askProduct && materialCodes.length > 0;
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string, choice?: SortChoice) => {
@@ -324,18 +329,18 @@ export default function Scan() {
   // P-112: the camera pauses at every decode (webEngine.js) and restarts with the flash of the reading (show). Whatever
   // way a camera reading ends (an error, a refused shipment, a message), it restarts here too; only while the model of
   // an unknown piece is asked it stays paused, and closing that window records the reading (skipModelPick).
-  const onCode = async (raw: string, source: Source) => {
+  const onCode = async (raw: string, source: Source, again = false) => {
     let r: "asked" | "continue" | void;
-    try { r = await handleCode(raw, source); }
+    try { r = await handleCode(raw, source, again); }
     finally {
       // The second code of a reading (the product code after the serial) is read at once, also without burst mode.
       if (source === "camera" && r! !== "asked") setTimeout(() => (r === "continue" ? ctrl.current?.resume() : afterCameraReading()), 950);
     }
   };
-  const handleCode = async (raw: string, source: Source): Promise<"asked" | "continue" | void> => {
+  const handleCode = async (raw: string, source: Source, again = false): Promise<"asked" | "continue" | void> => {
     const code = raw.trim();
     if (!code) return;
-    if (source === "camera") {
+    if (source === "camera" && !again) {
       // P-98: the camera restarts 0.9 s after a reading (burst) and forgets what it read (webEngine.js, frozen). The
       // same code is ignored while it stays in view and for CAMERA_REPEAT_MS after it was last seen or recorded.
       const last = cameraLast.current, now = Date.now();
@@ -348,7 +353,18 @@ export default function Scan() {
         return;
       }
     }
-    if (pendingSerial) { const p = pendingSerial; setPendingSerial(null); return record(p.code, p.source, code); }
+    if (pendingSerial) {
+      const p = pendingSerial;
+      setPendingSerial(null);
+      // D-66 (P-136c): the reading after a serial is its product code only if it is a material code of the catalog.
+      // Otherwise it is another piece: the serial is recorded without a product code and the new reading starts over
+      // (before, a second serial was taken as the product code and that piece was never recorded).
+      if (isProductCode(code, materialCodes)) return proceed(p.code, p.source, code);
+      toast.warning(t("scan.notProductCode", { code }), { id: "scan-not-product-code" });
+      const r = await proceed(p.code, p.source);
+      if (r === "asked") { afterDialog.current = { code, source }; return "asked"; }
+      return handleCode(code, source, true);
+    }
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
     if (suggests) {
       const it = await cachedItemForCode(code);
@@ -360,19 +376,31 @@ export default function Scan() {
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
     }
-    if (askProduct) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
+    if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
+    return proceed(code, source);
+  };
+  // D-66 (P-136c): what every piece goes through once its codes are known, with or without a product code.
+  const proceed = async (code: string, source: Source, second?: string): Promise<"asked" | void> => {
     // §10 / P-102: in "Sort" without a fixed category the suggestion is confirmed with one tap, or another one chosen;
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
-    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, suggested: suggestedRef.current }); return "asked"; }
+    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current }); return "asked"; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
     // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
     const cid = ddtApplies && ddtId ? await computeCodeId(code) : null;
     const inChosenDdt = !!cid && ddtExpected.some((e) => e.codeId === cid);
-    if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !inChosenDdt && !await cachedItemForCode(code)) {
-      setModelPick({ code, source }); setModelPickId(""); setModelQuery(""); return "asked";
+    // A product code of the catalog gives the model (the server's findModel): nothing to ask.
+    if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !inChosenDdt && !second && !await cachedItemForCode(code)) {
+      setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
     }
-    await record(code, source);
+    await record(code, source, second);
+  };
+  // The reading waiting behind a window (D-66) goes on when the window closes; it then drives the camera itself.
+  const takeNext = () => {
+    const n = afterDialog.current;
+    afterDialog.current = null;
+    if (n) void onCode(n.code, n.source, true);
+    return !!n;
   };
   const onCodeRef = React.useRef(onCode);
   onCodeRef.current = onCode;
@@ -452,7 +480,8 @@ export default function Scan() {
     const p = pendingSort;
     if (!p) return;
     setPendingSort(null);
-    await record(p.code, p.source, undefined, undefined, choice);
+    await record(p.code, p.source, p.second, undefined, choice);
+    if (takeNext()) return;
     if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   const cancelSort = () => {
@@ -461,6 +490,7 @@ export default function Scan() {
     setPendingSort(null);
     aiAssist.current = null;
     toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
+    if (takeNext()) return;
     if (p.source === "camera") setTimeout(afterCameraReading, 300);
   };
   // The piece waiting for its model is taken first, so a double tap (or "Save" and then the X) records it once.
@@ -469,6 +499,7 @@ export default function Scan() {
     if (!p) return;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second, modelPickId || undefined);
+    if (takeNext()) return;
     if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   // D-50 (P-112): closing the window (X, a tap outside, the back key) is "Skip": the reading is recorded without a model
@@ -478,6 +509,7 @@ export default function Scan() {
     if (!p) return;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second);
+    if (takeNext()) return;
     if (p.source === "camera") setTimeout(afterCameraReading, 950);
   };
   const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared")); };
@@ -564,7 +596,12 @@ export default function Scan() {
         {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
         <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
-        <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
+        <div className="basis-full">
+          <Checkbox id="scan-product" label={t("scan.askProduct")} checked={productOn} onChange={setAskProduct} disabled={catalogKnown && materialCodes.length === 0} testId="scan-ask-product" />
+          {catalogKnown && materialCodes.length === 0
+            ? <p className="text-xs text-warning" data-testid="scan-ask-product-nocatalog">{t("scan.askProductNoCatalog")}</p>
+            : <p className="text-xs text-muted" data-testid="scan-ask-product-hint">{t("scan.askProductHint")}</p>}
+        </div>
       </div>
       {lostCount > 0 && <div className="rounded bg-warning/15 text-warning text-xs p-2 flex gap-2 items-center" data-testid="scan-lost-photos">{t("scan.photosLost", { count: lostCount })} <Button size="sm" variant="ghost" onClick={clearLost} data-testid="scan-lost-clear">{t("common.close")}</Button></div>}
       {/* §7.2 burst mode, P-20 (D-11): counter and running list of this session's readings, below the camera, never over it. */}
@@ -633,6 +670,7 @@ export default function Scan() {
           <>
             <Button variant="secondary" className="w-full" onClick={readLabel} disabled={labelBusy} data-testid="scan-ai-label"><Sparkles className="h-5 w-5" /> {labelBusy ? t("scan.aiLabelReading") : t("scan.aiLabel")}</Button>
             <input ref={labelInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void onLabelFile(e)} data-testid="scan-ai-label-input" />
+            <p className="text-center text-sm text-muted" data-testid="scan-cannot-read-or">{t("scan.cannotReadOr")}</p>
           </>
         )}
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void onCode(manual, "manual"); setManual(""); }}>

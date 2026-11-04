@@ -422,7 +422,11 @@
       "ai_no_codes": "Nessun codice leggibile nella foto."
     },
     "sortingMissing": "Le categorie di smistamento non sono ancora sul telefono: servono la rete per scaricarle. Intanto registra solo l'arrivo e smista dopo.",
-    "cannotRead": "Il codice non si legge?"
+    "cannotRead": "Il codice non si legge?",
+    "cannotReadOr": "oppure",
+    "askProductHint": "Dopo il seriale leggi anche il codice del modello: l'app riconosce il modello da sola.",
+    "askProductNoCatalog": "Il catalogo dei modelli non è ancora sul telefono.",
+    "notProductCode": "{{code}} non è un codice prodotto del catalogo: l'ho preso come un nuovo pezzo."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",
