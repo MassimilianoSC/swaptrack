@@ -23,7 +23,6 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi |
 |---|---|---|
-| P-22 | Foto scattate senza rete, da capo a fondo: parte server fatta (51d5391, verde; JPEG con GPS c328954); parte schermata di o3 | o3 |
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
 
 ## Da fare
@@ -58,6 +57,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
 | P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
 | P-31a | Testi nuovi della pagina «Guida» nell'app, per ruolo | reg + o3 | 03/11/2026 (976d8c4) |
+| P-22 | Foto scattata senza rete, da capo a fondo: parte da sola alla riapertura, compare nella pagina del pezzo, su Storage senza EXIF né GPS (server 51d5391, schermata b834431) | o2 + o3 | 04/11/2026 |
 | P-87 | Telefono condiviso (D-40): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra, avviso con due scelte se entra un altro utente con dati del precedente non inviati | o3 | 03/11/2026 (abaa679, 36b8439, 3e1f5a8) |
 | P-30 | Procedura di pubblicazione: `deployBatch.mjs` usata per il lotto 1; lotto 2 pubblicato a mano con gli stessi comandi (D-61); giro a blocchi (D-60) | o2 + reg + committente | 03/11/2026 |
 | P-23 | Prove end-to-end: 84 prove in 5 blocchi (D-60), rosse solo per l'emulatore carico e verdi da sole | o3 + o2 | 03/11/2026 |
