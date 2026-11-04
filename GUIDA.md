@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit ffd72a3 · Testo della guida: sha 07673d04e9f7 · Data: 04/11/2026
+App descritta: commit 5160465 · Testo della guida: sha 686b21707fe0 · Data: 04/11/2026
 
 ## Come usare questa guida
 
@@ -179,7 +179,7 @@ Luoghi e organizzazioni compaiono sempre con il loro nome (per un luogo: codice 
 
 **Chi sei.** Lavori nei siti: smonti il materiale vecchio e installi quello nuovo. Con l'app leggi il codice di ogni pezzo che smonti o installi e, alla fine, dichiari che hai finito nel sito.
 
-**Cosa trovi nel menu.** «Home» (la scelta del sito) e «Guida». In basso a destra c'è sempre il grande pulsante «Leggi». In alto vedi il sito scelto: toccalo per cambiarlo.
+**Cosa trovi nel menu.** «Home» (la scelta del sito) e «Guida». In basso a destra c'è il grande pulsante «Leggi» (non compare nella schermata di lettura, dove già sei). In alto vedi il sito scelto: toccalo per cambiarlo.
 
 **Cosa non vedi.** Vedi solo i siti della tua ASP. Non vedi avvisi, anomalie e le pagine d'ufficio.
 
@@ -199,7 +199,7 @@ Se qualcosa va storto:
 
 ### Come leggo un codice a barre?
 
-Ci sono tre modi, nella schermata che si apre con «Leggi», più un quarto se l'ufficio l'ha acceso.
+Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; subito sotto ci sono i comandi di ogni pezzo: «Annulla l'ultima», «Foto», il suono, «Raffica» e, se il telefono li ha, «Torcia» e «Sole». Più sotto c'è il campo della pistola e, se il codice non si legge, la riga «Il codice non si legge?».
 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
@@ -212,15 +212,16 @@ Aiuti: «Torcia» accende la luce (se il telefono la ha); il cursore «Sole» sc
 
 **Con una pistola o un anello lettore.** Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo.
 
-**A mano.** Scrivi le cifre nel campo «Digita le cifre sotto il codice a barre» e premi «Conferma».
+**Se il codice non si legge.** Sotto il campo della pistola trovi «Il codice non si legge?» con due strade:
+- **A mano**: scrivi le cifre nel campo «Digita le cifre sotto il codice a barre» e premi «Conferma». Funziona anche senza rete.
+- **«Fotografa l'etichetta»**: c'è solo se l'Amministratore cliente ha acceso la lettura automatica nelle «Impostazioni» (scheda «Funzioni») e se c'è la rete; senza rete il pulsante non compare. Serve per un'etichetta rovinata, che la fotocamera non riesce a leggere.
 
-**Dalla foto dell'etichetta.** Il pulsante «Leggi dalla foto dell'etichetta» c'è solo se l'Amministratore cliente ha acceso la lettura automatica nelle «Impostazioni» (scheda «Funzioni»). Serve per un'etichetta rovinata, che la fotocamera non riesce a leggere, e serve la rete.
-1. Premi «Leggi dalla foto dell'etichetta» e fotografa l'etichetta. Mentre l'app la legge vedi «Lettura della foto…».
+Con «Fotografa l'etichetta»:
+1. Premi «Fotografa l'etichetta» e fotografa l'etichetta. Mentre l'app la legge vedi «Lettura della foto…».
 2. Si apre «Codici letti dalla foto». I caratteri evidenziati sono incerti: controlla sempre il codice sull'etichetta e correggilo se serve.
 3. Premi «Conferma» accanto al codice giusto. Solo allora la lettura parte, come se l'avessi scritta a mano, e la foto dell'etichetta resta collegata alla lettura. «Annulla» chiude senza registrare nulla.
 
 Messaggi possibili (in tutti questi casi scrivi il codice a mano):
-- «Serve la connessione per leggere la foto: scrivi il codice a mano qui sotto.»
 - «Nella foto non è stato trovato nessun codice: riprova o scrivilo a mano.»
 - «Alcuni codici non erano leggibili e non compaiono.»
 - «Hai raggiunto le letture automatiche di oggi.»
@@ -242,7 +243,7 @@ Se qualcosa va storto:
 3. In alto premi «Smonta» (se non è già evidenziato).
 4. Leggi uno dopo l'altro i codici dei pezzi che smonti.
 
-Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture in questa sessione», e l'elenco dei codici con «Da inviare» o «Inviata». Più sotto, «Le mie letture di oggi» elenca tutte le tue letture della giornata.
+Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture in questa sessione», e l'elenco dei codici con «Da inviare» o «Inviata». Più sotto c'è «Le mie letture di oggi · 12»: il numero è quante letture hai fatto oggi; tocca la riga per aprire l'elenco e di nuovo per chiuderlo.
 
 **Se compare «Pezzo sconosciuto».** L'app dice «Il codice … è nuovo. Scegli un modello per aiutare l'ufficio a completarlo, oppure salta.»
 - Se sai che modello è, scrivi una parte del nome o del codice in «Cerca modello o codice» e tocca il risultato giusto (oppure scegli il modello nella tendina «Modello»), poi premi «Conferma».
@@ -260,9 +261,9 @@ I pezzi nuovi arrivano dal magazzino della tua ASP: se un codice non è conosciu
 
 ### Come controllo i pezzi previsti nel sito (la BOM)?
 
-Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la «Lista BOM»:
+Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la riga «Lista BOM · 3/10» (letti su previsti): toccala per aprire la lista.
 - con «Smonta» vedi i «Pezzi da smontare», con «Installa» i «Pezzi da installare»;
-- ogni pezzo della lista che leggi prende la spunta; accanto al titolo vedi il conto, per esempio 3/10 (letti su previsti);
+- ogni pezzo della lista che leggi prende la spunta;
 - se leggi pezzi che non sono nella lista, compaiono sotto, per esempio «2 pezzi non attesi dalla BOM»;
 - «Nessuna riga per questa direzione.»: la BOM non prevede pezzi da smontare (o da installare).
 
@@ -282,7 +283,7 @@ Da sapere:
 ### Come faccio una foto a un pezzo?
 
 1. Leggi il pezzo.
-2. Subito dopo, prima di leggere il pezzo successivo, premi «Foto» e scatta.
+2. Subito dopo, prima di leggere il pezzo successivo, premi «Foto» (è subito sotto la fotocamera) e scatta.
 3. Vedi «Foto in coda per l'invio»: la foto parte appena c'è rete.
 
 Da sapere:
@@ -314,7 +315,7 @@ Premilo solo quando hai davvero finito: non c'è una domanda di conferma. Il sit
 
 **Chi sei.** Lavori nel magazzino della tua ASP. Con l'app registri gli arrivi di materiale (nuovo e smontato), smisti il materiale smontato, prepari i resi al cliente e i trasferimenti tra magazzini, e completi i dati dei pezzi.
 
-**Cosa trovi nel menu.** «Home» (la scelta del magazzino), «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Guida». In basso a destra c'è il pulsante «Leggi».
+**Cosa trovi nel menu.** «Home» (la scelta del magazzino), «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Guida». In basso a destra c'è il grande pulsante «Leggi» (non compare nella schermata di lettura, dove già sei).
 
 **Cosa non vedi.** Vedi solo i pezzi, i documenti, le spedizioni e gli avvisi della tua ASP, più i pezzi che un'altra ASP ti sta trasferendo. Nelle spedizioni, il magazzino di un'altra ASP compare come «altra organizzazione»; nelle altre pagine un luogo di un'altra ASP compare come «Luogo di un'altra ASP».
 
@@ -385,7 +386,7 @@ Poi registra l'arrivo:
 
 I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare».
 
-Cosa vedi dopo: il riquadro «Confronto con il DDT …» con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.
+Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.
 
 Infine, controlla e chiudi il confronto:
 1. Apri «Documenti» e premi «Apri» sul DDT.
@@ -426,7 +427,7 @@ Se qualcosa va storto:
 7. Premi «Invia», scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi «Invia». Vedi «Spedizione inviata».
 
 Da sapere:
-- Usa sempre «Leggi i pezzi» dalla scheda del reso: i pulsanti «Spedizione reso» e «Trasferimento» nella schermata «Leggi» funzionano solo se arrivi da una spedizione (altrimenti vedi «Spedizione non trovata.»).
+- Il reso si legge sempre con «Leggi i pezzi» dalla scheda del reso: «Spedizione reso» e «Trasferimento» compaiono nella schermata «Leggi» solo quando ci arrivi da una spedizione.
 - Leggere due volte lo stesso pezzo nello stesso reso non lo conta due volte.
 - Per togliere un pezzo letto per errore, premi subito «Annulla l'ultima».
 
@@ -492,7 +493,7 @@ Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici
 
 **Chi sei.** Gestisci la tua ASP: inviti e gestisci i tecnici e i magazzinieri, carichi le liste dei siti (BOM), correggi i pezzi della tua ASP, guardi i numeri e scarichi esportazioni e rapporti. Puoi fare anche tutto ciò che fa il Magazzino ASP.
 
-**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni», «Rapporti», «Persone», «Guida». In basso a destra c'è il pulsante «Leggi».
+**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni», «Rapporti», «Persone», «Guida». In basso a destra c'è il grande pulsante «Leggi» (non compare nella schermata di lettura, dove già sei).
 
 **Cosa non vedi.** Solo i dati della tua ASP. Non vedi le altre ASP, né i loro pezzi (salvo quelli che stanno arrivando a te).
 
@@ -805,7 +806,7 @@ Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salv
 - **«Soglie»**: «Giorni per stale_material» (dopo quanti giorni il materiale fermo genera l'avviso «Materiale fermo»; predefinito 30) e «Giorni per transfer_difference» (dopo quanti giorni un trasferimento incompleto genera «Trasferimento in ritardo»; predefinito 7).
 - **«Foto»**: «Foto obbligatoria per i pezzi difettosi». Se la spunti, quando un magazziniere smista un pezzo come «Difettoso» l'app gli chiede subito la foto (vedi [Come smisto il materiale smontato?](#come-smisto-il-materiale-smontato)).
 - **«Regole campo»**: «Un pezzo trovato al sito ma non in BOM». Scegli «Accetta e crea un avviso» (è la scelta di partenza) oppure «Accetta in silenzio (senza avviso)». In tutti e due i casi la lettura viene accettata; cambia solo se nasce l'avviso «BOM differenza» per quei pezzi.
-- **«Funzioni»**: «Lettura automatica documenti e codici delle etichette rovinate (AI)». «Propone le righe di DDT e BOM leggendo foto e PDF, e i codici delle etichette rovinate dalla loro foto. Le righe e i codici si salvano solo dopo il controllo di chi carica il documento o legge il pezzo.» Se la accendi, compaiono «Leggi automaticamente» nei documenti e «Leggi dalla foto dell'etichetta» nella schermata «Leggi»; per usarle serve la rete. Ogni persona può fare al massimo 20 letture automatiche al giorno (documenti ed etichette insieme); questo numero non si cambia da questa pagina.
+- **«Funzioni»**: «Lettura automatica documenti e codici delle etichette rovinate (AI)». «Propone le righe di DDT e BOM leggendo foto e PDF, e i codici delle etichette rovinate dalla loro foto. Le righe e i codici si salvano solo dopo il controllo di chi carica il documento o legge il pezzo.» Se la accendi, compaiono «Leggi automaticamente» nei documenti e «Fotografa l'etichetta» nella schermata «Leggi»; per usarle serve la rete. Ogni persona può fare al massimo 20 letture automatiche al giorno (documenti ed etichette insieme); questo numero non si cambia da questa pagina.
 
 ### Come leggo il registro amministrativo?
 
