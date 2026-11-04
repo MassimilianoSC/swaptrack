@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useSearchParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles } from "lucide-react";
+import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles, ChevronDown } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
 import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type CachedBom, type RejectedScan } from "@/lib/data/events";
@@ -24,6 +24,8 @@ const MODES: Record<string, string[]> = {
   asp_warehouse: ["arrive_at_warehouse", "classify", "return_ship", "transfer_out"],
   asp_admin: ["arrive_at_warehouse", "classify", "return_ship", "transfer_out"],
 };
+// P-134 (D-62 criterion 4): these work only inside a shipment, so they are offered only when the screen is opened from one.
+const SHIPMENT_MODES = ["return_ship", "transfer_out"];
 // P-98: how long the camera ignores the code it just read (the phone held still on the label).
 const CAMERA_REPEAT_MS = 3000;
 const BURST_KEY = "swaptrack.burst";
@@ -44,7 +46,8 @@ export default function Scan() {
   const role = claims?.role ?? "";
   const paramMode = params.get("mode");
   const shipmentId = params.get("shipmentId");
-  const mode = paramMode ?? MODES[role]?.[0] ?? "";
+  const mode = paramMode && (shipmentId || !SHIPMENT_MODES.includes(paramMode)) ? paramMode : MODES[role]?.[0] ?? "";
+  const modes = (MODES[role] ?? []).filter((m) => shipmentId || !SHIPMENT_MODES.includes(m));
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const ctrl = React.useRef<ReturnType<typeof startScanner> | null>(null);
   const [engine, setEngine] = React.useState<string | null>(null);
@@ -490,7 +493,7 @@ export default function Scan() {
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
       {shipmentId && <p className="text-xs text-primary font-mono" data-testid="scan-shipment-id">{t("scan.shipmentLabel")}: {shipmentId.slice(0, 8)}</p>}
       <div className="flex flex-wrap gap-2">
-        {(MODES[role] ?? []).map((m) => (
+        {modes.map((m) => (
           <Button key={m} variant={m === mode ? "primary" : "secondary"} size="lg" onClick={() => setParams((p) => { p.set("mode", m); return p; })} data-testid={`scan-mode-${m}`}>{t(`scan.modes.${m}`)}</Button>
         ))}
         {role === "asp_technician" && <Button variant="outline" size="lg" onClick={siteDone} data-testid="scan-site-done">{t("scan.siteDoneButton")}</Button>}
@@ -549,6 +552,21 @@ export default function Scan() {
       </div>
       {/* D-55 / P-121: single reading: the camera waits until the worker asks for the next piece. */}
       {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}
+      {/* P-134 (D-62 criterion 6): the commands of every piece right under the camera, in the first screen. */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {torch !== null && <Button variant="secondary" onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
+        {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
+          <input type="range" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
+        <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</Button>
+        {/* P-108: a button that cannot be used yet looks like one (dashed border, grey), and says why. */}
+        <Button variant="secondary" disabled={!session.length} onClick={undo} className={OFF} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
+        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
+        {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
+        <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
+        <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
+        <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
+      </div>
+      {lostCount > 0 && <div className="rounded bg-warning/15 text-warning text-xs p-2 flex gap-2 items-center" data-testid="scan-lost-photos">{t("scan.photosLost", { count: lostCount })} <Button size="sm" variant="ghost" onClick={clearLost} data-testid="scan-lost-clear">{t("common.close")}</Button></div>}
       {/* §7.2 burst mode, P-20 (D-11): counter and running list of this session's readings, below the camera, never over it. */}
       <section className="rounded border border-border p-3" data-testid="scan-session">
         <p className="flex items-baseline gap-2">
@@ -572,8 +590,9 @@ export default function Scan() {
         )}
       </section>
       {selectedDdt && (
-        <section className="rounded border border-border p-3" data-testid="scan-ddt-section">
-          <h2 className="font-semibold mb-1">{t("scan.ddt.title", { number: selectedDdt.number })}</h2>
+        <details className="rounded border border-border px-3" data-testid="scan-ddt-section">
+          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-ddt-toggle">{t("scan.ddt.title", { number: selectedDdt.number })} · <span className="tabular" data-testid="scan-ddt-progress">{ddtTicks.size}/{ddtExpected.length}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
+          <div className="pb-3">
           <p className="flex flex-wrap gap-4 text-sm tabular">
             <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtTicks.size}</span> {t("scan.ddt.arrived")}</span>
             <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtExpected.length - ddtTicks.size}</span> {t("scan.ddt.missing")}</span>
@@ -599,38 +618,31 @@ export default function Scan() {
               {ddtUnexpected.map((c) => <li key={c} className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" aria-hidden /><span className="truncate">{c}</span> {t("scan.ddt.unexpected")}</li>)}
             </ul>
           )}
-        </section>
+          </div>
+        </details>
       )}
       {camError && <p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
-      <div className="flex flex-wrap gap-2 items-center">
-        {torch !== null && <Button variant="secondary" onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
-        {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
-          <input type="range" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
-        <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</Button>
-        {/* P-108: a button that cannot be used yet looks like one (dashed border, grey), and says why. */}
-        <Button variant="secondary" disabled={!session.length} onClick={undo} className={OFF} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
-        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
-        {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
-        <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
-        {aiOn && (
-          <>
-            <Button variant="secondary" onClick={readLabel} disabled={labelBusy} data-testid="scan-ai-label"><Sparkles className="h-5 w-5" /> {labelBusy ? t("scan.aiLabelReading") : t("scan.aiLabel")}</Button>
-            <input ref={labelInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void onLabelFile(e)} data-testid="scan-ai-label-input" />
-          </>
-        )}
-        <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
-        <Checkbox id="scan-product" label={t("scan.askProduct")} checked={askProduct} onChange={setAskProduct} testId="scan-ask-product" />
-      </div>
-      {lostCount > 0 && <div className="rounded bg-warning/15 text-warning text-xs p-2 flex gap-2 items-center" data-testid="scan-lost-photos">{t("scan.photosLost", { count: lostCount })} <Button size="sm" variant="ghost" onClick={clearLost} data-testid="scan-lost-clear">{t("common.close")}</Button></div>}
       <form onSubmit={(e) => { e.preventDefault(); void onCode(wedge, "wedge"); setWedge(""); }}>
         <Input inputMode="none" autoFocus aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono" />
       </form>
-      <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void onCode(manual, "manual"); setManual(""); }}>
-        <Input ref={manualInput} inputMode="text" aria-label={t("scan.manual")} placeholder={t("scan.manual")} value={manual} onChange={(e) => setManual(e.target.value)} data-testid="scan-manual-input" className="font-mono" />
-        <Button type="submit" data-testid="scan-manual-submit">{t("common.confirm")}</Button>
-      </form>
-      <section>
-        <h2 className="font-semibold mb-2">{t("scan.today")}</h2>
+      {/* P-134 (D-62 criteria 8, 9): one place when the code cannot be read. Without network the label photo is not
+          offered (D-49): the digits remain. */}
+      <section className="space-y-2" data-testid="scan-cannot-read">
+        <h2 className="text-sm font-semibold">{t("scan.cannotRead")}</h2>
+        {aiOn && online && (
+          <>
+            <Button variant="secondary" className="w-full" onClick={readLabel} disabled={labelBusy} data-testid="scan-ai-label"><Sparkles className="h-5 w-5" /> {labelBusy ? t("scan.aiLabelReading") : t("scan.aiLabel")}</Button>
+            <input ref={labelInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => void onLabelFile(e)} data-testid="scan-ai-label-input" />
+          </>
+        )}
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void onCode(manual, "manual"); setManual(""); }}>
+          <Input ref={manualInput} inputMode="text" aria-label={t("scan.manual")} placeholder={t("scan.manual")} value={manual} onChange={(e) => setManual(e.target.value)} data-testid="scan-manual-input" className="font-mono" />
+          <Button type="submit" data-testid="scan-manual-submit">{t("common.confirm")}</Button>
+        </form>
+      </section>
+      <details className="rounded border border-border px-3" data-testid="scan-today-section">
+        <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-today-toggle">{t("scan.today")} · <span className="tabular" data-testid="scan-today-count">{todayRows.length}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
+        <div className="pb-3">
         {todayRows.length === 0 ? <p className="text-sm text-muted">{t("scan.todayEmpty")}</p> : (
           <ul className="space-y-1 text-sm" data-testid="scan-today-list">
             {todayRows.map((s) => (
@@ -643,15 +655,17 @@ export default function Scan() {
             ))}
           </ul>
         )}
-      </section>
+        </div>
+      </details>
 
       {bom && bomDirection && (
-        <section data-testid="scan-bom-section" className="rounded border border-border p-3">
-          <h2 className="font-semibold mb-1 flex items-center gap-2">
-            {t("scan.bom.title")}
-            <span className="text-xs text-muted font-mono">{bom.id.slice(0, 8)}</span>
-            <span className="ml-auto text-sm tabular" data-testid="scan-bom-count">{bomTicks.size}/{bom.expected.length}</span>
-          </h2>
+        <details data-testid="scan-bom-section" className="rounded border border-border px-3">
+          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-bom-toggle">
+            {t("scan.bom.title")} · <span className="tabular" data-testid="scan-bom-count">{bomTicks.size}/{bom.expected.length}</span>
+            <span className="text-xs text-muted font-mono font-normal">{bom.id.slice(0, 8)}</span>
+            <ChevronDown className="ml-auto h-5 w-5" aria-hidden />
+          </summary>
+          <div className="pb-3">
           <p className="text-xs text-muted mb-2">{t(`scan.bom.direction.${bomDirection}`)}</p>
           {bom.expected.length === 0 ? (
             <p className="text-sm text-muted">{t("scan.bom.noLines")}</p>
@@ -679,7 +693,8 @@ export default function Scan() {
               </ul>
             </>
           )}
-        </section>
+          </div>
+        </details>
       )}
 
       <Dialog open={!!label} onOpenChange={(o) => { if (!o) setLabel(null); }}>

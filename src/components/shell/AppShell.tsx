@@ -32,6 +32,7 @@ export function AppShell() {
   const online = useOnline();
   const loc = useLocation();
   React.useEffect(() => { setDrawer(false); }, [loc.pathname]);
+  const onScan = loc.pathname === "/scan";
   useInactivity(shell === "desk" && !narrow && authSettings.inactivityEnabled, authSettings.inactivityMinutes, safeSignOut);
 
   return (
@@ -45,11 +46,12 @@ export function AppShell() {
       {shell === "desk" && !online && <div role="status" className="border-b border-border bg-warning/15 px-4 py-2 text-sm" data-testid="desk-offline-strip">{t("status.offlineStrip")}</div>}
       <div className="flex flex-1 min-h-0">
         <Sidebar />
-        <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && "pb-28")} data-testid="main-content">
+        <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && !onScan && "pb-28")} data-testid="main-content">
           <Outlet />
         </main>
       </div>
-      {isAspRole(role) && <ScanButton />}
+      {/* P-134: on the scanning page the floating button would only cover the screen. */}
+      {isAspRole(role) && !onScan && <ScanButton />}
       <Dialog open={drawer} onOpenChange={setDrawer}>
         <DialogContent title={t("nav.menu")} side="left" className={cn(shell === "field" && "theme-field")}>
           {isAspRole(role) && <div className="mb-4 sm:hidden"><LocationChip /></div>}

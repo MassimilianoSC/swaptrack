@@ -411,7 +411,7 @@
     "sortHint": "Conferma la categoria suggerita o scegline un'altra. Per una serie di pezzi uguali scegli una categoria fissa nella tendina: si registrano senza conferma.",
     "burst": "Raffica (la fotocamera riparte da sola dopo ogni lettura)",
     "readNext": "Leggi il prossimo",
-    "aiLabel": "Leggi dalla foto dell'etichetta",
+    "aiLabel": "Fotografa l'etichetta",
     "aiLabelReading": "Lettura della foto…",
     "aiLabelOffline": "Serve la connessione per leggere la foto: scrivi il codice a mano qui sotto.",
     "aiLabelNone": "Nella foto non è stato trovato nessun codice: riprova o scrivilo a mano.",
@@ -421,7 +421,8 @@
       "ai_codes_dropped": "Alcuni codici non erano leggibili e non compaiono.",
       "ai_no_codes": "Nessun codice leggibile nella foto."
     },
-    "sortingMissing": "Le categorie di smistamento non sono ancora sul telefono: servono la rete per scaricarle. Intanto registra solo l'arrivo e smista dopo."
+    "sortingMissing": "Le categorie di smistamento non sono ancora sul telefono: servono la rete per scaricarle. Intanto registra solo l'arrivo e smista dopo.",
+    "cannotRead": "Il codice non si legge?"
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

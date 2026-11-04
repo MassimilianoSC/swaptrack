@@ -84,7 +84,7 @@ test.describe.serial("Lettura automatica dei documenti (scrivania)", () => {
     }
   });
 
-  test("etichetta rovinata senza rete: il pulsante spiega e porta alle cifre a mano", async ({ page, context }) => {
+  test("etichetta rovinata senza rete: la foto dell'etichetta non è offerta, restano le cifre a mano", async ({ page, context }) => {
     test.setTimeout(120_000);
     await setAi(true);
     try {
@@ -92,10 +92,10 @@ test.describe.serial("Lettura automatica dei documenti (scrivania)", () => {
       await pickLocation(page, SEED.nord.warehouse);
       await page.goto("/scan?mode=classify");
       await expect(page.getByTestId("scan-ai-label")).toBeVisible();
+      // P-134 (D-49, D-62 criterion 4): without network the label photo is not offered; the digits stay in the same place.
       await context.setOffline(true);
-      await page.getByTestId("scan-ai-label").click();
-      await expect(page.getByText(tr("scan.aiLabelOffline"))).toBeVisible();
-      await expect(page.getByTestId("scan-manual-input")).toBeFocused();
+      await expect(page.getByTestId("scan-ai-label")).toHaveCount(0);
+      await expect(page.getByTestId("scan-cannot-read").getByTestId("scan-manual-input")).toBeVisible();
       await context.setOffline(false);
     } finally {
       await setAi(false);

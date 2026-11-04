@@ -11,7 +11,8 @@
         "row-actions.desk.spec.ts",
         "ddt-late.desk.spec.ts",
         "excel-mapping-slow.desk.spec.ts",
-        "shared-phone.phone.spec.ts"
+        "shared-phone.phone.spec.ts",
+        "scan-tidy.phone.spec.ts"
       ]
     },
     {
