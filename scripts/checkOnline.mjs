@@ -1,7 +1,9 @@
-// P-67: READ-ONLY check before publishing batch 1. Prints counts only, never data of people:
+// P-67: READ-ONLY check before publishing a batch and before the demo. Prints counts only, never data of people:
 //   - events with no processedAt (never processed by the trigger), by type;
 //   - documents with aspId null (saved by a client role before P-49), by kind;
-//   - BOMs with lines without direction (P-92), and how many lines.
+//   - BOMs with lines without direction (P-92), and how many lines;
+//   - before the demo: documents of the AI procedure and demo DDTs already saved, demo label codes already read,
+//     shipment drafts, open alerts and anomalies, pieces to complete, the AI switch.
 // Target: the emulators by default (project demo-swaptrack). The real demo project only with BOTH
 //   CHECK_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
 // (PowerShell: $env:CHECK_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: CHECK_REAL_PROJECT=kronos-caffe-sito node ...)
@@ -35,6 +37,31 @@ print("Documents with aspId null, by kind", countBy(docs.docs, "kind"));
 const boms = await db.collection("documents").where("kind", "==", "bom").select("lines").get();
 const undirected = boms.docs.map((d) => (d.get("lines") ?? []).filter((l) => !l?.direction).length).filter((n) => n > 0);
 console.log(`\nBOMs read: ${boms.size}; BOMs with lines without direction: ${undirected.length} (${undirected.reduce((a, b) => a + b, 0)} lines)`);
-console.log(pending.length || docs.size || undirected.length
+const toFix = pending.length || docs.size || undirected.length;
+console.log(toFix
   ? "\nSend these numbers to the team: something must be fixed before or right after the batch."
   : "\nNothing to fix: no unprocessed event, no document without ASP, no BOM line without direction.");
+
+// Before the demo: what the manual checks and the AI procedure (P-124) may have left. Counts and invented demo
+// numbers only (documents and codes of demo-docs), never people.
+console.log("\n--- Before the demo (what the checks may have left)");
+const allDocs = await db.collection("documents").select("number", "kind", "status").get();
+const byNumber = (prefix) => allDocs.docs.filter((d) => String(d.get("number") ?? "").startsWith(prefix));
+const listDocs = (title, list) => {
+  console.log(`${title}: ${list.length}`);
+  for (const d of list) console.log(`  ${d.get("number")} (${d.get("kind")}, ${d.get("status")})`);
+};
+listDocs("Documents of the AI procedure (AI-PROVA-…), to close before the demo", byNumber("AI-PROVA"));
+listDocs("Demo DDTs already saved (TD-2026-…): the demo would see «already exists»", byNumber("TD-2026-"));
+const demoCodes = await db.collection("codes").where("raw", ">=", "TD26").where("raw", "<", "TD27").select("raw").get();
+console.log(`Codes of the demo labels already read (TD26…): ${demoCodes.size}${demoCodes.size ? ` (${demoCodes.docs.map((d) => d.get("raw")).sort().join(", ")})` : ""}`);
+const drafts = await db.collection("shipments").where("status", "==", "draft").select("kind").get();
+print("Shipment drafts still open, by kind", countBy(drafts.docs, "kind"));
+const alerts = await db.collection("alerts").where("closedAt", "==", null).select("kind").get();
+print("Open alerts, by kind", countBy(alerts.docs, "kind"));
+const anomalies = await db.collection("anomalies").where("resolution", "==", null).select("type").get();
+print("Open anomalies, by type", countBy(anomalies.docs, "type"));
+const toComplete = (await db.collection("items").where("needsModel", "==", true).count().get()).data().count;
+console.log(`\nPieces «to complete» (no model): ${toComplete}`);
+const features = (await db.collection("settings").doc("features").get()).data() ?? {};
+console.log(`Automatic reading (AI): ${features.aiDocumentExtraction ? "ON" : "off"}, daily limit per person ${features.aiDailyLimit ?? 20}`);
