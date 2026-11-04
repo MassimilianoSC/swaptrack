@@ -185,6 +185,9 @@ Serve: lotto 2 pubblicato (con 69df411, registro «ai_call»), i file di `node s
 9. Il giorno dopo: Fatturazione → Report, servizio Vertex AI, raggruppato per SKU, giorno della prova.
 Da riferire: una riga per passo (secondi, righe giuste/sbagliate/mancanti, avvisi, note), le righe del registro, il costo.
 
+### Prima della demo (9–10/11): controllo dei dati online (o2, `checkOnline.mjs`, sola lettura)
+Dalla cartella del progetto, in PowerShell: (se lo chiede) `gcloud auth application-default login`; `$env:CHECK_REAL_PROJECT="kronos-caffe-sito"`; `node scripts/checkOnline.mjs --yes-real-project`. Mandare il testo dalla riga «REAL project» in giù. Controlla: eventi mai elaborati, documenti senza ASP, BOM senza direzione, documenti AI-PROVA aperti (da chiudere), DDT TD-2026-… e codici TD26… già usati (alla demo non sarebbero «nuovi»: usare l'altro DDT o rigenerare i file), bozze di spedizione aperte, avvisi e anomalie per tipo (seed: 6 e 6), pezzi da completare, interruttore AI e limite.
+
 ## P-31 Documentazione per l'utente e il collaudo
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.
