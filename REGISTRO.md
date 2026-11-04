@@ -4,6 +4,7 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO
 
+- **04/11/2026 sera — FERMATA (decisione del committente), tutto rinviato a domani, anche il giro.** Online: app di 619a942 (lotto 5: P-136 codice prodotto, P-134 schermata di lettura, P-135 guida nell'app), pubblicata a mano solo l'app (D-65); server = lotto 3 (2a1cf61). main = GitHub = 619a942. Il giro completo di 619a942 NON è stato fatto. **Domani, nell'ordine:** (1) il committente rifà le prove sul telefono con lettura singola e raffica; (2) si affronta la modifica nuova: avviso quando si rilegge un pezzo già registrato, in questa sessione o prima (proposta: avviso giallo, lettura inviata comunque; da decidere); (3) poi anteprima (D-67), un solo giro, pubblicazione. Sui rami: o2 previewApp.mjs e previewLocal.mjs (P-137), o2-n14 (dopo la demo). P-138 (analisi del tempo reale) con il committente.
 - **04/11/2026: LOTTO 3 PUBBLICATO** (2a1cf61, `deployBatch.mjs --yes`, giro completo verde 89/89, 8 router OK). Main sbloccato. Prossimo: la schermata di lettura (P-133) con il committente; poi i suoi controlli a mano, la prova dell'AI, i telefoni.
 - **03/11/2026 sera — FERMATA PER OGGI (decisione del committente).** Finito il compito in corso, o2 e o3 si fermano del tutto fino a domani.
   - **Online:** lotto 2, commit 1887717, pubblicato a mano con i comandi di deployBatch (D-61); 8 router raggiungibili. Giro completo a blocchi con 3 rosse, tutte verdi da sole su emulatori nuovi (rallentamento dell'emulatore, D-60).
