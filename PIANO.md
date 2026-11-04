@@ -58,6 +58,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | P-121 | Interruttore «Raffica», spento di partenza, con «Leggi il prossimo» (D-55) | o3 | 03/11/2026 (64fc3a6) |
 | P-111 | Etichetta rovinata letta dalla foto con l'AI e confermata da chi legge (D-49, D-51) | o2 + o3 | 03/11/2026 (37eca36, 3b79354) |
 | P-31a | Testi nuovi della pagina «Guida» nell'app, per ruolo | reg + o3 | 03/11/2026 (976d8c4) |
+| P-135 | Guida completa dentro l'app: `GUIDA.html` copiata dalla build come /guida.html (una sola fonte), in cache per l'uso senza rete, pulsante «Apri la guida completa» che apre la sezione del proprio ruolo. Senza rete su iPhone da verificare sul telefono | o3 + reg | 04/11/2026 (9940269) |
 | P-134 | Schermata di lettura, correzioni piccole (D-63): reso e trasferimento solo dalla spedizione; niente «Leggi» flottante; «Il codice non si legge?» con «Fotografa l'etichetta» e le cifre; pannelli apribili con il conteggio; Foto e Annulla sotto la fotocamera, nel primo schermo (Arrivo con DDT: da y 1047 a 513) | o3 | 04/11/2026 (76dd66e) |
 | P-22 | Foto scattata senza rete, da capo a fondo: parte da sola alla riapertura, compare nella pagina del pezzo, su Storage senza EXIF né GPS (server 51d5391, schermata b834431) | o2 + o3 | 04/11/2026 |
 | P-87 | Telefono condiviso (D-40): nessuna uscita volontaria con dati in coda, foto mai a nome di chi entra, avviso con due scelte se entra un altro utente con dati del precedente non inviati | o3 | 03/11/2026 (abaa679, 36b8439, 3e1f5a8) |
