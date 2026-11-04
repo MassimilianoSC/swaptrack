@@ -70,4 +70,22 @@ test.describe("Codice prodotto dopo il seriale (telefono)", () => {
     await page.getByTestId("scan-sort-defective").click();
     await expect(page.getByTestId("scan-session-row").filter({ hasText: c })).toHaveCount(1);
   });
+  test("senza catalogo dei modelli sul telefono la casella è spenta e lo dice", async ({ page }) => {
+    test.setTimeout(180_000);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    // The phone loses its copy of the data (catalog included) and cannot reach Firestore: no catalog at all. The copy is
+    // removed from a page without the app (/guida.html), so no database connection holds it open.
+    await page.goto("/guida.html");
+    await page.evaluate(async () => {
+      for (const d of await indexedDB.databases()) {
+        if (d.name?.startsWith("firestore/")) await new Promise<void>((done) => { const r = indexedDB.deleteDatabase(d.name!); r.onsuccess = r.onerror = r.onblocked = () => done(); });
+      }
+    });
+    await page.route((url) => url.pathname.includes("google.firestore"), (r) => r.abort());
+    await page.goto("/scan?mode=arrive_at_warehouse");
+    await expect(page.getByTestId("scan-ask-product-nocatalog")).toHaveText(tr("scan.askProductNoCatalog"), { timeout: 60_000 });
+    await expect(page.getByTestId("scan-ask-product")).toBeDisabled();
+    await expect(page.getByTestId("scan-ask-product")).not.toBeChecked();
+  });
 });
