@@ -61,6 +61,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
   4. riferire alla memoria storica (§7).
   Se il merge è rifiutato perché `main` è avanzato: si rifà rebase e catena e si riprova. Un conflitto su un file dell'altra sessione: `git rebase --abort` e si segnala alla memoria storica, non si risolve da soli.
   Il committente ha dato un permesso preventivo a questi due comandi, alle prove, a `git add` e `git commit` (regole già nelle sue impostazioni). Se un comando del merge viene comunque rifiutato, non si cercano altre strade: si manda l'hash alla memoria storica con il testo del rifiuto, e il `merge --ff-only` lo lancia lei.
+- **Ordine di un lotto (D-67):** modifiche con le loro prove mirate; controllo del committente su un'anteprima (`node scripts/previewApp.mjs` se cambia solo l'app, `node scripts/previewLocal.mjs` se cambia anche il server); correzioni; un solo giro completo; pubblicazione. Le rosse del giro si rilanciano da sole e si riparano in modo isolato (D-61).
 - **Mai push, mai deploy, mai migrazioni del database online, mai segreti, mai scritture sul cloud.** Li fa il committente. Online va solo ciò che è in git, a lotti, dopo un giro completo di prove lanciato da una sola sessione; in quel momento `main` è congelato (lo annuncia la memoria storica) e non si avviano altre prove pesanti; o2 e o3 continuano sui loro rami.
 
 ## 5. Comandi (Git Bash dello strumento, sempre dalla propria copia: `cd <propria copia> && …`)
