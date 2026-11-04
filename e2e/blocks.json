@@ -52,15 +52,21 @@
       ]
     },
     {
-      "name": "telefono",
+      "name": "telefono-letture",
       "seed": "full",
       "files": [
         "camera-repeat.phone.spec.ts",
         "scan-data.phone.spec.ts",
         "photos.phone.spec.ts",
+        "model-search.phone.spec.ts"
+      ]
+    },
+    {
+      "name": "telefono-accesso",
+      "seed": "full",
+      "files": [
         "signout-safety.phone.spec.ts",
         "deactivated.phone.spec.ts",
-        "model-search.phone.spec.ts",
         "phone-width.phone.spec.ts",
         "signin-speed.phone.spec.ts",
         "site-list-retry.phone.spec.ts",
