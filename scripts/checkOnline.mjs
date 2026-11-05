@@ -4,20 +4,32 @@
 //   - BOMs with lines without direction (P-92), and how many lines;
 //   - before the demo (P-142): documents of the AI procedure (open and closed), demo DDTs already saved, documents
 //     with demo serials TD26… in their lines, BOMs of the demo site SITO-00013, demo label codes already read with the
-//     state and place of their piece, shipment drafts, open alerts and anomalies, pieces to complete, the AI switch.
+//     state and place of their piece, shipment drafts, open alerts and anomalies, pieces to complete, the AI switch;
+//   - what the demo script takes for granted (DEMO_PREREQUISITI, short version): the seven accounts (role and
+//     organization only), counts of organizations, places, models, sorting categories and rule, the settings, the
+//     dates of the readings and the month for «Reports», the aggregates, demo serials already expected, /guida.html.
 // Target: the emulators by default (project demo-swaptrack). The real demo project only with BOTH
 //   CHECK_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
 // (PowerShell: $env:CHECK_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: CHECK_REAL_PROJECT=kronos-caffe-sito node ...)
 // (credentials: gcloud auth application-default login). Nothing is ever written.
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+import { createRequire } from "node:module";
 import { hostOf } from "./emulatorPorts.mjs";
+import { DEMO_DOMAIN } from "./demoAccounts.mjs";
+import { ORGS, seedModels } from "./seedCatalog.mjs";
 
+const { computeCodeId } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
 const REAL = process.env.CHECK_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
-if (!REAL) process.env.FIRESTORE_EMULATOR_HOST ??= hostOf("firestore");
+if (!REAL) {
+  process.env.FIRESTORE_EMULATOR_HOST ??= hostOf("firestore");
+  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= hostOf("auth");
+}
 const PROJECT = REAL ? "kronos-caffe-sito" : "demo-swaptrack";
 initializeApp({ projectId: PROJECT });
 const db = getFirestore();
+const auth = getAuth();
 
 const countBy = (docs, field) => docs.reduce((m, d) => m.set(String(d.get(field)), (m.get(String(d.get(field))) ?? 0) + 1), new Map());
 const print = (title, m) => {
@@ -80,3 +92,68 @@ const toComplete = (await db.collection("items").where("needsModel", "==", true)
 console.log(`\nPieces «to complete» (no model): ${toComplete}`);
 const features = (await db.collection("settings").doc("features").get()).data() ?? {};
 console.log(`Automatic reading (AI): ${features.aiDocumentExtraction ? "ON" : "off"}, daily limit per person ${features.aiDailyLimit ?? 20}`);
+
+// What the demo script takes for granted online (swaptrack-guida/DEMO_PREREQUISITI.md, short version agreed with the
+// team). OK/NO per line; roles, organizations, codes, states and numbers only, never an e-mail.
+console.log("\n--- What the demo script takes for granted");
+let no = 0;
+const line = (ok, text) => { if (!ok) no++; console.log(`${ok ? "OK  " : "NO  "} ${text}`); };
+const settings = Object.fromEntries(await Promise.all(["app", "auth", "privacy", "branding"].map(async (id) => [id, (await db.collection("settings").doc(id).get()).data() ?? {}])));
+// A) The seven accounts of the script: claims, profile, Auth on, privacy notice already accepted.
+const ACCOUNTS = [["asp_warehouse", "nord"], ["asp_technician", "nord"], ["asp_admin", "nord"], ["client_warehouse", "telco"], ["client_office", "telco"], ["client_admin", "telco"], ["asp_warehouse", "centro"]];
+for (const [role, slug] of ACCOUNTS) {
+  const orgId = ORGS.find((o) => o.slug === slug).id;
+  const user = await auth.getUserByEmail(`${role.replace("_", ".")}.${slug}@${DEMO_DOMAIN}`).catch(() => null);
+  if (!user) { line(false, `account ${role} of ${orgId}: missing`); continue; }
+  const profile = (await db.collection("users").doc(user.uid).get()).data() ?? {};
+  const c = user.customClaims ?? {};
+  const wrong = [
+    !(c.role === role && c.orgId === orgId && c.active === true) && "claims",
+    !(profile.role === role && profile.orgId === orgId && profile.active === true) && "profile",
+    user.disabled && "Auth disabled",
+  ].filter(Boolean);
+  line(!wrong.length, `account ${role} of ${orgId}${wrong.length ? `: wrong ${wrong.join(", ")}` : ""}`);
+  const accepted = profile.privacyNoticeVersion != null && profile.privacyNoticeVersion === settings.privacy.version;
+  console.log(`       privacy notice: ${accepted ? `accepted (v${profile.privacyNoticeVersion})` : `not accepted (v${profile.privacyNoticeVersion ?? "—"} of v${settings.privacy.version ?? "—"}): shown at the first sign-in`}`);
+}
+// B–E) One count each.
+const active = async (col) => (await db.collection(col).where("active", "==", true).count().get()).data().count;
+line((await active("organizations")) >= ORGS.length, `active organizations: ${await active("organizations")} (the seed has ${ORGS.length})`);
+const places = await db.getAll(...["MAG-NORD-01", "MAG-CLI-01", "SITO-00013", "MAG-CENTRO-01"].map((c) => db.collection("locations").doc(`loc_${c}`)), { fieldMask: ["active"] });
+line(places.every((p) => p.exists && p.get("active") === true), `places of the script (MAG-NORD-01, MAG-CLI-01, SITO-00013, MAG-CENTRO-01) active: ${places.filter((p) => p.exists && p.get("active") === true).length} of 4`);
+const models = seedModels().length;
+line((await active("models")) >= models, `active models: ${await active("models")} (the seed has ${models})`);
+line((await active("sortingCategories")) >= 3, `active sorting categories: ${await active("sortingCategories")} (reuse, refurbish, scrap)`);
+const rule = (await db.collection("sortingRules").doc("rule_type_radio").get()).data();
+line(rule?.active === true && rule?.categoryId === "cat_refurbish", `sorting rule Radio unit → cat_refurbish: ${rule ? (rule.active ? `active, ${rule.categoryId}` : "off") : "missing"}`);
+// F) Settings, the values the script shows.
+console.log(`       settings: app minVersion «${settings.app.minVersion ?? ""}», e-mail ${settings.app.emailConfigured ? "ON" : "off"}; Google sign-in ${settings.auth.google ? "ON" : "off"}, inactivity sign-out ${settings.auth.inactivityEnabled ? "ON" : "off"}; privacy v${settings.privacy.version ?? "—"}; app name «${settings.branding.appName ?? ""}»; AI ${features.aiDocumentExtraction ? "ON" : "off"}`);
+line(!settings.app.minVersion, "no minimum app version (no phone is asked to update)");
+// G) The dates of the readings: the month to pick in «Reports» → «Generate».
+const months = new Map();
+const monthOf = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit" });
+const dates = (await db.collection("events").select("scannedAt").get()).docs.map((d) => d.get("scannedAt")?.toDate?.()).filter(Boolean);
+for (const d of dates) { const m = monthOf.format(d).slice(0, 7); months.set(m, (months.get(m) ?? 0) + 1); }
+const day = (d) => d.toISOString().slice(0, 10);
+const sorted = dates.sort((a, b) => a - b);
+console.log(`       readings: ${dates.length}${dates.length ? `, from ${day(sorted[0])} to ${day(sorted.at(-1))}` : ""}; by month: ${[...months].sort().map(([m, n]) => `${m} ${n}`).join(", ") || "—"}`);
+const best = [...months].sort((a, b) => b[1] - a[1])[0];
+line(!!best, `month to pick in «Reports»: ${best ? `${best[0]} (${best[1]} readings)` : "none, no readings"}`);
+const aggregates = (await db.collection("aggregates").count().get()).data().count;
+line(aggregates > 0, `aggregates (home dashboard): ${aggregates}${aggregates ? "" : " — the dashboard is empty until the nightly recount"}`);
+// H) The serials of the demo labels must not be expected by any document yet.
+const DEMO_SERIALS = [
+  ...Array.from({ length: 8 }, (_, i) => `TD260412${String(i + 1).padStart(3, "0")}`), ...Array.from({ length: 44 }, (_, i) => `TD260413${String(i + 1).padStart(3, "0")}`),
+  "TD260499001", ...Array.from({ length: 5 }, (_, i) => `TD26R13${String(i + 1).padStart(3, "0")}`), ...Array.from({ length: 4 }, (_, i) => `TD26I13${String(i + 1).padStart(3, "0")}`),
+];
+const codeIds = DEMO_SERIALS.map((s) => computeCodeId(s));
+const expected = [];
+for (let i = 0; i < codeIds.length; i += 30) expected.push(...(await db.collection("expectedCodes").where("codeId", "in", codeIds.slice(i, i + 30)).select("codeId").get()).docs);
+const expectedSerials = [...new Set(expected.map((d) => DEMO_SERIALS[codeIds.indexOf(d.get("codeId"))]))].sort();
+line(!expected.length, `demo serials expected by a document already (expectedCodes): ${expected.length}${expected.length ? ` — ${expectedSerials.join(", ")}` : ""}`);
+// I) The guide of the app (the published site only).
+if (REAL) {
+  const status = await fetch("https://swaptrack-demo.web.app/guida.html", { method: "HEAD" }).then((r) => r.status, () => "no answer");
+  line(status === 200, `https://swaptrack-demo.web.app/guida.html: ${status}`);
+} else console.log("       guida.html: checked only on the real project");
+console.log(no ? `\n${no} line(s) NO: send them to the team before the demo.` : "\nEverything the demo script takes for granted is there.");
