@@ -263,3 +263,5 @@ const users = {
 // asp_admin may only invite or manage the roles of their own ASP.
 export const ASSIGNABLE_BY_ASP_ADMIN = ASP_ROLES.filter((r) => r !== "asp_admin");
 export const usersRouter = makeRouter("users", users);
+// Exported for the emulator tests (functions/test), which call the handlers in-process.
+export const usersOps = users;
