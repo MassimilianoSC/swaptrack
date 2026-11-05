@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 5160465 · Testo della guida: sha 686b21707fe0 · Data: 04/11/2026
+App descritta: commit 1854879 · Testo della guida: sha 759dc5339240 · Data: 05/11/2026
 
 ## Come usare questa guida
 
@@ -235,6 +235,22 @@ Da sapere:
 Se qualcosa va storto:
 - «Fotocamera non consentita. Su iPhone: Impostazioni > Safari > Fotocamera (o le impostazioni dell'app installata). Puoi digitare il codice qui sotto.»: dai il permesso della fotocamera, oppure scrivi il codice a mano.
 - «Il motore di lettura non è disponibile: digita il codice qui sotto.»: usa il campo per scrivere a mano.
+
+### Cosa succede se rileggi un pezzo?
+
+Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si trova già dove sei. Ci sono tre casi.
+
+1. **L'hai appena letto, nella stessa lettura.** Hai già letto quel pezzo, per la stessa operazione e nello stesso posto, da quando hai aperto la schermata. Compare un avviso giallo, per esempio «… già letto poco fa (alle 10:42)». La lettura **non** viene registrata di nuovo e il contatore non sale. Vale con la fotocamera, la pistola e le cifre a mano. Se hai premuto «Annulla l'ultima» su quel pezzo, puoi rileggerlo normalmente.
+2. **Il pezzo è già qui, nello stesso stato.** Per esempio registri l'arrivo di un pezzo che risulta già arrivato in questo magazzino. Compare un avviso giallo, per esempio «… è già a MAG-NORD-01 · Magazzino Nord dal 04/11/26, 18:10». La lettura viene comunque inviata e non cambia niente. Nell'elenco la riga dice «già qui» e il contatore non la conta come pezzo nuovo.
+3. **Il pezzo risulta in uno stato che non torna.** Per esempio è già installato in un sito, è già stato reso, o è in un altro magazzino senza trasferimento. Compare un avviso **rosso**, per esempio «… risulta "Installato" a SITO-00001 · …: controlla l'etichetta». La lettura viene comunque inviata e l'ufficio la trova tra le anomalie. Guarda bene l'etichetta: potrebbe essere sul pezzo sbagliato.
+
+Da sapere:
+- Senza rete l'app usa i dati che ha già sul telefono, che possono essere vecchi: per questo nei casi 2 e 3 la lettura parte sempre. Solo il caso 1 è sicuro.
+- Se il pezzo appartiene a un'altra ASP, il telefono non lo vede (per riservatezza) e non avvisa: se ne accorge il server, che apre l'anomalia per l'ufficio.
+- Se il pezzo si trova in un posto che il telefono non conosce, l'avviso scrive «un altro luogo».
+- Con la rete lenta, prima del lampo verde può passare fino a un paio di secondi in più: l'app sta controllando il pezzo.
+
+Questo comportamento è una scelta, non un limite: se nel vostro lavoro deve essere diverso (per esempio bloccare anche il caso 2, oppure non avvisare), chiedetelo a chi gestisce SwapTrack.
 
 ### Come registro lo smontaggio dei pezzi in un sito?
 
