@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 4a6c0a0 · Guide text: sha f4e6c7bdfdf7 · Date: 05/11/2026
+App described: commit 4a6c0a0 · Guide text: sha eceb80ceaafc · Date: 05/11/2026
 
 ## How to use this guide
 
@@ -592,7 +592,7 @@ All the corrections stay in the history of the piece.
 2. You see how many pieces of your ASP are «At ASP warehouse», «Installed», «Removed at site», «Returned», «Sorted», «Defective», «Leftover», «In transfer». Tap a number to open the list of the pieces.
 3. Further down: «By flow and status», «By region», «Top models», «By manufacturer», «Sorting outcome» (with the name of every category), «Removed, of which previously new», «Warehouses».
 
-The numbers are updated after the scans and every night: a scan you have just made may appear a few minutes later. Reopen the page to see the latest ones.
+The numbers are updated after the scans and every night: a scan that has just been sent is counted a few seconds later. Reopen the page to see the latest ones.
 
 ### How do I download an export?
 

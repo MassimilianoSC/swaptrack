@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 4a6c0a0 · Testo della guida: sha 0fbbc64c9d56 · Data: 05/11/2026
+App descritta: commit 4a6c0a0 · Testo della guida: sha 5781d2bbde74 · Data: 05/11/2026
 
 ## Come usare questa guida
 
@@ -592,7 +592,7 @@ Tutte le correzioni restano nella storia del pezzo.
 2. Vedi quanti pezzi della tua ASP sono «Al magazzino ASP», «Installato», «Smontato in sito», «Reso», «Smistato», «Difettoso», «Avanzo», «In trasferimento». Tocca un numero per aprire l'elenco dei pezzi.
 3. Più sotto: «Per flusso e stato», «Per regione», «Modelli più presenti», «Per produttore», «Esito smistamento» (con il nome di ogni categoria), «Smontati, di cui prima nuovi», «Magazzini».
 
-I numeri si aggiornano dopo le letture e ogni notte: una lettura appena fatta può comparire qualche minuto dopo. Riapri la pagina per vedere gli ultimi.
+I numeri si aggiornano dopo le letture e ogni notte: una lettura appena inviata entra nei numeri pochi secondi dopo. Riapri la pagina per vedere gli ultimi.
 
 ### Come scarico un export?
 
