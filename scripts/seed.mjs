@@ -115,7 +115,8 @@ async function main() {
 
   console.log(`Seeded ${ORGS.length} organizations, ${accounts.length} users, ${locations.length} locations, ${models.length} models.`);
   console.table(accounts.map(([email, role, org]) => ({ email, role, org })));
-  if (!REAL) console.log(`Password of every account on the emulators: ${DEMO_PASSWORD}`);
+  // Never printed (it is in the README and the e2e helpers; a log can end up anywhere).
+  if (!REAL) console.log("Password of every account on the emulators: see README");
 }
 
 main().then(() => process.exit(0), (e) => { console.error(e); process.exit(1); });
