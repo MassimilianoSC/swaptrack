@@ -95,7 +95,8 @@ export default function Items() {
         <Button type="submit" data-testid="items-search-submit">{t("common.search")}</Button>
       </form>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-end" data-testid="items-filters">
+      {/* Aligned at the top: the hint under "Site or warehouse" must not push its box above the others. */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-start" data-testid="items-filters">
         <Field label={t("items.filters.status")} htmlFor="f-status">
           <Select id="f-status" value={filters.status ?? ""} onChange={(e) => setFilter("status", e.target.value || null)} data-testid="items-filter-status">
             <option value="">{t("items.filters.all")}</option>
@@ -122,7 +123,13 @@ export default function Items() {
             {[...models].sort((a, b) => (a.model ?? "").localeCompare(b.model ?? "", i18n.language)).map((m) => <option key={m.id} value={m.id}>{m.model} · {m.materialCode}</option>)}
           </Select>
         </Field>
-        {anyFilter && <Button type="button" variant="secondary" onClick={() => setParams(new URLSearchParams(), { replace: true })} data-testid="items-filter-clear">{t("items.filters.clear")}</Button>}
+        {anyFilter && (
+          // An empty label of the same height keeps the button on the row of the boxes.
+          <div className="space-y-1.5">
+            <span className="block text-sm font-medium invisible" aria-hidden>&nbsp;</span>
+            <Button type="button" variant="secondary" onClick={() => setParams(new URLSearchParams(), { replace: true })} data-testid="items-filter-clear">{t("items.filters.clear")}</Button>
+          </div>
+        )}
       </div>
 
       {failed || !items ? <ErrorState message={t("errors.load_failed")} /> : (
