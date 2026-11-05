@@ -432,7 +432,8 @@
     "alreadyHereRow": "already here",
     "rereadConflict": "{{code}} shows as “{{status}}” at {{place}}: check the label",
     "otherPlace": "another place",
-    "newClassNotForRemoved": "{{code}} is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category."
+    "newClassNotForRemoved": "{{code}} is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category.",
+    "pieceRecognized": "Piece recognised: the model is already known."
   },
   "pwa": {
     "newVersion": "A new version is available.",

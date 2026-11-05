@@ -18,7 +18,8 @@
         "reread.phone.spec.ts",
         "doc-serials.phone.spec.ts",
         "signin-logos.desk.spec.ts",
-        "sort-newclass.phone.spec.ts"
+        "sort-newclass.phone.spec.ts",
+        "late-item.phone.spec.ts"
       ]
     },
     {

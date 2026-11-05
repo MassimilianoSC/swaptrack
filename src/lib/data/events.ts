@@ -1,5 +1,5 @@
 // Field events (R3): the only documents the client creates. Written without awaiting the server (offline queue).
-import { collection, doc, setDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDoc, getDocFromCache, getDocsFromCache, getDocs, Timestamp, documentId, startAfter, limit, type Query, type DocumentReference, type DocumentSnapshot, type QuerySnapshot } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDoc, getDocFromCache, getDocFromServer, getDocsFromCache, getDocs, Timestamp, documentId, startAfter, limit, type Query, type DocumentReference, type DocumentSnapshot, type QuerySnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { computeCodeId, NORM_VERSION, normalizeBarcode } from "@/lib/codeId.js";
 import { scanInstant } from "@/lib/clockOffset.js";
@@ -62,7 +62,6 @@ export function isProductCode(raw: string, materialCodes: string[]): boolean {
 // (no network or weak signal: the answer never waits more than QUICK_MS).
 const QUICK_MS = 2000;
 const late = <T,>(): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), QUICK_MS));
-const quickDoc = (ref: DocumentReference): Promise<DocumentSnapshot> => Promise.race([getDoc(ref), late<DocumentSnapshot>()]).catch(() => getDocFromCache(ref));
 // D-58 A3: the server for QUICK_MS, else the cache; when the cache was used because the server was late, onLate receives the server's answer
 // as soon as it arrives (a DDT or a BOM created after the cache was loaded is not missed until the next load).
 function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<QuerySnapshot> {
@@ -74,14 +73,30 @@ function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<Q
 }
 
 // Item of a code (codes/items of the ASP, DECISIONS b7): from the server when it answers at once, else from the cache.
-export async function cachedItemForCode(raw: string): Promise<Record<string, unknown> | null> {
-  try {
-    const code = await quickDoc(doc(db, "codes", await computeCodeId(raw)));
-    const itemId = code.get("itemId");
+// D-71 (P-149b): when the cache was used because the server was late, onLate receives the server's answer as soon as it
+// arrives (a piece made after the phone's copy was loaded is known a moment later, with weak signal too).
+export async function cachedItemForCode(raw: string, onLate?: (item: Record<string, unknown> | null) => void): Promise<Record<string, unknown> | null> {
+  let cached = false;
+  const read = async (ref: DocumentReference): Promise<DocumentSnapshot | null> => {
+    try { return await Promise.race([getDoc(ref), late<DocumentSnapshot>()]); } catch { cached = true; return getDocFromCache(ref).catch(() => null); }
+  };
+  const codeRef = doc(db, "codes", await computeCodeId(raw));
+  const result = await (async () => {
+    const code = await read(codeRef);
+    const itemId = code?.exists() ? (code.get("itemId") as string | undefined) : undefined;
     if (!itemId) return null;
-    const it = await quickDoc(doc(db, "items", itemId));
-    return it.exists() ? it.data() : null;
-  } catch { return null; }
+    const it = await read(doc(db, "items", itemId));
+    return it?.exists() ? it.data() : null;
+  })().catch(() => null);
+  if (cached && onLate) {
+    void (async () => {
+      const code = await getDocFromServer(codeRef);
+      const itemId = code.exists() ? (code.get("itemId") as string | undefined) : undefined;
+      const it = itemId ? await getDocFromServer(doc(db, "items", itemId)) : null;
+      onLate(it?.exists() ? it.data() : null);
+    })().catch(() => undefined); // no network: no late answer
+  }
+  return result;
 }
 
 // b7: one query per collection on the ASP's items and codes (current or pending ASP), at sign-in and resume.

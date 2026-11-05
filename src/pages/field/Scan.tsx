@@ -108,6 +108,12 @@ export default function Scan() {
   const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; second?: string; suggested: string | null; newOk: boolean } | null>(null);
   // D-66 (P-136c): a reading taken as a new piece while the window of the previous one is open: handled when it closes.
   const afterDialog = React.useRef<{ code: string; source: Source } | null>(null);
+  // D-71: the windows open now and the piece of the last reading, read by the late answer of the server (onLateItem).
+  const pendingSortRef = React.useRef(pendingSort);
+  pendingSortRef.current = pendingSort;
+  const modelPickRef = React.useRef(modelPick);
+  modelPickRef.current = modelPick;
+  const knownFor = React.useRef<{ code: string; it: Record<string, unknown> | null } | null>(null);
   // P-113: the model search of the unknown-piece window (model, material code, manufacturer; case and accents ignored).
   const [modelQuery, setModelQuery] = React.useState("");
   const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -427,20 +433,52 @@ export default function Scan() {
     // D-68 case 1: certain (this phone, this session): not recorded again, the counter does not move.
     const earlier = sessionRef.current.find((r) => r.key === readingKey(code));
     if (earlier) { show(t("scan.readAgain", { code, time: formatInstant(new Date(earlier.at), i18n.language) }), "warn"); return; }
-    const known = await cachedItemForCode(code);
+    const known = await cachedItemForCode(code, (it) => void onLateItem(code, it));
+    knownFor.current = { code, it: known };
     if (suggests) {
-      const it = known;
-      const loaded = (await sortingLoad.current?.catch(() => null)) ?? sorting;
-      // Censimento n.24: a rule leading to a category no longer active is skipped (the next rule applies).
-      const active = new Set(loaded.categories.filter((c) => c.active).map((c) => c.id));
-      const s = it ? suggestCategory(loaded.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }, active) : null;
+      const s = await suggestionFor(known);
       suggestedRef.current = s;
       setSuggested(s);
-      setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
+      setLastPieceBadge(known?.previousFlow === "new" ? "previously_new" : null);
     }
     judgeReading(code, known);
     if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
     return proceed(code, source);
+  };
+  // The suggested category of a piece (§10), on the rules as loaded (a reading waits for them, P-25).
+  const suggestionFor = async (it: Record<string, unknown> | null): Promise<string | null> => {
+    if (!it) return null;
+    const loaded = (await sortingLoad.current?.catch(() => null)) ?? sorting;
+    // Censimento n.24: a rule leading to a category no longer active is skipped (the next rule applies).
+    const active = new Set(loaded.categories.filter((c) => c.active).map((c) => c.id));
+    return suggestCategory(loaded.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }, active);
+  };
+  // The piece of the last reading as the phone knows it (read once per reading; a late answer replaces it).
+  const itemOf = async (code: string) => (knownFor.current?.code === code ? knownFor.current.it : cachedItemForCode(code));
+  // D-71 (P-149b): the server's answer that came after the 2 s, while the window of that piece is still open and the
+  // worker has not chosen yet. The category window gets its suggestion and the right "Defective / Leftover"; the model
+  // window closes if the server knows the piece with its model (recorded without a model picked by hand, and said).
+  // Nothing changes once the worker has chosen, nor for a reading already recorded (no late D-68 warning).
+  const onLateItem = async (code: string, it: Record<string, unknown> | null) => {
+    if (knownFor.current?.code === code) knownFor.current = { code, it };
+    const p = pendingSortRef.current;
+    if (p && p.code === code) {
+      const s = suggests ? await suggestionFor(it) : p.suggested;
+      if (pendingSortRef.current !== p) return; // the worker chose meanwhile
+      suggestedRef.current = s;
+      setSuggested(s);
+      setPendingSort({ ...p, suggested: s, newOk: newClassAllowed(it) });
+      return;
+    }
+    const m = modelPickRef.current;
+    if (m && m.code === code && it?.modelId) {
+      modelPickRef.current = null;
+      setModelPick(null); setModelPickId("");
+      await record(m.code, m.source, m.second);
+      toast.message(t("scan.pieceRecognized"), { id: "scan-piece-recognized" });
+      if (takeNext()) return;
+      if (m.source === "camera") setTimeout(afterCameraReading, 950);
+    }
   };
   // D-66 (P-136c): what every piece goes through once its codes are known, with or without a product code.
   const proceed = async (code: string, source: Source, second?: string): Promise<"asked" | void> => {
@@ -448,7 +486,7 @@ export default function Scan() {
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
     // "Defective" / "Leftover" only where the server accepts them (newClassAllowed): offered in the window, and a fixed
     // "Defective" / "Leftover" on a removed piece records nothing and says why (the server would open an anomaly).
-    const newOk = mode === "classify" ? newClassAllowed(await cachedItemForCode(code)) : true;
+    const newOk = mode === "classify" ? newClassAllowed(await itemOf(code)) : true;
     if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current, newOk }); return "asked"; }
     if (mode === "classify" && newClass && !newOk) { rereadRef.current = null; show(t("scan.newClassNotForRemoved", { code }), "danger"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
@@ -460,7 +498,7 @@ export default function Scan() {
     const cid = asks ? await computeCodeId(code) : null;
     const inDocuments = !!cid && ((ddtApplies && !!ddtId && ddtExpected.some((e) => e.codeId === cid)) || documentCodeIds.has(cid));
     // A product code of the catalog gives the model (the server's findModel): nothing to ask.
-    if (asks && !inDocuments && !second && !await cachedItemForCode(code)) {
+    if (asks && !inDocuments && !second && !await itemOf(code)) {
       setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
     }
     await record(code, source, second);
@@ -549,6 +587,7 @@ export default function Scan() {
   const confirmSort = async (choice: SortChoice) => {
     const p = pendingSort;
     if (!p) return;
+    pendingSortRef.current = null;
     setPendingSort(null);
     await record(p.code, p.source, p.second, undefined, choice);
     if (takeNext()) return;
@@ -557,6 +596,7 @@ export default function Scan() {
   const cancelSort = () => {
     const p = pendingSort;
     if (!p) return;
+    pendingSortRef.current = null;
     setPendingSort(null);
     aiAssist.current = null;
     rereadRef.current = null;
@@ -568,6 +608,7 @@ export default function Scan() {
   const confirmModelPick = async () => {
     const p = modelPick;
     if (!p) return;
+    modelPickRef.current = null;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second, modelPickId || undefined);
     if (takeNext()) return;
@@ -578,6 +619,7 @@ export default function Scan() {
   const skipModelPick = async () => {
     const p = modelPick;
     if (!p) return;
+    modelPickRef.current = null;
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second);
     if (takeNext()) return;
