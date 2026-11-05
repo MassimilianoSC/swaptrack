@@ -58,4 +58,19 @@ test.describe("Pezzi — filtri e numeri del cruscotto (scrivania)", () => {
       expect(r.text).not.toContain(SEED.nord.site);
     }
   });
+  // Found online by the committente: "Site or warehouse" (the only filter with a hint under its box) sat higher than
+  // the other three. The four boxes and the four labels must line up (1 px at most), at 1280 and at 1024 px.
+  test("i quattro filtri sono allineati: caselle ed etichette alla stessa altezza", async ({ page }) => {
+    await signIn(page, ACCOUNTS.clientOffice); // a client role: the ASP filter is there too (four filters)
+    await page.goto("/items");
+    await expect(page.getByTestId("items-filter-asp")).toBeVisible();
+    for (const width of [1280, 1024]) {
+      await page.setViewportSize({ width, height: 800 });
+      const tops = async (selectors: string[]) => Promise.all(selectors.map(async (sel) => (await page.locator(sel).boundingBox())!.y));
+      const boxes = await tops(["status", "asp", "location", "model"].map((f) => `[data-testid="items-filter-${f}"]`));
+      const labels = await tops(["f-status", "f-asp", "f-place", "f-model"].map((id) => `label[for="${id}"]`));
+      expect(Math.max(...boxes) - Math.min(...boxes), `caselle a ${width} px: ${boxes.join(", ")}`).toBeLessThanOrEqual(1);
+      expect(Math.max(...labels) - Math.min(...labels), `etichette a ${width} px: ${labels.join(", ")}`).toBeLessThanOrEqual(1);
+    }
+  });
 });

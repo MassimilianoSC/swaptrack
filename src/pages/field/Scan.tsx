@@ -157,6 +157,7 @@ export default function Scan() {
   // §12.1 point 4: BOM tick list for the technician scan screen. Direction derived from mode.
   const bomDirection: "remove" | "install" | null = mode === "remove_at_site" ? "remove" : mode === "install_at_site" ? "install" : null;
   const [bom, setBom] = React.useState<{ id: string; expected: Array<{ codeRaw: string; codeId: string }>; createdAtMs: number } | null>(null);
+  const [bomLines, setBomLines] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [bomTicks, setBomTicks] = React.useState<Set<string>>(new Set());
   const [bomUnexpected, setBomUnexpected] = React.useState<string[]>([]);
 
@@ -201,24 +202,22 @@ export default function Scan() {
     return () => { aborted = true; };
   }, [ddts, ddtId]);
 
-  // The serials of the saved documents this screen knows (by codeId): every open DDT of the warehouse in "Arrival", the
-  // site's BOM lines to remove in "Remove" (the same lists the DDT choice and "BOM list" show, phone's copy offline).
+  // The serials of the saved documents this screen knows whose line gives the model (modelId or material code), by
+  // codeId: every open DDT of the warehouse in "Arrival", the site's BOM lines to remove in "Remove" (the same documents
+  // the DDT choice and "BOM list" show; the phone's copy offline). A line without a model still lets the worker pick one.
   const [documentCodeIds, setDocumentCodeIds] = React.useState<Set<string>>(new Set());
   React.useEffect(() => {
     let aborted = false;
     (async () => {
       const ids = new Set<string>();
-      if (mode === "arrive_at_warehouse") {
-        for (const d of ddts) for (const raw of d.lines) {
-          const l = raw as { kind?: string; codeRaw?: string; codeId?: string };
-          if (l.kind === "serial" && l.codeRaw) ids.add(l.codeId || (await computeCodeId(l.codeRaw)));
-        }
-      }
-      if (mode === "remove_at_site" && bom) bom.expected.forEach((e) => ids.add(e.codeId));
+      type Line = { kind?: string; codeRaw?: string; codeId?: string; direction?: string; modelId?: string | null; materialCode?: string | null };
+      const take = async (l: Line) => { if (l.kind === "serial" && l.codeRaw && (l.modelId || l.materialCode)) ids.add(l.codeId || (await computeCodeId(l.codeRaw))); };
+      if (mode === "arrive_at_warehouse") for (const d of ddts) for (const raw of d.lines) await take(raw as Line);
+      if (mode === "remove_at_site" && bomLines) for (const raw of bomLines) if ((raw as Line).direction === "remove") await take(raw as Line);
       if (!aborted) setDocumentCodeIds(ids);
     })();
     return () => { aborted = true; };
-  }, [mode, ddts, bom]);
+  }, [mode, ddts, bomLines]);
 
   // Live arrived / missing / unexpected, computed on the device from the user's own arrivals of today at this
   // warehouse joined with the DDT lines, with the server's rule (§11.3): an arrival counts for the DDT if it carries
@@ -245,11 +244,12 @@ export default function Scan() {
 
   // §12.1: load the BOM of the current site (if any) from the ASP cache; direction filters the lines shown.
   React.useEffect(() => {
-    if (!location || !bomDirection || location.type !== "site" || !claims?.orgId) { setBom(null); return; }
+    if (!location || !bomDirection || location.type !== "site" || !claims?.orgId) { setBom(null); setBomLines(null); return; }
     let aborted = false;
     // D-58 A3: the server's answer, when it comes after the cache's, replaces it.
     const take = async (b: CachedBom | null) => {
       if (aborted) return;
+      setBomLines(b ? b.lines : null);
       if (!b) { setBom(null); return; }
       const expected: Array<{ codeRaw: string; codeId: string }> = [];
       for (const raw of b.lines) {
@@ -444,11 +444,13 @@ export default function Scan() {
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
     if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current }); return "asked"; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
-    // P-104, extended: a serial line of a saved document the phone knows is never asked (any open DDT of this warehouse
-    // in "Arrival", the site's BOM in "Remove"): the server takes its model from the line (expectedCodes); a line without
-    // a model leaves the piece "to complete", filled in when the document gets it (§6.4).
+    // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
+    // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
+    // Extended: neither is a serial whose line in another saved document the phone knows gives the model (any open DDT
+    // of this warehouse in "Arrival", the site's BOM in "Remove").
     const asks = mode === "remove_at_site" || mode === "arrive_at_warehouse";
-    const inDocuments = asks && documentCodeIds.size > 0 && documentCodeIds.has(await computeCodeId(code));
+    const cid = asks ? await computeCodeId(code) : null;
+    const inDocuments = !!cid && ((ddtApplies && !!ddtId && ddtExpected.some((e) => e.codeId === cid)) || documentCodeIds.has(cid));
     // A product code of the catalog gives the model (the server's findModel): nothing to ask.
     if (asks && !inDocuments && !second && !await cachedItemForCode(code)) {
       setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
