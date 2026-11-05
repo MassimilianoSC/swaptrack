@@ -75,20 +75,30 @@ async function findModel(e: Doc): Promise<Doc | null> {
     const q = await db.collection("models").where("materialCode", "==", normalizeBarcode(e.secondCodeRaw)).limit(1).get();
     if (!q.empty) return { id: q.docs[0].id, ...q.docs[0].data() };
   }
-  // §6.4 / §11.2: expectedCodes lookup (one query).
+  // §6.4 / §11.2: expectedCodes lookup (one query); serial lines carry modelId or materialCode.
   if (e.codeId) {
     const q = await db.collection("expectedCodes").where("codeId", "==", e.codeId).get();
     if (!q.empty) {
-      // DDT wins over BOM; serial lines carry modelId or materialCode.
-      q.docs.sort((a, b) => (a.get("kind") === "ddt_in" ? -1 : 1) - (b.get("kind") === "ddt_in" ? -1 : 1));
-      const hint = q.docs[0].data();
-      if (hint.modelId) {
-        const m = await db.collection("models").doc(hint.modelId).get();
-        if (m.exists) return { id: m.id, ...m.data() };
-      }
-      if (hint.materialCode) {
-        const m = await db.collection("models").where("materialCode", "==", normalizeBarcode(hint.materialCode)).limit(1).get();
-        if (!m.empty) return { id: m.docs[0].id, ...m.docs[0].data() };
+      // P-146: a document that is not closed first (the closed ones are trials or past deliveries), then a DDT before a
+      // BOM, then the newest; a line that gives no model of the catalog yields to the next one.
+      const docIds = [...new Set(q.docs.map((h) => String(h.get("documentId") ?? "")))].filter(Boolean);
+      const docs = docIds.length ? await db.getAll(...docIds.map((id) => db.collection("documents").doc(id)), { fieldMask: ["status", "createdAt"] }) : [];
+      const info = new Map(docs.map((d) => [d.id, { open: d.exists && d.get("status") !== "closed", at: (d.get("createdAt") as Timestamp | undefined)?.toMillis?.() ?? 0 }]));
+      const rank = (h: FirebaseFirestore.QueryDocumentSnapshot) => {
+        const i = info.get(String(h.get("documentId") ?? ""));
+        return [i?.open ? 0 : 1, h.get("kind") === "ddt_in" ? 0 : 1, -(i?.at ?? 0)];
+      };
+      const hints = [...q.docs].sort((a, b) => { const x = rank(a), y = rank(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; });
+      for (const h of hints) {
+        const hint = h.data();
+        if (hint.modelId) {
+          const m = await db.collection("models").doc(hint.modelId).get();
+          if (m.exists) return { id: m.id, ...m.data() };
+        }
+        if (hint.materialCode) {
+          const m = await db.collection("models").where("materialCode", "==", normalizeBarcode(hint.materialCode)).limit(1).get();
+          if (!m.empty) return { id: m.docs[0].id, ...m.docs[0].data() };
+        }
       }
     }
   }

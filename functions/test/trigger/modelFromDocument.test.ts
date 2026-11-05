@@ -4,6 +4,7 @@ import { setupTrigger, ev, computeCodeId, RUN, type TriggerEnv } from "./env";
 // A piece that is a serial line of a saved document takes the model of that line, even when the reading does not
 // name the document (an arrival with no DDT chosen): findModel in trigger.ts looks up expectedCodes by the code the
 // server computes. Order: the model picked on the phone (payload.modelId) first, then the document; a DDT before a BOM.
+// P-146: an open document before a closed one, and a line that gives no model yields to the next.
 let t: TriggerEnv;
 const A = `mdl_TT_mfd_a_${RUN}`, B = `mdl_TT_mfd_b_${RUN}`, C = `mdl_TT_mfd_c_${RUN}`;
 const MC = (x: string) => `MCMFD${x}${RUN.toUpperCase()}`;
@@ -38,6 +39,27 @@ describe("the model of a piece that is a line of a saved document", () => {
     const code = `SN-${RUN}-MFD-2`;
     await expect_(code, `ddt_mfd2_${RUN}`, "ddt_in", { modelId: A });
     const arrival = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "new", modelId: B } }));
+    expect(await item(arrival)).toMatchObject({ modelId: B, needsModel: false });
+  });
+
+  // P-146: the trials of the automatic reading leave closed documents with the same serials as the demo DDT.
+  it("an open document wins over a closed one with the same serial", async () => {
+    const code = `SN-${RUN}-MFD-4`;
+    // Ids chosen so that the closed document's hint comes first in the query (expectedCodes ids are codeId_documentId).
+    const closed = `a_ddt_mfd4_closed_${RUN}`, open = `z_ddt_mfd4_open_${RUN}`;
+    await t.db.collection("documents").doc(closed).set({ kind: "ddt_in", status: "closed", number: `AI-MFD4-${RUN}`, aspId: "org_asp_nord" });
+    await t.db.collection("documents").doc(open).set({ kind: "ddt_in", status: "open", number: `TD-MFD4-${RUN}`, aspId: "org_asp_nord" });
+    await expect_(code, closed, "ddt_in", { modelId: C });
+    await expect_(code, open, "ddt_in", { modelId: A });
+    const arrival = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "new" } }));
+    expect(await item(arrival)).toMatchObject({ modelId: A, needsModel: false });
+  });
+
+  it("a line whose material code is not in the catalog yields to the next document", async () => {
+    const code = `SN-${RUN}-MFD-5`;
+    await expect_(code, `a_ddt_mfd5_${RUN}`, "ddt_in", { materialCode: MC("NOTINCATALOG") });
+    await expect_(code, `z_ddt_mfd5_${RUN}`, "ddt_in", { materialCode: MC("B") });
+    const arrival = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "new" } }));
     expect(await item(arrival)).toMatchObject({ modelId: B, needsModel: false });
   });
 
