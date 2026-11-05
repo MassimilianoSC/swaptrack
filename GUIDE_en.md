@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 4a6c0a0 · Guide text: sha 817655e752b6 · Date: 05/11/2026
+App described: commit 4a6c0a0 · Guide text: sha f4e6c7bdfdf7 · Date: 05/11/2026
 
 ## How to use this guide
 
@@ -26,7 +26,7 @@ SwapTrack follows the **pieces** (the equipment) by reading their barcode. It fo
 - **The language icon**: «Italiano» or «English».
 - **The «User menu»** (person icon): your name and role, «Profile», «Guide», «Sign out».
 
-The «Guide» page of the app holds only a few short reminders. This guide is the complete one.
+The «Guide» page of the app holds a few short reminders and, below them, the button «Open the complete guide»: it opens this guide at the part for your role, in a new tab (close it to go back to the app). Once the app has been opened with the network, the guide opens without the network too (on iPhone still to be checked).
 
 ### How do I sign in the first time, after the invitation?
 
@@ -592,7 +592,7 @@ All the corrections stay in the history of the piece.
 2. You see how many pieces of your ASP are «At ASP warehouse», «Installed», «Removed at site», «Returned», «Sorted», «Defective», «Leftover», «In transfer». Tap a number to open the list of the pieces.
 3. Further down: «By flow and status», «By region», «Top models», «By manufacturer», «Sorting outcome» (with the name of every category), «Removed, of which previously new», «Warehouses».
 
-The numbers are updated after the scans and every night. Reopen the page to see the latest ones.
+The numbers are updated after the scans and every night: a scan you have just made may appear a few minutes later. Reopen the page to see the latest ones.
 
 ### How do I download an export?
 

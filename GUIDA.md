@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 4a6c0a0 · Testo della guida: sha db165d11afd8 · Data: 05/11/2026
+App descritta: commit 4a6c0a0 · Testo della guida: sha 0fbbc64c9d56 · Data: 05/11/2026
 
 ## Come usare questa guida
 
@@ -26,7 +26,7 @@ SwapTrack segue i **pezzi** (gli apparati) leggendo il loro codice a barre. Segu
 - **L'icona della lingua**: «Italiano» o «English».
 - **Il «Menu utente»** (icona della persona): il tuo nome e ruolo, «Profilo», «Guida», «Esci».
 
-La voce «Guida» dell'app contiene solo pochi promemoria brevi. Questa guida è quella completa.
+La voce «Guida» dell'app contiene pochi promemoria brevi e, sotto, il pulsante «Apri la guida completa»: apre questa guida alla parte del tuo ruolo, in una scheda nuova (chiudila per tornare all'app). Dopo che l'app è stata aperta una volta con la rete, la guida si apre anche senza rete (su iPhone da verificare).
 
 ### Come faccio il primo accesso, dopo l'invito?
 
@@ -592,7 +592,7 @@ Tutte le correzioni restano nella storia del pezzo.
 2. Vedi quanti pezzi della tua ASP sono «Al magazzino ASP», «Installato», «Smontato in sito», «Reso», «Smistato», «Difettoso», «Avanzo», «In trasferimento». Tocca un numero per aprire l'elenco dei pezzi.
 3. Più sotto: «Per flusso e stato», «Per regione», «Modelli più presenti», «Per produttore», «Esito smistamento» (con il nome di ogni categoria), «Smontati, di cui prima nuovi», «Magazzini».
 
-I numeri si aggiornano dopo le letture e ogni notte. Riapri la pagina per vedere gli ultimi.
+I numeri si aggiornano dopo le letture e ogni notte: una lettura appena fatta può comparire qualche minuto dopo. Riapri la pagina per vedere gli ultimi.
 
 ### Come scarico un export?
 
