@@ -22,6 +22,8 @@
 
 **Public operation (no sign-in):** `users.requestPasswordReset` (rate-limited per IP and per e-mail, always the same answer).
 
+**Password e-mails (D-69, P-140):** the invitation («set your password») and «Forgot your password?» e-mails are sent by Firebase Authentication with its «password reset» template (`core/mail.ts` `sendPasswordEmail`: Identity Toolkit `accounts:sendOobCode` with the public web API key `WEB_API_KEY` of `functions/.env*`; the template's custom action URL is the app's `/auth/action`, and `continueUrl` carries the purpose). No `mail` collection and no extension. Invitations are e-mailed only with `settings/app.emailConfigured`; otherwise, or if the e-mail fails, the admin gets the link to copy once (`invitation_link_shown` in the admin log). «Forgot your password?» is always e-mailed.
+
 **Automatic reading (D-45, D-46, D-49):** `documents.extractDocument` sends the pages of a saved document (PDF and images) to Gemini (`core/aiExtract.ts`: model `gemini-3.8-flash`, Vertex AI **EU multi-region endpoint** `aiplatform.eu.rep.googleapis.com`, location `eu`, never `global`; temperature 0, thinking LOW, JSON with a fixed schema) and returns proposed lines checked by `core/aiOutput.ts`; nothing is saved (the page confirms with `saveDocument`). Same checks as `saveDocument`; behind `settings/features.aiDocumentExtraction` (off by default) and `aiDailyLimit` readings per user per day (default 20, counter `rateLimits/ai_{uid}_{day}`). The functions' service account needs the role Vertex AI User; no key or secret. On the emulators and in the tests (`demo-*` projects) a fixed fake answer, no network. Logs never contain the document. The `documents` router runs with a 120 s timeout and 1 GiB. `documents.extractLabel` (D-49) reads the photo of a damaged label (sent by the app, compressed, at most 1 MB, not stored) and proposes the code(s) with the positions of doubtful characters (`uncertainAt`); roles that record readings; same switch, same daily counter and endpoint. The confirmed reading is a manual one marked `payload.aiAssisted: true` (allowed by the rules, no new `source`).
 
 ## Routers
@@ -55,7 +57,6 @@ the caller's `orgId`. Composite indexes: `firestore.indexes.json`, checked by `t
 | `exports/{id}` | scope, filter, language, path, rowCount, createdAt, createdBy | only the creator (client_admin, client_office, asp_admin) |
 | `adminLog/{id}` | actor, action, target, details, at | read client_admin |
 | `accessLog/{id}` | actor, eventId, at (every `revealEventAuthor`) | none |
-| `mail/{id}` | to, message {subject, text, html}, createdAt (Trigger Email format) | none |
 | `rateLimits/{key}` | count, expiresAt, updatedAt | none |
 
 Claims: `role`, `orgId`, `active`, `disabledAt` (ms or null), set only by functions. Rules use claims only.

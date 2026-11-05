@@ -5,7 +5,8 @@ import { fail } from "../core/errors";
 import { makeRouter, op, Ctx } from "../core/router";
 import { adminLog } from "../core/adminLog";
 import { getSettings } from "../core/settings";
-import { passwordLink, queueMail } from "../core/mail";
+import { logger } from "firebase-functions/v2";
+import { passwordLink, sendPasswordEmail } from "../core/mail";
 import { rateLimit } from "../core/rateLimit";
 import { ASP_ROLES, ROLES, Role, canManageUser, isAdminRole, roleFitsOrg, OrgType } from "../shared/roles";
 import { EMAIL_RE } from "../shared/policy";
@@ -44,12 +45,18 @@ async function setClaims(uid: string, role: Role, orgId: string, active: boolean
   await auth.setCustomUserClaims(uid, { role, orgId, active, disabledAt });
 }
 
+// D-69 (P-140): with the switch on, Firebase Authentication e-mails the «set your password» link. If that fails (for
+// example the domain of APP_URL is not authorized in Auth), the admin gets the link to copy instead of nothing.
 async function deliverInvitation(ctx: Ctx, uid: string, email: string, language: "it" | "en") {
-  const link = await passwordLink(email, language, "invite");
   if ((await getSettings("app")).emailConfigured) {
-    await queueMail(email, language, "invite", link);
-    return { delivered: "email" as const };
+    try {
+      await sendPasswordEmail(email, language, "invite");
+      return { delivered: "email" as const };
+    } catch (e) {
+      logger.warn("invitation_email_failed", { uid, error: (e as Error).message });
+    }
   }
+  const link = await passwordLink(email, language, "invite");
   // DECISIONS b2: no e-mail configured -> link shown once to the inviting admin, every display logged.
   await adminLog(ctx.uid!, "invitation_link_shown", uid);
   return { delivered: "link" as const, link };
@@ -250,7 +257,8 @@ const users = {
         const u = snap.docs[0]?.data() as UserDoc | undefined;
         if (u && u.active && !u.deleted) {
           const language = u.language ?? d.language;
-          await queueMail(d.email, language, "reset", await passwordLink(d.email, language, "reset"));
+          // D-69: Firebase Authentication e-mails the link, with the e-mail switch off too (it needs no setup).
+          await sendPasswordEmail(d.email, language, "reset").catch((e) => logger.warn("reset_email_failed", { error: (e as Error).message }));
         }
       } catch {
         // swallowed on purpose: same answer in every case
