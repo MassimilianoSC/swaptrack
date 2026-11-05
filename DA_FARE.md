@@ -201,6 +201,16 @@ Da riferire: una riga per passo (secondi, righe giuste/sbagliate/mancanti, avvis
 ### Prima della demo (9–10/11): controllo dei dati online (o2, `checkOnline.mjs`, sola lettura)
 Dalla cartella del progetto, in PowerShell: (se lo chiede) `gcloud auth application-default login`; `$env:CHECK_REAL_PROJECT="kronos-caffe-sito"`; `node scripts/checkOnline.mjs --yes-real-project`. Mandare il testo dalla riga «REAL project» in giù. Controlla: eventi mai elaborati, documenti senza ASP, BOM senza direzione, documenti AI-PROVA aperti (da chiudere), DDT TD-2026-… e codici TD26… già usati (alla demo non sarebbero «nuovi»: usare l'altro DDT o rigenerare i file), bozze di spedizione aperte, avvisi e anomalie per tipo (seed: 6 e 6), pezzi da completare, interruttore AI e limite.
 
+### P-141: «Accedi con Google» online, cosa gli emulatori non vedono (o2, 05/11)
+Prima prova online del committente (05/11): «Errore 400: redirect_uri_mismatch». Causa: authDomain della demo = swaptrack-demo.web.app, ritorno su https://swaptrack-demo.web.app/__/auth/handler, assente dal client OAuth.
+1. Google Cloud → API e servizi → Credenziali → «Web client (auto created by Google Service)»: origine JavaScript `https://swaptrack-demo.web.app` e URI di reindirizzamento `https://swaptrack-demo.web.app/__/auth/handler` → Salva (vale dopo qualche minuto).
+2. Gli account della demo (@swaptrack-demo.test) non sono account Google: per mostrare Google serve un utente invitato nell'app con un indirizzo Google vero (decisione del committente: suo indirizzo, disattivato dopo la demo). Se l'invitato non ha ancora impostato la password, Google la toglie (P-141).
+3. Google Auth Platform → «Pubblico»: se «Test», entrano solo gli utenti di prova (altrimenti «403 access_denied»): aggiungere l'indirizzo del punto 2 oppure «Pubblica app» (ambiti email/profile/openid: nessuna verifica).
+4. Google Auth Platform → «Branding»: nome mostrato nella scelta dell'account (forse quello del vecchio sito): «SwapTrack».
+5. Firebase → Authentication → Impostazioni → «Collegamento account utente»: «Collega gli account che usano lo stesso indirizzo email» (con «Crea più account» si ha «no_active_account»).
+6. Authentication → Impostazioni → «Funzioni di blocco»: beforeCreate e beforeSignIn selezionate. Sign-in method → Google abilitato.
+7. Il giorno prima: prova dal computer e dall'app installata sui due telefoni (popup su iPhone installato = caso più fragile). Interruttore «Accesso con Google» acceso (checkOnline: «Google sign-in ON»).
+
 ### P-140: passi in console per gli inviti per e-mail (aggiornati il 05/11: modelli e URL d'azione bloccati su questo progetto)
 Su kronos-caffe-sito Firebase non permette di modificare i modelli delle e-mail né l'URL d'azione: si usano l'e-mail standard («Reimposta la password per %APP_NAME%», nella lingua della persona) e la pagina standard di Firebase; dopo il salvataggio «Continua» riporta all'accesso di SwapTrack.
 1. Impostazioni progetto → Generali → «Nome pubblico» → SwapTrack Demo → Salva. FATTO il 05/11.
