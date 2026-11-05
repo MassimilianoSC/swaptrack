@@ -188,6 +188,16 @@ Da riferire: una riga per passo (secondi, righe giuste/sbagliate/mancanti, avvis
 ### Prima della demo (9–10/11): controllo dei dati online (o2, `checkOnline.mjs`, sola lettura)
 Dalla cartella del progetto, in PowerShell: (se lo chiede) `gcloud auth application-default login`; `$env:CHECK_REAL_PROJECT="kronos-caffe-sito"`; `node scripts/checkOnline.mjs --yes-real-project`. Mandare il testo dalla riga «REAL project» in giù. Controlla: eventi mai elaborati, documenti senza ASP, BOM senza direzione, documenti AI-PROVA aperti (da chiudere), DDT TD-2026-… e codici TD26… già usati (alla demo non sarebbero «nuovi»: usare l'altro DDT o rigenerare i file), bozze di spedizione aperte, avvisi e anomalie per tipo (seed: 6 e 6), pezzi da completare, interruttore AI e limite.
 
+### P-140: passi in console per gli inviti per e-mail (aggiornati il 05/11: modelli e URL d'azione bloccati su questo progetto)
+Su kronos-caffe-sito Firebase non permette di modificare i modelli delle e-mail né l'URL d'azione: si usano l'e-mail standard («Reimposta la password per %APP_NAME%», nella lingua della persona) e la pagina standard di Firebase; dopo il salvataggio «Continua» riporta all'accesso di SwapTrack.
+1. Impostazioni progetto → Generali → «Nome pubblico» → SwapTrack Demo → Salva. FATTO il 05/11.
+2. Domini autorizzati: swaptrack-demo.web.app (FATTO il 05/11).
+3. Authentication → Impostazioni → «Policy relative alle password»: «Richiedi applicazione», lunghezza minima 10, carattere minuscolo e numerico obbligatori, «Forza l'upgrade all'accesso» spento. FATTO il 05/11 (la password demo la rispetta).
+4. Pubblicazione delle funzioni con P-140.
+5. Amministratore cliente → Impostazioni → «App» → interruttore degli inviti per e-mail → «Salva».
+6. Prova: invito a un indirizzo proprio → arriva «Reimposta la password per SwapTrack Demo», l'app non mostra il link; password corta rifiutata, giusta accettata → «Continua» → accesso.
+Da dire nella guida: l'e-mail di invito si chiama «Reimposta la password…»; chi invita lo dica alla persona. Per un testo d'invito proprio: richiesta all'assistenza Firebase o funzione con il server di posta del cliente (strada B).
+
 ## P-31 Documentazione per l'utente e il collaudo
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.
