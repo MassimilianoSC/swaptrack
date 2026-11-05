@@ -201,6 +201,25 @@ export default function Scan() {
     return () => { aborted = true; };
   }, [ddts, ddtId]);
 
+  // The serials of the saved documents this screen knows (by codeId): every open DDT of the warehouse in "Arrival", the
+  // site's BOM lines to remove in "Remove" (the same lists the DDT choice and "BOM list" show, phone's copy offline).
+  const [documentCodeIds, setDocumentCodeIds] = React.useState<Set<string>>(new Set());
+  React.useEffect(() => {
+    let aborted = false;
+    (async () => {
+      const ids = new Set<string>();
+      if (mode === "arrive_at_warehouse") {
+        for (const d of ddts) for (const raw of d.lines) {
+          const l = raw as { kind?: string; codeRaw?: string; codeId?: string };
+          if (l.kind === "serial" && l.codeRaw) ids.add(l.codeId || (await computeCodeId(l.codeRaw)));
+        }
+      }
+      if (mode === "remove_at_site" && bom) bom.expected.forEach((e) => ids.add(e.codeId));
+      if (!aborted) setDocumentCodeIds(ids);
+    })();
+    return () => { aborted = true; };
+  }, [mode, ddts, bom]);
+
   // Live arrived / missing / unexpected, computed on the device from the user's own arrivals of today at this
   // warehouse joined with the DDT lines, with the server's rule (§11.3): an arrival counts for the DDT if it carries
   // its ddtId or its code is one of its serial lines; unexpected = carries the ddtId but is not a line.
@@ -425,12 +444,13 @@ export default function Scan() {
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
     if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current }); return "asked"; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
-    // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
-    // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
-    const cid = ddtApplies && ddtId ? await computeCodeId(code) : null;
-    const inChosenDdt = !!cid && ddtExpected.some((e) => e.codeId === cid);
+    // P-104, extended: a serial line of a saved document the phone knows is never asked (any open DDT of this warehouse
+    // in "Arrival", the site's BOM in "Remove"): the server takes its model from the line (expectedCodes); a line without
+    // a model leaves the piece "to complete", filled in when the document gets it (§6.4).
+    const asks = mode === "remove_at_site" || mode === "arrive_at_warehouse";
+    const inDocuments = asks && documentCodeIds.size > 0 && documentCodeIds.has(await computeCodeId(code));
     // A product code of the catalog gives the model (the server's findModel): nothing to ask.
-    if ((mode === "remove_at_site" || mode === "arrive_at_warehouse") && !inChosenDdt && !second && !await cachedItemForCode(code)) {
+    if (asks && !inDocuments && !second && !await cachedItemForCode(code)) {
       setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
     }
     await record(code, source, second);
