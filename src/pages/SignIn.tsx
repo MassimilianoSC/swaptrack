@@ -6,6 +6,7 @@ import type { MultiFactorResolver, AuthCredential } from "firebase/auth";
 import { useSession } from "@/app/session";
 import { signIn, resolveTotp } from "@/lib/data/auth";
 import { signInWithGoogle, signInWithMicrosoft, linkAfterPassword } from "@/lib/auth/providers";
+import { GoogleLogo, MicrosoftLogo } from "@/components/brandLogos";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/form";
 import { Logo, LanguageSwitch } from "@/components/shell/parts";
@@ -78,8 +79,8 @@ export default function SignIn() {
       </form>
       {!mfa && !link && (authSettings.google || authSettings.microsoft) && (
         <div className="space-y-2">
-          {authSettings.google && <Button variant="secondary" className="w-full" onClick={() => provider(signInWithGoogle)} data-testid="signin-google-button">{t("auth.withGoogle")}</Button>}
-          {authSettings.microsoft && <Button variant="secondary" className="w-full" onClick={() => provider(signInWithMicrosoft)} data-testid="signin-microsoft-button">{t("auth.withMicrosoft")}</Button>}
+          {authSettings.google && <Button variant="secondary" className="w-full" onClick={() => provider(signInWithGoogle)} data-testid="signin-google-button"><GoogleLogo />{t("auth.withGoogle")}</Button>}
+          {authSettings.microsoft && <Button variant="secondary" className="w-full" onClick={() => provider(signInWithMicrosoft)} data-testid="signin-microsoft-button"><MicrosoftLogo />{t("auth.withMicrosoft")}</Button>}
         </div>
       )}
       <Link to="/forgot" className="inline-block underline text-sm min-h-touch" data-testid="signin-forgot-link">{t("auth.forgot")}</Link>

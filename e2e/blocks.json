@@ -16,7 +16,8 @@
         "guide-full.desk.spec.ts",
         "product-code.phone.spec.ts",
         "reread.phone.spec.ts",
-        "doc-serials.phone.spec.ts"
+        "doc-serials.phone.spec.ts",
+        "signin-logos.desk.spec.ts"
       ]
     },
     {
