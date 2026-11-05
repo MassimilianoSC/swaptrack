@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 4a6c0a0 · Guide text: sha eceb80ceaafc · Date: 05/11/2026
+App described: commit 65c1319 · Guide text: sha d3bfe78cdb10 · Date: 05/11/2026
 
 ## How to use this guide
 
@@ -266,6 +266,8 @@ What you see next: under the camera there is the counter, for example «5 readin
 - If you do not know it, press «Skip»: the piece is recorded anyway and the office will complete the model. Closing the window with the X also counts as «Skip».
 - «No model found: you can skip.»: no model matches what you wrote.
 
+If the piece is among the «Pieces to remove» of the site's BOM and the BOM gives the model, the window does not appear: the model is taken from the BOM.
+
 ### How do I record the installation of new pieces?
 
 1. Choose the site.
@@ -400,7 +402,7 @@ Then record the arrival:
 3. In the «DDT» list choose «DDT …» with the right number: the «Material» list switches by itself to «New material». (If you leave «No DDT (arrival only)» with «New material», the pieces arrive but are not compared with the DDT.)
 4. Scan the codes of the pieces.
 
-The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete».
+The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete». A piece that is in another open DDT of your warehouse, one you did not choose, does not open the window either, as long as that DDT gives the model.
 
 What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). If you see «The DDT has no serial lines.», the DDT has only quantities and there is no tick list.
 

@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 4a6c0a0 · Testo della guida: sha 5781d2bbde74 · Data: 05/11/2026
+App descritta: commit 65c1319 · Testo della guida: sha ddd9d0dc7f4d · Data: 05/11/2026
 
 ## Come usare questa guida
 
@@ -266,6 +266,8 @@ Cosa vedi dopo: sotto la fotocamera c'è il contatore, per esempio «5 letture i
 - Se non lo sai, premi «Salta»: il pezzo viene registrato lo stesso e l'ufficio completerà il modello. Anche chiudere la finestra con la X vale come «Salta».
 - «Nessun modello trovato: puoi saltare.»: nessun modello corrisponde a ciò che hai scritto.
 
+Se il pezzo è tra i «Pezzi da smontare» della BOM del sito e la BOM dice il modello, la finestra non compare: il modello lo prende dalla BOM.
+
 ### Come registro l'installazione dei pezzi nuovi?
 
 1. Scegli il sito.
@@ -400,7 +402,7 @@ Poi registra l'arrivo:
 3. Nella tendina «DDT» scegli «DDT …» con il numero giusto: la tendina «Materiale» passa da sola a «Materiale nuovo». (Se lasci «Nessun DDT (solo arrivo)» con «Materiale nuovo», i pezzi arrivano ma non vengono confrontati con il DDT.)
 4. Leggi i codici dei pezzi.
 
-I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare».
+I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare». Anche un pezzo che è in un altro DDT aperto del tuo magazzino, che non hai scelto, non apre la finestra, purché quel DDT dica il modello.
 
 Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.
 
