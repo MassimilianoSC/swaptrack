@@ -14,7 +14,8 @@
         "shared-phone.phone.spec.ts",
         "scan-tidy.phone.spec.ts",
         "guide-full.desk.spec.ts",
-        "product-code.phone.spec.ts"
+        "product-code.phone.spec.ts",
+        "reread.phone.spec.ts"
       ]
     },
     {

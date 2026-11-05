@@ -426,7 +426,12 @@
     "cannotReadOr": "oppure",
     "askProductHint": "Dopo il seriale leggi anche il codice del modello: l'app riconosce il modello da sola.",
     "askProductNoCatalog": "Il catalogo dei modelli non è ancora sul telefono.",
-    "notProductCode": "{{code}} non è un codice prodotto del catalogo: l'ho preso come un nuovo pezzo."
+    "notProductCode": "{{code}} non è un codice prodotto del catalogo: l'ho preso come un nuovo pezzo.",
+    "readAgain": "{{code}} già letto poco fa (alle {{time}})",
+    "alreadyHere": "{{code}} è già a {{place}} dal {{date}}",
+    "alreadyHereRow": "già qui",
+    "rereadConflict": "{{code}} risulta «{{status}}» a {{place}}: controlla l'etichetta",
+    "otherPlace": "un altro luogo"
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",

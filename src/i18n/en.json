@@ -426,7 +426,12 @@
     "cannotReadOr": "or",
     "askProductHint": "After the serial, read the model code too: the app recognises the model by itself.",
     "askProductNoCatalog": "The model catalog is not on the phone yet.",
-    "notProductCode": "{{code}} is not a product code of the catalog: it was taken as a new piece."
+    "notProductCode": "{{code}} is not a product code of the catalog: it was taken as a new piece.",
+    "readAgain": "{{code}} already read a moment ago (at {{time}})",
+    "alreadyHere": "{{code}} has been at {{place}} since {{date}}",
+    "alreadyHereRow": "already here",
+    "rereadConflict": "{{code}} shows as “{{status}}” at {{place}}: check the label",
+    "otherPlace": "another place"
   },
   "pwa": {
     "newVersion": "A new version is available.",

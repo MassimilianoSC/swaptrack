@@ -5,9 +5,10 @@ import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle,
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
 import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type CachedBom, type RejectedScan } from "@/lib/data/events";
-import { listModels, watchDoc, loadFieldLocations, type Row, type Model } from "@/lib/data/db";
+import { listModels, watchDoc, loadFieldLocations, type Row, type Model, type Location } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
-import { computeCodeId } from "@/lib/codeId.js";
+import { computeCodeId, normalizeBarcode } from "@/lib/codeId.js";
+import { itemState, judge, type Judgement } from "@/lib/scan/rereading";
 import { suggestCategory, type SortingRule } from "@shared/sorting";
 import { formatInstant, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ export default function Scan() {
   const [camError, setCamError] = React.useState<string | null>(null);
   const [torch, setTorch] = React.useState<boolean | null>(null);
   const [exposure, setExposure] = React.useState<{ min: number; max: number; step: number } | null>(null);
-  const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" } | null>(null);
+  const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger" } | null>(null);
   const [muted, setMuted] = React.useState(() => localStorage.getItem("swaptrack.muted") === "1");
   const [askProduct, setAskProduct] = React.useState(false);
   const [pendingSerial, setPendingSerial] = React.useState<{ code: string; source: Source } | null>(null);
@@ -82,7 +83,15 @@ export default function Scan() {
   const [catalogKnown, setCatalogKnown] = React.useState(false);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   // P-20 (D-11): readings since this screen was opened (newest first); the mode does not reset it.
-  const [session, setSession] = React.useState<{ id: string; code: string; type: string }[]>([]);
+  // D-68: key = the same piece read for the same thing (operation, place, shipment, DDT); here = already there, not counted.
+  const [session, setSession] = React.useState<{ id: string; code: string; type: string; key: string; at: number; here?: boolean }[]>([]);
+  const sessionRef = React.useRef(session);
+  sessionRef.current = session;
+  // D-68: the judgement of the reading being recorded (set before the windows of model and category, read by record).
+  const rereadRef = React.useRef<{ kind: Exclude<Judgement, null>; text: string } | null>(null);
+  // Names of the ASP's places and the shipment the screen was opened from, for the judgement and its messages.
+  const [places, setPlaces] = React.useState<Row<Location>[]>([]);
+  const [shipmentDoc, setShipmentDoc] = React.useState<Record<string, unknown> | null>(null);
   const [today, setToday] = React.useState<MyScan[]>([]);
   // §12.2 / P-24 (D-15): the DDT chosen for an arrival of new material (never pre-selected) and the live comparison.
   const [ddts, setDdts] = React.useState<CachedDdt[]>([]);
@@ -124,6 +133,8 @@ export default function Scan() {
   const [defectivePhotoFor, setDefectivePhotoFor] = React.useState<string | null>(null);
   // P-115 (n.28): opened from a shipment, the screen works at the shipment's place (given in the address), never at
   // the place left in the session.
+  React.useEffect(() => { if (claims?.orgId) void loadFieldLocations(claims.orgId).then(({ list }) => setPlaces(list)).catch(() => undefined); }, [claims?.orgId]);
+  React.useEffect(() => (shipmentId ? watchDoc<Record<string, unknown>>(`shipments/${shipmentId}`, setShipmentDoc, () => setShipmentDoc(null)) : setShipmentDoc(null)), [shipmentId]);
   const paramLocation = params.get("location");
   React.useEffect(() => {
     if (!paramLocation || !claims?.orgId || location?.id === paramLocation) return;
@@ -257,7 +268,7 @@ export default function Scan() {
     return () => { aborted = true; };
   }, [bom, bomDirection, mode, today, location]);
 
-  const show = (text: string, tone: "ok" | "warn") => {
+  const show = (text: string, tone: "ok" | "warn" | "danger") => {
     setFlash({ text, tone });
     beep(muted);
     if (tone === "ok") navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
@@ -302,6 +313,24 @@ export default function Scan() {
   // the catalog is still loading the option can be ticked (a reading meanwhile is never taken as a product code).
   const noCatalog = catalogKnown && materialCodes.length === 0;
   const productOn = askProduct && !noCatalog;
+  // D-68 case 1: the same piece read for the same thing in this session (until "Undo last" takes it away).
+  const readingKey = (code: string) => [normalizeBarcode(code), mode, location?.id ?? "", shipmentId ?? "", ddtApplies ? ddtId : ""].join("|");
+  const placeName = (id: string | null) => { const l = places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
+  // D-68 cases 2 and 3: the reading as the server's state machine would see it, on the piece as the phone knows it.
+  const judgeReading = (code: string, it: Record<string, unknown> | null) => {
+    rereadRef.current = null;
+    const prev = itemState(it);
+    if (!prev || !location || !claims?.orgId) return;
+    const payload = buildPayload();
+    // "Sort" one piece at a time with nothing chosen yet: the category is decided in the window, nothing to judge now.
+    if (mode === "classify" && !payload.categoryId && !payload.newClass) return;
+    const sh = shipmentDoc;
+    if ((mode === "return_ship" || mode === "transfer_out" || shipmentId) && !sh) return; // shipment unknown (no network)
+    const shipment = sh ? { id: shipmentId!, kind: sh.kind as "transfer" | "return", fromAspId: sh.fromAspId as string, toAspId: (sh.toAspId as string | null) ?? null, toLocationId: sh.toLocationId as string } : null;
+    const kind = judge(prev, { id: "local", type: mode, source: "camera", at: Date.now(), locationId: location.id, locationType: location.type, locationAspId: claims.orgId, aspId: claims.orgId, payload, shipment });
+    if (kind === "here") rereadRef.current = { kind, text: t("scan.alreadyHere", { code, place: placeName(prev.currentLocationId), date: formatInstant(new Date(prev.statusSince), i18n.language) }) };
+    if (kind === "conflict") rereadRef.current = { kind, text: t("scan.rereadConflict", { code, status: t(`items.statuses.${prev.status}`), place: placeName(prev.currentLocationId) }) };
+  };
   const needsCategory = () => mode === "classify" && !newClass && !category && !suggestedRef.current;
 
   const record = async (code: string, source: Source, second?: string, modelId?: string, choice?: SortChoice) => {
@@ -320,12 +349,15 @@ export default function Scan() {
       setPhotoNum((m) => ({ ...m, [id]: 1 }));
       void enqueuePhoto(id, claims.orgId, assisted.blob, 1).then(() => { void flushQueue(); }, () => toast.error(t("scan.photoFailed")));
     }
-    setSession((s) => [{ id, code, type: mode }, ...s]);
+    const reread = rereadRef.current;
+    rereadRef.current = null;
+    setSession((s) => [{ id, code, type: mode, key: readingKey(code), at: Date.now(), here: reread?.kind === "here" }, ...s]);
     setLastEventId(id);
     // §12.2 / P-115 (n.5): a new defective with the setting on asks for its photo until one is queued.
     if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectivePhotoFor(id);
     if (source === "camera") cameraLast.current = { code, at: Date.now() };
-    if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
+    if (reread) show(reread.text, reread.kind === "here" ? "warn" : "danger");
+    else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
   };
 
   // P-112: the camera pauses at every decode (webEngine.js) and restarts with the flash of the reading (show). Whatever
@@ -368,8 +400,12 @@ export default function Scan() {
       return handleCode(code, source, true);
     }
     if (isProductCode(code, materialCodes)) { show(t("scan.productCode"), "warn"); return; } // §6.3: no event
+    // D-68 case 1: certain (this phone, this session): not recorded again, the counter does not move.
+    const earlier = sessionRef.current.find((r) => r.key === readingKey(code));
+    if (earlier) { show(t("scan.readAgain", { code, time: formatInstant(new Date(earlier.at), i18n.language) }), "warn"); return; }
+    const known = await cachedItemForCode(code);
     if (suggests) {
-      const it = await cachedItemForCode(code);
+      const it = known;
       const loaded = (await sortingLoad.current?.catch(() => null)) ?? sorting;
       // Censimento n.24: a rule leading to a category no longer active is skipped (the next rule applies).
       const active = new Set(loaded.categories.filter((c) => c.active).map((c) => c.id));
@@ -378,6 +414,7 @@ export default function Scan() {
       setSuggested(s);
       setLastPieceBadge(it?.previousFlow === "new" ? "previously_new" : null);
     }
+    judgeReading(code, known);
     if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
     return proceed(code, source);
   };
@@ -491,6 +528,7 @@ export default function Scan() {
     if (!p) return;
     setPendingSort(null);
     aiAssist.current = null;
+    rereadRef.current = null;
     toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
     if (takeNext()) return;
     if (p.source === "camera") setTimeout(afterCameraReading, 300);
@@ -521,6 +559,7 @@ export default function Scan() {
   const needPhotoForDefective = photoMandatoryDefective && mode === "classify" && newClass === "defective";
   // "My scans of today": a void is shown on the reading it undid, not as a row of its own.
   const todayRows = today.filter((s) => s.type !== "void");
+  const counted = session.filter((s) => !s.here).length;
   const selectedDdt = ddtApplies ? ddts.find((d) => d.id === ddtId) ?? null : null;
 
   return (
@@ -582,7 +621,7 @@ export default function Scan() {
         <div className="pointer-events-none absolute inset-x-[15%] inset-y-[30%] border-4 border-primary rounded" aria-hidden />
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
-        {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : "bg-warning text-black")} role="status" data-testid="scan-flash">{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
+        {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")} role="status" data-testid="scan-flash" data-tone={flash.tone}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
       </div>
       {/* D-55 / P-121: single reading: the camera waits until the worker asks for the next piece. */}
       {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}
@@ -609,8 +648,8 @@ export default function Scan() {
       {/* §7.2 burst mode, P-20 (D-11): counter and running list of this session's readings, below the camera, never over it. */}
       <section className="rounded border border-border p-3" data-testid="scan-session">
         <p className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tabular" data-testid="scan-session-count">{session.length}</span>
-          <span className="text-sm text-muted">{t("scan.sessionCount", { count: session.length })}</span>
+          <span className="text-3xl font-bold tabular" data-testid="scan-session-count">{counted}</span>
+          <span className="text-sm text-muted">{t("scan.sessionCount", { count: counted })}</span>
         </p>
         {session.length > 0 && (
           <ul className="mt-2 max-h-36 overflow-y-auto text-sm" data-testid="scan-session-list">
@@ -621,6 +660,7 @@ export default function Scan() {
                 <li key={s.id} className="flex gap-3 border-b border-border py-1" data-testid="scan-session-row">
                   <span className="font-mono truncate">{s.code}</span>
                   <span className="text-muted">{t(`scan.modes.${s.type}`, { defaultValue: s.type })}</span>
+                  {s.here && <span className="text-warning" data-testid="scan-session-here">{t("scan.alreadyHereRow")}</span>}
                   <span className={cn("ml-auto shrink-0", refused && "text-danger font-semibold")} data-testid={refused ? "scan-session-refused" : undefined}>{refused ? t("scan.refused") : sent ? t("scan.sent") : t("scan.waiting")}</span>
                 </li>
               );
