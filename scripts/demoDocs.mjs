@@ -35,8 +35,8 @@ const DDT = [
   { number: "TD-2026-0413", lines: [...Array.from({ length: 44 }, (_, i) => serialLine(`TD260413${String(i + 1).padStart(3, "0")}`, MODELS[i % 20])), quantityLine(MODELS[12], 4), quantityLine(MODELS[17], 6)] },
 ];
 const BOM = [
-  ...Array.from({ length: 5 }, (_, i) => ({ op: "SMONTARE", ...serialLine(`TD26R13${String(i + 1).padStart(3, "0")}`, MODELS[i]) })),
-  ...Array.from({ length: 4 }, (_, i) => ({ op: "INSTALLARE", ...serialLine(`TD26I13${String(i + 1).padStart(3, "0")}`, MODELS[i + 5]) })),
+  ...Array.from({ length: 5 }, (_, i) => ({ op: "SMONTARE", model: MODELS[i], ...serialLine(`TD26R13${String(i + 1).padStart(3, "0")}`, MODELS[i]) })),
+  ...Array.from({ length: 4 }, (_, i) => ({ op: "INSTALLARE", model: MODELS[i + 5], ...serialLine(`TD26I13${String(i + 1).padStart(3, "0")}`, MODELS[i + 5]) })),
   { op: "INSTALLARE", ...quantityLine(MODELS[11], 2) },
 ];
 // Labels: three clean ones of DDT 0412, two damaged ones of the same DDT, one piece that is not in it ("unexpected").
@@ -48,6 +48,14 @@ const LABELS = [
   { file: "etichetta-5-strappata-TD260412005.jpg", serial: "TD260412005", model: MODELS[4], damage: "torn" },
   { file: "etichetta-6-fuori-DDT-TD260499001.png", serial: "TD260499001", model: MODELS[6], damage: null },
 ];
+// The serials of the BOM of the site, all clean: the pieces to remove at the site and the new ones to install.
+const BOM_LABELS = BOM.filter((l) => l.serial).map((l, i) => ({
+  file: `etichetta-bom-${i + 1}-${l.op.toLowerCase()}-${l.serial}.png`, serial: l.serial, model: l.model, damage: null, op: l.op,
+}));
+// All the labels on A4 at real size, to print (at 100%) and read with the phone camera.
+const PRINT_PDF = "etichette-da-stampare.pdf";
+const LABEL_MM = { width: 70, height: 35 };
+const DAMAGE_IT = { blur: "sfocata, non si legge", torn: "strappata, non si legge" };
 
 // ---- HTML ----
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -112,28 +120,55 @@ function bomHtml() {
 }
 const FOOTER = `<div style="font: 7pt Arial, sans-serif; color: #777; width: 100%; padding: 0 12mm; display: flex; justify-content: space-between;"><span>${TEST_MARK} · dati inventati</span><span>Pagina <span class="pageNumber"></span> di <span class="totalPages"></span></span></div>`;
 
-function labelHtml(l, barcodePng) {
-  const torn = l.damage === "torn";
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-    body { margin: 0; width: 760px; height: 420px; display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at 30% 30%, #8d949b, #4b5157); font-family: Arial, Helvetica, sans-serif; }
-    .label { position: relative; width: 600px; padding: 18px 22px 14px; background: #fbfbf7; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.45);
-      ${l.damage === "blur" ? "filter: blur(2.6px) contrast(.8); transform: rotate(-4deg);" : torn ? "transform: rotate(1.5deg);" : ""} }
+// Code 128 as vector bars (the quiet zone is in the SVG): sharp in the pictures and on paper.
+async function barcodeSvg(serial) {
+  const bar = await writeBarcode(serial, { format: "Code128" });
+  if (bar.error) throw new Error(bar.error);
+  const svg = bar.svg.slice(bar.svg.indexOf("<svg")).replace(/<svg width="(\d+)" height="(\d+)"/, '<svg viewBox="0 0 $1 $2" preserveAspectRatio="none" shape-rendering="crispEdges"');
+  if (!svg.includes("viewBox")) throw new Error(`unexpected SVG for ${serial}`);
+  return svg;
+}
+const LABEL_CSS = `
+    .label { position: relative; width: 600px; padding: 18px 22px 14px; background: #fbfbf7; border-radius: 6px; font-family: Arial, Helvetica, sans-serif; color: #111; }
+    .shadow { box-shadow: 0 3px 10px rgba(0,0,0,.45); }
     .top { display: flex; justify-content: space-between; font-size: 15px; } .brand { font-weight: bold; font-size: 20px; }
-    .bar { display: block; width: 556px; height: 120px; margin: 10px 0 4px; image-rendering: pixelated; }
+    .bar { width: 556px; height: 120px; margin: 10px 0 4px; } .bar svg { display: block; width: 100%; height: 100%; }
     .sn { font: bold 26px "Courier New", monospace; letter-spacing: 3px; text-align: center; }
     .test { position: absolute; right: 10px; bottom: 4px; font-size: 9px; color: #999; letter-spacing: 1px; }
     .tear { position: absolute; left: 150px; top: 58px; width: 80px; height: 128px; background: linear-gradient(100deg, transparent 0 20%, #d9d6cc 22% 80%, transparent 82%);
       transform: rotate(12deg); box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
-    .smudge { position: absolute; left: 393px; top: 190px; width: 30px; height: 34px; border-radius: 50%; background: rgba(90,80,60,.55); filter: blur(3px); }
-  </style></head><body><div class="label">
+    .smudge { position: absolute; left: 393px; top: 190px; width: 30px; height: 34px; border-radius: 50%; background: rgba(90,80,60,.55); filter: blur(3px); }`;
+const DAMAGE_STYLE = { blur: "filter: blur(2.6px) contrast(.8); transform: rotate(-4deg);", torn: "transform: rotate(1.5deg);" };
+const labelDiv = (l, svg, extraClass = "") => `<div class="label ${extraClass}" style="${DAMAGE_STYLE[l.damage] ?? ""}">
     <div class="top"><span class="brand">${esc(l.model.manufacturer)}</span><span>${esc(KIND_IT[l.model.equipmentType])} ${esc(l.model.model)}</span></div>
     <div class="top"><span>P/N ${esc(l.model.materialCode)}</span><span>Made in EU</span></div>
-    <img class="bar" src="data:image/png;base64,${barcodePng.toString("base64")}">
+    <div class="bar">${svg}</div>
     <div class="sn">S/N ${esc(l.serial)}</div>
-    ${torn ? '<div class="tear"></div><div class="smudge"></div>' : ""}
+    ${l.damage === "torn" ? '<div class="tear"></div><div class="smudge"></div>' : ""}
     <div class="test">${TEST_MARK}</div>
-  </div></body></html>`;
+  </div>`;
+// The label photographed on a grey device.
+const labelHtml = (l, svg) => `<!doctype html><html><head><meta charset="utf-8"><style>
+    body { margin: 0; width: 760px; height: 420px; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 30% 30%, #8d949b, #4b5157); }${LABEL_CSS}
+  </style></head><body>${labelDiv(l, svg, "shadow")}</body></html>`;
+// The sheet to print: each label in a 70 x 35 mm box with a dashed cutting line, its name below it.
+function printHtml(groups) {
+  const zoom = ((LABEL_MM.width - 4) * 96 / 25.4 / 644).toFixed(3); // 644 px = the label with its padding; 2 mm free each side
+  const cell = ({ l, svg, caption }) => `<div class="item"><div class="cut" data-serial="${esc(l.serial)}"><div style="zoom: ${zoom}">${labelDiv(l, svg)}</div></div><div class="cap">${esc(caption)}</div></div>`;
+  const section = (g, i) => `<section style="${i ? "break-before: page;" : ""}"><h2>${esc(g.title)}</h2><p>${esc(g.note)}</p><div class="grid">${g.items.map(cell).join("")}</div></section>`;
+  return `<!doctype html><html lang="it"><head><meta charset="utf-8"><style>
+    * { box-sizing: border-box; } body { margin: 0; font: 9pt Arial, Helvetica, sans-serif; color: #111; }
+    h1 { font-size: 13pt; margin: 0 0 1mm; } h2 { font-size: 11pt; margin: 0 0 1mm; } p { margin: 0 0 3mm; color: #333; }
+    .grid { display: grid; grid-template-columns: repeat(2, ${LABEL_MM.width}mm); column-gap: 14mm; row-gap: 3mm; }
+    .item { break-inside: avoid; }
+    .cut { width: ${LABEL_MM.width}mm; height: ${LABEL_MM.height}mm; border: .25mm dashed #999; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
+    .cap { font-size: 7.5pt; color: #555; margin-top: .8mm; }${LABEL_CSS}
+  </style></head><body>
+    <h1>Etichette di prova da stampare · ${TEST_MARK}</h1>
+    <p>Stampa al 100% (dimensione reale, non «adatta alla pagina»): ogni etichetta è ${LABEL_MM.width} × ${LABEL_MM.height} mm. Ritaglia lungo il tratteggio. Dati inventati.</p>
+    ${groups.map(section).join("")}
+  </body></html>`;
 }
 
 // The DDT on paper, photographed on a desk: a little rotated, uneven light, slightly soft (D-45: the real case).
@@ -174,6 +209,7 @@ async function main() {
   await prepareZXingModule({ overrides: { wasmBinary: wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength) }, fireImmediately: true });
   const browser = await chromium.launch();
   const checks = [];
+  const printed = [];
   try {
     const page = await browser.newPage();
     for (const d of DDT) {
@@ -191,11 +227,28 @@ async function main() {
     await page.screenshot({ path: `${OUT}DDT-TD-2026-0412-foto.jpg`, type: "jpeg", quality: 78 });
 
     await page.setViewportSize({ width: 760, height: 420 });
-    for (const l of LABELS) {
-      const bar = await writeBarcode(l.serial, { format: "Code128" });
-      if (bar.error) throw new Error(bar.error);
-      await page.setContent(labelHtml(l, Buffer.from(await bar.image.arrayBuffer())), { waitUntil: "load" });
+    const svgs = new Map();
+    for (const l of [...LABELS, ...BOM_LABELS]) {
+      svgs.set(l.serial, await barcodeSvg(l.serial));
+      await page.setContent(labelHtml(l, svgs.get(l.serial)), { waitUntil: "load" });
       await page.screenshot({ path: `${OUT}${l.file}`, ...(l.file.endsWith(".jpg") ? { type: "jpeg", quality: 85 } : { type: "png" }) });
+    }
+
+    // The sheet to print, then the same sheet on screen at about 300 dpi: what the camera will meet on paper.
+    const groups = [
+      { title: `Arrivo in magazzino: DDT ${DDT[0].number}`, note: `Etichette 1-5 del DDT (la 4 e la 5 rovinate apposta) e la 6 di un pezzo che non è nel DDT. Luogo: ${WAREHOUSE.code}.`,
+        items: LABELS.map((l, i) => ({ l, svg: svgs.get(l.serial), caption: `${i + 1} · ${l.serial}${l.damage ? ` · ${DAMAGE_IT[l.damage]}` : ""}${i === 5 ? " · fuori DDT" : ""}` })) },
+      { title: `Sito ${SITE.code}: seriali della BOM`, note: "SMONTARE: da attaccare ai pezzi vecchi da togliere al sito. INSTALLARE: i pezzi nuovi da montare.",
+        items: BOM_LABELS.map((l) => ({ l, svg: svgs.get(l.serial), caption: `${l.op} · ${l.serial}` })) },
+    ];
+    await page.setContent(printHtml(groups), { waitUntil: "load" });
+    await page.pdf({ path: `${OUT}${PRINT_PDF}`, format: "A4", printBackground: true, displayHeaderFooter: true, headerTemplate: "<div></div>", footerTemplate: FOOTER, margin: { top: "12mm", bottom: "16mm", left: "18mm", right: "18mm" } });
+    const hiRes = await browser.newPage({ deviceScaleFactor: 300 / 96 });
+    await hiRes.setContent(printHtml(groups), { waitUntil: "load" });
+    for (const box of await hiRes.locator(".cut").all()) {
+      const serial = await box.getAttribute("data-serial");
+      const mm = await box.evaluate((e) => [e.offsetWidth, e.offsetHeight].map((px) => Math.round(px * 25.4 / 96)));
+      printed.push({ serial, mm, got: (await readBarcodes(new Uint8Array(await box.screenshot({ type: "png" })), { formats: ["Code128"], tryHarder: true })).map((b) => b.text) });
     }
   } finally {
     await browser.close();
@@ -215,11 +268,20 @@ async function main() {
   checks.push([`DDT-TD-2026-0412.xlsx: intestazioni in riga 1 e ${DDT[0].lines.length} righe`, x1.headers.join("|") === DDT_HEADERS.join("|") && x1.rows === DDT[0].lines.length]);
   const x2 = await excelRows(`BOM-${SITE.code}.xlsx`);
   checks.push([`BOM-${SITE.code}.xlsx: ${BOM.length} righe con la colonna Operazione`, x2.headers.includes("Operazione") && x2.rows === BOM.length]);
-  for (const l of LABELS) {
+  for (const l of [...LABELS, ...BOM_LABELS]) {
     const got = await decode(l.file);
     checks.push(l.damage
       ? [`${l.file}: lo scanner NON la legge (caso della lettura automatica)`, !got.includes(l.serial)]
       : [`${l.file}: lo scanner legge ${l.serial}`, got.length === 1 && got[0] === l.serial]);
+  }
+  checks.push([`${PRINT_PDF}: 2 pagine (DDT, poi BOM)`, pdfPages(PRINT_PDF) === 2]);
+  const all = [...LABELS, ...BOM_LABELS];
+  checks.push([`${PRINT_PDF}: ${all.length} etichette di ${LABEL_MM.width} × ${LABEL_MM.height} mm`, printed.length === all.length && printed.every((p) => p.mm[0] === LABEL_MM.width && p.mm[1] === LABEL_MM.height)]);
+  for (const l of all) {
+    const got = printed.find((p) => p.serial === l.serial)?.got ?? [];
+    checks.push(l.damage
+      ? [`stampata ${l.serial}: lo scanner NON la legge`, !got.includes(l.serial)]
+      : [`stampata ${l.serial}: lo scanner la legge`, got.length === 1 && got[0] === l.serial]);
   }
   for (const [what, ok] of checks) console.log(`${ok ? "OK  " : "NO  "} ${what}`);
   console.log(`Files in ${OUT}`);
@@ -245,6 +307,8 @@ function leggimi() {
     "etichetta-4-sfocata         la fotocamera non la legge: «Leggi dalla foto dell'etichetta»",
     "etichetta-5-strappata       codice a barre strappato e una cifra macchiata: lettura automatica con carattere incerto",
     "etichetta-6-fuori-DDT       pezzo che non è nel DDT: risulta «inatteso»",
+    `etichetta-bom-1..9          seriali della BOM di ${SITE.code}: ${BOM_LABELS.filter((l) => l.op === "SMONTARE").length} da smontare (TD26R13…), ${BOM_LABELS.filter((l) => l.op === "INSTALLARE").length} da installare (TD26I13…)`,
+    `${PRINT_PDF}   tutte le etichette su A4, ${LABEL_MM.width} × ${LABEL_MM.height} mm: stampare al 100% e ritagliare`,
     "",
     "Percorso di demo (Magazzino ASP Nord):",
     "1. Documenti > Nuovo documento > DDT (arrivo), numero TD-2026-0412, luogo MAG-NORD-01; carica il PDF, l'Excel o la foto; controlla le righe e Salva.",
