@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit ffd72a3 · Guide text: sha 5cf593256bad · Date: 04/11/2026
+App described: commit 4a6c0a0 · Guide text: sha 817655e752b6 · Date: 05/11/2026
 
 ## How to use this guide
 
@@ -49,7 +49,7 @@ If something goes wrong:
 2. Write your «Work e-mail» and the «Password».
 3. Press «Sign in».
 
-If your company has turned them on, you also see «Sign in with Google» or «Sign in with Microsoft». If your address already has a password, the app says «This e-mail already has a password: enter it to link the two sign-in methods.»: write the password and press «Sign in».
+If your company has turned them on, you also see «Sign in with Google» or «Sign in with Microsoft». If your address already has a password, the app says «This e-mail already has a password: enter it to link the two sign-in methods.»: write the password and press «Sign in». With a Gmail or company Google address, instead, Google links itself to your account and your password stays valid. You can sign in with Google only if the administrator has already invited you with that same address.
 
 Most frequent messages:
 - «Wrong e-mail or password.»: check and try again, or use «Forgot your password?».
@@ -179,7 +179,7 @@ Places and organizations always appear with their name (for a place: code and na
 
 **Who you are.** You work at the sites: you remove the old material and install the new one. With the app you scan the code of every piece you remove or install and, at the end, you declare that you have finished at the site.
 
-**What you find in the menu.** «Home» (the choice of the site) and «Guide». At the bottom right there is always the big «Scan» button. At the top you see the chosen site: tap it to change it.
+**What you find in the menu.** «Home» (the choice of the site) and «Guide». At the bottom right there is the big «Scan» button (it does not appear in the scanning screen, where you already are). At the top you see the chosen site: tap it to change it.
 
 **What you do not see.** You see only the sites of your ASP. You do not see alerts, anomalies and the office pages.
 
@@ -199,7 +199,7 @@ If something goes wrong:
 
 ### How do I read a barcode?
 
-There are three ways, in the screen that opens with «Scan», plus a fourth one if the office has turned it on.
+You scan in the screen that opens with «Scan». At the top there is the camera; right below there are the controls for every piece: «Undo last», «Photo», the sound, «Burst» and, if the phone has them, «Torch» and «Sun». Further down there is the field of the scanner gun and, if the code cannot be read, the row «Can't read the code?».
 
 **With the camera.**
 1. Frame the code inside the colored box.
@@ -212,15 +212,16 @@ Helps: «Torch» turns the light on (if the phone has one); the «Sun» slider d
 
 **With a scanner gun or a ring scanner.** Tap the field «Scanner gun / ring: read here» and scan: the scanner writes the code and sends it by itself.
 
-**By hand.** Write the digits in the field «Type the digits under the barcode» and press «Confirm».
+**If the code cannot be read.** Under the field of the scanner gun you find «Can't read the code?» with two ways:
+- **By hand**: write the digits in the field «Type the digits under the barcode» and press «Confirm». It works without network too.
+- **«Photograph the label»**: it is there only if the Client administrator has turned on the automatic reading in «Settings» (tab «Features») and if there is network; without network the button does not appear. It is for a damaged label that the camera cannot read.
 
-**From the photo of the label.** The «Read from the label photo» button is there only if the Client administrator has turned on the automatic reading in «Settings» (tab «Features»). It is for a damaged label that the camera cannot read, and it needs the network.
-1. Press «Read from the label photo» and take a photo of the label. While the app reads it you see «Reading the photo…».
+With «Photograph the label»:
+1. Press «Photograph the label» and take a photo of the label. While the app reads it you see «Reading the photo…».
 2. «Codes read from the photo» opens. The highlighted characters are uncertain: always check the code on the label and correct it if needed.
 3. Press «Confirm» next to the right code. Only then the scan starts, as if you had typed it, and the photo of the label stays linked to the scan. «Cancel» closes without recording anything.
 
 Possible messages (in all these cases type the code by hand):
-- «Reading the photo needs the network: type the code by hand below.»
 - «No code was found in the photo: try again or type it by hand.»
 - «Some codes were not readable and are missing.»
 - «You have reached today's automatic readings.»
@@ -235,6 +236,22 @@ If something goes wrong:
 - «Camera not allowed. On iPhone: Settings > Safari > Camera (or the installed app's settings). You can type the code below.»: give the camera permission, or type the code by hand.
 - «The reading engine is not available: type the code below.»: use the field to type by hand.
 
+### What happens if you scan a piece again?
+
+When you scan a code, the app checks whether you have already scanned that piece or whether it is already where you are. There are three cases.
+
+1. **You have just scanned it, in the same scanning.** You have already scanned that piece, for the same operation and at the same place, since you opened the screen. A yellow warning appears, for example «… already read a moment ago (at 10:42)». The scan is **not** recorded again and the counter does not go up. It works with the camera, the scanner gun and the digits by hand. If you pressed «Undo last» on that piece, you can scan it again normally.
+2. **The piece is already here, in the same state.** For example you record the arrival of a piece that is already recorded as arrived in this warehouse. A yellow warning appears, for example «… has been at MAG-NORD-01 · Magazzino Nord since 04/11/26, 18:10». The scan is sent anyway and nothing changes. In the list the row says «already here» and the counter does not count it as a new piece.
+3. **The piece shows a state that does not match.** For example it is already installed at a site, it has already been returned, or it is in another warehouse without a transfer. A **red** warning appears, for example «… shows as “Installed” at SITO-00001 · …: check the label». The scan is sent anyway and the office finds it among the anomalies. Look carefully at the label: it may be on the wrong piece.
+
+Good to know:
+- Without network the app uses the data it already has on the phone, which may be old: this is why in cases 2 and 3 the scan always leaves. Only case 1 is certain.
+- If the piece belongs to another ASP, the phone does not see it (for confidentiality) and does not warn: the server notices it and opens the anomaly for the office.
+- If the piece is at a place the phone does not know, the warning says «another place».
+- With a slow network, up to a couple of seconds more may pass before the green flash: the app is checking the piece.
+
+This behavior is a choice, not a limit: if in your work it must be different (for example blocking case 2 too, or not warning), ask whoever manages SwapTrack.
+
 ### How do I record the removal of pieces at a site?
 
 1. Choose the site (see above).
@@ -242,7 +259,7 @@ If something goes wrong:
 3. At the top press «Remove» (if it is not highlighted already).
 4. Scan one after another the codes of the pieces you remove.
 
-What you see next: under the camera there is the counter, for example «5 readings in this session», and the list of the codes with «Waiting» or «Sent». Further down, «My scans of today» lists all your scans of the day.
+What you see next: under the camera there is the counter, for example «5 readings in this session», and the list of the codes with «Waiting» or «Sent». Further down there is «My scans of today · 12»: the number is how many scans you made today; tap the row to open the list and again to close it.
 
 **If «Unknown piece» appears.** The app says «The code … is new. Pick a model to help the office complete it later, or skip.»
 - If you know the model, write part of the name or of the code in «Search model or code» and tap the right result (or choose the model in the «Model» list), then press «Confirm».
@@ -260,9 +277,9 @@ The new pieces come from the warehouse of your ASP: if a code is not known, the 
 
 ### How do I check the pieces expected at the site (the BOM)?
 
-If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the «BOM tick list»:
+If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the row «BOM tick list · 3/10» (scanned out of expected): tap it to open the list.
 - with «Remove» you see the «Pieces to remove», with «Install» the «Pieces to install»;
-- every piece of the list that you scan gets a tick; next to the title you see the count, for example 3/10 (scanned out of expected);
+- every piece of the list that you scan gets a tick;
 - if you scan pieces that are not in the list, they appear below, for example «2 pieces not expected by the BOM»;
 - «No lines for this direction.»: the BOM expects no pieces to remove (or to install).
 
@@ -282,7 +299,7 @@ Good to know:
 ### How do I take a photo of a piece?
 
 1. Scan the piece.
-2. Right after, before scanning the next piece, press «Photo» and take the picture.
+2. Right after, before scanning the next piece, press «Photo» (it is right below the camera) and take the picture.
 3. You see «Photo queued for upload»: the photo leaves as soon as there is network.
 
 Good to know:
@@ -314,7 +331,7 @@ Press it only when you have really finished: there is no confirmation question. 
 
 **Who you are.** You work in the warehouse of your ASP. With the app you record the arrivals of material (new and removed), you sort the removed material, you prepare the returns to the client and the transfers between warehouses, and you complete the data of the pieces.
 
-**What you find in the menu.** «Home» (the choice of the warehouse), «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Guide». At the bottom right there is the «Scan» button.
+**What you find in the menu.** «Home» (the choice of the warehouse), «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Guide». At the bottom right there is the big «Scan» button (it does not appear in the scanning screen, where you already are).
 
 **What you do not see.** You see only the pieces, the documents, the shipments and the alerts of your ASP, plus the pieces that another ASP is transferring to you. In the shipments, the warehouse of another ASP appears as «another organization»; in the other pages a place of another ASP appears as «Place of another ASP».
 
@@ -385,7 +402,7 @@ Then record the arrival:
 
 The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete».
 
-What you see next: the box «Comparison with DDT …» with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). If you see «The DDT has no serial lines.», the DDT has only quantities and there is no tick list.
+What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). If you see «The DDT has no serial lines.», the DDT has only quantities and there is no tick list.
 
 Finally, check and close the comparison:
 1. Open «Documents» and press «Open» on the DDT.
@@ -426,7 +443,7 @@ If something goes wrong:
 7. Press «Send», write the «DDT number» («Enter the DDT number, then send.») and press «Send». You see «Shipment sent».
 
 Good to know:
-- Always use «Scan pieces» from the page of the return: the «Return shipment» and «Transfer out» buttons in the «Scan» screen work only if you come from a shipment (otherwise you see «Shipment not found.»).
+- The return is always scanned with «Scan pieces» from the page of the return: «Return shipment» and «Transfer out» appear in the «Scan» screen only when you come to it from a shipment.
 - Scanning the same piece twice in the same return does not count it twice.
 - To take out a piece scanned by mistake, press «Undo last» at once.
 
@@ -492,7 +509,7 @@ On the page of the piece you find: «State» (status, location, last scan), «Co
 
 **Who you are.** You manage your ASP: you invite and manage the technicians and the warehouse staff, you upload the lists of the sites (BOMs), you correct the pieces of your ASP, you look at the numbers and download exports and reports. You can also do everything the ASP warehouse does.
 
-**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports», «Reports», «People», «Guide». At the bottom right there is the «Scan» button.
+**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports», «Reports», «People», «Guide». At the bottom right there is the big «Scan» button (it does not appear in the scanning screen, where you already are).
 
 **What you do not see.** Only the data of your ASP. You do not see the other ASPs, nor their pieces (except those that are coming to you).
 
@@ -800,12 +817,12 @@ Open «Settings». Every tab has its own «Save»: changing tab does not save. A
 
 - **«Branding»**: «App name», «Primary color», «Logo» (PNG, JPEG, SVG or WebP, at most 500 KB; it also appears on the sign-in page). «Remove logo» removes it.
 - **«Sign-in»**: «Google sign-in», «Microsoft sign-in (company account)», «Two-step verification for administrators», «Sign out desktop sessions after inactivity» with the «Inactivity minutes» (from 5 to 480; it applies only to computers, and it does not sign out if there are scans waiting to be sent). Google, Microsoft and the two-step verification need a technical preparation of the sign-in service: turn them on only after talking with whoever installed SwapTrack.
-- **«App»**: «Minimum version» (empty = no block; if you write it, whoever has an older version must update). «E-mail sending is configured (Trigger Email)»: tick it only if e-mail sending has really been prepared; otherwise the invitations show you the link to copy.
+- **«App»**: «Minimum version» (empty = no block; if you write it, whoever has an older version must update). «Invitations are sent by e-mail (Firebase Authentication)»: tick it to send invitations by e-mail; if it is off, or if the e-mail does not leave, the invitation shows you the link to copy. «Forgot your password?» is always sent by e-mail.
 - **«Privacy»**: «Notice text (Italian)» and «Notice text (English)». Changing a text, everybody will have to accept it again. «Ask everybody to accept again (new version)» asks for it even without changing the text. «Remove the author from old events» with «After how many days» (from 30 to 3650): removes from old scans the record of who made them.
 - **«Thresholds»**: «Days before stale_material» (after how many days stuck material raises the alert «Stale material»; default 30) and «Days before transfer_difference» (after how many days an incomplete transfer raises «Transfer difference»; default 7).
 - **«Photos»**: «Photo mandatory for defective pieces». If you tick it, when a warehouse worker sorts a piece as «Defective» the app asks for the photo at once (see [How do I sort removed material?](#how-do-i-sort-removed-material)).
 - **«Field rules»**: «A piece found at a site but not in the BOM». Choose «Accept and create an alert» (the starting choice) or «Accept silently (no alert)». In both cases the scan is accepted; only whether the «BOM difference» alert is raised for those pieces changes.
-- **«Features»**: «Automatic reading of documents and damaged label codes (AI)». «Proposes the lines of DDTs and BOMs by reading photos and PDFs, and the codes of damaged labels from their photo. Lines and codes are saved only after the check of whoever uploads the document or scans the piece.» If you turn it on, «Read automatically» appears in the documents and «Read from the label photo» in the «Scan» screen; they need the network. Every person can make at most 20 automatic readings a day (documents and labels together); this number cannot be changed from this page.
+- **«Features»**: «Automatic reading of documents and damaged label codes (AI)». «Proposes the lines of DDTs and BOMs by reading photos and PDFs, and the codes of damaged labels from their photo. Lines and codes are saved only after the check of whoever uploads the document or scans the piece.» If you turn it on, «Read automatically» appears in the documents and «Photograph the label» in the «Scan» screen; they need the network. Every person can make at most 20 automatic readings a day (documents and labels together); this number cannot be changed from this page.
 
 ### How do I read the admin log?
 

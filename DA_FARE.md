@@ -198,6 +198,12 @@ Su kronos-caffe-sito Firebase non permette di modificare i modelli delle e-mail 
 6. Prova: invito a un indirizzo proprio → arriva «Reimposta la password per SwapTrack Demo», l'app non mostra il link; password corta rifiutata, giusta accettata → «Continua» → accesso.
 Da dire nella guida: l'e-mail di invito si chiama «Reimposta la password…»; chi invita lo dica alla persona. Per un testo d'invito proprio: richiesta all'assistenza Firebase o funzione con il server di posta del cliente (strada B).
 
+### Anteprima locale del 05/11 (P-139, P-140), passi preparati da o2
+Avvio: `cd C:\Users\mcracchiolo\Desktop\swaptrack` poi `node scripts/previewLocal.mjs`; pronto con «Local: http://localhost:3010/»; Chrome su http://localhost:3010, F12 e Ctrl+Shift+M per la modalità telefono, F5. Nessuna sessione usa gli emulatori mentre è aperta.
+P-139 (magazziniere Nord, MAG-NORD-01, cifre a mano): (1) Arrivo, Materiale nuovo, PROVA-0001 → al «Pezzo sconosciuto» premere «Salta»; di nuovo PROVA-0001 → avviso giallo «già letto poco fa», contatore fermo. (2) Dopo «Inviata», Home e di nuovo Arrivo, PROVA-0001 → avviso giallo «è già a MAG-NORD-01 … dal …», riga «già qui», contatore fermo. (3) Rosso: Smista con categoria «Riutilizzo» e PROVA-0001, oppure Arrivo nuovo con SNN-000002 (installato in un sito di Nord) → «… risulta «…» a …: controlla l'etichetta».
+P-140 (amministratore cliente): Impostazioni → App → «Gli inviti partono per e-mail (Firebase Authentication)» → Salva; Utenti → Invita utente (e-mail inventata) → «L'e-mail di invito è stata inviata.» e nessun link. L'e-mail finta si legge su http://127.0.0.1:9109/emulator/v1/projects/demo-swaptrack/oobCodes (riga «oobLink»); aprirla, scegliere la password, entrare. Controprova a interruttore spento: compare il link.
+Chiusura: Ctrl+C una volta, attendere «emulators: … stopped». Se resta una porta: `netstat -ano | findstr ":8190 :9109 :5011 :9209 :3010"` e `taskkill /PID <numero> /F` solo per quei numeri; avvisare la memoria storica.
+
 ## P-31 Documentazione per l'utente e il collaudo
 
 **Cosa:** una guida breve per il consulente (cosa vedrà, con quali account) e una lista di collaudo per il committente (percorso per percorso, cosa aspettarsi). Ogni scritta verificata sul codice.
