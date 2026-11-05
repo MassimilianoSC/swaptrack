@@ -20,7 +20,7 @@ import { hostOf } from "./emulatorPorts.mjs";
 import { DEMO_DOMAIN } from "./demoAccounts.mjs";
 import { ORGS, seedModels } from "./seedCatalog.mjs";
 
-const { computeCodeId } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
+const { computeCodeId, normalizeBarcode } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
 const REAL = process.env.CHECK_REAL_PROJECT === "kronos-caffe-sito" && process.argv.includes("--yes-real-project");
 if (!REAL) {
   process.env.FIRESTORE_EMULATOR_HOST ??= hostOf("firestore");
@@ -148,9 +148,27 @@ const DEMO_SERIALS = [
 ];
 const codeIds = DEMO_SERIALS.map((s) => computeCodeId(s));
 const expected = [];
-for (let i = 0; i < codeIds.length; i += 30) expected.push(...(await db.collection("expectedCodes").where("codeId", "in", codeIds.slice(i, i + 30)).select("codeId").get()).docs);
-const expectedSerials = [...new Set(expected.map((d) => DEMO_SERIALS[codeIds.indexOf(d.get("codeId"))]))].sort();
-line(!expected.length, `demo serials expected by a document already (expectedCodes): ${expected.length}${expected.length ? ` — ${expectedSerials.join(", ")}` : ""}`);
+for (let i = 0; i < codeIds.length; i += 30) expected.push(...(await db.collection("expectedCodes").where("codeId", "in", codeIds.slice(i, i + 30)).select("codeId", "documentId", "modelId", "materialCode").get()).docs);
+const serialOf = (d) => DEMO_SERIALS[codeIds.indexOf(d.get("codeId"))];
+const serialsOf = (list) => [...new Set(list.map(serialOf))].sort().join(", ");
+// Open (or checked) documents make the demo see «expected» lines; closed ones (the AI trials, P-142) only give the
+// model of the piece (findModel), so for those the check is that each serial points to one model of the catalog.
+const docIds = [...new Set(expected.map((d) => String(d.get("documentId"))))];
+const docStatus = new Map((docIds.length ? await db.getAll(...docIds.map((id) => db.collection("documents").doc(id)), { fieldMask: ["status"] }) : [])
+  .map((d) => [d.id, d.exists ? d.get("status") : "deleted"]));
+const live = expected.filter((d) => ["open", "checked"].includes(docStatus.get(String(d.get("documentId")))));
+line(!live.length, `demo serials expected by an open document already (expectedCodes): ${live.length}${live.length ? ` — ${serialsOf(live)}` : ""}`);
+const closedHints = expected.filter((d) => !live.includes(d));
+if (closedHints.length) {
+  const catalog = (await db.collection("models").select("materialCode").get()).docs;
+  const byCode = new Map(catalog.map((m) => [normalizeBarcode(String(m.get("materialCode") ?? "")), m.id]));
+  const ids = new Set(catalog.map((m) => m.id));
+  const modelOf = (h) => (h.get("modelId") && ids.has(h.get("modelId")) ? h.get("modelId") : byCode.get(normalizeBarcode(String(h.get("materialCode") ?? ""))) ?? null);
+  const models = new Map();
+  for (const h of closedHints) models.set(serialOf(h), [...(models.get(serialOf(h)) ?? []), modelOf(h)]);
+  const bad = [...models].filter(([, m]) => m.includes(null) || new Set(m).size > 1).map(([s]) => s).sort();
+  line(!bad.length, `demo serials in closed documents (only the model of the piece): ${closedHints.length} lines of ${models.size} serials${bad.length ? ` — no model of the catalog or different models for ${bad.join(", ")}` : ", each gives one model of the catalog"}`);
+}
 // I) The guide of the app (the published site only).
 if (REAL) {
   const status = await fetch("https://swaptrack-demo.web.app/guida.html", { method: "HEAD" }).then((r) => r.status, () => "no answer");
