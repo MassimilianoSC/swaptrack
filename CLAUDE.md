@@ -31,6 +31,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - `scripts/`, tranne `scripts/copy-wasm.mjs` (congelato)
 - `tests/` e `vitest.config.ts`, tranne `tests/codeId.parity.test.mjs` (congelato)
 - `ARCHITECTURE.md`
+- `PRIMA_DELLA_PRESENTAZIONE/` (LEGGIMI e comandi per riportare la demo allo stato iniziale; il testo lo rivede la memoria storica)
 
 **o3**
 - `src/`, tranne i file consegnati (congelati): `src/lib/codeId.js`, `src/lib/clockOffset.js`, `src/lib/imageCompress.js`, `src/lib/scanner/engine.js`, `src/lib/scanner/webEngine.js`
