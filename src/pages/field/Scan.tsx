@@ -27,6 +27,10 @@ const MODES: Record<string, string[]> = {
 };
 // P-134 (D-62 criterion 4): these work only inside a shipment, so they are offered only when the screen is opened from one.
 const SHIPMENT_MODES = ["return_ship", "transfer_out"];
+// The server sorts a piece as "defective" / "leftover" only if it is new material at the warehouse, or already defective /
+// leftover (shared/stateMachine.ts, classify); a piece the phone does not know is offered both, as before.
+const newClassAllowed = (it: Record<string, unknown> | null) =>
+  !it || (it.status === "received_at_asp" && it.flow === "new") || it.status === "defective" || it.status === "leftover";
 // P-98: how long the camera ignores the code it just read (the phone held still on the label).
 const CAMERA_REPEAT_MS = 3000;
 const BURST_KEY = "swaptrack.burst";
@@ -101,7 +105,7 @@ export default function Scan() {
   const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
   const [modelPick, setModelPick] = React.useState<{ code: string; source: Source; second?: string } | null>(null);
   const [modelPickId, setModelPickId] = React.useState("");
-  const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; second?: string; suggested: string | null } | null>(null);
+  const [pendingSort, setPendingSort] = React.useState<{ code: string; source: Source; second?: string; suggested: string | null; newOk: boolean } | null>(null);
   // D-66 (P-136c): a reading taken as a new piece while the window of the previous one is open: handled when it closes.
   const afterDialog = React.useRef<{ code: string; source: Source } | null>(null);
   // P-113: the model search of the unknown-piece window (model, material code, manufacturer; case and accents ignored).
@@ -442,7 +446,11 @@ export default function Scan() {
   const proceed = async (code: string, source: Source, second?: string): Promise<"asked" | void> => {
     // §10 / P-102: in "Sort" without a fixed category the suggestion is confirmed with one tap, or another one chosen;
     // nothing is recorded until then (the camera waits, as for the model). A fixed category records at once.
-    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current }); return "asked"; }
+    // "Defective" / "Leftover" only where the server accepts them (newClassAllowed): offered in the window, and a fixed
+    // "Defective" / "Leftover" on a removed piece records nothing and says why (the server would open an anomaly).
+    const newOk = mode === "classify" ? newClassAllowed(await cachedItemForCode(code)) : true;
+    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current, newOk }); return "asked"; }
+    if (mode === "classify" && newClass && !newOk) { rereadRef.current = null; show(t("scan.newClassNotForRemoved", { code }), "danger"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
     // a line without a model leaves the piece "to complete", filled in when the document gets it (§6.4).
@@ -834,8 +842,12 @@ export default function Scan() {
               {sorting.categories.filter((c) => c.active && c.id !== pendingSort?.suggested).map((c) => (
                 <li key={c.id}><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ categoryId: c.id })} data-testid={`scan-sort-option-${c.id}`}>{c.labels[i18n.language as "it" | "en"]}</Button></li>
               ))}
-              <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "defective" })} data-testid="scan-sort-defective">{t("scan.defective")}</Button></li>
-              <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "leftover" })} data-testid="scan-sort-leftover">{t("scan.leftover")}</Button></li>
+              {pendingSort?.newOk && (
+                <>
+                  <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "defective" })} data-testid="scan-sort-defective">{t("scan.defective")}</Button></li>
+                  <li><Button type="button" variant="secondary" size="lg" className="w-full" onClick={() => void confirmSort({ newClass: "leftover" })} data-testid="scan-sort-leftover">{t("scan.leftover")}</Button></li>
+                </>
+              )}
             </ul>
             <div className="flex justify-end"><Button variant="ghost" onClick={cancelSort} data-testid="scan-sort-cancel">{t("common.cancel")}</Button></div>
           </div>

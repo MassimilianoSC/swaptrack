@@ -17,7 +17,8 @@
         "product-code.phone.spec.ts",
         "reread.phone.spec.ts",
         "doc-serials.phone.spec.ts",
-        "signin-logos.desk.spec.ts"
+        "signin-logos.desk.spec.ts",
+        "sort-newclass.phone.spec.ts"
       ]
     },
     {

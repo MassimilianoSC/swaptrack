@@ -431,7 +431,8 @@
     "alreadyHere": "{{code}} has been at {{place}} since {{date}}",
     "alreadyHereRow": "already here",
     "rereadConflict": "{{code}} shows as “{{status}}” at {{place}}: check the label",
-    "otherPlace": "another place"
+    "otherPlace": "another place",
+    "newClassNotForRemoved": "{{code}} is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category."
   },
   "pwa": {
     "newVersion": "A new version is available.",

@@ -431,7 +431,8 @@
     "alreadyHere": "{{code}} è già a {{place}} dal {{date}}",
     "alreadyHereRow": "già qui",
     "rereadConflict": "{{code}} risulta «{{status}}» a {{place}}: controlla l'etichetta",
-    "otherPlace": "un altro luogo"
+    "otherPlace": "un altro luogo",
+    "newClassNotForRemoved": "{{code}} è materiale smontato: «Difettoso» e «Avanzo» valgono solo per il materiale nuovo. Non registrato: scegli una categoria."
   },
   "pwa": {
     "newVersion": "È disponibile una nuova versione.",
