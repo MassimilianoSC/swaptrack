@@ -6,6 +6,7 @@ import { hostOf } from "./emulatorPorts.mjs";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID, createHash } from "node:crypto";
 import { createRequire } from "node:module";
+import { clearCollections } from "./clearCollections.mjs";
 // The REAL barcode identity (SPEC R8), the same file the trigger uses: never a local formula,
 // otherwise scanning a seeded piece would not find it and would create a duplicate.
 const { computeCodeId, normalizeBarcode, NORM_VERSION } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
@@ -41,17 +42,9 @@ async function commitAll(writes) {
 }
 
 async function clearSeeded() {
-  // Clears items / codes / events / documents / expectedCodes / shipments / anomalies / alerts / aggregates (keeps orgs/users/locations/models/settings).
-  const cols = ["items", "codes", "events", "documents", "expectedCodes", "shipments", "anomalies", "alerts", "aggregates", "reports", "exports"];
-  for (const c of cols) {
-    const snap = await db.collection(c).get();
-    for (let i = 0; i < snap.docs.length; i += 400) {
-      const b = db.batch();
-      for (const d of snap.docs.slice(i, i + 400)) b.delete(d.ref);
-      await b.commit();
-    }
-  }
-  // Lines are a subcollection of shipments: cleaned together with the parent.
+  // Clears items / codes / events / documents / expectedCodes / shipments (with their lines) / anomalies / alerts /
+  // aggregates / reports / exports; keeps orgs / users / locations / models / settings.
+  await clearCollections(db, ["items", "codes", "events", "documents", "expectedCodes", "shipments", "anomalies", "alerts", "aggregates", "reports", "exports"]);
 }
 
 function range(n) { return Array.from({ length: n }, (_, i) => i); }

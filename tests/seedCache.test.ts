@@ -16,6 +16,6 @@ describe("seedCacheKey", () => {
     expect(seedCacheKey("yarn seed && yarn seed:full", "2026-11-03", ["ab", ""])).not.toBe(seedCacheKey("yarn seed && yarn seed:full", "2026-11-03", ["a", "b"]));
   });
   it("the inputs include the seed scripts, the barcode identity, the emulator configuration and firebase-tools", () => {
-    expect(SEED_INPUTS).toEqual(expect.arrayContaining(["scripts/seed.mjs", "scripts/fullSeed.mjs", "scripts/seedCatalog.mjs", "functions/src/codeId.node.js", "firebase.json", "node_modules/firebase-tools/package.json"]));
+    expect(SEED_INPUTS).toEqual(expect.arrayContaining(["scripts/seed.mjs", "scripts/fullSeed.mjs", "scripts/clearCollections.mjs", "scripts/seedCatalog.mjs", "functions/src/codeId.node.js", "firebase.json", "node_modules/firebase-tools/package.json"]));
   });
 });

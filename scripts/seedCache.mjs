@@ -5,7 +5,7 @@
 import { createHash } from "node:crypto";
 
 export const SEED_INPUTS = [
-  "scripts/seed.mjs", "scripts/seedCatalog.mjs", "scripts/fullSeed.mjs", "scripts/demoAccounts.mjs",
+  "scripts/seed.mjs", "scripts/seedCatalog.mjs", "scripts/fullSeed.mjs", "scripts/clearCollections.mjs", "scripts/demoAccounts.mjs",
   "functions/src/codeId.node.js", "firebase.json", "node_modules/firebase-tools/package.json",
 ];
 
