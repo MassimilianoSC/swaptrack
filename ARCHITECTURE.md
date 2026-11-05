@@ -8,7 +8,7 @@
 ## Exported Cloud Functions (`functions/src/index.ts`)
 | Function | Kind | Started by |
 |---|---|---|
-| `users`, `catalog`, `settings`, `items`, `shipments`, `documents`, `alerts`, `desk` | callable routers (R20) | app, through `src/lib/data/call.ts` |
+| `users`, `catalog`, `settings`, `items`, `shipments`, `documents`, `alerts`, `desk` | callable routers (R20); default 60 s timeout, `documents` and `desk` 120 s (P-144, `tests/routerLimits.test.ts`) | app, through `src/lib/data/call.ts` |
 | `onEventCreated` | Firestore trigger on `events/{id}`, retry on | every scan event (`processEvent` in `trigger.ts`) |
 | `beforeCreate` | blocking (Identity Platform) | any account creation outside the Admin SDK |
 | `beforeSignIn` | blocking (Identity Platform) | every sign-in |

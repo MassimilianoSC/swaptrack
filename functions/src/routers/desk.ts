@@ -145,4 +145,5 @@ export const desk = {
   }),
 };
 
-export const deskRouter = makeRouter("desk", desk);
+// P-144: an export of every ASP with many pieces can pass the default 60 s.
+export const deskRouter = makeRouter("desk", desk, { timeoutSeconds: 120 });
