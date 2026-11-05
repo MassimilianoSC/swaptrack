@@ -65,7 +65,7 @@ Password for all, on the emulators only: `SwapDemo2026`. The demo project online
 - `node scripts/previewLocal.mjs` opens the emulators with the full seed (from the cache when present) and the app on http://localhost:3010, prints the demo accounts (the password is the emulators' one above) and stays open until Ctrl+C, then stops the emulators. While it runs it holds the emulators (one turn, CLAUDE.md §5). Use it when the server changed too; there is no camera there (phones allow it only on a secure address).
 
 ## Invented demo documents
-`node scripts/demoDocs.mjs` (from the project folder, after `yarn install`) writes into `demo-docs/` invented documents for the demo: DDTs as PDF, Excel and photo, a BOM as Excel and PDF, and barcode labels, clean and damaged, all marked «DOCUMENTO DI PROVA». `demo-docs/LEGGIMI.txt` explains each file and the demo path (DDT TD-2026-0412 at Magazzino ASP Nord 1: arrived, missing, unexpected). It needs the test browser (`yarn playwright install chromium`, once, if missing).
+`node scripts/demoDocs.mjs` (from the project folder, after `yarn install`) writes into `demo-docs/` invented documents for the demo: DDTs as PDF, Excel and photo, a BOM as Excel and PDF, barcode labels, clean and damaged, labels of the BOM serials of SITO-00013, and `etichette-da-stampare.pdf` with all labels on A4 at real size (70 × 35 mm, print at 100%), all marked «DOCUMENTO DI PROVA». `demo-docs/LEGGIMI.txt` explains each file and the demo path (DDT TD-2026-0412 at Magazzino ASP Nord 1: arrived, missing, unexpected). It needs the test browser (`yarn playwright install chromium`, once, if missing).
 
 ## Progetto Firebase della demo / Firebase project of the demo installation
 

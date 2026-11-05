@@ -98,20 +98,21 @@ Senza stati né date (stanno in `PIANO.md`). Stesso numero del piano. Per ogni v
 ### Prova guidata (preparata da o3 il 03/11, per l'app online dopo il lotto 2)
 Account: tecnico Nord (sito), magazziniere Nord (arrivo); la password la sa il committente. Per ogni passo: FAI / VEDI / RIFERISCI. Testi tra «…» esatti dell'app.
 0. Prima (amministratore cliente, al computer): Impostazioni → «Funzioni» → spunta «Lettura automatica documenti e codici delle etichette rovinate (AI)» → «Salva» («Salvato»); a prova finita la toglie. Tre etichette: A e B leggibili, C rovinata o coperta da un dito.
-1. Installazione. Android (Chrome): menu ⋮ → «Installa app» (o «Aggiungi a schermata Home»). iPhone (Safari): Condividi → «Aggiungi alla schermata Home» → «Aggiungi». Vede l'icona; l'app si apre a tutto schermo. Riferisce modello e sistema, icona, tutto schermo.
-2. Accesso dall'icona, «Accedi», informativa «Ho letto e accetto». Vede «Scegli il sito» con l'elenco e «Online». Riferisce i secondi da «Accedi» all'elenco; se qualcosa è rimasto su «Caricamento…» oltre 10 s.
+1. Installazione. Android (Chrome): entrati nell'app, nella striscia in alto «Installa l'app» (oppure in fondo al menu ☰ la voce «Installa l'app»); se non compare, menu ⋮ di Chrome → «Installa app» (o «Aggiungi a schermata Home»). iPhone (Safari): Condividi → «Aggiungi alla schermata Home» → «Aggiungi». Vede l'icona; l'app si apre a tutto schermo. Riferisce modello e sistema, icona, tutto schermo.
+2. Accesso dall'icona, «Accedi», informativa «Ho letto e accetto». Vede «Scegli il sito» con l'elenco e, in alto, l'icona della rete (sul telefono la scritta «Online» non c'è, solo l'icona). Riferisce i secondi da «Accedi» all'elenco; se qualcosa è rimasto su «Caricamento…» oltre 10 s.
 3. Sito, «Leggi», «Smonta», «Consenti» la fotocamera. Vede la fotocamera col riquadro e «Motore nativo» o «Motore di riserva». Riferisce il motore e se la fotocamera si apre subito.
 4. Lettura singola (Raffica spenta): A → suono, lampo verde, «Leggi il prossimo»; B inquadrata non si registra finché non si preme «Leggi il prossimo». Riferisce i due esiti.
 5. Pezzo sconosciuto: chiuso con la X (o indietro su Android) → la lettura c'è e la fotocamera riparte. Con un'altra etichetta nuova: ricerca del modello per nome, tocco, «Conferma». Riferisce i due esiti.
-6. Raffica: spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»; A poi C in fila, il numero sale; chiusa e riaperta l'app, «Raffica» resta spuntata.
-7. «Già letto»: fermo 5 s sull'etichetta appena letta → «Già letto. Per rileggerlo allontana il telefono per 3 secondi.», il numero non sale.
-8. Foto dopo una lettura: «Foto in coda per l'invio»; prima di ogni lettura «Foto» sembra spento con «Leggi un pezzo, poi scatta la foto».
-9. Con la rete: secondi da «Da inviare» a «Inviata» in «Le mie letture di oggi».
-10. Modalità aereo: 2 letture e «Ho finito in questo sito»; «Offline» e «2 da inviare»; «Esci» bloccato con la spiegazione.
+6. Raffica: spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»; due etichette NUOVE (D ed E) in fila, il numero sale (A è già letta al passo 4: darebbe «… già letto poco fa (alle …)», D-68); chiusa e riaperta l'app, «Raffica» resta spuntata.
+7. «Già letto»: fermo 5 s sull'etichetta appena letta → «Già letto. Per rileggerlo allontana il telefono per 3 secondi.», il numero non sale. Poi allontana il telefono 3 s e reinquadrala: compare «… già letto poco fa (alle …)» in giallo e il numero non sale (D-68).
+8. Foto dopo una lettura: «Foto in coda per l'invio»; prima di ogni lettura «Foto» sembra spento con «Leggi un pezzo, poi scatta la foto.»; «Foto» e «Annulla l'ultima» sono subito sotto la fotocamera.
+9. Con la rete: secondi da «Da inviare» a «Inviata» nell'elenco sotto la fotocamera (o aprendo «Le mie letture di oggi · N», che ora è un pannello chiuso).
+10. Modalità aereo: 2 letture e «Ho finito in questo sito»; l'icona della rete barrata e «2 da inviare»; «Esci» bloccato con la spiegazione.
 11. Ritorno della rete con l'app aperta: «Online», tutte «Inviata», sparisce «da inviare». Secondi.
 12. Modalità aereo, app chiusa e riaperta: l'elenco dei siti c'è e la ricerca funziona; cosa dice «aggiornati».
-13. AI, con la rete: «Leggi dalla foto dell'etichetta» su C → «Codici letti dalla foto», caratteri incerti evidenziati, correzione, «Conferma» → lampo verde e «Foto in coda per l'invio». In modalità aereo il pulsante spiega che serve la connessione. Riferisce se il codice era giusto, i secondi, la chiarezza del messaggio.
-14. Magazziniere, se c'è tempo: «Arrivo», poi «Smista / classifica»: «Categoria suggerita: …» in grande con «Conferma» e le altre come pulsanti; «Annulla» → «… non smistato».
+13. AI, con la rete: sotto «Il codice non si legge?» premi «Fotografa l'etichetta» su C → «Codici letti dalla foto», caratteri incerti evidenziati, correzione, «Conferma» → lampo verde e «Foto in coda per l'invio». In modalità aereo «Fotografa l'etichetta» non compare: resta solo il campo delle cifre («oppure» sparisce con il pulsante). Riferisce se il codice era giusto, i secondi, la chiarezza del messaggio.
+14. Magazziniere, se c'è tempo: «Arrivo», poi «Smista / classifica»: «Suggerita: …» in grande con «Conferma» e le altre come pulsanti; «Annulla» → «… non smistato».
+15. Facoltativo (D-68 caso 2): chiudi e riapri la schermata «Leggi», stessa modalità e luogo: rileggi A → avviso giallo «… è già a … dal …», riga «già qui», il numero non sale.
 Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il numero del passo, eventuali foto dello schermo.
 
 ## P-22 Foto con la coda senza rete
@@ -144,7 +145,7 @@ Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il n
   1. Magazzino cliente: Spedizioni mostra i resi senza errori; aprendo un reso si vedono le righe.
   2. Ufficio cliente: crea una BOM per un sito di ASP Nord; il tecnico di Nord la vede nella schermata di lettura di quel sito.
   3. Ufficio cliente: Esportazioni → crea un export senza filtri → il file Excel si scarica.
-  4. Ufficio cliente: Resoconti → genera ottobre 2026 → il file scaricato si chiama «SwapTrack-resoconto-2026-10-cliente» (P-106); scegliendo l'ambito ASP Nord (P-99) il file finisce con il nome dell'ASP e il resoconto dice «ASP Nord»; generandolo due volte, il primo file resta scaricabile (P-114).
+  4. Ufficio cliente: «Rapporti» → genera ottobre 2026 → il file scaricato si chiama «SwapTrack-resoconto-2026-10-cliente» (P-106); scegliendo l'ambito ASP Nord (P-99) il file finisce con il nome dell'ASP e il resoconto dice «ASP Nord»; generandolo due volte, il primo file resta scaricabile (P-114).
   5. Magazzino Nord: in arrivo con un DDT legge un pezzo sbagliato, «annulla l'ultima», poi «Confronta»: il pezzo annullato non è fra gli inattesi.
   6. Magazzino Nord, «Arrivo» di materiale nuovo: compare la scelta del DDT aperto e il riquadro arrivati/mancanti/inattesi si aggiorna a ogni lettura (P-24).
   7. Tecnico o magazzino: una lettura con foto scattata in rete; poi l'ufficio cliente apre la pagina di quel pezzo e vede la foto (P-68, P-70).
@@ -156,21 +157,33 @@ Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il n
 - **Prima dei controlli:** nella console, i 7 indici nuovi «Abilitati».
 - **Controlli a mano** (account del seed; in ordine di importanza per la demo; l'atteso viene dalla specifica o dalla decisione):
   1. Pezzi, due filtri insieme (P-101; §13.1–13.2). Ufficio cliente → Cruscotto → clic su «Smistato»: solo pezzi «Smistato». Poi scegli anche un modello: solo smistati di quel modello, nessun errore. Un errore d'indice: mandarne il testo.
-  2. Raffica col telefono vero (P-98, P-109). Magazziniere Nord sul telefono, Arrivo, fotocamera ferma 5 s sulla stessa etichetta: una sola riga, contatore +1; rileggendo subito compare «Già letto».
-  3. Reso: rilettura e «Annulla l'ultima» (P-90, P-91, D-41; §8.2). Magazziniere Nord: nuovo reso, due pezzi «Smistato», rileggi il secondo: pezzi 2, nessuna anomalia nuova. «Annulla l'ultima»: 1 pezzo e 1 riga, il pezzo annullato torna «Smistato».
+  2. Raffica col telefono vero (P-98, P-109). Magazziniere Nord sul telefono, Arrivo, fotocamera ferma 5 s sulla stessa etichetta: una sola riga, contatore +1; entro 3 s compare «Già letto. Per rileggerlo allontana il telefono per 3 secondi.»; dopo, rileggendo, compare «… già letto poco fa (alle …)» (D-68); in tutti e due i casi il contatore non sale.
+  3. Reso: rilettura e «Annulla l'ultima» (P-90, P-91, D-41; §8.2). Magazziniere Nord: nuovo reso, due pezzi «Smistato», rileggi il secondo: avviso giallo «… già letto poco fa (alle …)», la lettura non si registra (D-68); pezzi 2, nessuna anomalia nuova. «Annulla l'ultima»: 1 pezzo e 1 riga, il pezzo annullato torna «Smistato».
   4. Esportazione scaricata (D-35, P-89, P-106; §13.3). Ufficio cliente → Esportazioni → senza filtri → Scarica: si apre in Excel e si chiama «SwapTrack-export-AAAA-MM-GG-hhmm.xlsx».
-  5. Resoconto di un'ASP (P-99, P-114 n.26; §13.4). Ufficio cliente → Resoconti → ambito «ASP Nord», ottobre 2026 → Genera due volte: due righe, tutte e due scaricabili; il file dice «ASP Nord» e si chiama «SwapTrack-resoconto-2026-10-…».
+  5. Resoconto di un'ASP (P-99, P-114 n.26; §13.4). Ufficio cliente → «Rapporti» → ambito «ASP Nord», il mese indicato da checkOnline («month to pick in «Reports»») → Genera due volte: due righe, tutte e due scaricabili; il file dice «ASP Nord» e si chiama «SwapTrack-resoconto-2026-10-…».
   6. Reso con un mancante, avviso che apre il reso (P-103; §9.3). Magazzino cliente: conferma un reso togliendo la spunta a un pezzo → avviso di differenza del reso; aperto da Avvisi porta al reso, non al documento.
   7. Foto vista dall'ufficio (P-68, P-70; §13.2). Tecnico Nord: lettura con foto, in rete. Ufficio cliente: nel pezzo la miniatura, cliccata si apre.
-  8. Arrivo di smontato con smistamento (P-25, D-27, D-39; §12.2). Magazziniere Nord, Arrivo, «Smontato», «Smista nello stesso passaggio»: categoria suggerita in grande, pezzo «Smistato». Con «Nuovo» il pezzo è «Al magazzino ASP», mai «Smistato».
-  9. BOM con direzione (P-92; §11.2). Amministratore cliente: BOM per un sito di Nord con righe in «Da smontare» e «Da installare» → si salva. Tecnico Nord a quel sito: righe divise per direzione.
-  10. Trasferimento ricevuto (P-114 n.16; §9.4). Magazziniere Nord: trasferimento MAG-NORD-01 → MAG-NORD-02 con 2 pezzi, invia; a MAG-NORD-02, Arrivo con quel trasferimento, leggi i 2 pezzi: spedizione «Ricevuta», con la data.
+  8. Arrivo di smontato con smistamento (P-25, D-27, D-39; §12.2). Magazziniere Nord, Arrivo, «Materiale smontato», «Smista nello stesso passaggio»: categoria suggerita in grande, pezzo «Smistato». Con «Materiale nuovo» il pezzo è «Al magazzino ASP», mai «Smistato».
+  9. BOM con direzione (P-92; §11.2). Amministratore cliente: BOM per un sito di Nord con righe in «Da smontare» e «Da installare» → si salva. Tecnico Nord a quel sito, «Leggi»: tocca la riga «Lista BOM · 0/N» per aprirla (ora è chiusa); con «Smonta» vede i «Pezzi da smontare», con «Installa» i «Pezzi da installare».
+  10. Trasferimento ricevuto (P-114 n.16; §9.4). Magazziniere Nord: trasferimento MAG-NORD-01 → MAG-NORD-02 con 2 pezzi, i pezzi si leggono con «Leggi i pezzi» dalla scheda del trasferimento (P-134); invia; a MAG-NORD-02, «Leggi i pezzi» dalla scheda del trasferimento, leggi i 2 pezzi: spedizione «Ricevuta», con la data.
   11. Documenti del magazzino cliente (P-97): l'elenco dei DDT di reso compare, nessuna rotellina infinita.
   12. Niente testi grezzi (P-96, P-117). Ufficio cliente: Home, Anomalie, Esportazioni senza scritte tipo «home.cards…». Amministratore cliente: Registro con testi, mai codici con il trattino basso.
   13. Persone dell'amministratore ASP (P-117 n.30; §3.3). Amministratore Nord → Persone: nessun menu azioni sulla propria riga; sì su magazziniere e tecnico.
   14. Uscita con letture in coda (P-87a, se nel lotto). Tecnico, modalità aereo: una lettura, poi Profilo → «Esci da tutti i dispositivi»: «Non puoi ancora uscire», l'uscita non avviene.
   15. DDT caricato come foto (P-105, D-47, se nel lotto; §11.2). Magazziniere Nord: nuovo DDT con 2 foto → salva; aggiunge una terza: 3 pagine; tolta una, resta nella storia.
   16. Lettura con l'AI (D-45, se nel lotto; dopo i passi di messa a punto). Interruttore spento: nessun pulsante «Leggi automaticamente». Acceso: righe proposte da confermare, nulla salvato senza conferma.
+
+### Prima della demo (9-10/11): controllo dei dati online (o2, 1454229)
+Comando (PowerShell, sola lettura; servono le credenziali di `gcloud auth application-default login`): `cd C:\Users\mcracchiolo\Desktop\swaptrack` poi `$env:CHECK_REAL_PROJECT="kronos-caffe-sito"` poi `node scripts/checkOnline.mjs --yes-real-project`.
+Nella parte «--- What the demo script takes for granted» ogni riga comincia con OK (va bene) o NO (da sistemare); le righe rientrate sono informazioni.
+- A) «account <ruolo> of <organizzazione>»: i 7 account del copione. NO = «missing», «claims» (permessi), «profile» (scheda utente), «Auth disabled» (accesso bloccato). «privacy notice: … not accepted …: shown at the first sign-in» non è un errore: al primo accesso compare l'informativa da accettare (farlo il giorno prima).
+- B–E) ditte attive (almeno 4), i 4 luoghi del copione (4 su 4), modelli attivi (almeno 20), categorie di smistamento (3), regola «Radio unit → cat_refurbish» attiva.
+- F) «settings: …» da confrontare con il copione (AI accesa, e-mail, Google); «no minimum app version» NO se c'è una versione minima.
+- G) «month to pick in «Reports»: AAAA-MM» = il mese da scegliere in «Rapporti» → «Genera»; «aggregates (home dashboard)» NO se 0 (cruscotto vuoto).
+- H) «demo serials expected by a document already» deve essere 0; se NO, «Demo DDTs already saved» e «BOMs of the demo site» dicono quale documento è già stato salvato.
+- I) «https://swaptrack-demo.web.app/guida.html: 200»; altro numero o «no answer» = NO (riga mai provata prima: guardarla bene).
+- Ultima riga: «Everything the demo script takes for granted is there.» oppure «N line(s) NO: send them to the team before the demo.»
+A mano in console (committente): Functions → ci sono gli 8 router e onEventCreated.
 
 ### Lotto 2: prima prova dell'AI online (procedura preparata da o2 il 03/11)
 Serve: lotto 2 pubblicato (con 69df411, registro «ai_call»), i file di `node scripts/demoDocs.mjs` in `demo-docs/`, circa 30 minuti, un cronometro.
