@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 1854879 · Testo della guida: sha 759dc5339240 · Data: 05/11/2026
+App descritta: commit 1b42f27 · Testo della guida: sha caac64fd44bc · Data: 05/11/2026
 
 ## Come usare questa guida
 
@@ -49,7 +49,7 @@ Se qualcosa va storto:
 2. Scrivi la tua «E-mail di lavoro» e la «Password».
 3. Premi «Accedi».
 
-Se la tua azienda li ha attivati, vedi anche «Accedi con Google» o «Accedi con Microsoft». Se il tuo indirizzo ha già una password, l'app scrive «Questa e-mail ha già una password: inseriscila per collegare i due metodi di accesso.»: scrivi la password e premi «Accedi».
+Se la tua azienda li ha attivati, vedi anche «Accedi con Google» o «Accedi con Microsoft». Se il tuo indirizzo ha già una password, l'app scrive «Questa e-mail ha già una password: inseriscila per collegare i due metodi di accesso.»: scrivi la password e premi «Accedi». Con un indirizzo Gmail o di Google aziendale, invece, Google si collega da solo al tuo account e la password resta valida. Con Google entri solo se l'amministratore ti ha già invitato con quello stesso indirizzo.
 
 Messaggi più frequenti:
 - «E-mail o password errate.»: controlla e riprova, oppure usa «Password dimenticata?».
