@@ -60,6 +60,10 @@ Password for all, on the emulators only: `SwapDemo2026`. The demo project online
 
 **Full demo seed (`yarn seed:full`)**: on top of the base seed, ~5,000 pieces across every state of both flows (installed / received / sorted / defective / leftover / removed_at_site / returned / in_transfer / in_return, with `previousFlow: new` on about 10%), 10 DDTs (3 checked), 5 return DDTs, 10 BOMs, 5 within-ASP transfers (3 received), 3 between-ASP transfers, 5 return shipments (2 confirmed, 1 complete), 6 alerts, 6 anomalies, two months of history, aggregate recount for `client` and each ASP across every dimension including status × region.
 
+## Preview before a batch (D-67)
+- `node scripts/previewApp.mjs` (owner only: it writes to the cloud, never to the real site) publishes the app of `main` on the preview channel «anteprima» of the demo site for 7 days and prints the temporary address. Run again, it updates the same address. The preview domain is added to the Auth authorized domains by itself. Note: the preview uses the real demo data; functions, rules and indexes stay the ones online. Use it when only the app changed.
+- `node scripts/previewLocal.mjs` opens the emulators with the full seed (from the cache when present) and the app on http://localhost:3010, prints the demo accounts (the password is the emulators' one above) and stays open until Ctrl+C, then stops the emulators. While it runs it holds the emulators (one turn, CLAUDE.md §5). Use it when the server changed too; there is no camera there (phones allow it only on a secure address).
+
 ## Invented demo documents
 `node scripts/demoDocs.mjs` (from the project folder, after `yarn install`) writes into `demo-docs/` invented documents for the demo: DDTs as PDF, Excel and photo, a BOM as Excel and PDF, and barcode labels, clean and damaged, all marked «DOCUMENTO DI PROVA». `demo-docs/LEGGIMI.txt` explains each file and the demo path (DDT TD-2026-0412 at Magazzino ASP Nord 1: arrived, missing, unexpected). It needs the test browser (`yarn playwright install chromium`, once, if missing).
 
