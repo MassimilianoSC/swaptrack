@@ -29,6 +29,13 @@ export function site(i) {
   return { code: `SITO-${String(i).padStart(5, "0")}`, name: `Stazione ${region} ${i}`, type: "site", aspId: a.id, address: `Località ${i}`, region };
 }
 
+// Sites that get no BOM of the full seed: the site of the demo (scripts/demoDocs.mjs, COPIONE_DEMO tappa 4) and the
+// sites where e2e tests save their own BOM (e2e/doc-serials.phone.spec.ts). Two open BOMs at the same version on one
+// site are picked by document order, so a seeded one would take the place of the demo's.
+export const SITES_WITHOUT_SEEDED_BOM = ["SITO-00013", "SITO-00022", "SITO-00025"];
+// The site of the i-th seeded BOM of an ASP (fullSeed.mjs), from the sites of that ASP in the order of their ids.
+export const bomSite = (sitesOfAsp, i) => sitesOfAsp.filter((s) => !SITES_WITHOUT_SEEDED_BOM.includes(s.code))[i];
+
 // The 20 models of the catalog: material codes MC400100, MC400107, ...
 export function seedModels() {
   return Array.from({ length: 20 }, (_, i) => ({

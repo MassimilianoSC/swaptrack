@@ -156,7 +156,16 @@ const serialsOf = (list) => [...new Set(list.map(serialOf))].sort().join(", ");
 const docIds = [...new Set(expected.map((d) => String(d.get("documentId"))))];
 const docStatus = new Map((docIds.length ? await db.getAll(...docIds.map((id) => db.collection("documents").doc(id)), { fieldMask: ["status"] }) : [])
   .map((d) => [d.id, d.exists ? d.get("status") : "deleted"]));
-const live = expected.filter((d) => ["open", "checked"].includes(docStatus.get(String(d.get("documentId")))));
+// P-150: the BOM of the demo site. The demo's own BOM (only the serials TD26R13…/TD26I13…) may be loaded the day before
+// (COPIONE «Prima della demo» 3); any other open BOM there, or two of the demo's, would be picked instead of it.
+const isOpen = (d) => ["open", "checked"].includes(d.get("status"));
+const demoSiteBoms = allDocs.docs.filter((d) => d.get("kind") === "bom" && d.get("locationId") === "loc_SITO-00013" && isOpen(d));
+const isDemoBom = (d) => { const s = (d.get("lines") ?? []).filter((l) => l?.codeRaw); return s.length > 0 && s.every((l) => /^TD26[RI]13/.test(String(l.codeRaw))); };
+const demoBoms = demoSiteBoms.filter(isDemoBom), otherBoms = demoSiteBoms.filter((d) => !isDemoBom(d));
+line(!otherBoms.length && demoBoms.length <= 1, `open BOMs at the demo site SITO-00013: ${otherBoms.length ? `${otherBoms.map((d) => d.get("number")).join(", ")} not of the demo — close them in the app` : "none other than the demo's"}${demoBoms.length > 1 ? `; ${demoBoms.length} BOMs of the demo (${demoBoms.map((d) => d.get("number")).join(", ")}) — keep one, close the others` : ""}`);
+if (demoBoms.length === 1) console.log(`       the BOM of the demo is loaded: ${demoBoms[0].get("number")} (tappa 4)`);
+const demoBomIds = new Set(demoBoms.map((d) => d.id));
+const live = expected.filter((d) => ["open", "checked"].includes(docStatus.get(String(d.get("documentId")))) && !demoBomIds.has(String(d.get("documentId"))));
 line(!live.length, `demo serials expected by an open document already (expectedCodes): ${live.length}${live.length ? ` — ${serialsOf(live)}` : ""}`);
 const closedHints = expected.filter((d) => !live.includes(d));
 if (closedHints.length) {

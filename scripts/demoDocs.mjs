@@ -10,7 +10,7 @@ import { createRequire } from "node:module";
 import { chromium } from "@playwright/test";
 import ExcelJS from "exceljs";
 import { prepareZXingModule, writeBarcode, readBarcodes } from "zxing-wasm/full";
-import { ORGS, CLIENT_WAREHOUSE, aspWarehouses, site, seedModels } from "./seedCatalog.mjs";
+import { ORGS, CLIENT_WAREHOUSE, aspWarehouses, site, seedModels, SITES_WITHOUT_SEEDED_BOM } from "./seedCatalog.mjs";
 
 const OUT = fileURLToPath(new URL("../demo-docs/", import.meta.url));
 const require = createRequire(import.meta.url);
@@ -21,9 +21,10 @@ const MODELS = seedModels();
 const CLIENT = ORGS.find((o) => o.type === "client");
 const NORD = ORGS.find((o) => o.slug === "nord");
 const WAREHOUSE = aspWarehouses().find((w) => w.code === "MAG-NORD-01");
-// A Nord site without a seeded BOM (the full seed puts Nord's BOMs at sites 1, 10, 19 and 28; the e2e tests use 1 and 7).
+// A Nord site with no BOM of the full seed (seedCatalog.mjs SITES_WITHOUT_SEEDED_BOM, P-150).
 const SITE = site(13);
 if (SITE.aspId !== NORD.id) throw new Error("site 13 is not a Nord site any more: choose another one");
+if (!SITES_WITHOUT_SEEDED_BOM.includes(SITE.code)) throw new Error(`${SITE.code} may get a BOM of the full seed: add it to SITES_WITHOUT_SEEDED_BOM`);
 const DATE = "04/11/2026";
 const KIND_IT = { "Radio unit": "Unità radio", Baseband: "Unità banda base", "Power supply": "Alimentatore", "Transmission card": "Scheda di trasmissione", "Antenna module": "Modulo d'antenna" };
 const describe = (m) => `${KIND_IT[m.equipmentType]} ${m.model} - ${m.manufacturer}`;

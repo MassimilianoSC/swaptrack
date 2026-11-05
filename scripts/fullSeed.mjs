@@ -7,6 +7,7 @@ import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { randomUUID, createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { clearCollections } from "./clearCollections.mjs";
+import { bomSite } from "./seedCatalog.mjs";
 // The REAL barcode identity (SPEC R8), the same file the trigger uses: never a local formula,
 // otherwise scanning a seeded piece would not find it and would create a duplicate.
 const { computeCodeId, normalizeBarcode, NORM_VERSION } = createRequire(import.meta.url)("../functions/src/codeId.node.js");
@@ -205,7 +206,7 @@ async function main() {
   }
   for (let i = 0; i < 10; i++) {
     const asp = asps[i % asps.length];
-    const site = sitesByAsp[asp.id][i];
+    const site = bomSite(sitesByAsp[asp.id], i); // P-150: never the demo site nor the sites of the e2e tests
     const lines = range(3).map((j) => ({ kind: "serial", codeRaw: `BOM-${i}-R-${j}`, codeId: codeId(`BOM-${i}-R-${j}`), direction: "remove" }))
       .concat(range(2).map((j) => ({ kind: "serial", codeRaw: `BOM-${i}-I-${j}`, codeId: codeId(`BOM-${i}-I-${j}`), direction: "install" })));
     const docId = `doc_bom_${i}`;
@@ -274,7 +275,7 @@ async function main() {
   }]);
   // bom_difference on one BOM
   alerts.push([db.collection("alerts").doc(`bom-doc_bom_0`), {
-    kind: "bom_difference", aspId: asps[0].id, locationId: sitesByAsp[asps[0].id][0].id, documentId: "doc_bom_0", shipmentId: null,
+    kind: "bom_difference", aspId: asps[0].id, locationId: bomSite(sitesByAsp[asps[0].id], 0).id, documentId: "doc_bom_0", shipmentId: null,
     detail: { missing: 1, unexpected: 0 }, count: 1, createdAt, updatedAt: createdAt, seenAt: null, closedAt: null, closedNote: null,
   }]);
   await commitAll(alerts);
