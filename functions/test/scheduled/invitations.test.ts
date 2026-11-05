@@ -15,10 +15,12 @@ const ca = { uid: "tt_ca", role: "client_admin", orgId: "org_client", ip: "test"
 const pub = { uid: null, role: "asp_technician", orgId: "", ip: "test", token: {} } as unknown as Parameters<Users["requestPasswordReset"]["handler"]>[0];
 let n = 0;
 const email = () => `invito.${Date.now().toString(36)}.${n++}@swaptrack-demo.test`;
+// The emulator lists the links generated for the admin to copy (generatePasswordResetLink) as well: an e-mail sent by
+// Firebase is the one with a continueUrl, which only the sending call carries.
 const sentTo = async (to: string) => {
   const r = await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/emulator/v1/projects/${PROJECT}/oobCodes`);
   const all = ((await r.json()) as { oobCodes?: Array<{ email: string; requestType: string; oobLink: string }> }).oobCodes ?? [];
-  return all.filter((c) => c.email === to);
+  return all.filter((c) => c.email === to && decodeURIComponent(c.oobLink).includes("continueUrl="));
 };
 const setEmail = (on: boolean) => env.admin.db.collection("settings").doc("app").set({ minVersion: "", emailConfigured: on });
 const invite = (to: string) => users.inviteUser.handler(ca, { email: to, firstName: "Prova", lastName: "Invito", language: "it", role: "client_office", orgId: "org_client" }) as Promise<{ uid: string; delivered: string; link?: string }>;
