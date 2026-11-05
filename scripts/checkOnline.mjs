@@ -2,8 +2,9 @@
 //   - events with no processedAt (never processed by the trigger), by type;
 //   - documents with aspId null (saved by a client role before P-49), by kind;
 //   - BOMs with lines without direction (P-92), and how many lines;
-//   - before the demo: documents of the AI procedure and demo DDTs already saved, demo label codes already read,
-//     shipment drafts, open alerts and anomalies, pieces to complete, the AI switch.
+//   - before the demo (P-142): documents of the AI procedure (open and closed), demo DDTs already saved, documents
+//     with demo serials TD26… in their lines, BOMs of the demo site SITO-00013, demo label codes already read with the
+//     state and place of their piece, shipment drafts, open alerts and anomalies, pieces to complete, the AI switch.
 // Target: the emulators by default (project demo-swaptrack). The real demo project only with BOTH
 //   CHECK_REAL_PROJECT=kronos-caffe-sito   and the argument --yes-real-project
 // (PowerShell: $env:CHECK_REAL_PROJECT="kronos-caffe-sito" then the command; Git Bash: CHECK_REAL_PROJECT=kronos-caffe-sito node ...)
@@ -45,16 +46,30 @@ console.log(toFix
 // Before the demo: what the manual checks and the AI procedure (P-124) may have left. Counts and invented demo
 // numbers only (documents and codes of demo-docs), never people.
 console.log("\n--- Before the demo (what the checks may have left)");
-const allDocs = await db.collection("documents").select("number", "kind", "status").get();
+const allDocs = await db.collection("documents").select("number", "kind", "status", "version", "locationId", "lines").get();
 const byNumber = (prefix) => allDocs.docs.filter((d) => String(d.get("number") ?? "").startsWith(prefix));
-const listDocs = (title, list) => {
+const place = (id) => String(id ?? "—").replace(/^loc_/, "");
+const listDocs = (title, list, extra = () => "") => {
   console.log(`${title}: ${list.length}`);
-  for (const d of list) console.log(`  ${d.get("number")} (${d.get("kind")}, ${d.get("status")})`);
+  for (const d of list) console.log(`  ${d.get("number")} (${d.get("kind")}, ${d.get("status")}, v${d.get("version") ?? 1}, ${place(d.get("locationId"))})${extra(d)}`);
 };
-listDocs("Documents of the AI procedure (AI-PROVA-…), to close before the demo", byNumber("AI-PROVA"));
+const aiDocs = byNumber("AI-PROVA");
+listDocs("Documents of the AI procedure (AI-PROVA-…) still OPEN, to close before the demo", aiDocs.filter((d) => d.get("status") !== "closed"));
+listDocs("Documents of the AI procedure already closed (nothing to do)", aiDocs.filter((d) => d.get("status") === "closed"));
 listDocs("Demo DDTs already saved (TD-2026-…): the demo would see «already exists»", byNumber("TD-2026-"));
-const demoCodes = await db.collection("codes").where("raw", ">=", "TD26").where("raw", "<", "TD27").select("raw").get();
-console.log(`Codes of the demo labels already read (TD26…): ${demoCodes.size}${demoCodes.size ? ` (${demoCodes.docs.map((d) => d.get("raw")).sort().join(", ")})` : ""}`);
+// P-142: any document that lists the demo serials (TD26…), whatever its number: its expected lines are already there.
+const demoLines = (d) => (d.get("lines") ?? []).filter((l) => String(l?.codeRaw ?? "").startsWith("TD26")).length;
+listDocs("Documents with demo serials in their lines (TD26…), any number", allDocs.docs.filter((d) => demoLines(d) > 0), (d) => `: ${demoLines(d)} lines TD26…`);
+listDocs("BOMs of the demo site SITO-00013 already saved", allDocs.docs.filter((d) => d.get("kind") === "bom" && d.get("locationId") === "loc_SITO-00013"));
+const demoCodes = await db.collection("codes").where("raw", ">=", "TD26").where("raw", "<", "TD27").select("raw", "itemId").get();
+console.log(`Codes of the demo labels already read (TD26…): ${demoCodes.size}${demoCodes.size ? " — the demo would show «already read» or «is already at …» for them:" : ""}`);
+// For each, the state and the place of its piece: what the demo scanning would meet.
+const pieces = demoCodes.size ? await db.getAll(...demoCodes.docs.map((c) => db.collection("items").doc(String(c.get("itemId") || "-"))), { fieldMask: ["status", "currentLocationId"] }) : [];
+const pieceOf = new Map(pieces.map((p) => [p.id, p]));
+for (const c of [...demoCodes.docs].sort((a, b) => String(a.get("raw")).localeCompare(String(b.get("raw"))))) {
+  const p = pieceOf.get(String(c.get("itemId")));
+  console.log(`  ${c.get("raw")} → ${p?.exists ? `${p.get("status")}, ${place(p.get("currentLocationId"))}` : "no piece"}`);
+}
 const drafts = await db.collection("shipments").where("status", "==", "draft").select("kind").get();
 print("Shipment drafts still open, by kind", countBy(drafts.docs, "kind"));
 const alerts = await db.collection("alerts").where("closedAt", "==", null).select("kind").get();
