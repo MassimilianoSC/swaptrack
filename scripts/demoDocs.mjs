@@ -292,10 +292,10 @@ function leggimi() {
   const count = (d) => `${d.lines.filter((l) => l.serial).length} seriali e ${d.lines.filter((l) => !l.serial).length} righe a quantità`;
   const ddt0 = DDT[0].lines.filter((l) => l.serial).map((l) => l.serial);
   return [
-    `${TEST_MARK} - dati inventati per la demo di SwapTrack (P-124). Rigenerati con: node scripts/demoDocs.mjs`,
+    `${TEST_MARK} - dati inventati per la demo di SwapTrack. Rigenerati con: node scripts/demoDocs.mjs`,
     "",
-    `Coerenti con il seed: ${NORD.name}, ${WAREHOUSE.name} (${WAREHOUSE.code}), sito ${SITE.code} (${SITE.name}), codici materiale del catalogo.`,
-    "I seriali TD26... sono nuovi: non esistono nel seed. Salvando il DDT, il server crea i pezzi attesi.",
+    `Coerenti con i dati inventati della demo: ${NORD.name}, ${WAREHOUSE.name} (${WAREHOUSE.code}), sito ${SITE.code} (${SITE.name}), codici materiale del catalogo.`,
+    "I seriali TD26... sono nuovi: non esistono nei dati inventati. Salvando il DDT, il server crea i pezzi attesi.",
     "",
     `DDT-TD-2026-0412.pdf        DDT di 1 pagina: ${count(DDT[0])} (per la lettura automatica)`,
     "DDT-TD-2026-0412-foto.jpg   lo stesso DDT fotografato sulla scrivania (il caso vero per la lettura automatica)",
@@ -304,16 +304,18 @@ function leggimi() {
     `BOM-${SITE.code}.xlsx         BOM del sito ${SITE.code}: colonna Operazione, valori SMONTARE e INSTALLARE`,
     `BOM-${SITE.code}.pdf          la stessa BOM stampata (per la lettura automatica)`,
     "etichetta-1..3-pulita       si leggono con la fotocamera (seriali del DDT 0412)",
-    "etichetta-4-sfocata         la fotocamera non la legge: «Leggi dalla foto dell'etichetta»",
+    "etichetta-4-sfocata         la fotocamera non la legge: «Il codice non si legge?» → «Fotografa l'etichetta»",
     "etichetta-5-strappata       codice a barre strappato e una cifra macchiata: lettura automatica con carattere incerto",
-    "etichetta-6-fuori-DDT       pezzo che non è nel DDT: risulta «inatteso»",
+    "etichetta-6-fuori-DDT       pezzo che non è nel DDT: compare «Pezzo sconosciuto» (scegli un modello o «Salta»), poi nel confronto risulta «Non atteso»",
     `etichetta-bom-1..9          seriali della BOM di ${SITE.code}: ${BOM_LABELS.filter((l) => l.op === "SMONTARE").length} da smontare (TD26R13…), ${BOM_LABELS.filter((l) => l.op === "INSTALLARE").length} da installare (TD26I13…)`,
     `${PRINT_PDF}   tutte le etichette su A4, ${LABEL_MM.width} × ${LABEL_MM.height} mm: stampare al 100% e ritagliare`,
     "",
     "Percorso di demo (Magazzino ASP Nord):",
     "1. Documenti > Nuovo documento > DDT (arrivo), numero TD-2026-0412, luogo MAG-NORD-01; carica il PDF, l'Excel o la foto; controlla le righe e Salva.",
     "2. Leggi > Arrivo > DDT TD-2026-0412; leggi le etichette 1, 2, 3 (e la 4 e la 5 con la foto, se la lettura automatica è accesa); poi la 6.",
-    `3. Documenti > TD-2026-0412 > Confronta: arrivati ${ddt0.slice(0, 3).join(", ")} (più 4 e 5 se lette), mancanti gli altri, inatteso TD260499001.`,
+    `3. Documenti > TD-2026-0412 > Confronta: arrivati ${ddt0.slice(0, 3).join(", ")} (più 4 e 5 se lette), mancanti gli altri, non atteso TD260499001.`,
+    "",
+    "Prima della presentazione i dati delle prove si cancellano: vedi la cartella PRIMA_DELLA_PRESENTAZIONE.",
     "",
   ].join("\r\n");
 }
