@@ -35,6 +35,7 @@ test.describe("Rilettura di un pezzo (telefono)", () => {
     // the server has not yet undone the first reading, so the counter is not checked here).
     await page.getByTestId("scan-undo").click();
     await expect(page.getByTestId("scan-session-row")).toHaveCount(0);
+    await expect(page.getByTestId("scan-flash")).toBeHidden(); // "undone" said, before the next reading
     await scanManual(page, a);
     await expect(page.getByTestId("scan-session-row").filter({ hasText: a })).toHaveCount(1);
   });

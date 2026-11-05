@@ -315,7 +315,8 @@ export default function Scan() {
   const productOn = askProduct && !noCatalog;
   // D-68 case 1: the same piece read for the same thing in this session (until "Undo last" takes it away).
   const readingKey = (code: string) => [normalizeBarcode(code), mode, location?.id ?? "", shipmentId ?? "", ddtApplies ? ddtId : ""].join("|");
-  const placeName = (id: string | null) => { const l = places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
+  // The place of the screen is always known; the others come from the ASP's list (loaded in the background).
+  const placeName = (id: string | null) => { const l = id && id === location?.id ? location : places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
   // D-68 cases 2 and 3: the reading as the server's state machine would see it, on the piece as the phone knows it.
   const judgeReading = (code: string, it: Record<string, unknown> | null) => {
     rereadRef.current = null;
