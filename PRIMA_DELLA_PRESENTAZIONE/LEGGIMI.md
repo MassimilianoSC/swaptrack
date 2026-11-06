@@ -33,7 +33,7 @@ cd C:\Users\mcracchiolo\Desktop\swaptrack; $env:RESET_REAL_PROJECT="kronos-caffe
 
 Cosa guardare nell'uscita:
 
-- **«Client administrators kept … 1»** (o più): c'è almeno un amministratore cliente che resta e può entrare. Se compare **«STOP: no active client administrator»**, non andare avanti e chiamare il gruppo.
+- **«Client administrators kept … 1»** (o più): c'è almeno un amministratore cliente che resta e può entrare. Se compare **«STOP: no active client administrator»**, non andare avanti e scrivere alla memoria storica (la chat di Claude), incollando l'uscita.
 - La tabella delle collezioni: accanto a ognuna c'è **«delete N»** (si cancella) oppure **«kept»** (resta). Restano le persone, le organizzazioni, le impostazioni (Google, e-mail, AI, logo) e il catalogo (luoghi, modelli, categorie). Si cancellano le letture, i pezzi, i documenti, le spedizioni, gli avvisi, le anomalie e i loro file.
 - **«NOT of SwapTrack (left)»**: dati o file che non sono di SwapTrack (per esempio del vecchio sito del caffè). Non vengono toccati.
 
@@ -61,7 +61,7 @@ L'ultimo passo stampa due parti. Ogni riga comincia con **OK** (va bene) o **NO*
 
 | Riga | Cosa vuol dire | Con un NO |
 |---|---|---|
-| `account <ruolo> of <organizzazione>` | l'account del copione esiste, ha ruolo e ditta giusti ed è attivo | «missing»: rilanciare il comando 3b. «Auth disabled»: riattivare l'account. Amministratore cliente: menu «Utenti» → riga della persona → «…» («Azioni») → «Riattiva» → nella finestra «Riattiva l'utente» premi «Conferma». (Amministratore ASP: lo stesso dal menu «Persone», solo per magazzinieri e tecnici della sua ASP.) Vale anche dopo «Blocca subito»; la persona poi rientra con la sua password, perché le sessioni aperte sono state chiuse. Altro: chiamare il gruppo |
+| `account <ruolo> of <organizzazione>` | l'account del copione esiste, ha ruolo e ditta giusti ed è attivo | «missing»: rilanciare il comando 3b. «Auth disabled»: riattivare l'account. Amministratore cliente: menu «Utenti» → riga della persona → «…» («Azioni») → «Riattiva» → nella finestra «Riattiva l'utente» premi «Conferma». (Amministratore ASP: lo stesso dal menu «Persone», solo per magazzinieri e tecnici della sua ASP.) Vale anche dopo «Blocca subito»; la persona poi rientra con la sua password, perché le sessioni aperte sono state chiuse. Altro: scrivere alla memoria storica (la chat di Claude), incollando l'uscita |
 | `privacy notice: not accepted` | al primo accesso comparirà l'informativa | non è un errore: entrare una volta con quell'account e premere «Ho letto e accetto» |
 | `active organizations`, `places of the script`, `active models`, `active sorting categories`, `sorting rule` | ditte, luoghi, modelli e categorie del copione | rilanciare il comando 3b (il seed rimette ciò che manca). Se resta NO, qualcosa è stato disattivato a mano: riattivarlo nell'app |
 | `settings: …` | riepilogo: versione minima, e-mail, Google, uscita per inattività, informativa, nome dell'app, AI | confrontare con il copione: accendere o spegnere da Impostazioni |
@@ -70,8 +70,8 @@ L'ultimo passo stampa due parti. Ogni riga comincia con **OK** (va bene) o **NO*
 | `aggregates (home dashboard)` | i conteggi del cruscotto | 0: come sopra, rilanciare il comando 3b |
 | `open BOMs at the demo site SITO-00013` | a SITO-00013 non c'è nessuna BOM aperta oltre a quella della demo | chiudere la BOM indicata (Documenti → numero → «Chiudi»). Se la BOM della demo è caricata, compare sotto la riga «the BOM of the demo is loaded»: va bene |
 | `demo serials expected by an open document already` | un documento APERTO aspetta già i seriali della demo | chiudere il documento indicato più sopra (Documenti → numero → «Chiudi»), oppure rilanciare il comando 3b |
-| `demo serials in closed documents` | documenti chiusi delle prove con gli stessi seriali: danno solo il modello del pezzo | chiamare il gruppo con i seriali indicati |
-| `…/guida.html: 200` | la guida dell'app si apre | chiamare il gruppo |
+| `demo serials in closed documents` | documenti chiusi delle prove con gli stessi seriali: danno solo il modello del pezzo | scrivere alla memoria storica (la chat di Claude), incollando l'uscita |
+| `…/guida.html: 200` | la guida dell'app si apre | scrivere alla memoria storica (la chat di Claude), incollando l'uscita |
 
 **Parte «Before the demo»:**
 
@@ -100,7 +100,7 @@ L'ultima riga dice **«Everything the demo script takes for granted is there.»*
 ## 6. Il resto, dal copione
 
 - **AI accesa o spenta:** Amministratore cliente → «Impostazioni» → «Funzioni».
-- **BOM di SITO-00013** caricata il giorno prima (tappa 4), dal file `demo-docs/BOM-SITO-00013.xlsx`.
+- **BOM di SITO-00013** caricata il giorno prima (tappa 4), dal file `demo-docs/BOM-SITO-00013.xlsx`: da salvare come Amministratore ASP Nord o Amministratore cliente, scegliendo nelle «Colonne dell'Excel» anche «Codice materiale» = «Cod. articolo». Senza, il telefono chiede il modello di ogni pezzo.
 - **Etichette da stampare.** Se la cartella `demo-docs` non c'è, generarla:
 
   ```powershell
@@ -108,4 +108,4 @@ L'ultima riga dice **«Everything the demo script takes for granted is there.»*
   ```
 
   Poi stampare `demo-docs\etichette-da-stampare.pdf` **al 100%** (non «adatta alla pagina») e ritagliare.
-- **Prova completa** del copione una volta. Poi di nuovo i punti 1, 3b, 4 e 5, così la demo parte pulita.
+- **Prova completa** del copione una volta. Poi di nuovo i punti 1, 3b, 4 e 5; per ultima ricaricare la BOM di SITO-00013 (punto 6, con la colonna «Cod. articolo») e rifare il punto 5.4 sul telefono del tecnico.
