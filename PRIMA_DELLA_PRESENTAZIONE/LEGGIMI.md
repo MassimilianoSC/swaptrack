@@ -109,3 +109,35 @@ L'ultima riga dice **«Everything the demo script takes for granted is there.»*
 
   Poi stampare `demo-docs\etichette-da-stampare.pdf` **al 100%** (non «adatta alla pagina») e ritagliare.
 - **Prova completa** del copione una volta. Poi di nuovo i punti 1, 3b, 4 e 5; per ultima ricaricare la BOM di SITO-00013 (punto 6, con la colonna «Cod. articolo») e rifare il punto 5.4 sul telefono del tecnico.
+
+## 7. Accesso veloce il giorno della demo
+
+Il controllo che parte a ogni accesso (`beforeSignIn`), se nessuno entra da un po', si addormenta: il primo accesso dopo la pausa aspetta qualche secondo in più. Per la demo lo si tiene sveglio. Costa pochi centesimi al giorno.
+
+**Accendere** (il giorno prima o la mattina della demo):
+
+```powershell
+cd C:\Users\mcracchiolo\Desktop\swaptrack; gcloud run services update beforesignin --min-instances=1 --region europe-west1 --project kronos-caffe-sito
+```
+
+Se gcloud chiede di entrare, lanciare prima `gcloud auth login` (si apre il browser, stesso account del punto 2).
+
+**Controllare che sia acceso** (non cambia niente):
+
+```powershell
+cd C:\Users\mcracchiolo\Desktop\swaptrack; gcloud run services describe beforesignin --region europe-west1 --project kronos-caffe-sito --format=yaml | Select-String minScale
+```
+
+Deve comparire una riga che finisce con **`minScale: '1'`**. Nessuna riga, oppure `'0'`: è spento, rilanciare il comando di accensione.
+
+**Attenzione:** una pubblicazione delle funzioni può rimetterlo a 0. Tra l'accensione e la fine della demo non si pubblica niente; se proprio serve, dopo la pubblicazione rifare il controllo e, se è spento, riaccenderlo.
+
+## 8. Dopo la demo
+
+Spegnere, così non costa più niente:
+
+```powershell
+cd C:\Users\mcracchiolo\Desktop\swaptrack; gcloud run services update beforesignin --min-instances=0 --region europe-west1 --project kronos-caffe-sito
+```
+
+Il controllo del punto 7 non deve più mostrare `minScale: '1'`.
