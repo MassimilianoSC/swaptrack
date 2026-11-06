@@ -35,6 +35,8 @@ export default function ShipmentDetail() {
   const [missing, setMissing] = React.useState<Set<string>>(new Set());
   const [extra, setExtra] = React.useState<string[]>([]);
   const [extraInput, setExtraInput] = React.useState("");
+  // P-151: the app's window, never the browser's confirm (before the early return: a hook, React's rule).
+  const [cancelling, setCancelling] = React.useState(false);
 
   React.useEffect(() => id ? watchShipment(id, setShipment) : undefined, [id]);
   React.useEffect(() => id ? watchLines(id, setLines) : undefined, [id]);
@@ -55,8 +57,6 @@ export default function ShipmentDetail() {
     if (shipment.kind === "return") { if (!ddtNumber.trim()) { toast.error(t("errors.ddt_number_required")); return; } payload.ddtNumber = ddtNumber.trim(); }
     if (await run(() => call("sendShipment", payload), t("shipments.sent"))) setSendOpen(false);
   };
-  // P-151: the app's window, never the browser's confirm.
-  const [cancelling, setCancelling] = React.useState(false);
   const cancel = async () => {
     setCancelling(false);
     await run(() => call("cancelShipment", { shipmentId: id }), t("shipments.cancelled"));

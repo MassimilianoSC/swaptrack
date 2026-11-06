@@ -43,6 +43,9 @@ export default function Alerts() {
   const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
   const [all, setAll] = React.useState<Row<Alert>[] | null>(null);
   const [showClosed, setShowClosed] = React.useState(false);
+  // P-151: the alert being closed and its note (before the early return: hooks, React's rule).
+  const [closing, setClosing] = React.useState<string | null>(null);
+  const [note, setNote] = React.useState("");
   React.useEffect(() => claims?.orgId ? watchAlerts({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
   if (!all) return <Loading />;
   const list = showClosed ? all : all.filter((a) => !a.closedAt);
@@ -52,8 +55,6 @@ export default function Alerts() {
   const seen = (id: string) => runFor(`seen-${id}`, () => call("markAlertSeen", { alertId: id }));
   // P-116 (n.20): cancelling the note (X, Esc, «Annulla») does not close the alert. P-151: the app's window with the
   // optional note, never the browser's prompt.
-  const [closing, setClosing] = React.useState<string | null>(null);
-  const [note, setNote] = React.useState("");
   const close = (id: string) => { setNote(""); setClosing(id); };
   const doClose = async () => {
     const id = closing;
