@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 7f08154 · Guide text: sha 927c1a427f71 · Date: 06/11/2026
+App described: commit 7f08154 · Guide text: sha ffcf23abb988 · Date: 06/11/2026
 
 ## How to use this guide
 
@@ -818,7 +818,7 @@ If an ASP scans a piece that belongs to another ASP without a transfer, the anom
 
 Open «Settings». Every tab has its own «Save»: changing tab does not save. After saving you see «Saved».
 
-- **«Branding»**: «App name», «Primary color», «Logo» (PNG, JPEG, SVG or WebP, at most 500 KB; it also appears on the sign-in page). «Remove logo» removes it.
+- **«Branding»**: «App name», «Primary color», «Logo» (PNG, JPEG, SVG or WebP, at most 500 KB; it also appears on the sign-in page). «Remove logo» removes it. Color, name and logo change the look inside the app; the icon and the name of the app installed on the phone stay those of SwapTrack.
 - **«Sign-in»**: «Google sign-in», «Microsoft sign-in (company account)», «Two-step verification for administrators», «Sign out desktop sessions after inactivity» with the «Inactivity minutes» (from 5 to 480; it applies only to computers, and it does not sign out if there are scans waiting to be sent). Google, Microsoft and the two-step verification need a technical preparation of the sign-in service: turn them on only after talking with whoever installed SwapTrack.
 - **«App»**: «Minimum version» (empty = no block; if you write it, whoever has an older version must update). «Invitations are sent by e-mail (Firebase Authentication)»: tick it to send invitations by e-mail; if it is off, or if the e-mail does not leave, the invitation shows you the link to copy. «Forgot your password?» is always sent by e-mail.
 - **«Privacy»**: «Notice text (Italian)» and «Notice text (English)». Changing a text, everybody will have to accept it again. «Ask everybody to accept again (new version)» asks for it even without changing the text. «Remove the author from old events» with «After how many days» (from 30 to 3650): removes from old scans the record of who made them.

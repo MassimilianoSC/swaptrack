@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 7f08154 · Testo della guida: sha 66782aeaecf7 · Data: 06/11/2026
+App descritta: commit 7f08154 · Testo della guida: sha fc453305fc32 · Data: 06/11/2026
 
 ## Come usare questa guida
 
@@ -818,7 +818,7 @@ Se un'ASP legge un pezzo che appartiene a un'altra ASP senza trasferimento, nasc
 
 Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salva. Dopo il salvataggio vedi «Salvato».
 
-- **«Marchio»**: «Nome dell'app», «Colore principale», «Logo» (PNG, JPEG, SVG o WebP, al massimo 500 KB; compare anche nella pagina di accesso). «Rimuovi il logo» lo toglie.
+- **«Marchio»**: «Nome dell'app», «Colore principale», «Logo» (PNG, JPEG, SVG o WebP, al massimo 500 KB; compare anche nella pagina di accesso). «Rimuovi il logo» lo toglie. Colore, nome e logo cambiano l'aspetto dentro l'app; l'icona e il nome dell'app installata sul telefono restano quelli di SwapTrack.
 - **«Accesso»**: «Accesso con Google», «Accesso con Microsoft (account aziendale)», «Verifica in due passaggi per gli amministratori», «Chiudi le sessioni desktop dopo inattività» con i «Minuti di inattività» (da 5 a 480; vale solo sui computer, e non chiude se ci sono letture da inviare). Google, Microsoft e la verifica in due passaggi richiedono una preparazione tecnica del servizio di accesso: attivali solo dopo averne parlato con chi ha installato SwapTrack.
 - **«App»**: «Versione minima» (vuoto = nessun blocco; se la scrivi, chi ha una versione più vecchia deve aggiornare). «Gli inviti partono per e-mail (Firebase Authentication)»: spuntalo per mandare gli inviti per e-mail; se è spento, o se l'e-mail non parte, l'invito ti mostra il link da copiare. «Password dimenticata?» parte sempre per e-mail.
 - **«Privacy»**: «Testo dell'informativa (italiano)» e «(inglese)». Cambiando un testo, tutti dovranno accettarlo di nuovo. «Chiedi a tutti di accettare di nuovo (nuova versione)» lo richiede anche senza cambiare il testo. «Rimuovi l'autore dagli eventi vecchi» con «Dopo quanti giorni» (da 30 a 3650): toglie dalle letture vecchie l'indicazione di chi le ha fatte.
