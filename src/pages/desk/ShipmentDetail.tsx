@@ -12,6 +12,7 @@ import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/dialogs";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { compressImage } from "@/lib/imageCompress.js";
@@ -54,8 +55,10 @@ export default function ShipmentDetail() {
     if (shipment.kind === "return") { if (!ddtNumber.trim()) { toast.error(t("errors.ddt_number_required")); return; } payload.ddtNumber = ddtNumber.trim(); }
     if (await run(() => call("sendShipment", payload), t("shipments.sent"))) setSendOpen(false);
   };
+  // P-151: the app's window, never the browser's confirm.
+  const [cancelling, setCancelling] = React.useState(false);
   const cancel = async () => {
-    if (!confirm(t("shipments.cancelConfirm"))) return;
+    setCancelling(false);
     await run(() => call("cancelShipment", { shipmentId: id }), t("shipments.cancelled"));
   };
   const toggleMissing = (itemId: string) => setMissing((s) => { const n = new Set(s); n.has(itemId) ? n.delete(itemId) : n.add(itemId); return n; });
@@ -101,7 +104,8 @@ export default function ShipmentDetail() {
             </label>
           )}
           {canConfirm && <Button variant="secondary" onClick={() => setConfirmOpen(true)} data-testid="shipment-confirm"><PackageCheck className="h-4 w-4" />{t("shipments.confirm")}</Button>}
-          {canCancel && <Button variant="danger" onClick={cancel} disabled={busy} data-testid="shipment-cancel"><Trash2 className="h-4 w-4" />{t("shipments.cancel")}</Button>}
+          {canCancel && <Button variant="danger" onClick={() => setCancelling(true)} disabled={busy} data-testid="shipment-cancel"><Trash2 className="h-4 w-4" />{t("shipments.cancel")}</Button>}
+          <ConfirmDialog open={cancelling} danger busy={busy} title={t("shipments.cancel")} body={t("shipments.cancelConfirm")} confirmLabel={t("shipments.cancel")} onConfirm={() => void cancel()} onClose={() => setCancelling(false)} />
           <Button variant="ghost" onClick={() => nav(-1)} data-testid="shipment-back">{t("common.back")}</Button>
         </>}
       />

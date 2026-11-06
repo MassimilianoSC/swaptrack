@@ -24,13 +24,15 @@ export function InviteResultDialog({ result, onClose }: { result: InviteResult |
   );
 }
 
-export function ConfirmDialog({ open, title, body, confirmLabel, danger, onConfirm, onClose, busy }: {
-  open: boolean; title: string; body: string; confirmLabel: string; danger?: boolean; onConfirm: () => void; onClose: () => void; busy?: boolean;
+// The app's confirmation window (never the browser's confirm/prompt, P-151); children: an optional field, such as a note.
+export function ConfirmDialog({ open, title, body, confirmLabel, danger, onConfirm, onClose, busy, children }: {
+  open: boolean; title: string; body: string; confirmLabel: string; danger?: boolean; onConfirm: () => void; onClose: () => void; busy?: boolean; children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent title={title} description={body}>
+        {children}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose} data-testid="confirm-cancel">{t("common.cancel")}</Button>
           <Button variant={danger ? "danger" : "primary"} disabled={busy} onClick={onConfirm} data-testid="confirm-ok">{confirmLabel}</Button>

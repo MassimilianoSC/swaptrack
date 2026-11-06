@@ -153,7 +153,8 @@
       "ai_too_many_lines": "The document has too many lines: only part of them was read.",
       "ai_no_lines": "No line was found in the document."
     },
-    "excelLoadingSaved": "Loading the saved column choice… The columns you choose stay."
+    "excelLoadingSaved": "Loading the saved column choice… The columns you choose stay.",
+    "closeTitle": "Close the document?"
   },
   "alerts": {
     "subtitle": "One alert per object (document, shipment, place).",
@@ -183,7 +184,9 @@
       "shipment": "Shipment",
       "document": "Document",
       "place": "Place"
-    }
+    },
+    "closeTitle": "Close the alert?",
+    "closeBody": "The alert moves to the closed ones. You can add a note."
   },
   "anomalies": {
     "resolveAcceptMove": "Accept move",

@@ -16,6 +16,7 @@ import { ExcelMapping } from "@/components/documents/ExcelMapping";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
+import { ConfirmDialog } from "@/components/dialogs";
 import { Loading, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { toast } from "sonner";
@@ -136,8 +137,10 @@ export default function DocumentDetail() {
     if (await run(() => call("markDocumentChecked", { documentId: id }), t("documents.marked")) !== undefined) setReloadKey((k) => k + 1);
     void doCompare();
   };
+  // P-151: the app's window, never the browser's confirm.
+  const [closing, setClosing] = React.useState(false);
   const close = async () => {
-    if (!confirm(t("documents.closeConfirm"))) return;
+    setClosing(false);
     if (await run(() => call("closeDocument", { documentId: id }), t("documents.closed")) !== undefined) setReloadKey((k) => k + 1);
   };
   const doCompare = async () => { const r = await run(() => call<Compare>("compareDocument", { documentId: id })); if (r) setCompare(r); };
@@ -159,7 +162,8 @@ export default function DocumentDetail() {
           {canWrite && doc!.status !== "closed" && <Button variant="secondary" onClick={save} disabled={busy} data-testid="document-save"><Save className="h-4 w-4" />{t("common.save")}</Button>}
           {canCheck && doc!.status === "open" && <Button variant="secondary" onClick={mark} disabled={busy} data-testid="document-mark"><Check className="h-4 w-4" />{t("documents.markChecked")}</Button>}
           <Button variant="ghost" onClick={doCompare} disabled={busy} data-testid="document-compare"><Scale className="h-4 w-4" />{t("documents.compare")}</Button>
-          {canClose && doc!.status !== "closed" && <Button variant="danger" onClick={close} disabled={busy} data-testid="document-close"><Lock className="h-4 w-4" />{t("documents.close")}</Button>}
+          {canClose && doc!.status !== "closed" && <Button variant="danger" onClick={() => setClosing(true)} disabled={busy} data-testid="document-close"><Lock className="h-4 w-4" />{t("documents.close")}</Button>}
+          <ConfirmDialog open={closing} danger busy={busy} title={t("documents.closeTitle")} body={t("documents.closeConfirm")} confirmLabel={t("documents.close")} onConfirm={() => void close()} onClose={() => setClosing(false)} />
         </>}
       />
       <Card>

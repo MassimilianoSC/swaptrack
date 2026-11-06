@@ -72,8 +72,8 @@ test.describe("Scrivania — solo ciò che il server accetta (P-116)", () => {
     });
     await signIn(page, ACCOUNTS.aspAdminNord);
     await page.goto("/alerts");
-    page.once("dialog", (d) => void d.dismiss());
     await page.getByTestId(`alerts-close-${id}`).click();
+    await page.getByTestId("confirm-cancel").click(); // P-151: the app's window, «Annulla»
     await page.waitForTimeout(2000);
     expect((await emulatorRead(`alerts/${id}`)).closedAt).toBeNull();
     await expect(page.getByTestId(`alerts-close-${id}`)).toBeVisible();

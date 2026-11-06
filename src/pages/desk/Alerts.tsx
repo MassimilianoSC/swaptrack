@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/dialogs";
+import { Input, Field } from "@/components/ui/form";
 import { useNames } from "@/lib/names";
 
 // P-100 (n.11, P-95): the codes listed in a document alert (missing, unexpected, unknown model), the first few of each.
@@ -48,10 +50,22 @@ export default function Alerts() {
   // P-103: the alert of a shipment (return, transfer) opens the shipment, also when a DDT is attached to it.
   const link = (a: Row<Alert>) => a.shipmentId ? `/shipments/${a.shipmentId}` : a.documentId ? `/documents/${a.documentId}` : a.locationId ? `/items?locationId=${a.locationId}` : "#";
   const seen = (id: string) => runFor(`seen-${id}`, () => call("markAlertSeen", { alertId: id }));
-  // P-116 (n.20): cancelling the note (X, Esc) does not close the alert.
-  const close = async (id: string) => { const note = prompt(t("alerts.closeNote")); if (note === null || !canClose) return; await runFor(`close-${id}`, () => call("closeAlert", { alertId: id, note: note ?? "" }), t("alerts.closed")); };
+  // P-116 (n.20): cancelling the note (X, Esc, «Annulla») does not close the alert. P-151: the app's window with the
+  // optional note, never the browser's prompt.
+  const [closing, setClosing] = React.useState<string | null>(null);
+  const [note, setNote] = React.useState("");
+  const close = (id: string) => { setNote(""); setClosing(id); };
+  const doClose = async () => {
+    const id = closing;
+    setClosing(null);
+    if (!id || !canClose) return;
+    await runFor(`close-${id}`, () => call("closeAlert", { alertId: id, note: note.trim() }), t("alerts.closed"));
+  };
   return (
     <div className="space-y-6">
+      <ConfirmDialog open={!!closing} title={t("alerts.closeTitle")} body={t("alerts.closeBody")} confirmLabel={t("common.close")} onConfirm={() => void doClose()} onClose={() => setClosing(null)}>
+        <Field label={t("alerts.closeNote")} htmlFor="alert-note"><Input id="alert-note" value={note} onChange={(e) => setNote(e.target.value)} data-testid="alerts-close-note" /></Field>
+      </ConfirmDialog>
       <PageHeader title={t("nav.alerts")} subtitle={t("alerts.subtitle")}
         actions={<Button variant="ghost" onClick={() => setShowClosed(!showClosed)} data-testid="alerts-toggle-closed">{showClosed ? t("alerts.hideClosed") : t("alerts.showClosed")}</Button>} />
       {list.length === 0 ? <Empty title={t("alerts.empty")} /> : (
