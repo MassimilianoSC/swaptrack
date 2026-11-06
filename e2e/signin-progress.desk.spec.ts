@@ -22,7 +22,11 @@ test.describe("Accesso: «Accesso in corso…» fino alla prima pagina (scrivani
     // Until the app's first page shows, the signal never goes away (no plain "Loading" in between).
     await expect.poll(async () => (await page.getByTestId("topbar").count()) > 0 || (await signal.count()) > 0, { timeout: 2_000 }).toBe(true);
     await expect(page.getByTestId("state-loading")).toHaveCount(0);
-    await expect(page.getByTestId("topbar")).toBeVisible({ timeout: 60_000 });
+    // The first page is the app, or its privacy notice when it has not been accepted yet: the signal ends there.
+    const privacy = page.getByTestId("privacy-accept-button");
+    await expect(privacy.or(page.getByTestId("topbar"))).toBeVisible({ timeout: 60_000 });
     await expect(signal).toHaveCount(0);
+    if (await privacy.isVisible()) await privacy.click();
+    await expect(page.getByTestId("topbar")).toBeVisible({ timeout: 60_000 });
   });
 });
