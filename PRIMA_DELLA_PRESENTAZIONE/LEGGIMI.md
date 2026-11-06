@@ -61,7 +61,7 @@ L'ultimo passo stampa due parti. Ogni riga comincia con **OK** (va bene) o **NO*
 
 | Riga | Cosa vuol dire | Con un NO |
 |---|---|---|
-| `account <ruolo> of <organizzazione>` | l'account del copione esiste, ha ruolo e ditta giusti ed è attivo | «missing»: rilanciare il comando 3b. «Auth disabled»: riattivare l'account in Impostazioni → Utenti. Altro: chiamare il gruppo |
+| `account <ruolo> of <organizzazione>` | l'account del copione esiste, ha ruolo e ditta giusti ed è attivo | «missing»: rilanciare il comando 3b. «Auth disabled»: riattivare l'account. Amministratore cliente: menu «Utenti» → riga della persona → «…» («Azioni») → «Riattiva» → nella finestra «Riattiva l'utente» premi «Conferma». (Amministratore ASP: lo stesso dal menu «Persone», solo per magazzinieri e tecnici della sua ASP.) Vale anche dopo «Blocca subito»; la persona poi rientra con la sua password, perché le sessioni aperte sono state chiuse. Altro: chiamare il gruppo |
 | `privacy notice: not accepted` | al primo accesso comparirà l'informativa | non è un errore: entrare una volta con quell'account e premere «Ho letto e accetto» |
 | `active organizations`, `places of the script`, `active models`, `active sorting categories`, `sorting rule` | ditte, luoghi, modelli e categorie del copione | rilanciare il comando 3b (il seed rimette ciò che manca). Se resta NO, qualcosa è stato disattivato a mano: riattivarlo nell'app |
 | `settings: …` | riepilogo: versione minima, e-mail, Google, uscita per inattività, informativa, nome dell'app, AI | confrontare con il copione: accendere o spegnere da Impostazioni |
