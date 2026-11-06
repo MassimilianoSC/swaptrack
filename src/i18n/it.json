@@ -296,7 +296,9 @@
     "newPassword": "Nuova password",
     "passwordPolicy": "Almeno 10 caratteri, con lettere e cifre.",
     "confirmPassword": "Ripeti la password",
-    "savePassword": "Salva la password"
+    "savePassword": "Salva la password",
+    "signingIn": "Accesso in corso…",
+    "signingInSlow": "Ci vuole qualche secondo in più: attendi."
   },
   "location": {
     "choose": "Scegli il luogo",

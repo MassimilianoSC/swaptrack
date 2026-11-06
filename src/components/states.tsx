@@ -4,6 +4,41 @@ import { AlertTriangle, Inbox, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 // Designed loading, empty and error states for every screen (§15).
+
+// P-152: a sign-in is going on from "Sign in" (or a provider) until the app's first page: the same signal on the button
+// and on the page that waits for profile and settings. One start time, so "a few more seconds" counts from the click.
+const SIGNING_KEY = "swaptrack.signingInAt";
+const SLOW_MS = 4000;
+export const markSigningIn = () => { try { sessionStorage.setItem(SIGNING_KEY, String(Date.now())); } catch { /* storage unavailable */ } };
+export const clearSigningIn = () => { try { sessionStorage.removeItem(SIGNING_KEY); } catch { /* storage unavailable */ } };
+export const signingInSince = (): number | null => { try { return Number(sessionStorage.getItem(SIGNING_KEY)) || null; } catch { return null; } };
+// True once SLOW_MS have passed since the sign-in started.
+export function useSigningInSlow(active: boolean): boolean {
+  const [slow, setSlow] = React.useState(false);
+  React.useEffect(() => {
+    setSlow(false);
+    const since = signingInSince();
+    if (!active || !since) return;
+    const timer = setTimeout(() => setSlow(true), Math.max(0, since + SLOW_MS - Date.now()));
+    return () => clearTimeout(timer);
+  }, [active]);
+  return slow;
+}
+export function SigningInSlow() {
+  const { t } = useTranslation();
+  return <p className="text-sm text-muted text-center" data-testid="signing-in-slow">{t("auth.signingInSlow")}</p>;
+}
+// The page between a successful sign-in and the app (profile, settings, notice still on their way).
+export function SigningIn() {
+  const { t } = useTranslation();
+  const slow = useSigningInSlow(true);
+  return (
+    <div role="status" aria-busy="true" className="flex flex-col items-center gap-3 py-16 text-muted" data-testid="signing-in">
+      <span className="flex items-center gap-3"><Loader2 className="h-5 w-5 animate-spin" aria-hidden /> {t("auth.signingIn")}</span>
+      {slow && <SigningInSlow />}
+    </div>
+  );
+}
 export function Loading({ label }: { label?: string }) {
   const { t } = useTranslation();
   return (

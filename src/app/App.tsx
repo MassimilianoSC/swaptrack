@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { SessionProvider, useSession } from "./session";
 import { FailClosedScreen, NoAccountScreen, PreviousPendingScreen, DeactivatedScreen, UpdateRequiredScreen, PrivacyGate, MfaEnrollGate } from "./gates";
 import { AppShell } from "@/components/shell/AppShell";
-import { Loading } from "@/components/states";
+import { Loading, SigningIn, signingInSince } from "@/components/states";
 import { APP_VERSION } from "@/lib/data/firebase";
 import { compareVersions } from "@shared/policy";
 import { isAdminRole } from "@shared/roles";
@@ -61,7 +61,8 @@ function Gate() {
   if (s.phase === "deactivated") return <DeactivatedScreen />;
   // P-85: the session documents never hold the screen beyond DOCS_LATE_MS; each check applies as soon as its documents
   // are known (§4.15: the notice appears the moment profile and notice say the accepted version is not the current one).
-  if ((!s.appSettings || !s.privacy || !s.profile) && !s.docsLate) return <Loading />;
+  // P-152: right after a sign-in, the same "Signing in…" as the button (no plain "Loading" in between).
+  if ((!s.appSettings || !s.privacy || !s.profile) && !s.docsLate) return signingInSince() ? <SigningIn /> : <Loading />;
   if (s.appSettings?.minVersion && compareVersions(APP_VERSION, s.appSettings.minVersion) < 0) return <UpdateRequiredScreen />;
   if (s.profile && s.privacy && s.profile.privacyNoticeVersion !== s.privacy.version) return <PrivacyGate />;
   const mfaNeeded = s.authSettings.mfaAdmins && isAdminRole(s.claims?.role ?? "") && s.user && (!hasMfa(s.user) || !s.claims?.secondFactor);

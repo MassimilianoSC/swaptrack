@@ -20,7 +20,8 @@
         "signin-logos.desk.spec.ts",
         "sort-newclass.phone.spec.ts",
         "late-item.phone.spec.ts",
-        "app-dialogs.desk.spec.ts"
+        "app-dialogs.desk.spec.ts",
+        "signin-progress.desk.spec.ts"
       ]
     },
     {

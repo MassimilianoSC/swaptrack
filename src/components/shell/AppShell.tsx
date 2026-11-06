@@ -6,6 +6,7 @@ import { useNarrow, useOnline } from "@/app/hooks";
 import { shellFor, isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "../ui/dialog";
+import { clearSigningIn } from "../states";
 import { Sidebar, SideNav, TopBar, ScanButton, LocationChip } from "./parts";
 import { IosInstallHint, UpdatePrompt, InstallBanner, InstallNavItem } from "./banners";
 
@@ -33,6 +34,8 @@ export function AppShell() {
   const loc = useLocation();
   React.useEffect(() => { setDrawer(false); }, [loc.pathname]);
   const onScan = loc.pathname === "/scan";
+  // P-152: the app's first page is here: the sign-in is over.
+  React.useEffect(() => { clearSigningIn(); }, []);
   useInactivity(shell === "desk" && !narrow && authSettings.inactivityEnabled, authSettings.inactivityMinutes, safeSignOut);
 
   return (
