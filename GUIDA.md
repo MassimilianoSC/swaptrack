@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 86d7c43 · Testo della guida: sha 17b8798381d5 · Data: 06/11/2026
+App descritta: commit 7f08154 · Testo della guida: sha 66782aeaecf7 · Data: 06/11/2026
 
 ## Come usare questa guida
 
@@ -47,7 +47,7 @@ Se qualcosa va storto:
 
 1. Apri SwapTrack. Si apre «Accedi».
 2. Scrivi la tua «E-mail di lavoro» e la «Password».
-3. Premi «Accedi».
+3. Premi «Accedi». Il pulsante mostra «Accesso in corso…» finché l'app si apre; se ci vuole di più compare «Ci vuole qualche secondo in più: attendi.».
 
 Se la tua azienda li ha attivati, vedi anche «Accedi con Google» o «Accedi con Microsoft». Se il tuo indirizzo ha già una password, l'app scrive «Questa e-mail ha già una password: inseriscila per collegare i due metodi di accesso.»: scrivi la password e premi «Accedi». Con un indirizzo Gmail o di Google aziendale, invece, Google si collega da solo al tuo account e la password resta valida. Con Google entri solo se l'amministratore ti ha già invitato con quello stesso indirizzo.
 
@@ -567,14 +567,14 @@ Ogni nuovo salvataggio dello stesso documento crea una nuova versione (la vedi a
 ### Come chiudo un documento?
 
 1. Apri il documento da «Documenti».
-2. Premi «Chiudi» e conferma («Chiudere questo documento?»). Vedi «Chiuso».
+2. Premi «Chiudi»: si apre la finestra «Chiudere il documento?». Premi «Conferma». Vedi «Chiuso».
 
 Un documento chiuso non si modifica più. Chiudere un documento non chiude gli avvisi collegati.
 
 ### Come chiudo un avviso?
 
 1. In «Avvisi», sulla riga dell'avviso, premi «Chiudi».
-2. Scrivi una nota se serve («Nota (facoltativa):») e conferma. Vedi «Chiuso».
+2. Si apre la finestra «Chiudere l'avviso?»: scrivi una nota se serve («Nota (facoltativa):») e premi «Conferma». Vedi «Chiuso».
 
 Premi «Chiudi» solo quando hai risolto: non c'è un pulsante per riaprire. Se il problema si ripresenta, l'app riapre l'avviso da sola.
 

@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 86d7c43 · Guide text: sha 27f5b479bfdd · Date: 06/11/2026
+App described: commit 7f08154 · Guide text: sha 927c1a427f71 · Date: 06/11/2026
 
 ## How to use this guide
 
@@ -47,7 +47,7 @@ If something goes wrong:
 
 1. Open SwapTrack. «Sign in» opens.
 2. Write your «Work e-mail» and the «Password».
-3. Press «Sign in».
+3. Press «Sign in». The button shows «Signing in…» until the app opens; if it takes longer you see «It is taking a few more seconds: please wait.».
 
 If your company has turned them on, you also see «Sign in with Google» or «Sign in with Microsoft». If your address already has a password, the app says «This e-mail already has a password: enter it to link the two sign-in methods.»: write the password and press «Sign in». With a Gmail or company Google address, instead, Google links itself to your account and your password stays valid. You can sign in with Google only if the administrator has already invited you with that same address.
 
@@ -567,14 +567,14 @@ Every new save of the same document creates a new version (you see it next to th
 ### How do I close a document?
 
 1. Open the document from «Documents».
-2. Press «Close» and confirm («Close this document?»). You see «Closed».
+2. Press «Close»: the window «Close the document?» opens. Press «Confirm». You see «Closed».
 
 A closed document can no longer be changed. Closing a document does not close the linked alerts.
 
 ### How do I close an alert?
 
 1. In «Alerts», on the row of the alert, press «Close».
-2. Write a note if needed («Note (optional):») and confirm. You see «Closed».
+2. The window «Close the alert?» opens: write a note if needed («Note (optional):») and press «Confirm». You see «Closed».
 
 Press «Close» only when you have solved it: there is no button to reopen. If the problem comes back, the app reopens the alert by itself.
 
