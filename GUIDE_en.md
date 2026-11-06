@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 65c1319 · Guide text: sha d3bfe78cdb10 · Date: 05/11/2026
+App described: commit 86d7c43 · Guide text: sha 27f5b479bfdd · Date: 06/11/2026
 
 ## How to use this guide
 
@@ -249,6 +249,7 @@ Good to know:
 - If the piece belongs to another ASP, the phone does not see it (for confidentiality) and does not warn: the server notices it and opens the anomaly for the office.
 - If the piece is at a place the phone does not know, the warning says «another place».
 - With a slow network, up to a couple of seconds more may pass before the green flash: the app is checking the piece.
+- With a weak signal the app waits for the server at most 2 seconds. If the answer arrives later and the window of the piece is still open, the window updates: in «Sort» the suggested category appears; «Unknown piece» closes by itself if the piece was already known, with the line «Piece recognised: the model is already known.». If you have already chosen, your choice stays.
 
 This behavior is a choice, not a limit: if in your work it must be different (for example blocking case 2 too, or not warning), ask whoever manages SwapTrack.
 
@@ -419,7 +420,7 @@ Good to know: after «Mark checked» the DDT no longer appears in the «DDT» li
 2. Press «Sort / classify».
 3. In the «Category» list leave «Confirm each piece (no fixed category)».
 4. Scan a code: the window «Sort …» opens with the code of the piece.
-5. If the app has a suggestion, you see «Suggested: …» in large letters: press «Confirm» to use it. Otherwise tap another category, or «Defective» or «Leftover».
+5. If the app has a suggestion, you see «Suggested: …» in large letters: press «Confirm» to use it. Otherwise tap another category. «Defective» and «Leftover» appear only for new material (or for a piece already defective or leftover).
 
 The piece is recorded only when you tap a choice. If the app has no suggestion, the window shows only the categories: tap the right one. If you close the window with «Cancel» or with the X, the piece is not recorded: you see «… not sorted.» and you can scan it again.
 
@@ -427,7 +428,7 @@ The piece is recorded only when you tap a choice. If the app has no suggestion, 
 
 If «installed new material» appears next to the suggested category, that piece had been installed new and then removed.
 
-**Defective or leftover new material.** In the window tap «Defective» or «Leftover». For many pieces in a row, choose «Defective» or «Leftover» in the second list («Removed material (category)»), then scan the pieces.
+**Defective or leftover new material.** In the window tap «Defective» or «Leftover». For many pieces in a row, choose «Defective» or «Leftover» in the second list («Removed material (category)»), then scan the pieces. If with this fixed choice you scan a removed piece, the app does not record it and says so in red: «… is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category.»
 
 **Photo of defective pieces.** If the Client administrator has made the photo of defective pieces mandatory, choosing «Defective» in the list you see «A photo is required for defective pieces (setting).», and after every defective piece the app writes «Photo required for the defective piece: take it now.»: press «Photo» next to the message and take the picture.
 

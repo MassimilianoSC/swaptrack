@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 65c1319 · Testo della guida: sha ddd9d0dc7f4d · Data: 05/11/2026
+App descritta: commit 86d7c43 · Testo della guida: sha 17b8798381d5 · Data: 06/11/2026
 
 ## Come usare questa guida
 
@@ -249,6 +249,7 @@ Da sapere:
 - Se il pezzo appartiene a un'altra ASP, il telefono non lo vede (per riservatezza) e non avvisa: se ne accorge il server, che apre l'anomalia per l'ufficio.
 - Se il pezzo si trova in un posto che il telefono non conosce, l'avviso scrive «un altro luogo».
 - Con la rete lenta, prima del lampo verde può passare fino a un paio di secondi in più: l'app sta controllando il pezzo.
+- Con poco segnale l'app aspetta il server al massimo 2 secondi. Se la risposta arriva dopo e la finestra del pezzo è ancora aperta, la finestra si aggiorna: in «Smista» compare la categoria suggerita; «Pezzo sconosciuto» si chiude da solo se il pezzo era già noto, con la riga «Pezzo riconosciuto: il modello c'è già.». Se hai già scelto, la tua scelta resta.
 
 Questo comportamento è una scelta, non un limite: se nel vostro lavoro deve essere diverso (per esempio bloccare anche il caso 2, oppure non avvisare), chiedetelo a chi gestisce SwapTrack.
 
@@ -419,7 +420,7 @@ Da sapere: dopo «Segna verificato» il DDT non compare più nella tendina «DDT
 2. Premi «Smista / classifica».
 3. Nella tendina «Categoria» lascia «Conferma a ogni pezzo (nessuna categoria fissa)».
 4. Leggi un codice: si apre la finestra «Smista …» con il codice del pezzo.
-5. Se l'app ha un suggerimento, vedi in grande «Suggerita: …»: premi «Conferma» per usarla. Altrimenti tocca un'altra categoria, oppure «Difettoso» o «Avanzo».
+5. Se l'app ha un suggerimento, vedi in grande «Suggerita: …»: premi «Conferma» per usarla. Altrimenti tocca un'altra categoria. «Difettoso» e «Avanzo» compaiono solo per il materiale nuovo (o per un pezzo già difettoso o avanzo).
 
 Il pezzo viene registrato solo quando tocchi una scelta. Se l'app non ha un suggerimento, la finestra mostra solo le categorie: tocca quella giusta. Se chiudi la finestra con «Annulla» o con la X, il pezzo non viene registrato: vedi «… non smistato.» e puoi leggerlo di nuovo.
 
@@ -427,7 +428,7 @@ Il pezzo viene registrato solo quando tocchi una scelta. Se l'app non ha un sugg
 
 Se accanto alla categoria suggerita compare «nuovo installato», quel pezzo era stato installato nuovo e poi smontato.
 
-**Materiale nuovo difettoso o avanzato.** Nella finestra tocca «Difettoso» o «Avanzo». Per tanti pezzi di fila, scegli «Difettoso» o «Avanzo» nella seconda tendina («Materiale smontato (categoria)»), poi leggi i pezzi.
+**Materiale nuovo difettoso o avanzato.** Nella finestra tocca «Difettoso» o «Avanzo». Per tanti pezzi di fila, scegli «Difettoso» o «Avanzo» nella seconda tendina («Materiale smontato (categoria)»), poi leggi i pezzi. Se con questa scelta fissa leggi un pezzo smontato, l'app non lo registra e lo dice in rosso: «… è materiale smontato: «Difettoso» e «Avanzo» valgono solo per il materiale nuovo. Non registrato: scegli una categoria.»
 
 **Foto dei difettosi.** Se l'Amministratore cliente ha reso obbligatoria la foto dei pezzi difettosi, scegliendo «Difettoso» nella tendina vedi «La foto è obbligatoria per i pezzi difettosi (impostazione).», e dopo ogni pezzo difettoso l'app scrive «Foto obbligatoria per il difettoso: scattala ora.»: premi «Foto» accanto al messaggio e scatta.
 
