@@ -35,6 +35,9 @@ const newClassAllowed = (it: Record<string, unknown> | null) =>
 // P-98: how long the camera ignores the code it just read (the phone held still on the label).
 const CAMERA_REPEAT_MS = 3000;
 const BURST_KEY = "swaptrack.burst";
+// P-155 (D-72): what stays under the video in the first screen: the "read the next" button and one row of commands.
+const BELOW_VIDEO_PX = 164;
+const VIDEO_MAX_SCREEN_SHARE = 0.58;
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
 
@@ -94,6 +97,23 @@ export default function Scan() {
   const [decoded, setDecoded] = React.useState<string | null>(null);
   const firstSignalled = React.useRef(false);
   const log = useScanLog(params.get("scanlog") === "1");
+  // P-155 (D-72): on a phone held upright the video takes the free height of the first screen (the camera's image is
+  // upright too), never less than the 16:9 used elsewhere; the commands stay under it, in the first screen (P-134).
+  const videoBox = React.useRef<HTMLDivElement>(null);
+  const [videoHeight, setVideoHeight] = React.useState<number | null>(null);
+  const [resized, onResize] = React.useReducer((x: number) => x + 1, 0);
+  React.useEffect(() => {
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  React.useLayoutEffect(() => {
+    const box = videoBox.current;
+    if (!box) return;
+    if (!window.matchMedia("(orientation: portrait) and (max-width: 767px)").matches) { setVideoHeight(null); return; }
+    const free = window.innerHeight - (box.getBoundingClientRect().top + window.scrollY) - BELOW_VIDEO_PX;
+    setVideoHeight(Math.round(Math.min(Math.max(free, (box.clientWidth * 9) / 16), window.innerHeight * VIDEO_MAX_SCREEN_SHARE)));
+  }); // every render: what sits above the video changes with the mode and the choices (`resized` re-renders on rotation)
+  void resized;
   React.useEffect(() => {
     audioContext();
     const wake = () => { audioContext(); };
@@ -763,10 +783,12 @@ export default function Scan() {
           ))}
         </div>
       )}
-      <div className="relative overflow-hidden rounded-lg border border-border bg-black aspect-video">
+      <div ref={videoBox} className={cn("relative overflow-hidden rounded-lg border border-border bg-black", videoHeight === null && "aspect-video")} style={videoHeight === null ? undefined : { height: videoHeight }} data-testid="scan-video-box">
         <video ref={videoRef} className="h-full w-full object-cover" playsInline muted data-testid="scan-video" />
-        <div className={cn("pointer-events-none absolute inset-x-[15%] inset-y-[30%] border-4 rounded", decoded ? "border-white" : "border-primary")} aria-hidden data-testid="scan-aim" />
-        {decoded && <p role="status" className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+          <div className={cn("w-[80%] h-44 max-h-[60%] border-4 rounded", decoded ? "border-white" : "border-primary")} data-testid="scan-aim" />
+        </div>
+        {decoded && <p role="status" className="absolute inset-x-[12%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")} role="status" data-testid="scan-flash" data-tone={flash.tone}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
