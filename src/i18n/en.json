@@ -438,7 +438,21 @@
     "rereadConflict": "{{code}} shows as “{{status}}” at {{place}}: check the label",
     "otherPlace": "another place",
     "newClassNotForRemoved": "{{code}} is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category.",
-    "pieceRecognized": "Piece recognised: the model is already known."
+    "pieceRecognized": "Piece recognised: the model is already known.",
+    "decoded": "Read: {{code}}",
+    "notReady": "Wait a moment: the app is not ready yet. Read the code again.",
+    "readingFailed": "Reading failed: the code was not recorded. Try again.",
+    "log": {
+      "video": "Video",
+      "first": "signal",
+      "piece": "piece",
+      "copy": "phone's copy",
+      "rules": "rules",
+      "green": "green",
+      "yellow": "yellow",
+      "red": "red",
+      "window": "window"
+    }
   },
   "pwa": {
     "newVersion": "A new version is available.",

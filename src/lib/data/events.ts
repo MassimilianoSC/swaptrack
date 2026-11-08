@@ -75,7 +75,7 @@ function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<Q
 // Item of a code (codes/items of the ASP, DECISIONS b7): from the server when it answers at once, else from the cache.
 // D-71 (P-149b): when the cache was used because the server was late, onLate receives the server's answer as soon as it
 // arrives (a piece made after the phone's copy was loaded is known a moment later, with weak signal too).
-export async function cachedItemForCode(raw: string, onLate?: (item: Record<string, unknown> | null) => void): Promise<Record<string, unknown> | null> {
+export async function cachedItemForCode(raw: string, onLate?: (item: Record<string, unknown> | null) => void, onCopyUsed?: () => void): Promise<Record<string, unknown> | null> {
   let cached = false;
   const read = async (ref: DocumentReference): Promise<DocumentSnapshot | null> => {
     try { return await Promise.race([getDoc(ref), late<DocumentSnapshot>()]); } catch { cached = true; return getDocFromCache(ref).catch(() => null); }
@@ -88,6 +88,7 @@ export async function cachedItemForCode(raw: string, onLate?: (item: Record<stri
     const it = await read(doc(db, "items", itemId));
     return it?.exists() ? it.data() : null;
   })().catch(() => null);
+  if (cached) onCopyUsed?.();
   if (cached && onLate) {
     void (async () => {
       const code = await getDocFromServer(codeRef);

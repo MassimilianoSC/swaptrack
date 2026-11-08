@@ -9,6 +9,7 @@ import { listModels, watchDoc, loadFieldLocations, type Row, type Model, type Lo
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId, normalizeBarcode } from "@/lib/codeId.js";
 import { itemState, judge, type Judgement } from "@/lib/scan/rereading";
+import { useScanLog } from "@/lib/scan/scanLog";
 import { suggestCategory, type SortingRule } from "@shared/sorting";
 import { formatInstant, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,37 @@ const BURST_KEY = "swaptrack.burst";
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
 
-function beep(muted: boolean) {
+// P-155: one audio context for the screen, woken by the worker's touches (iOS keeps silent a context no touch started,
+// and a new one per reading was never released). "first": the code was seen; "ok": recorded, when nothing was heard for
+// it yet; "warn": look at the screen (two low tones, told apart without looking).
+let audio: AudioContext | null = null;
+function audioContext(): AudioContext | null {
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === "suspended") void audio.resume();
+    return audio;
+  } catch { return null; }
+}
+function closeAudio() {
+  try { void audio?.close(); } catch { /* already closed */ }
+  audio = null;
+}
+function tone(c: AudioContext, frequency: number, at: number, length: number) {
+  const o = c.createOscillator();
+  o.frequency.value = frequency;
+  o.connect(c.destination);
+  o.start(c.currentTime + at);
+  o.stop(c.currentTime + at + length);
+}
+function beep(kind: "first" | "ok" | "warn", muted: boolean) {
   if (muted) return;
-  try { const c = new AudioContext(); const o = c.createOscillator(); o.frequency.value = 1200; o.connect(c.destination); o.start(); o.stop(c.currentTime + 0.12); } catch { /* no audio */ }
+  const c = audioContext();
+  if (!c) return;
+  try {
+    if (kind === "first") tone(c, 1200, 0, 0.08);
+    else if (kind === "ok") tone(c, 1200, 0, 0.12);
+    else { tone(c, 440, 0, 0.12); tone(c, 440, 0.18, 0.12); }
+  } catch { /* no audio */ }
 }
 
 // §7.2 scanning screen: camera through engine.js only (R16), keyboard wedge, manual entry, burst, undo last,
@@ -61,6 +90,17 @@ export default function Scan() {
   const [exposure, setExposure] = React.useState<{ min: number; max: number; step: number } | null>(null);
   const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger" } | null>(null);
   const [muted, setMuted] = React.useState(() => localStorage.getItem("swaptrack.muted") === "1");
+  // P-155 (D-72): the code was seen, the phone is still checking it. White, never green: green says "recorded".
+  const [decoded, setDecoded] = React.useState<string | null>(null);
+  const firstSignalled = React.useRef(false);
+  const log = useScanLog(params.get("scanlog") === "1");
+  React.useEffect(() => {
+    audioContext();
+    const wake = () => { audioContext(); };
+    document.addEventListener("click", wake);
+    document.addEventListener("touchend", wake);
+    return () => { document.removeEventListener("click", wake); document.removeEventListener("touchend", wake); closeAudio(); };
+  }, []);
   const [askProduct, setAskProduct] = React.useState(false);
   const [pendingSerial, setPendingSerial] = React.useState<{ code: string; source: Source } | null>(null);
   const [wedge, setWedge] = React.useState("");
@@ -299,9 +339,24 @@ export default function Scan() {
 
   const show = (text: string, tone: "ok" | "warn" | "danger") => {
     setFlash({ text, tone });
-    beep(muted);
-    if (tone === "ok") navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
+    setDecoded(null);
+    log.end(tone === "ok" ? "green" : tone === "warn" ? "yellow" : "red");
+    // P-155: a reading already signalled when it was seen is not signalled again when it goes well.
+    if (tone !== "ok") beep("warn", muted);
+    else if (!firstSignalled.current) {
+      beep("ok", muted);
+      navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
+    }
     setTimeout(() => setFlash(null), 900);
+  };
+  // P-155 (D-72): as soon as the code is seen, before asking the server about the piece. Only for readings the phone
+  // cannot already tell will not be recorded; the outcome (green, yellow, red or a window) comes after.
+  const firstSignal = (code: string) => {
+    firstSignalled.current = true;
+    setDecoded(code);
+    beep("first", muted);
+    navigator.vibrate?.(40);
+    log.mark("first");
   };
   // D-55 / P-121: after a camera reading the camera reads again by itself only in burst mode; otherwise it waits for
   // "Read the next". The choice is kept on this phone (off when nothing is saved).
@@ -396,7 +451,10 @@ export default function Scan() {
   const onCode = async (raw: string, source: Source, again = false) => {
     let r: "asked" | "continue" | void;
     try { r = await handleCode(raw, source, again); }
+    catch { show(t("scan.readingFailed"), "danger"); } // P-155: never a beep and then silence with nothing recorded
     finally {
+      setDecoded(null);
+      firstSignalled.current = false;
       // The second code of a reading (the product code after the serial) is read at once, also without burst mode.
       if (source === "camera" && r! !== "asked") setTimeout(() => (r === "continue" ? ctrl.current?.resume() : afterCameraReading()), 950);
     }
@@ -417,6 +475,8 @@ export default function Scan() {
         return;
       }
     }
+    log.start(code);
+    if (!location || !user || !claims?.orgId) { show(t("scan.notReady"), "warn"); return; }
     if (pendingSerial) {
       const p = pendingSerial;
       setPendingSerial(null);
@@ -433,10 +493,14 @@ export default function Scan() {
     // D-68 case 1: certain (this phone, this session): not recorded again, the counter does not move.
     const earlier = sessionRef.current.find((r) => r.key === readingKey(code));
     if (earlier) { show(t("scan.readAgain", { code, time: formatInstant(new Date(earlier.at), i18n.language) }), "warn"); return; }
-    const known = await cachedItemForCode(code, (it) => void onLateItem(code, it));
+    if (SHIPMENT_MODES.includes(mode) && !shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
+    firstSignal(code);
+    const known = await cachedItemForCode(code, (it) => void onLateItem(code, it), log.usedCopy);
+    log.mark("piece");
     knownFor.current = { code, it: known };
     if (suggests) {
       const s = await suggestionFor(known);
+      log.mark("rules");
       suggestedRef.current = s;
       setSuggested(s);
       setLastPieceBadge(known?.previousFlow === "new" ? "previously_new" : null);
@@ -487,7 +551,7 @@ export default function Scan() {
     // "Defective" / "Leftover" only where the server accepts them (newClassAllowed): offered in the window, and a fixed
     // "Defective" / "Leftover" on a removed piece records nothing and says why (the server would open an anomaly).
     const newOk = mode === "classify" ? newClassAllowed(await itemOf(code)) : true;
-    if (mode === "classify" && !category && !newClass) { setPendingSort({ code, source, second, suggested: suggestedRef.current, newOk }); return "asked"; }
+    if (mode === "classify" && !category && !newClass) { log.end("window"); setPendingSort({ code, source, second, suggested: suggestedRef.current, newOk }); return "asked"; }
     if (mode === "classify" && newClass && !newOk) { rereadRef.current = null; show(t("scan.newClassNotForRemoved", { code }), "danger"); return; }
     // §6.4 model pick for unknown pieces: if unknown + warehouse/technician, ask for model (skip is allowed).
     // P-104: a serial line of the chosen DDT is never asked: the server takes its model from the line (expectedCodes);
@@ -499,7 +563,7 @@ export default function Scan() {
     const inDocuments = !!cid && ((ddtApplies && !!ddtId && ddtExpected.some((e) => e.codeId === cid)) || documentCodeIds.has(cid));
     // A product code of the catalog gives the model (the server's findModel): nothing to ask.
     if (asks && !inDocuments && !second && !await itemOf(code)) {
-      setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
+      log.end("window"); setModelPick({ code, source, second }); setModelPickId(""); setModelQuery(""); return "asked";
     }
     await record(code, source, second);
   };
@@ -689,9 +753,20 @@ export default function Scan() {
           )}
         </div>
       )}
+      {log.on && (
+        <div className="rounded border border-border p-2 text-xs font-mono space-y-1" data-testid="scan-log">
+          <p>{t("scan.log.video")}: {videoRef.current?.videoWidth ?? 0}×{videoRef.current?.videoHeight ?? 0} · ms</p>
+          {log.rows.map((r) => (
+            <p key={r.id} data-testid="scan-log-row">
+              {r.code.slice(-8)} · {t("scan.log.first")} {r.first ?? "-"} · {t("scan.log.piece")} {r.piece ?? "-"}{r.copy ? ` (${t("scan.log.copy")})` : ""} · {t("scan.log.rules")} {r.rules ?? "-"} · {r.endKind ? t(`scan.log.${r.endKind}`) : "…"} {r.end ?? ""}
+            </p>
+          ))}
+        </div>
+      )}
       <div className="relative overflow-hidden rounded-lg border border-border bg-black aspect-video">
         <video ref={videoRef} className="h-full w-full object-cover" playsInline muted data-testid="scan-video" />
-        <div className="pointer-events-none absolute inset-x-[15%] inset-y-[30%] border-4 border-primary rounded" aria-hidden />
+        <div className={cn("pointer-events-none absolute inset-x-[15%] inset-y-[30%] border-4 rounded", decoded ? "border-white" : "border-primary")} aria-hidden data-testid="scan-aim" />
+        {decoded && <p role="status" className="absolute inset-x-[15%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")} role="status" data-testid="scan-flash" data-tone={flash.tone}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
