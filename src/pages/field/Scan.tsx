@@ -37,6 +37,8 @@ const CAMERA_REPEAT_MS = 3000;
 const BURST_KEY = "swaptrack.burst";
 // P-155 (D-72): what stays under the video in the first screen: the "read the next" button and one row of commands.
 const BELOW_VIDEO_PX = 164;
+// P-155 (D-72): the longest a reading waits for the server before its outcome (the piece, then the sorting rules).
+const READING_WAIT_MS = 2500;
 const VIDEO_MAX_SCREEN_SHARE = 0.58;
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
@@ -140,6 +142,7 @@ export default function Scan() {
   // The sorting rules as loaded: a reading made right after the screen opens waits for them, so its suggestion is
   // never computed on an empty list (P-25).
   const sortingLoad = React.useRef<Promise<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }> | null>(null);
+  const sortingReady = React.useRef(false);
   // P-98: the last code the camera read (or recorded) and when.
   // P-109: told shows that the user has been told once that this code was already read.
   const cameraLast = React.useRef<{ code: string; at: number; told?: boolean } | null>(null);
@@ -235,7 +238,7 @@ export default function Scan() {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined).finally(() => setCatalogKnown(true));
     const load = loadSorting() as Promise<{ categories: Category[]; rules: SortingRule[]; fromCache?: boolean }>;
     sortingLoad.current = load;
-    void load.then(setSorting).catch(() => undefined);
+    void load.then((v) => { sortingReady.current = true; setSorting(v); }).catch(() => undefined);
     void listLost().then((l) => setLostCount(l.length));
     return user ? watchMyScansToday(user.uid, setToday) : undefined;
   }, [user, claims]);
@@ -515,12 +518,15 @@ export default function Scan() {
     if (earlier) { show(t("scan.readAgain", { code, time: formatInstant(new Date(earlier.at), i18n.language) }), "warn"); return; }
     if (SHIPMENT_MODES.includes(mode) && !shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
     firstSignal(code);
+    const waitingSince = Date.now();
     const known = await cachedItemForCode(code, (it) => void onLateItem(code, it), log.usedCopy);
     log.mark("piece");
     knownFor.current = { code, it: known };
     if (suggests) {
-      const s = await suggestionFor(known);
+      const s = await suggestionFor(known, Math.max(0, READING_WAIT_MS - (Date.now() - waitingSince)));
       log.mark("rules");
+      // P-155: the rules came too late for this reading: the open window gets its suggestion when they arrive (D-71).
+      if (known && !sortingReady.current) void sortingLoad.current?.then(() => onLateItem(code, known), () => undefined);
       suggestedRef.current = s;
       setSuggested(s);
       setLastPieceBadge(known?.previousFlow === "new" ? "previously_new" : null);
@@ -529,10 +535,12 @@ export default function Scan() {
     if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
     return proceed(code, source);
   };
-  // The suggested category of a piece (§10), on the rules as loaded (a reading waits for them, P-25).
-  const suggestionFor = async (it: Record<string, unknown> | null): Promise<string | null> => {
+  // The suggested category of a piece (§10), on the rules as loaded (a reading waits for them, P-25, but not forever:
+  // P-155, the wait had no limit and the rules are asked to the server with no limit of their own).
+  const suggestionFor = async (it: Record<string, unknown> | null, waitMs = READING_WAIT_MS): Promise<string | null> => {
     if (!it) return null;
-    const loaded = (await sortingLoad.current?.catch(() => null)) ?? sorting;
+    const timeUp = new Promise<null>((ok) => setTimeout(() => ok(null), waitMs));
+    const loaded = (await Promise.race([sortingLoad.current?.catch(() => null) ?? null, timeUp])) ?? sorting;
     // Censimento n.24: a rule leading to a category no longer active is skipped (the next rule applies).
     const active = new Set(loaded.categories.filter((c) => c.active).map((c) => c.id));
     return suggestCategory(loaded.rules, { siteId: it.siteOfOrigin as string, modelId: it.modelId as string, equipmentType: it.equipmentType as string }, active);

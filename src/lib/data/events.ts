@@ -1,8 +1,8 @@
 // Field events (R3): the only documents the client creates. Written without awaiting the server (offline queue).
 import { collection, doc, setDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDoc, getDocFromCache, getDocFromServer, getDocsFromCache, getDocs, Timestamp, documentId, startAfter, limit, type Query, type DocumentReference, type DocumentSnapshot, type QuerySnapshot } from "firebase/firestore";
 import { db } from "./firebase";
-import { computeCodeId, NORM_VERSION, normalizeBarcode } from "@/lib/codeId.js";
-import { scanInstant } from "@/lib/clockOffset.js";
+import { computeCodeId, NORM_VERSION, normalizeBarcode } from "../codeId.js";
+import { scanInstant } from "../clockOffset.js";
 
 export type Source = "camera" | "wedge" | "manual";
 export interface NewEvent {
@@ -61,7 +61,9 @@ export function isProductCode(raw: string, materialCodes: string[]): boolean {
 // P-78: online first, briefly (a piece created after the cache was loaded is found), else the offline cache
 // (no network or weak signal: the answer never waits more than QUICK_MS).
 const QUICK_MS = 2000;
-const late = <T,>(): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), QUICK_MS));
+// P-155 (D-72): the two reads of a piece (its code, then the piece) share QUICK_MS; the second always has this much.
+export const SECOND_READ_MIN_MS = 500;
+const late = <T,>(ms = QUICK_MS): Promise<T> => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), ms));
 // D-58 A3: the server for QUICK_MS, else the cache; when the cache was used because the server was late, onLate receives the server's answer
 // as soon as it arrives (a DDT or a BOM created after the cache was loaded is not missed until the next load).
 function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<QuerySnapshot> {
@@ -77,15 +79,16 @@ function quickDocsLate(q: Query, onLate?: (s: QuerySnapshot) => void): Promise<Q
 // arrives (a piece made after the phone's copy was loaded is known a moment later, with weak signal too).
 export async function cachedItemForCode(raw: string, onLate?: (item: Record<string, unknown> | null) => void, onCopyUsed?: () => void): Promise<Record<string, unknown> | null> {
   let cached = false;
-  const read = async (ref: DocumentReference): Promise<DocumentSnapshot | null> => {
-    try { return await Promise.race([getDoc(ref), late<DocumentSnapshot>()]); } catch { cached = true; return getDocFromCache(ref).catch(() => null); }
+  const deadline = Date.now() + QUICK_MS;
+  const read = async (ref: DocumentReference, ms: number): Promise<DocumentSnapshot | null> => {
+    try { return await Promise.race([getDoc(ref), late<DocumentSnapshot>(ms)]); } catch { cached = true; return getDocFromCache(ref).catch(() => null); }
   };
   const codeRef = doc(db, "codes", await computeCodeId(raw));
   const result = await (async () => {
-    const code = await read(codeRef);
+    const code = await read(codeRef, QUICK_MS);
     const itemId = code?.exists() ? (code.get("itemId") as string | undefined) : undefined;
     if (!itemId) return null;
-    const it = await read(doc(db, "items", itemId));
+    const it = await read(doc(db, "items", itemId), Math.max(deadline - Date.now(), SECOND_READ_MIN_MS));
     return it?.exists() ? it.data() : null;
   })().catch(() => null);
   if (cached) onCopyUsed?.();

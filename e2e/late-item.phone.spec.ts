@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, emulatorFindOne } from "./helpers";
 import { SEED } from "./seed";
 
@@ -35,6 +35,35 @@ test.describe("Risposta tardiva del server nella lettura (telefono)", () => {
     await expect(page.getByTestId("scan-manual-input")).toBeVisible({ timeout: 60_000 });
     await type(page, code);
     await expect(page.getByTestId("scan-sort")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("scan-sort-suggested")).toContainText(SEED.sorting.radioCategoryLabelIt, { timeout: 45_000 });
+  });
+
+  test("Smista con il server che non risponde: la finestra non aspetta le regole e riceve «Suggerita» quando arrivano", async ({ page }) => {
+    test.setTimeout(240_000);
+    const code = uniqueCode("LT");
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    await arrivedRadio(page, code);
+    // Read once with the server: the piece is now in the phone's copy.
+    await page.goto("/scan?mode=classify");
+    await expect(page.getByTestId("scan-manual-input")).toBeVisible({ timeout: 60_000 });
+    await type(page, code);
+    await expect(page.getByTestId("scan-sort-suggested")).toContainText(SEED.sorting.radioCategoryLabelIt, { timeout: 45_000 });
+    await page.getByTestId("scan-sort-cancel").click();
+    // A new screen in the same page (no reload): its sorting rules are asked of a server that does not answer at all.
+    const held: Route[] = [];
+    const firestore = (url: URL) => url.pathname.includes("google.firestore");
+    await page.route(firestore, (r) => { held.push(r); });
+    const go = (to: string) => page.evaluate((path) => { history.pushState({}, "", path); dispatchEvent(new PopStateEvent("popstate")); }, to);
+    await go("/");
+    await expect(page.getByTestId("scan-screen")).toHaveCount(0);
+    await go("/scan?mode=classify");
+    await expect(page.getByTestId("scan-manual-input")).toBeVisible({ timeout: 60_000 });
+    await type(page, code);
+    await expect(page.getByTestId("scan-sort")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("scan-sort-suggested")).toHaveCount(0);
+    await page.unroute(firestore);
+    for (const r of held) await r.continue().catch(() => undefined);
     await expect(page.getByTestId("scan-sort-suggested")).toContainText(SEED.sorting.radioCategoryLabelIt, { timeout: 45_000 });
   });
 
