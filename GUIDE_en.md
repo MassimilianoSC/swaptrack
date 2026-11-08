@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 7f08154 · Guide text: sha ffcf23abb988 · Date: 06/11/2026
+App described: commit 712d2a5 · Guide text: sha c612c92459a4 · Date: 08/11/2026
 
 ## How to use this guide
 
@@ -203,8 +203,9 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 
 **With the camera.**
 1. Frame the code inside the colored box.
-2. When the reading succeeds, the screen turns green with the code, you hear a sound and the phone vibrates (if it can).
-3. The camera stops and «Read the next» appears: press it when you frame the next piece.
+2. As soon as the code is recognised, you hear a short sound, the phone vibrates (if it can) and the box turns white with «Read: …». It only means that the code has been seen.
+3. Shortly after comes the outcome: the green screen with the code means that the reading is recorded. Yellow or red, with a different sound (two low tones), mean: look at the screen. A window may also open («Unknown piece», «Sort»): the reading is recorded when you have answered.
+4. The camera stops and «Read the next» appears: press it when you frame the next piece.
 
 **Reading in a row.** If you have to read many pieces one after another, tick «Burst (the camera restarts by itself after every reading)»: after less than a second you can read the next piece without pressing anything. The phone remembers the choice for the next times too.
 
@@ -248,8 +249,8 @@ Good to know:
 - Without network the app uses the data it already has on the phone, which may be old: this is why in cases 2 and 3 the scan always leaves. Only case 1 is certain.
 - If the piece belongs to another ASP, the phone does not see it (for confidentiality) and does not warn: the server notices it and opens the anomaly for the office.
 - If the piece is at a place the phone does not know, the warning says «another place».
-- With a slow network, up to a couple of seconds more may pass before the green flash: the app is checking the piece.
-- With a weak signal the app waits for the server at most 2 seconds. If the answer arrives later and the window of the piece is still open, the window updates: in «Sort» the suggested category appears; «Unknown piece» closes by itself if the piece was already known, with the line «Piece recognised: the model is already known.». If you have already chosen, your choice stays.
+- If the code is a product code or you read it a moment ago, you do not hear the first sound and «Read» does not appear: you see the yellow warning at once.
+- With a weak signal, at most two and a half seconds may pass between «Read: …» and the outcome: the app is checking the piece. If the server's answer arrives later and the window of the piece is still open, the window updates: in «Sort» the suggested category appears; «Unknown piece» closes by itself if the piece was already known, with the line «Piece recognised: the model is already known.». If you have already chosen, your choice stays.
 
 This behavior is a choice, not a limit: if in your work it must be different (for example blocking case 2 too, or not warning), ask whoever manages SwapTrack.
 

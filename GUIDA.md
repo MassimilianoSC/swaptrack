@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 7f08154 · Testo della guida: sha fc453305fc32 · Data: 06/11/2026
+App descritta: commit 712d2a5 · Testo della guida: sha bb2f8bfd104b · Data: 08/11/2026
 
 ## Come usare questa guida
 
@@ -203,8 +203,9 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
-2. Quando la lettura riesce, lo schermo diventa verde con il codice, senti un suono e il telefono vibra (se lo permette).
-3. La fotocamera si ferma e compare «Leggi il prossimo»: premilo quando inquadri il pezzo successivo.
+2. Appena il codice è riconosciuto, senti un breve suono, il telefono vibra (se lo permette) e il riquadro diventa bianco con «Letto: …». Vuol dire solo che il codice è stato visto.
+3. Poco dopo arriva l'esito: lo schermo verde con il codice vuol dire che la lettura è registrata. Il giallo o il rosso, con un suono diverso (due toni bassi), vogliono dire: guarda lo schermo. Può anche aprirsi una finestra («Pezzo sconosciuto», «Smista»): la lettura si registra quando hai risposto.
+4. La fotocamera si ferma e compare «Leggi il prossimo»: premilo quando inquadri il pezzo successivo.
 
 **Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
 
@@ -248,8 +249,8 @@ Da sapere:
 - Senza rete l'app usa i dati che ha già sul telefono, che possono essere vecchi: per questo nei casi 2 e 3 la lettura parte sempre. Solo il caso 1 è sicuro.
 - Se il pezzo appartiene a un'altra ASP, il telefono non lo vede (per riservatezza) e non avvisa: se ne accorge il server, che apre l'anomalia per l'ufficio.
 - Se il pezzo si trova in un posto che il telefono non conosce, l'avviso scrive «un altro luogo».
-- Con la rete lenta, prima del lampo verde può passare fino a un paio di secondi in più: l'app sta controllando il pezzo.
-- Con poco segnale l'app aspetta il server al massimo 2 secondi. Se la risposta arriva dopo e la finestra del pezzo è ancora aperta, la finestra si aggiorna: in «Smista» compare la categoria suggerita; «Pezzo sconosciuto» si chiude da solo se il pezzo era già noto, con la riga «Pezzo riconosciuto: il modello c'è già.». Se hai già scelto, la tua scelta resta.
+- Se il codice è un codice prodotto o lo hai già letto poco fa, non senti il primo suono e non compare «Letto»: vedi subito l'avviso giallo.
+- Con poco segnale, tra «Letto: …» e l'esito possono passare al massimo due secondi e mezzo: l'app sta controllando il pezzo. Se la risposta del server arriva dopo e la finestra del pezzo è ancora aperta, la finestra si aggiorna: in «Smista» compare la categoria suggerita; «Pezzo sconosciuto» si chiude da solo se il pezzo era già noto, con la riga «Pezzo riconosciuto: il modello c'è già.». Se hai già scelto, la tua scelta resta.
 
 Questo comportamento è una scelta, non un limite: se nel vostro lavoro deve essere diverso (per esempio bloccare anche il caso 2, oppure non avvisare), chiedetelo a chi gestisce SwapTrack.
 
