@@ -31,6 +31,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 | # | Cosa | Chi |
 |---|---|---|
 | P-78 | (diagnosi del 02/11: a utente singolo una lettura subito dopo l'accesso va «Inviata» in 2 s; i blocchi lunghi erano il carico delle prove) Caricamento a pagine fatto; misura «Inviata entro 10 s» su main (d544338). Da misurare su un telefono vero col progetto vero (P-21) | o3 |
+| P-157 | Avvisi di lettura (D-73, lotto 10; via del committente 09/11; stima o3 circa 2,5 h): giallo e rosso 3 s, fotocamera che riparte a fine avviso senza ripetere il giallo, timer annullato, frase «Codice già letto. Inquadra il pezzo successivo.». Misura: giallo e rosso visibili a 2,5 s; verde e velocità invariati; etichetta ferma 8 s dopo un giallo = un solo giallo, niente popup, contatore fermo; anteprima del committente su telefono vero con la fotocamera | o3 + committente |
 
 ## Da fare
 
