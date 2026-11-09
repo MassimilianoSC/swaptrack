@@ -115,6 +115,26 @@ Account: tecnico Nord (sito), magazziniere Nord (arrivo); la password la sa il c
 15. Facoltativo (D-68 caso 2): chiudi e riapri la schermata «Leggi», stessa modalità e luogo: rileggi A → avviso giallo «… è già a … dal …», riga «già qui», il numero non sale.
 Alla fine, per ogni telefono: modello e sistema, cosa non ha funzionato con il numero del passo, eventuali foto dello schermo.
 
+## P-154 iPhone: sospetti da verificare (o3, 06/11 e 09/11)
+
+Letti nel codice, **nessuno visto su un telefono vero**: si ripara solo ciò che la prova conferma. Bozza di o3 per suono e fotocamera, non compilata né provata: `swaptrack-guida/P-154_bozza_o3.cjs` (fuori da git). Le prove automatiche simulano audio e fotocamera: la conferma resta sul telefono.
+
+**Cosa annotare durante la prova:** versione di iOS; app installata o Safari; dove sta l'interruttore laterale; se il suono manca alla prima lettura, dopo un'uscita dall'app o sempre; se il video resta nero tornando nell'app.
+
+| Cosa si vede sull'iPhone | Cosa si fa | Stima (o3) | Rischio |
+|---|---|---|---|
+| Muto alla prima lettura, poi suona dopo un tocco | riparazione del suono | 1 h con la prova | basso |
+| Suona, poi muto dopo un'uscita dall'app | riparazione del suono (può migliorare senza guarire del tutto) | compresa | basso |
+| Muto sempre, interruttore su silenzioso | è il comportamento attuale; il committente decide se forzare il suono (o3 lo lascerebbe così per la demo) | 0,5 h | da iOS 17; un rapporto su iOS 18 dice che non basta |
+| Muto sempre, interruttore su suono | riparazione del suono, ma prima capire se l'audio funziona in altri siti | 1 h | basso |
+| Video nero tornando nell'app | riavvio della fotocamera al ritorno | 2,5 h con le prove | medio-basso |
+
+**Suono, perché:** il contesto audio nasce all'apertura della schermata, senza tocco, e alla chiusura si distrugge, quindi ogni visita riparte bloccata; al ritorno da sottofondo si riattiva solo lo stato «suspended», mentre iOS usa anche «interrupted» (WebKit 263627, 273511). Riparazione: sblocco a qualsiasi tocco dell'app, contesto vivo tra le schermate, riattivazione al ritorno. Limite: il contesto può dire «running» restando muto.
+
+**Fotocamera, perché:** oggi al ritorno non c'è nessun controllo. Tre varianti segnalate: camera terminata, camera muta che non torna, camera viva ma video nero nella PWA (WebKit 204681, 230698, 252465). Riparazione senza toccare il motore congelato: al ritorno si prova a far ripartire il video; se dopo 1,5 s l'immagine è ferma o la camera non è viva si riapre lo scanner; con una finestra aperta si aspetta la chiusura (meccanismo di P-157). Con «Raffica» spenta, alla riapertura la fotocamera torna attiva e «Leggi il prossimo» sparisce. Nessuna fonte garantisce che funzioni sempre.
+
+**Altri sospetti, non riesaminati il 09/11:** guida completa senza rete aperta in una vista di Safari senza la cache dell'app; zoom di Safari sui campi sotto i 16 px; nessun margine per le zone sicure dello schermo con `viewport-fit=cover`; scaricamento di un file dall'app installata.
+
 ## P-22 Foto con la coda senza rete
 
 **Cosa:** scatto in modalità aereo → coda in IndexedDB → ritorno in rete → caricamento su Storage → `attachPhotos`. Mai provato con l'emulatore Storage acceso.
