@@ -401,7 +401,7 @@
       "noLines": "No lines for this direction.",
       "unexpectedTitle": "{{count}} pieces not expected by the BOM"
     },
-    "alreadyRead": "Already read. To read it again, move the phone away for 3 seconds.",
+    "alreadyRead": "Code already read. Point at the next piece.",
     "photoHint": "Read a piece, then take the photo.",
     "modelSearch": "Search model or code",
     "modelSearchNone": "No model found: you can skip.",

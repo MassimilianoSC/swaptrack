@@ -401,7 +401,7 @@
       "noLines": "Nessuna riga per questa direzione.",
       "unexpectedTitle": "{{count}} pezzi non attesi dalla BOM"
     },
-    "alreadyRead": "Già letto. Per rileggerlo allontana il telefono per 3 secondi.",
+    "alreadyRead": "Codice già letto. Inquadra il pezzo successivo.",
     "photoHint": "Leggi un pezzo, poi scatta la foto.",
     "modelSearch": "Cerca modello o codice",
     "modelSearchNone": "Nessun modello trovato: puoi saltare.",

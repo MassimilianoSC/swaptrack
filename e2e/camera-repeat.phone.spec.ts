@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, watchFlash, flashLog, toastLog, clearFlashLog } from "./helpers";
 import { SEED } from "./seed";
 
 // The camera of the scanning screen with the phone held on a label (criterion 2).
@@ -9,11 +9,12 @@ import { SEED } from "./seed";
 async function fakeCamera(page: Page, burst = true): Promise<void> {
   if (burst) await page.addInitScript(() => { try { localStorage.setItem("swaptrack.burst", "1"); } catch { /* no storage */ } });
   await page.addInitScript(() => {
-    const w = window as unknown as { __fakeCode: string | null; BarcodeDetector: unknown };
+    const w = window as unknown as { __fakeCode: string | null; __detects: number; BarcodeDetector: unknown };
     w.__fakeCode = null;
+    w.__detects = 0;
     w.BarcodeDetector = class {
       static async getSupportedFormats() { return ["code_128"]; }
-      async detect() { return w.__fakeCode ? [{ rawValue: w.__fakeCode, boundingBox: { x: 0, y: 0, width: 32, height: 24 } }] : []; }
+      async detect() { w.__detects++; return w.__fakeCode ? [{ rawValue: w.__fakeCode, boundingBox: { x: 0, y: 0, width: 32, height: 24 } }] : []; }
     };
     navigator.mediaDevices.getUserMedia = async () => {
       const c = document.createElement("canvas");
@@ -27,6 +28,20 @@ async function fakeCamera(page: Page, burst = true): Promise<void> {
 }
 // The label in front of the camera (null: the phone is moved away).
 const frame = (page: Page, code: string | null) => page.evaluate((c) => { (window as unknown as { __fakeCode: string | null }).__fakeCode = c; }, code);
+
+const detects = (page: Page) => page.evaluate(() => (window as unknown as { __detects: number }).__detects);
+const readAgainHead = (code: string) => tr("scan.readAgain").replace("{{code}}", code).split("{{")[0];
+// A piece read by the camera (model chosen), then the phone moved away until the 3 s rule and the popup are over.
+async function readOnceAndMoveAway(page: Page, code: string): Promise<void> {
+  await frame(page, code);
+  await page.getByTestId("scan-modelpick-select").selectOption({ index: 1 });
+  await page.getByTestId("scan-modelpick-save").click();
+  await expect(page.getByTestId("scan-flash")).toContainText(code);
+  await frame(page, null);
+  await page.waitForTimeout(3500);
+  await expect(page.getByText(tr("scan.alreadyRead"))).toHaveCount(0);
+  await expect(page.getByTestId("scan-flash")).toBeHidden();
+}
 
 // The Nord warehouse worker, arrival of new material, camera running.
 async function arrivalWithCamera(page: Page): Promise<void> {
@@ -69,6 +84,77 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await expect(page.getByTestId("scan-modelpick-select")).toBeHidden();
     await expect(page.getByTestId("scan-session-count")).toHaveText("1");
     await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toHaveCount(1);
+    await frame(page, null);
+  });
+
+  // P-157 (D-73): the yellow says it once: with the label still in view no second yellow (the 3 s rule would be over
+  // when the camera restarts) and no quiet "already read" after it.
+  test("etichetta ferma 8 secondi dopo un giallo: un solo giallo, niente popup, contatore fermo", async ({ page }) => {
+    test.setTimeout(180_000);
+    const code = uniqueCode("C");
+    await watchFlash(page);
+    await arrivalWithCamera(page);
+    await readOnceAndMoveAway(page, code);
+    await clearFlashLog(page);
+
+    await frame(page, code);
+    await expect(page.getByTestId("scan-flash")).toContainText(readAgainHead(code));
+    await page.waitForTimeout(8000);
+    expect((await flashLog(page)).filter((e) => e.v.startsWith("warn|"))).toHaveLength(1);
+    expect(await toastLog(page)).not.toContain(tr("scan.alreadyRead"));
+    await expect(page.getByTestId("scan-session-count")).toHaveText("1");
+    await expect(page.getByTestId("scan-session-row")).toHaveCount(1);
+    await frame(page, null);
+  });
+
+  // P-157 (D-73): a window opened during the warning (a code typed by hand) keeps the camera stopped; it restarts when
+  // the window closes. Before, the camera restarted under the window and the next label replaced the piece being asked.
+  test("una finestra aperta durante il giallo: la fotocamera non riparte sotto, riparte quando si chiude", async ({ page }) => {
+    test.setTimeout(240_000);
+    const [a, b, c] = [uniqueCode("C"), uniqueCode("C"), uniqueCode("C")];
+    await arrivalWithCamera(page);
+    await readOnceAndMoveAway(page, a);
+    await frame(page, a);
+    await expect(page.getByTestId("scan-flash")).toContainText(readAgainHead(a));
+    await frame(page, null);
+
+    await page.getByTestId("scan-manual-input").fill(c);
+    await page.getByTestId("scan-manual-submit").click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(c);
+    await page.waitForTimeout(3500); // past the end of the warning
+    await frame(page, b);
+    await page.waitForTimeout(2500);
+    await expect(dialog).toContainText(c);
+    await expect(dialog).not.toContainText(b);
+
+    await page.getByTestId("scan-modelpick-skip").click();
+    await expect(dialog).toContainText(b, { timeout: 10_000 });
+    await frame(page, null);
+  });
+
+  // P-157 (D-73): leaving the screen during the warning leaves nothing behind; coming back the camera reads normally.
+  test("uscire dalla schermata durante il giallo: nessuna ripartenza dopo, al ritorno si legge", async ({ page }) => {
+    test.setTimeout(240_000);
+    const [a, b] = [uniqueCode("C"), uniqueCode("C")];
+    await arrivalWithCamera(page);
+    await readOnceAndMoveAway(page, a);
+    await frame(page, a);
+    await expect(page.getByTestId("scan-flash")).toContainText(readAgainHead(a));
+    await frame(page, null);
+
+    const go = (to: string) => page.evaluate((path) => { history.pushState({}, "", path); dispatchEvent(new PopStateEvent("popstate")); }, to);
+    await go("/");
+    await expect(page.getByTestId("scan-screen")).toHaveCount(0);
+    const before = await detects(page);
+    await page.waitForTimeout(4000); // past the end of the warning
+    expect(await detects(page)).toBe(before);
+
+    await go("/scan?mode=arrive_at_warehouse");
+    await page.getByTestId("scan-flow-select").selectOption("new");
+    await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
+    await frame(page, b);
+    await expect(page.getByTestId("scan-modelpick-select")).toBeVisible({ timeout: 10_000 });
     await frame(page, null);
   });
 

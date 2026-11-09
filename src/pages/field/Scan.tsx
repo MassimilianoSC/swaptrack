@@ -39,6 +39,13 @@ const BURST_KEY = "swaptrack.burst";
 const BELOW_VIDEO_PX = 164;
 // P-155 (D-72): the longest a reading waits for the server before its outcome (the piece, then the sorting rules).
 const READING_WAIT_MS = 2500;
+// P-157 (D-73): how long a message stays over the video. A warning must be readable by someone who has never seen it;
+// green and the two yellow messages that only say what comes next stay short.
+const FLASH_MS = 900;
+const WARNING_MS = 3000;
+// The camera reads again this long after a reading, and in any case this long after the message over the video has gone.
+const CAMERA_AFTER_READING_MS = 950;
+const CAMERA_AFTER_FLASH_MS = 50;
 const VIDEO_MAX_SCREEN_SHARE = 0.58;
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
@@ -94,6 +101,9 @@ export default function Scan() {
   const [torch, setTorch] = React.useState<boolean | null>(null);
   const [exposure, setExposure] = React.useState<{ min: number; max: number; step: number } | null>(null);
   const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger" } | null>(null);
+  // P-157 (D-73): one timer for the message over the video (a new message cancels the old one's), and when it ends.
+  const flashTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const flashEnds = React.useRef(0);
   const [muted, setMuted] = React.useState(() => localStorage.getItem("swaptrack.muted") === "1");
   // P-155 (D-72): the code was seen, the phone is still checking it. White, never green: green says "recorded".
   const [decoded, setDecoded] = React.useState<string | null>(null);
@@ -360,7 +370,7 @@ export default function Scan() {
     return () => { aborted = true; };
   }, [bom, bomDirection, mode, today, location]);
 
-  const show = (text: string, tone: "ok" | "warn" | "danger") => {
+  const show = (text: string, tone: "ok" | "warn" | "danger", ms: number = tone === "ok" ? FLASH_MS : WARNING_MS) => {
     setFlash({ text, tone });
     setDecoded(null);
     log.end(tone === "ok" ? "green" : tone === "warn" ? "yellow" : "red");
@@ -370,7 +380,11 @@ export default function Scan() {
       beep("ok", muted);
       navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
     }
-    setTimeout(() => setFlash(null), 900);
+    // P-157: a warning has said it: the quiet "already read" does not follow it for the same label.
+    if (ms > FLASH_MS && cameraLast.current) cameraLast.current.told = true;
+    clearTimeout(flashTimer.current);
+    flashEnds.current = Date.now() + ms;
+    flashTimer.current = setTimeout(() => setFlash(null), ms);
   };
   // P-155 (D-72): as soon as the code is seen, before asking the server about the piece. Only for readings the phone
   // cannot already tell will not be recorded; the outcome (green, yellow, red or a window) comes after.
@@ -465,7 +479,7 @@ export default function Scan() {
     if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectivePhotoFor(id);
     if (source === "camera") cameraLast.current = { code, at: Date.now() };
     if (reread) show(reread.text, reread.kind === "here" ? "warn" : "danger");
-    else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn"); else show(code, "ok");
+    else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn", FLASH_MS); else show(code, "ok");
   };
 
   // P-112: the camera pauses at every decode (webEngine.js) and restarts with the flash of the reading (show). Whatever
@@ -474,12 +488,12 @@ export default function Scan() {
   const onCode = async (raw: string, source: Source, again = false) => {
     let r: "asked" | "continue" | void;
     try { r = await handleCode(raw, source, again); }
-    catch { show(t("scan.readingFailed"), "danger"); } // P-155: never a beep and then silence with nothing recorded
+    catch { cameraLast.current = null; show(t("scan.readingFailed"), "danger"); } // P-155: never a beep and then silence with nothing recorded; P-157: it says "try again", so the label is not "already read"
     finally {
       setDecoded(null);
       firstSignalled.current = false;
       // The second code of a reading (the product code after the serial) is read at once, also without burst mode.
-      if (source === "camera" && r! !== "asked") setTimeout(() => (r === "continue" ? ctrl.current?.resume() : afterCameraReading()), 950);
+      if (source === "camera" && r! !== "asked") restartCamera(r! === "continue" ? () => ctrl.current?.resume() : afterCameraReading, CAMERA_AFTER_READING_MS);
     }
   };
   const handleCode = async (raw: string, source: Source, again = false): Promise<"asked" | "continue" | void> => {
@@ -494,12 +508,12 @@ export default function Scan() {
       if (repeat) {
         // P-109: said once, quietly (no beep, no vibration), not at every frame while the phone stays on the label.
         if (!last!.told) { toast.message(t("scan.alreadyRead"), { id: "scan-already-read" }); cameraLast.current.told = true; }
-        setTimeout(() => ctrl.current?.resume(), 300);
+        restartCamera(() => ctrl.current?.resume(), 300);
         return;
       }
     }
     log.start(code);
-    if (!location || !user || !claims?.orgId) { show(t("scan.notReady"), "warn"); return; }
+    if (!location || !user || !claims?.orgId) { cameraLast.current = null; show(t("scan.notReady"), "warn"); return; }
     if (pendingSerial) {
       const p = pendingSerial;
       setPendingSerial(null);
@@ -532,7 +546,7 @@ export default function Scan() {
       setLastPieceBadge(known?.previousFlow === "new" ? "previously_new" : null);
     }
     judgeReading(code, known);
-    if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn"); return "continue"; }
+    if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn", FLASH_MS); return "continue"; }
     return proceed(code, source);
   };
   // The suggested category of a piece (§10), on the rules as loaded (a reading waits for them, P-25, but not forever:
@@ -569,7 +583,7 @@ export default function Scan() {
       await record(m.code, m.source, m.second);
       toast.message(t("scan.pieceRecognized"), { id: "scan-piece-recognized" });
       if (takeNext()) return;
-      if (m.source === "camera") setTimeout(afterCameraReading, 950);
+      if (m.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
     }
   };
   // D-66 (P-136c): what every piece goes through once its codes are known, with or without a product code.
@@ -605,6 +619,28 @@ export default function Scan() {
   const onCodeRef = React.useRef(onCode);
   onCodeRef.current = onCode;
 
+  // P-157 (D-73): the only way the camera restarts after a reading. One timer at a time, gone with the screen; never
+  // under the message over the video (it covers the whole video), and never while a window is open: it waits for it.
+  const cameraTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cameraDeferred = React.useRef<(() => void) | null>(null);
+  const windowOpen = !!label || !!pendingSort || !!modelPick;
+  const windowOpenRef = React.useRef(windowOpen);
+  windowOpenRef.current = windowOpen;
+  const clearCameraRestart = () => { clearTimeout(cameraTimer.current); cameraDeferred.current = null; };
+  const restartCamera = (go: () => void, minMs: number) => {
+    clearCameraRestart();
+    const afterFlash = flashEnds.current - Date.now() + CAMERA_AFTER_FLASH_MS;
+    const longWait = afterFlash > minMs;
+    cameraTimer.current = setTimeout(() => {
+      // The wait outlasts CAMERA_REPEAT_MS: the label still in view is the same reading, not one more warning.
+      if (longWait && cameraLast.current) cameraLast.current.at = Date.now();
+      if (windowOpenRef.current) cameraDeferred.current = go; else go();
+    }, longWait ? afterFlash : minMs);
+  };
+  React.useEffect(() => {
+    if (!windowOpen && cameraDeferred.current) restartCamera(cameraDeferred.current, CAMERA_AFTER_READING_MS);
+  }, [windowOpen]);
+
   React.useEffect(() => {
     if (!videoRef.current || !location) return;
     const c = startScanner({
@@ -616,7 +652,7 @@ export default function Scan() {
       onExposure: (r: { min: number; max: number; step: number }) => setExposure(r),
     });
     ctrl.current = c;
-    return () => c.stop();
+    return () => { clearCameraRestart(); c.stop(); };
   }, [location]);
 
   const undo = async () => {
@@ -683,7 +719,7 @@ export default function Scan() {
     setPendingSort(null);
     await record(p.code, p.source, p.second, undefined, choice);
     if (takeNext()) return;
-    if (p.source === "camera") setTimeout(afterCameraReading, 950);
+    if (p.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
   };
   const cancelSort = () => {
     const p = pendingSort;
@@ -694,7 +730,7 @@ export default function Scan() {
     rereadRef.current = null;
     toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
     if (takeNext()) return;
-    if (p.source === "camera") setTimeout(afterCameraReading, 300);
+    if (p.source === "camera") restartCamera(afterCameraReading, 300);
   };
   // The piece waiting for its model is taken first, so a double tap (or "Save" and then the X) records it once.
   const confirmModelPick = async () => {
@@ -704,7 +740,7 @@ export default function Scan() {
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second, modelPickId || undefined);
     if (takeNext()) return;
-    if (p.source === "camera") setTimeout(afterCameraReading, 950);
+    if (p.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
   };
   // D-50 (P-112): closing the window (X, a tap outside, the back key) is "Skip": the reading is recorded without a model
   // (needsModel, "To complete", §6.4) and the camera reads again. A wrong reading has "Undo last".
@@ -715,7 +751,7 @@ export default function Scan() {
     setModelPick(null); setModelPickId("");
     await record(p.code, p.source, p.second);
     if (takeNext()) return;
-    if (p.source === "camera") setTimeout(afterCameraReading, 950);
+    if (p.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
   };
   const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared")); };
 

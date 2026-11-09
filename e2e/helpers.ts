@@ -139,16 +139,44 @@ export async function pickLocation(page: Page, code: string): Promise<void> {
   await expect(page.getByTestId("site-picker-selected")).toContainText(code);
 }
 
+// P-157: what the scanning screen shows over time, sampled in the page (a wait in the test would measure the test too).
+export type FlashEntry = { v: string; at: number };
+type FlashWindow = { __flash: FlashEntry[]; __toasts: string[] };
+export async function watchFlash(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const w = window as unknown as FlashWindow;
+    w.__flash = [];
+    w.__toasts = [];
+    let current = "";
+    setInterval(() => {
+      const el = document.querySelector("[data-testid='scan-flash']");
+      const now = el ? `${el.getAttribute("data-tone")}|${el.textContent}` : "";
+      if (now !== current) { current = now; w.__flash.push({ v: now, at: performance.now() }); }
+      document.querySelectorAll("[data-sonner-toast]").forEach((t) => { const s = t.textContent ?? ""; if (!w.__toasts.includes(s)) w.__toasts.push(s); });
+    }, 30);
+  });
+}
+export const flashLog = (page: Page): Promise<FlashEntry[]> => page.evaluate(() => (window as unknown as FlashWindow).__flash);
+export const toastLog = (page: Page): Promise<string[]> => page.evaluate(() => (window as unknown as FlashWindow).__toasts);
+export const clearFlashLog = (page: Page): Promise<void> => page.evaluate(() => { const w = window as unknown as FlashWindow; w.__flash = []; w.__toasts = []; });
+// How long the last message of this tone stayed in ms (0: never shown, or still on the screen).
+export async function flashSpell(page: Page, tone: "ok" | "warn" | "danger"): Promise<number> {
+  const log = await flashLog(page);
+  for (let i = log.length - 1; i >= 0; i--) if (log[i].v.startsWith(`${tone}|`)) return log[i + 1] ? log[i + 1].at - log[i].at : 0;
+  return 0;
+}
+
 // Scanning screen: type the digits under the barcode (source: manual) and wait for the confirmation flash.
 // Enter submits the form (the fixed "Scan" button of the field shell can never sit over a click).
 // An unknown piece in a removal or an arrival asks for the model first (SPEC §6.4): skipped, or the first
 // model of the catalog is chosen when `withModel` is set.
 export async function scanManual(page: Page, code: string, opts: { withModel?: boolean } = {}): Promise<void> {
   const input = page.getByTestId("scan-manual-input");
-  await input.fill(code);
-  await input.press("Enter");
   const skip = page.getByTestId("scan-modelpick-skip");
   const flash = page.getByTestId("scan-flash");
+  await expect(flash).toBeHidden(); // a warning of the reading before (3 s, P-157) is not the answer to this one
+  await input.fill(code);
+  await input.press("Enter");
   await expect(skip.or(flash)).toBeVisible();
   if (await skip.isVisible()) {
     if (opts.withModel) {
