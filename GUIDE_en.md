@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 712d2a5 · Guide text: sha c612c92459a4 · Date: 08/11/2026
+App described: commit 63598f8 · Guide text: sha ae101721b12c · Date: 09/11/2026
 
 ## How to use this guide
 
@@ -229,7 +229,7 @@ Possible messages (in all these cases type the code by hand):
 - «The automatic reading service is not responding, try again later.»
 
 Good to know:
-- If you keep the camera still on the same label, the app does not read it twice and writes «Already read. To read it again, move the phone away for 3 seconds.» This is normal.
+- If you keep the camera still on the same label, the app does not read it twice and writes «Code already read. Point at the next piece.» This is normal. A different code is read straight away.
 - If the app says «This is the product code: read the serial number», you have read the code of the model (the same on all pieces of the same type). Look on the label for the serial number of the single piece and read that one.
 - If the piece has two codes and you want to record the product code too, tick «Read product code after the serial»: read the serial number first, the app says «Now read the product code», then read the product code (the camera is ready at once, even if you are not reading in a row). It is always one single piece.
 
@@ -239,7 +239,7 @@ If something goes wrong:
 
 ### What happens if you scan a piece again?
 
-When you scan a code, the app checks whether you have already scanned that piece or whether it is already where you are. There are three cases.
+When you scan a code, the app checks whether you have already scanned that piece or whether it is already where you are. There are three cases. Yellow and red warnings stay on the screen for about 3 seconds.
 
 1. **You have just scanned it, in the same scanning.** You have already scanned that piece, for the same operation and at the same place, since you opened the screen. A yellow warning appears, for example «… already read a moment ago (at 10:42)». The scan is **not** recorded again and the counter does not go up. It works with the camera, the scanner gun and the digits by hand. If you pressed «Undo last» on that piece, you can scan it again normally.
 2. **The piece is already here, in the same state.** For example you record the arrival of a piece that is already recorded as arrived in this warehouse. A yellow warning appears, for example «… has been at MAG-NORD-01 · Magazzino Nord since 04/11/26, 18:10». The scan is sent anyway and nothing changes. In the list the row says «already here» and the counter does not count it as a new piece.

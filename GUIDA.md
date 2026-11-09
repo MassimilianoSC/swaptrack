@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 712d2a5 · Testo della guida: sha bb2f8bfd104b · Data: 08/11/2026
+App descritta: commit 63598f8 · Testo della guida: sha ae3a6299bb04 · Data: 09/11/2026
 
 ## Come usare questa guida
 
@@ -229,7 +229,7 @@ Messaggi possibili (in tutti questi casi scrivi il codice a mano):
 - «Il servizio di lettura automatica non risponde, riprova più tardi.»
 
 Da sapere:
-- Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte e scrive «Già letto. Per rileggerlo allontana il telefono per 3 secondi.» È normale.
+- Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte e scrive «Codice già letto. Inquadra il pezzo successivo.» È normale. Un codice diverso si legge subito.
 - Se l'app dice «Questo è il codice prodotto: leggi il numero di serie», hai letto il codice del modello (uguale su tutti i pezzi dello stesso tipo). Cerca sull'etichetta il numero di serie del singolo pezzo e leggi quello.
 - Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto», poi leggi il codice prodotto (la fotocamera è subito pronta, anche se non leggi di fila). È sempre un solo pezzo.
 
@@ -239,7 +239,7 @@ Se qualcosa va storto:
 
 ### Cosa succede se rileggi un pezzo?
 
-Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si trova già dove sei. Ci sono tre casi.
+Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si trova già dove sei. Ci sono tre casi. Gli avvisi gialli e rossi restano sullo schermo circa 3 secondi.
 
 1. **L'hai appena letto, nella stessa lettura.** Hai già letto quel pezzo, per la stessa operazione e nello stesso posto, da quando hai aperto la schermata. Compare un avviso giallo, per esempio «… già letto poco fa (alle 10:42)». La lettura **non** viene registrata di nuovo e il contatore non sale. Vale con la fotocamera, la pistola e le cifre a mano. Se hai premuto «Annulla l'ultima» su quel pezzo, puoi rileggerlo normalmente.
 2. **Il pezzo è già qui, nello stesso stato.** Per esempio registri l'arrivo di un pezzo che risulta già arrivato in questo magazzino. Compare un avviso giallo, per esempio «… è già a MAG-NORD-01 · Magazzino Nord dal 04/11/26, 18:10». La lettura viene comunque inviata e non cambia niente. Nell'elenco la riga dice «già qui» e il contatore non la conta come pezzo nuovo.
