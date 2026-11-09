@@ -23,6 +23,8 @@ cd C:\Users\mcracchiolo\Desktop\swaptrack; gcloud auth application-default login
 
 Si apre il browser: entrare con l'account che amministra il progetto della demo.
 
+Se PowerShell risponde che `gcloud` non è riconosciuto, il programma non è installato su questo computer: scaricarlo da https://cloud.google.com/sdk/docs/install (Windows, programma di installazione), poi chiudere e riaprire PowerShell. Serve per il punto 7 e per entrare in Google Cloud la prima volta.
+
 ## 3. Pulizia: prima guardare, poi fare
 
 **3a. Solo guardare (non cancella niente):**
@@ -128,9 +130,9 @@ Se gcloud chiede di entrare, lanciare prima `gcloud auth login` (si apre il brow
 cd C:\Users\mcracchiolo\Desktop\swaptrack; gcloud run services describe beforesignin --region europe-west1 --project kronos-caffe-sito --format=yaml | Select-String minScale
 ```
 
-Deve comparire una riga che finisce con **`minScale: '1'`**. Nessuna riga, oppure `'0'`: è spento, rilanciare il comando di accensione.
+Deve comparire una riga che finisce con **`minScale: '1'`**. Nessuna riga, oppure `'0'`: è spento. Rilanciare una volta il comando di accensione e rifare il controllo; se è ancora così, scrivere alla memoria storica (la chat di Claude), incollando l'uscita.
 
-**Attenzione:** una pubblicazione delle funzioni può rimetterlo a 0. Tra l'accensione e la fine della demo non si pubblica niente; se proprio serve, dopo la pubblicazione rifare il controllo e, se è spento, riaccenderlo.
+**Attenzione:** pubblicare tutte le funzioni (`--only functions`) oppure proprio `beforeSignIn` lo rimette a 0, anche se il codice non è cambiato. Pubblicare solo l'app o una sola altra funzione non lo tocca. Tra l'accensione e la fine della demo non si pubblica niente; se proprio serve, dopo la pubblicazione rifare il controllo e, se è spento, riaccenderlo.
 
 ## 8. Dopo la demo
 
