@@ -23,7 +23,8 @@
         "first-signal.phone.spec.ts",
         "scan-video-size.phone.spec.ts",
         "app-dialogs.desk.spec.ts",
-        "signin-progress.desk.spec.ts"
+        "signin-progress.desk.spec.ts",
+        "scan-button-cover.desk.spec.ts"
       ]
     },
     {

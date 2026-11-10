@@ -49,7 +49,8 @@ export function AppShell() {
       {shell === "desk" && !online && <div role="status" className="border-b border-border bg-warning/15 px-4 py-2 text-sm" data-testid="desk-offline-strip">{t("status.offlineStrip")}</div>}
       <div className="flex flex-1 min-h-0">
         <Sidebar />
-        <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && !onScan && "pb-28")} data-testid="main-content">
+        {/* Room under the page for the floating "Scan" button. P-161: also from lg, where lg:p-8 overrode pb-28. */}
+        <main className={cn("flex-1 min-w-0 p-4 lg:p-8", isAspRole(role) && !onScan && "pb-28 lg:pb-28")} data-testid="main-content">
           <Outlet />
         </main>
       </div>
