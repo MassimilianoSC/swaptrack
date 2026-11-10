@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
 import ExcelJS from "exceljs";
 import { ACCOUNTS, signIn, uniqueCode, tr, emulatorSetDoc, emulatorRead, emulatorFirstId } from "./helpers";
 import { SEED } from "./seed";
@@ -22,6 +22,19 @@ async function newDocument(page: Page, kind: "ddt_in" | "bom", location: string)
   await page.getByTestId("document-location").selectOption(`loc_${location}`);
   return number;
 }
+// P-160: a file dragged from the computer and dropped on a place of the page (a real drop event with its files).
+type DragFile = { name: string; mimeType: string; buffer: Buffer };
+async function dragOn(page: Page, target: Locator, files: DragFile[], events: string[] = ["dragenter", "dragover", "drop"]): Promise<void> {
+  const dt = await page.evaluateHandle((list) => {
+    const d = new DataTransfer();
+    for (const f of list) d.items.add(new File([Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0))], f.name, { type: f.mimeType }));
+    return d;
+  }, files.map((f) => ({ name: f.name, mimeType: f.mimeType, b64: f.buffer.toString("base64") })));
+  for (const type of events) await target.dispatchEvent(type, { dataTransfer: dt });
+}
+const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const DOCX = { name: "lettera.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: Buffer.from("PK not a document") };
+
 const saveNew = async (page: Page) => {
   await page.getByTestId("document-save-new").click();
   await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
@@ -129,6 +142,94 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await expect.poll(async () => ((await emulatorRead(`documents/${id}`)).version as number), { timeout: 30_000 }).toBe(2);
     const lines = (await emulatorRead(`documents/${id}`)).lines as Array<{ codeRaw: string; modelId?: string | null }>;
     expect(lines).toEqual([expect.objectContaining({ codeRaw: code, modelId })]);
+  });
+
+  // P-160: dragged onto the "Files" box, an Excel gives exactly what the button gives (the first test above).
+  test("Excel trascinato sul riquadro dei file: riquadro evidenziato, stesse righe da confermare del pulsante", async ({ page }) => {
+    test.setTimeout(180_000);
+    const [a, b] = [uniqueCode("X"), uniqueCode("X")];
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    const box = page.getByTestId("document-files");
+    const file = { name: "ddt.xlsx", mimeType: XLSX, buffer: await xlsx([["Seriale", "Materiale", "Qtà", "Note"], [a, "MC-A", "", ""], [b, "", "", "x"], ["", "MC-B", "3", ""]]) };
+    await dragOn(page, box, [file], ["dragenter", "dragover"]);
+    await expect(box).toHaveAttribute("data-dragging", "true");
+    await expect(page.getByTestId("document-files-drop")).toHaveText(tr("documents.filesDrop"));
+    await dragOn(page, box, [file], ["drop"]);
+    await expect(box).toHaveAttribute("data-dragging", "false");
+    await expect(page.getByTestId("excel-mapping")).toBeVisible();
+    await page.getByTestId("excel-map-serial").selectOption("Seriale");
+    await page.getByTestId("excel-map-materialCode").selectOption("Materiale");
+    await page.getByTestId("excel-map-quantity").selectOption("Qtà");
+    await page.getByTestId("excel-map-apply").click();
+    await expect(page.getByTestId("document-lines-to-confirm")).toBeVisible();
+    await expect(page.getByTestId("document-lines")).toHaveValue(`${a} MC-A\n${b}\n#3 MC-B`);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+    await saveNew(page);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+  });
+
+  test("foto e PDF trascinati insieme: due file e l'anteprima, come con il pulsante", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    const png = Buffer.from(await page.evaluate(async () => {
+      const c = document.createElement("canvas"); c.width = 200; c.height = 100;
+      const g = c.getContext("2d")!; g.fillStyle = "#ccc"; g.fillRect(0, 0, 200, 100);
+      const blob = await new Promise<Blob>((r) => c.toBlob((x) => r(x!), "image/png"));
+      return new Promise<string>((r) => { const f = new FileReader(); f.onload = () => r(String(f.result).split(",")[1]); f.readAsDataURL(blob); });
+    }), "base64");
+    await dragOn(page, page.getByTestId("document-files"), [{ name: "pagina1.png", mimeType: "image/png", buffer: png }, { name: "pagina2.pdf", mimeType: "application/pdf", buffer: PDF() }]);
+    await expect(page.getByTestId("document-file")).toHaveCount(2);
+    await expect(page.getByTestId("document-preview-image")).toBeVisible();
+  });
+
+  // P-160: a type the server does not take is said at once, dragged or chosen with the button (before, the button took
+  // it and the server refused the whole save).
+  test("file di tipo non ammesso, trascinato o scelto col pulsante: messaggio subito, nessun file aggiunto", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    await page.getByTestId("document-files-input").setInputFiles(DOCX);
+    await expect(page.getByText(tr("errors.unsupported_file_type")).first()).toBeVisible();
+    await expect(page.getByTestId("document-file")).toHaveCount(0);
+    await dragOn(page, page.getByTestId("document-files"), [DOCX, { name: "pagina.pdf", mimeType: "application/pdf", buffer: PDF() }]);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+    await expect(page.getByTestId("document-file")).toContainText("pagina.pdf");
+  });
+
+  // Found with P-160: Windows calls a CSV "application/vnd.ms-excel"; the file was sent with that type and the server
+  // refused the save (unsupported_file_type).
+  test("CSV che Windows chiama «application/vnd.ms-excel»: il documento si salva", async ({ page }) => {
+    test.setTimeout(120_000);
+    const a = uniqueCode("X");
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    await page.getByTestId("document-files-input").setInputFiles({ name: "ddt.csv", mimeType: "application/vnd.ms-excel", buffer: Buffer.from(`Seriale\n${a}\n`) });
+    await page.getByTestId("excel-map-serial").selectOption("Seriale");
+    await page.getByTestId("excel-map-apply").click();
+    await expect(page.getByTestId("document-lines")).toHaveValue(a);
+    await saveNew(page);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+  });
+
+  // P-160: a file dropped off the box is ignored (the browser would open it in place of the page and the document not
+  // saved yet would be lost). A dispatched event never opens anything: what is checked is that the page stops it.
+  test("file lasciato fuori dal riquadro: la pagina lo ferma e non si esce", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    await expect(page.getByTestId("document-files")).toBeVisible();
+    const stopped = await page.evaluate(() => {
+      const d = new DataTransfer();
+      d.items.add(new File(["%PDF-1.4"], "fuori.pdf", { type: "application/pdf" }));
+      const ev = new DragEvent("drop", { dataTransfer: d, bubbles: true, cancelable: true });
+      document.body.dispatchEvent(ev);
+      return ev.defaultPrevented;
+    });
+    expect(stopped).toBe(true);
+    await expect(page.getByTestId("document-file")).toHaveCount(0);
+    await expect(page).toHaveURL(/\/documents\/new$/);
   });
 
   test("file oltre 5 MB: messaggio chiaro, nessun file aggiunto", async ({ page }) => {
