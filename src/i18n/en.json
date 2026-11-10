@@ -908,6 +908,7 @@
     "subtitle": "A single physical piece.",
     "searchByCode": "Search by code",
     "notFound": "No piece has this code.",
+    "notVisible": "This piece is not visible to your ASP.",
     "model": "Model",
     "materialCode": "Material code",
     "status": "State",

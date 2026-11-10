@@ -26,9 +26,13 @@ test.describe("Percorso 6 — riservatezza: ASP Centro non vede ASP Nord (scriva
     await expect(page).toHaveURL(/\/items$/);
   });
 
-  test("indirizzo diretto di un pezzo di Nord: stato d'errore, nessun dato", async ({ page }) => {
+  // P-159: the page says the piece is not visible to this ASP (without saying whose), not "could not load the data".
+  test("indirizzo diretto di un pezzo di Nord: «non visibile per la tua ASP», nessun dato", async ({ page }) => {
     await page.goto(`/items/${SEED.nord.itemId}`);
-    await expect(page.getByTestId("state-error")).toBeVisible();
+    await expect(page.getByTestId("state-empty")).toHaveText(tr("items.notVisible"));
+    await expect(page.getByTestId("state-error")).toHaveCount(0);
+    await expect(page.getByText(tr("errors.load_failed"))).toHaveCount(0);
+    await expect(page.getByTestId("state-empty")).not.toContainText(NORD);
     await expect(page.getByTestId("item-status")).toHaveCount(0);
     await expect(page.getByTestId("item-codes")).toHaveCount(0);
     await expect(page.getByTestId("main-content")).not.toContainText(SEED.nord.itemCode);

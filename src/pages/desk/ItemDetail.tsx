@@ -32,8 +32,14 @@ export default function ItemDetail() {
   const names = useNames();
   const online = useOnline();
   const [item, setItem] = React.useState<Row<Item> | null>(null);
-  // §15: a piece that cannot be read (rules) shows an error; an id that does not exist shows "not found".
-  const [loadError, setLoadError] = React.useState(false);
+  // §15: a piece that cannot be read shows an error; an id that does not exist shows "not found".
+  // P-159: a piece the rules refuse (of another ASP) says so, without saying whose it is (criterion 1); "forbidden" wins
+  // over a generic error from the other reads of the page.
+  const [loadError, setLoadError] = React.useState<false | "error" | "forbidden">(false);
+  const failed = React.useCallback((e: unknown) => {
+    const next = (e as { code?: string } | null)?.code === "permission-denied" ? "forbidden" : "error";
+    setLoadError((prev) => (prev === "forbidden" ? prev : next));
+  }, []);
   const [missing, setMissing] = React.useState(false);
   const [codes, setCodes] = React.useState<Row<Code>[]>([]);
   const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | null>(null);
@@ -92,9 +98,9 @@ export default function ItemDetail() {
     setLoadError(false); setMissing(false);
     void listModels().then(setModels).catch(() => undefined);
     void loadSorting().then((s) => setCategories(s.categories)).catch(() => undefined);
-    void reload().catch(() => setLoadError(true));
-    return watchItem(id, (v) => { setItem(v); setMissing(v === null); }, () => setLoadError(true));
-  }, [id, reload]);
+    void reload().catch(failed);
+    return watchItem(id, (v) => { setItem(v); setMissing(v === null); }, failed);
+  }, [id, reload, failed]);
   const photoKey = (item?.photoPaths ?? []).join("|");
   React.useEffect(() => {
     const paths = photoKey ? photoKey.split("|") : [];
@@ -111,6 +117,7 @@ export default function ItemDetail() {
 
   // D-58 B3: without network a piece that is not on this device is "not available without network", never "not found".
   if ((loadError || missing) && !online) return <ErrorState message={t("errors.offlineUnavailable")} />;
+  if (loadError === "forbidden") return <Empty title={t("items.notVisible")} />; // not a failure: no "something went wrong"
   if (loadError) return <ErrorState message={t("errors.load_failed")} />;
   if (missing) return <Empty title={t("items.notFound")} />;
   if (!id || !item || history === null) return <Loading />;
