@@ -79,6 +79,7 @@ L'ultimo passo stampa due parti. Ogni riga comincia con **OK** (va bene) o **NO*
 
 - **«Documents of the AI procedure … still OPEN»**: chiudere i documenti elencati.
 - **«Demo DDTs already saved»**: dopo la pulizia deve essere 0. Se non lo è, rilanciare il comando 3b.
+- **«Codes of the demo labels already read (TD26…)»**: dopo la pulizia deve essere 0. Se non lo è, qualcuno ha letto le etichette della demo dopo la pulizia, oppure un telefono aveva ancora letture da inviare: rifare il punto 1 e poi il comando 3b.
 - **«BOMs of the demo site SITO-00013»**: dopo la pulizia 0; dopo aver caricato la BOM della demo (punto 6), 1.
 - **«Events never processed»**: deve essere 0. Se non lo è, aspettare due minuti e rilanciare solo il controllo:
 
