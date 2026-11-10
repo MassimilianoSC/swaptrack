@@ -14,13 +14,16 @@ async function ownDocuments(n: number): Promise<void> {
     });
   }
 }
-async function lastOpenIsFree(page: Page, width: number): Promise<boolean> {
+// What is under the middle of the last "Open" at the end of the page: "free", or the element that covers it.
+async function underLastOpen(page: Page, width: number): Promise<string> {
   await page.setViewportSize({ width, height: 900 });
   await page.goto("/documents");
   const opens = page.locator("[data-testid^='documents-row-']");
-  await expect(opens.first()).toBeVisible();
+  await expect(opens.nth(2)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByTestId("scan-fab")).toBeVisible();
-  // The window as tall as the page: the last row is as low as it can be, at the end of the page.
+  // The window as tall as the page (measured in a low window: the page fills at least the window), so the last row is
+  // as low as it can be, at the end of the page, where the button is.
+  await page.setViewportSize({ width, height: 300 });
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   await page.setViewportSize({ width, height });
   const last = opens.last();
@@ -29,7 +32,8 @@ async function lastOpenIsFree(page: Page, width: number): Promise<boolean> {
   return last.evaluate((el) => {
     const r = el.getBoundingClientRect();
     const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    return !!hit && el.contains(hit);
+    if (hit && el.contains(hit)) return "free";
+    return hit ? `${hit.tagName} ${hit.getAttribute("data-testid") ?? ""} ${(hit.textContent ?? "").trim().slice(0, 40)}` : "nothing (off screen)";
   });
 }
 
@@ -38,13 +42,13 @@ test.describe("Pulsante «Leggi» e ultima riga di una tabella (scrivania)", () 
     test.setTimeout(120_000);
     await ownDocuments(3);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    expect(await lastOpenIsFree(page, 1280)).toBe(true);
+    expect(await underLastOpen(page, 1280)).toBe("free");
   });
 
   test("sul telefono (390 px) l'ultimo «Apri» dei documenti resta libero", async ({ page }) => {
     test.setTimeout(120_000);
     await ownDocuments(3);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    expect(await lastOpenIsFree(page, 390)).toBe(true);
+    expect(await underLastOpen(page, 390)).toBe("free");
   });
 });
