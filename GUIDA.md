@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit cd7628f · Testo della guida: sha 4a49bbe1c826 · Data: 11/11/2026
+App descritta: commit d3f0efc · Testo della guida: sha db7da71121bd · Data: 11/11/2026
 
 ## Come usare questa guida
 
@@ -281,7 +281,7 @@ I pezzi nuovi arrivano dal magazzino della tua ASP: se un codice non è conosciu
 
 ### Come controllo i pezzi previsti nel sito (la BOM)?
 
-Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la riga «Lista BOM · 3/10» (letti su previsti): toccala per aprire la lista.
+Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la riga «Lista BOM · 3/10» (letti su previsti): toccala per aprire la lista. In alto a destra sul video c'è anche il riepilogo «BOM 3/10 ▾»: toccalo per aprire sopra il video l'elenco dei pezzi da smontare o installare, con la spunta su quelli già letti, e toccalo di nuovo per chiuderlo. Mentre c'è la fascia di un avviso giallo o rosso il riepilogo sparisce per qualche secondo.
 - con «Smonta» vedi i «Pezzi da smontare», con «Installa» i «Pezzi da installare»;
 - ogni pezzo della lista che leggi prende la spunta;
 - se leggi pezzi che non sono nella lista, compaiono sotto, per esempio «2 pezzi non attesi dalla BOM»;
@@ -368,12 +368,12 @@ I documenti (DDT e BOM) si preparano in «Documenti» con «Nuovo documento». O
 **Allegare file o foto.**
 1. Nel riquadro «File del documento» premi «Aggiungi file o foto» e scegli PDF, foto (JPEG, PNG, WebP), Excel o CSV. Al computer puoi anche trascinare uno o più file sul riquadro: mentre trascini compare «Rilascia qui i file». Se non c'è ancora nulla vedi «Nessun file. Puoi aggiungere foto, PDF o l'Excel del documento, anche trascinandoli qui.»
 2. I file nuovi mostrano «da salvare» finché non premi «Salva». Le foto vengono rimpicciolite prima di partire.
-3. Tocca il nome di un file per vederlo accanto alle righe; «Apri il file» lo apre da solo (utile sull'iPhone).
+3. Tocca il nome di un file per vederlo accanto alle righe; «Apri il file» lo apre da solo (utile sull'iPhone) e «Scarica» lo salva con il nome che aveva sul tuo computer (i file caricati prima del 12/11/2026 hanno un nome di sistema, per esempio «1-1.pdf»). Al computer un Excel compare come una targhetta verde, così si vede subito.
 4. Per togliere un file salvato premi la X accanto al nome: vedi «1 file tolto da questa versione (resta nella storia).» con «Annulla» per ripensarci. Il file sparisce dalla versione nuova quando premi «Salva».
 
 Limiti: «Al massimo 10 file per documento.»; ogni file al massimo 5 MB («File troppo grande: massimo 5 MB.»); i file nuovi di un salvataggio insieme al massimo 6 MB («I file nuovi insieme superano 6 MB: salva in due volte o usa foto più leggere.»). Un tipo di file diverso dà subito, appena lo aggiungi, «Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.»
 
-**Righe da un Excel o CSV.** Quando aggiungi un Excel o un CSV si apre «Colonne dell'Excel»: «Scegli quale colonna contiene ogni dato. La scelta viene ricordata per il prossimo file.» Se vedi «Carico la scelta delle colonne salvata… Le colonne che scegli tu restano.», l'app sta recuperando la scelta dell'ultima volta: puoi già scegliere.
+**Righe da un Excel o CSV.** Se l'app non riesce a leggere le righe di un Excel lo dice («Non riesco a leggere le righe di questo Excel…», oppure «Non riesco ad aprire la lettura degli Excel: ricarica l'app e riprova…»); il file resta comunque allegato. Quando aggiungi un Excel o un CSV si apre «Colonne dell'Excel»: «Scegli quale colonna contiene ogni dato. La scelta viene ricordata per il prossimo file.» Se vedi «Carico la scelta delle colonne salvata… Le colonne che scegli tu restano.», l'app sta recuperando la scelta dell'ultima volta: puoi già scegliere.
 1. Scegli la colonna del «Seriale», oppure quelle del «Codice materiale» e della «Quantità».
 2. Sotto vedi quante righe sono pronte, per esempio «12 righe pronte, 1 non lette.»
 3. Premi «Usa queste righe». Le righe si aggiungono a quelle già scritte e vedi, per esempio, «12 righe lette dal file (1 non lette): controllale, poi Salva.»
@@ -393,7 +393,7 @@ Prima prepara il DDT nell'app (una volta per ogni DDT):
 2. «Tipo»: «DDT (arrivo)».
 3. «Numero»: il numero scritto sul DDT di carta.
 4. «Luogo»: il tuo magazzino.
-5. «Righe»: un numero di serie per riga, copiato dal DDT (puoi scrivere anche «seriale codice-materiale»: il numero di serie, uno spazio e il codice materiale). Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio `#3 MC-A`). Puoi anche allegare il DDT e leggerne le righe da un Excel o con la lettura automatica: vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto).
+5. «Righe»: un numero di serie per riga, copiato dal DDT (puoi scrivere anche «seriale codice-materiale»: il numero di serie, uno spazio e il codice materiale). Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio `#3 MC-A`). Una riga «#1» seguita da un codice che non è un codice materiale del catalogo vale come numero di serie: «#1 KRD901305/11» è il pezzo con quel seriale. Sotto il riquadro vedi come l'app ha capito le righe, per esempio «Seriali: 4 · righe a quantità (pezzi senza seriale): 1». Puoi anche allegare il DDT e leggerne le righe da un Excel o con la lettura automatica: vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto).
 6. Premi «Salva». Vedi «Salvato».
 
 Se vedi «Esiste già un documento con questo numero per questa ASP.», hai già inserito quel DDT: controlla in «Documenti» prima di continuare.
@@ -534,7 +534,7 @@ Cosa vedi dopo:
 - «L'e-mail di invito è stata inviata.»: la persona riceve il link per e-mail.
 - Oppure «L'invio delle e-mail non è configurato: copia questo link e consegnalo alla persona. Viene mostrato solo ora.»: premi «Copia» (diventa «Copiato») e consegna il link alla persona in modo riservato. Non lo vedrai più.
 
-Se qualcosa va storto: «Esiste già un account con questa e-mail.»; «Questo ruolo non appartiene a questa organizzazione.»; «L'organizzazione non è attiva.» (chiedi all'Amministratore cliente).
+Se qualcosa va storto: «Questa persona è già stata invitata (esiste già un account con questa e-mail).»; «Questo ruolo non appartiene a questa organizzazione.»; «L'organizzazione non è attiva.» (chiedi all'Amministratore cliente).
 
 ### Come gestisco le persone della mia ASP?
 
@@ -739,9 +739,9 @@ Ordine consigliato:
 3. In «Primo amministratore» scrivi «Nome», «Cognome», «E-mail di lavoro» e scegli la «Lingua».
 4. Conferma con «Nuova ASP». Vedi «ASP creata» e poi l'esito dell'invito (e-mail inviata o link da copiare, come in [Come invito una persona?](#come-invito-una-persona) dell'Amministratore ASP).
 
-Se vedi «Esiste già un account con questa e-mail.», l'invito non è partito: prima di riprovare controlla in «Organizzazioni» se l'ASP compare già, e usa un'altra e-mail per il primo amministratore.
+Se vedi «Questa persona è già stata invitata (esiste già un account con questa e-mail).», l'invito non è partito: prima di riprovare controlla in «Organizzazioni» se l'ASP compare già, e usa un'altra e-mail per il primo amministratore.
 
-**Lingua dei report**: cambiala dalla tendina sulla riga dell'ASP; si salva subito.
+**Lingua dei report**: cambiala dalla tendina sulla riga dell'ASP; si salva subito. La colonna «Utenti» dice quante persone ha ogni organizzazione (per esempio «2 attivi su 3»): un clic sulla riga apre «Utenti di …» con solo le sue persone, e da lì «Invita utente» ha già l'organizzazione scelta; «Indietro» torna a «Organizzazioni».
 
 **Disabilitare un'ASP**: premi «Disabilita» e conferma («Disabilitare … disattiva tutti i suoi utenti.»). «Abilita» la riattiva, ma i suoi utenti restano disattivati finché non li riattivi uno per uno da «Utenti». Un'ASP non si cancella e non si rinomina.
 

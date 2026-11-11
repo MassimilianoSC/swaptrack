@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit cd7628f · Guide text: sha 9e21db796db7 · Date: 11/11/2026
+App described: commit d3f0efc · Guide text: sha cb9019f0c69f · Date: 11/11/2026
 
 ## How to use this guide
 
@@ -281,7 +281,7 @@ The new pieces come from the warehouse of your ASP: if a code is not known, the 
 
 ### How do I check the pieces expected at the site (the BOM)?
 
-If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the row «BOM tick list · 3/10» (scanned out of expected): tap it to open the list.
+If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the row «BOM tick list · 3/10» (scanned out of expected): tap it to open the list. At the top right of the video there is also the summary «BOM 3/10 ▾»: tap it to open over the video the list of the pieces to remove or install, with a tick on those already scanned, and tap it again to close it. While the band of a yellow or red warning is shown, the summary disappears for a few seconds.
 - with «Remove» you see the «Pieces to remove», with «Install» the «Pieces to install»;
 - every piece of the list that you scan gets a tick;
 - if you scan pieces that are not in the list, they appear below, for example «2 pieces not expected by the BOM»;
@@ -368,12 +368,12 @@ Documents (DDTs and BOMs) are prepared in «Documents» with «New document». B
 **Attaching files or photos.**
 1. In the «Document files» box press «Add file or photo» and choose a PDF, photos (JPEG, PNG, WebP), Excel or CSV. On the computer you can also drag one or more files onto the box: while you drag you see «Drop the files here». If there is nothing yet you see «No files. You can add photos, PDFs or the document's Excel, also by dragging them here.»
 2. The new files show «not saved» until you press «Save». Photos are made smaller before leaving.
-3. Tap the name of a file to see it next to the lines; «Open the file» opens it on its own (useful on the iPhone).
+3. Tap the name of a file to see it next to the lines; «Open the file» opens it on its own (useful on the iPhone) and «Download» saves it with the name it had on your computer (files uploaded before 12/11/2026 have a system name, for example «1-1.pdf»). On the computer an Excel shows as a green tag, so you see it at once.
 4. To take out a saved file press the X next to the name: you see «1 file taken out of this version (it stays in the history).» with «Undo» to change your mind. The file disappears from the new version when you press «Save».
 
 Limits: «At most 10 files per document.»; every file at most 5 MB («File too large: 5 MB at most.»); the new files of one save together at most 6 MB («The new files together exceed 6 MB: save in two steps or use lighter photos.»). Another file type gives straight away, as soon as you add it, «File type not allowed: use PDF, an image (JPEG, PNG, WebP), Excel or CSV.»
 
-**Lines from an Excel or CSV.** When you add an Excel or a CSV, «Excel columns» opens: «Choose which column holds each field. The choice is kept for the next file.» If you see «Loading the saved column choice… The columns you choose stay.», the app is fetching the choice of last time: you can already choose.
+**Lines from an Excel or CSV.** If the app cannot read the lines of an Excel it says so («I cannot read the lines of this Excel…», or «I cannot open the reading of Excel files: reload the app and try again…»); the file stays attached anyway. When you add an Excel or a CSV, «Excel columns» opens: «Choose which column holds each field. The choice is kept for the next file.» If you see «Loading the saved column choice… The columns you choose stay.», the app is fetching the choice of last time: you can already choose.
 1. Choose the column of the «Serial», or those of the «Material code» and of the «Quantity».
 2. Below you see how many lines are ready, for example «12 lines ready, 1 not read.»
 3. Press «Use these lines». The lines are added to those already typed and you see, for example, «12 lines read from the file (1 not read): check them, then Save.»
@@ -393,7 +393,7 @@ First prepare the DDT in the app (once for every DDT):
 2. «Kind»: «DDT (arrival)».
 3. «Number»: the number written on the paper DDT.
 4. «Location»: your warehouse.
-5. «Lines»: one serial number per line, copied from the DDT (you can also write "serial material-code": the serial number, a space and the material code). For the pieces without a serial number write a quantity line: "#" followed by the quantity and the material code (for example `#3 MC-A`). You can also attach the DDT and read its lines from an Excel or with the automatic reading: see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos).
+5. «Lines»: one serial number per line, copied from the DDT (you can also write "serial material-code": the serial number, a space and the material code). For the pieces without a serial number write a quantity line: "#" followed by the quantity and the material code (for example `#3 MC-A`). A «#1» line followed by a code that is not a material code of the catalog counts as a serial number: «#1 KRD901305/11» is the piece with that serial. Below the box you see how the app understood the lines, for example «Serials: 4 · quantity lines (pieces without a serial): 1». You can also attach the DDT and read its lines from an Excel or with the automatic reading: see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos).
 6. Press «Save». You see «Saved».
 
 If you see «A document with this number already exists for this ASP.», you have already entered that DDT: check in «Documents» before going on.
@@ -534,7 +534,7 @@ What you see next:
 - «The invitation e-mail has been sent.»: the person receives the link by e-mail.
 - Or «E-mail sending is not configured: copy this link and give it to the person. It is shown only now.»: press «Copy» (it becomes «Copied») and give the link to the person privately. You will not see it again.
 
-If something goes wrong: «An account with this e-mail already exists.»; «This role does not belong to this organization.»; «The organization is not active.» (ask the Client administrator).
+If something goes wrong: «This person has already been invited (an account with this e-mail already exists).»; «This role does not belong to this organization.»; «The organization is not active.» (ask the Client administrator).
 
 ### How do I manage the people of my ASP?
 
@@ -739,9 +739,9 @@ Recommended order:
 3. In «First administrator» write «First name», «Last name», «Work e-mail» and choose the «Language».
 4. Confirm with «New ASP». You see «ASP created» and then the outcome of the invitation (e-mail sent or link to copy, as in [How do I invite a person?](#how-do-i-invite-a-person) of the ASP administrator).
 
-If you see «An account with this e-mail already exists.», the invitation did not leave: before trying again check in «Organizations» whether the ASP already appears, and use another e-mail for the first administrator.
+If you see «This person has already been invited (an account with this e-mail already exists).», the invitation did not leave: before trying again check in «Organizations» whether the ASP already appears, and use another e-mail for the first administrator.
 
-**Report language**: change it from the list on the row of the ASP; it is saved at once.
+**Report language**: change it from the list on the row of the ASP; it is saved at once. The «Users» column says how many people each organization has (for example «2 active of 3»): a click on the row opens «Users of …» with only its people, and from there «Invite user» already has the organization chosen; «Back» returns to «Organizations».
 
 **Disabling an ASP**: press «Disable» and confirm («Disabling … deactivates all its users.»). «Enable» turns it on again, but its users stay deactivated until you reactivate them one by one from «Users». An ASP cannot be deleted or renamed.
 
