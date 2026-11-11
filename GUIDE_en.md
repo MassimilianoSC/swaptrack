@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 63598f8 · Guide text: sha ae101721b12c · Date: 09/11/2026
+App described: commit cd7628f · Guide text: sha 9e21db796db7 · Date: 11/11/2026
 
 ## How to use this guide
 
@@ -19,7 +19,7 @@ SwapTrack follows the **pieces** (the equipment) by reading their barcode. It fo
 
 ### What do you see at the top?
 
-- **The menu of the pages.** On the computer it is the bar on the left (you can narrow it with «Collapse sidebar» and open it again with «Expand sidebar»). On the phone it opens with «Open menu» (the three lines at the top left). At the bottom of the menu, until the app is installed, there is also «Install the app» (see [How do I install the app on my phone?](#how-do-i-install-the-app-on-my-phone)).
+- **The menu of the pages.** On the computer it is the bar on the left (you can narrow it with «Collapse sidebar» and open it again with «Expand sidebar»). On the phone it opens with «Open menu» (the three lines at the top left). In the pages of a piece, a document and a shipment there is «Back» above the title: it takes you to the page you came from, or to the list if the page was opened from a link. In the «Scan» screen there is just the arrow, next to the operations. At the bottom of the menu, until the app is installed, there is also «Install the app» (see [How do I install the app on my phone?](#how-do-i-install-the-app-on-my-phone)).
 - **The bell**: how many open alerts there are (the ASP technician does not see it).
 - **The network**: on the computer you see «Online» or «Offline»; on the phone you see only the signal icon, crossed out when there is no network. Next to it you may see «3 waiting to be sent»: these are scans or photos the phone has not sent yet.
 - **On the computer, without network**, the strip «You are offline: the data may not be up to date.» appears under the bar: what you see may be old; it goes back to normal when the network is back.
@@ -169,7 +169,7 @@ If you open a page that cannot be shown without network, you see «Not available
 In almost every office page the data is in tables:
 - «Filter» searches the text you see in the rows already shown on that page, not the whole archive;
 - tap the title of a column to sort (the order follows the text you see in the column);
-- 25 rows per page: use «Previous page» and «Next page»; you see «Rows: …» and «Page 1 of 3».
+- 25 rows per page: use «Previous page» and «Next page»; you see «Rows: …» and «Page 1 of 3». In the Documents, Shipments, Items, To complete, Anomalies and Alerts lists a click anywhere on the row opens the detail, like «Open» (with Ctrl+click in a new tab); the buttons of the row, such as «Seen», only do their own action.
 
 Places and organizations always appear with their name (for a place: code and name). If you work for an ASP, a place of another ASP appears as «Place of another ASP» and another ASP as «Another ASP».
 
@@ -204,7 +204,7 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 **With the camera.**
 1. Frame the code inside the colored box.
 2. As soon as the code is recognised, you hear a short sound, the phone vibrates (if it can) and the box turns white with «Read: …». It only means that the code has been seen.
-3. Shortly after comes the outcome: the green screen with the code means that the reading is recorded. Yellow or red, with a different sound (two low tones), mean: look at the screen. A window may also open («Unknown piece», «Sort»): the reading is recorded when you have answered.
+3. Shortly after comes the outcome: the green screen with the code means that the reading is recorded. Yellow or red, with a different sound (two low tones), mean: look at the screen. A window may also open («Unknown piece», «Sort»): the reading is recorded when you have answered. If you press the phone's Back button while the window is open, the window closes as with the X («Unknown piece» as «Skip», «Sort» as «Cancel») and you stay in «Scan».
 4. The camera stops and «Read the next» appears: press it when you frame the next piece.
 
 **Reading in a row.** If you have to read many pieces one after another, tick «Burst (the camera restarts by itself after every reading)»: after less than a second you can read the next piece without pressing anything. The phone remembers the choice for the next times too.
@@ -231,7 +231,7 @@ Possible messages (in all these cases type the code by hand):
 Good to know:
 - If you keep the camera still on the same label, the app does not read it twice and writes «Code already read. Point at the next piece.» This is normal. A different code is read straight away.
 - If the app says «This is the product code: read the serial number», you have read the code of the model (the same on all pieces of the same type). Look on the label for the serial number of the single piece and read that one.
-- If the piece has two codes and you want to record the product code too, tick «Read product code after the serial»: read the serial number first, the app says «Now read the product code», then read the product code (the camera is ready at once, even if you are not reading in a row). It is always one single piece.
+- If the piece has two codes and you want to record the product code too, tick «Read product code after the serial»: read the serial number first, the app says «Now read the product code» (the message stays until you read it), then read the product code (the camera is ready at once, even if you are not reading in a row). It is always one single piece. If you leave «Scan» before reading the product code, the serial number is recorded anyway.
 
 If something goes wrong:
 - «Camera not allowed. On iPhone: Settings > Safari > Camera (or the installed app's settings). You can type the code below.»: give the camera permission, or type the code by hand.
@@ -239,7 +239,7 @@ If something goes wrong:
 
 ### What happens if you scan a piece again?
 
-When you scan a code, the app checks whether you have already scanned that piece or whether it is already where you are. There are three cases. Yellow and red warnings stay on the screen for about 3 seconds.
+When you scan a code, the app checks whether you have already scanned that piece or whether it is already where you are. There are three cases. Yellow and red warnings stay for about 8 seconds: for the first 3 they cover the camera, then they become a band at the top of the video, so you can already point at the next piece; the next reading removes the band. The boxes that appear at the top in «Scan» also stay 8 seconds.
 
 1. **You have just scanned it, in the same scanning.** You have already scanned that piece, for the same operation and at the same place, since you opened the screen. A yellow warning appears, for example «… already read a moment ago (at 10:42)». The scan is **not** recorded again and the counter does not go up. It works with the camera, the scanner gun and the digits by hand. If you pressed «Undo last» on that piece, you can scan it again normally.
 2. **The piece is already here, in the same state.** For example you record the arrival of a piece that is already recorded as arrived in this warehouse. A yellow warning appears, for example «… has been at MAG-NORD-01 · Magazzino Nord since 04/11/26, 18:10». The scan is sent anyway and nothing changes. In the list the row says «already here» and the counter does not count it as a new piece.
@@ -247,7 +247,7 @@ When you scan a code, the app checks whether you have already scanned that piece
 
 Good to know:
 - Without network the app uses the data it already has on the phone, which may be old: this is why in cases 2 and 3 the scan always leaves. Only case 1 is certain.
-- If the piece belongs to another ASP, the phone does not see it (for confidentiality) and does not warn: the server notices it and opens the anomaly for the office.
+- If the piece belongs to another ASP, the phone does not see it (for confidentiality) and does not warn: the server notices it and opens the anomaly for the office. If you try to open that piece's page, for example from the row of a return, you see «This piece is not visible to your ASP.»
 - If the piece is at a place the phone does not know, the warning says «another place».
 - If the code is a product code or you read it a moment ago, you do not hear the first sound and «Read» does not appear: you see the yellow warning at once.
 - With a weak signal, at most two and a half seconds may pass between «Read: …» and the outcome: the app is checking the piece. If the server's answer arrives later and the window of the piece is still open, the window updates: in «Sort» the suggested category appears; «Unknown piece» closes by itself if the piece was already known, with the line «Piece recognised: the model is already known.». If you have already chosen, your choice stays.
@@ -366,12 +366,12 @@ If «Unknown piece» appears, choose the model and press «Confirm», or press �
 Documents (DDTs and BOMs) are prepared in «Documents» with «New document». Besides the «Lines» typed by hand, you can attach the real document and let the app read its lines.
 
 **Attaching files or photos.**
-1. In the «Document files» box press «Add file or photo» and choose a PDF, photos (JPEG, PNG, WebP), Excel or CSV. If there is nothing yet you see «No files. You can add photos, PDFs or the document's Excel.»
+1. In the «Document files» box press «Add file or photo» and choose a PDF, photos (JPEG, PNG, WebP), Excel or CSV. On the computer you can also drag one or more files onto the box: while you drag you see «Drop the files here». If there is nothing yet you see «No files. You can add photos, PDFs or the document's Excel, also by dragging them here.»
 2. The new files show «not saved» until you press «Save». Photos are made smaller before leaving.
 3. Tap the name of a file to see it next to the lines; «Open the file» opens it on its own (useful on the iPhone).
 4. To take out a saved file press the X next to the name: you see «1 file taken out of this version (it stays in the history).» with «Undo» to change your mind. The file disappears from the new version when you press «Save».
 
-Limits: «At most 10 files per document.»; every file at most 5 MB («File too large: 5 MB at most.»); the new files of one save together at most 6 MB («The new files together exceed 6 MB: save in two steps or use lighter photos.»). Another file type gives «File type not allowed: use PDF, an image (JPEG, PNG, WebP), Excel or CSV.»
+Limits: «At most 10 files per document.»; every file at most 5 MB («File too large: 5 MB at most.»); the new files of one save together at most 6 MB («The new files together exceed 6 MB: save in two steps or use lighter photos.»). Another file type gives straight away, as soon as you add it, «File type not allowed: use PDF, an image (JPEG, PNG, WebP), Excel or CSV.»
 
 **Lines from an Excel or CSV.** When you add an Excel or a CSV, «Excel columns» opens: «Choose which column holds each field. The choice is kept for the next file.» If you see «Loading the saved column choice… The columns you choose stay.», the app is fetching the choice of last time: you can already choose.
 1. Choose the column of the «Serial», or those of the «Material code» and of the «Quantity».
@@ -401,7 +401,7 @@ If you see «A document with this number already exists for this ASP.», you hav
 Then record the arrival:
 1. Choose the warehouse and press «Scan».
 2. Press «Arrival».
-3. In the «DDT» list choose «DDT …» with the right number: the «Material» list switches by itself to «New material». (If you leave «No DDT (arrival only)» with «New material», the pieces arrive but are not compared with the DDT.)
+3. In the «DDT» list choose «DDT …» with the right number: the «Material» list switches by itself to «New material». (If you leave «No DDT (arrival only)» with «New material», the pieces arrive but are not compared with the DDT.) If there are many DDTs, type part of the number in «Search DDT», next to the list: only the matching ones remain (capitals, spaces and dashes do not count). Next to each number there is the date the DDT was uploaded.
 4. Scan the codes of the pieces.
 
 The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete». A piece that is in another open DDT of your warehouse, one you did not choose, does not open the window either, as long as that DDT gives the model.

@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 63598f8 · Testo della guida: sha ae3a6299bb04 · Data: 09/11/2026
+App descritta: commit cd7628f · Testo della guida: sha 4a49bbe1c826 · Data: 11/11/2026
 
 ## Come usare questa guida
 
@@ -19,7 +19,7 @@ SwapTrack segue i **pezzi** (gli apparati) leggendo il loro codice a barre. Segu
 
 ### Cosa vedi in alto
 
-- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra). In fondo al menu, finché l'app non è installata, c'è anche «Installa l'app» (vedi [Come installo l'app sul telefono?](#come-installo-lapp-sul-telefono)).
+- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra). Nelle pagine di un pezzo, di un documento e di una spedizione, sopra il titolo c'è «Indietro»: riporta alla pagina da cui sei arrivato, oppure all'elenco se la pagina è stata aperta da un link. Nella schermata «Leggi» c'è la sola freccia, accanto alle operazioni. In fondo al menu, finché l'app non è installata, c'è anche «Installa l'app» (vedi [Come installo l'app sul telefono?](#come-installo-lapp-sul-telefono)).
 - **La campanella**: quanti avvisi aperti ci sono (non compare al Tecnico ASP).
 - **La rete**: sul computer vedi «Online» o «Offline»; sul telefono vedi solo l'icona del segnale, barrata quando non c'è rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.
 - **Sul computer, senza rete**, sotto la barra compare la striscia «Sei offline: i dati possono non essere aggiornati.»: quello che vedi può essere vecchio; torna normale quando la rete torna.
@@ -169,7 +169,7 @@ Se apri una pagina che senza rete non si può mostrare, vedi «Non disponibile s
 In quasi tutte le pagine d'ufficio i dati sono in tabelle:
 - «Filtra» cerca nel testo che vedi nelle righe già mostrate in quella pagina, non in tutto l'archivio;
 - tocca il titolo di una colonna per ordinare (l'ordine segue il testo che vedi nella colonna);
-- 25 righe per pagina: usa «Pagina precedente» e «Pagina successiva»; vedi «Righe: …» e «Pagina 1 di 3».
+- 25 righe per pagina: usa «Pagina precedente» e «Pagina successiva»; vedi «Righe: …» e «Pagina 1 di 3». Negli elenchi Documenti, Spedizioni, Pezzi, Da completare, Anomalie e Avvisi un clic in un punto qualsiasi della riga apre il dettaglio, come «Apri» (con Ctrl+clic in una scheda nuova); i pulsanti della riga, come «Visto», fanno solo la loro azione.
 
 Luoghi e organizzazioni compaiono sempre con il loro nome (per un luogo: codice e nome). Se lavori per un'ASP, un luogo di un'altra ASP compare come «Luogo di un'altra ASP» e un'altra ASP come «Altra ASP».
 
@@ -204,7 +204,7 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
 2. Appena il codice è riconosciuto, senti un breve suono, il telefono vibra (se lo permette) e il riquadro diventa bianco con «Letto: …». Vuol dire solo che il codice è stato visto.
-3. Poco dopo arriva l'esito: lo schermo verde con il codice vuol dire che la lettura è registrata. Il giallo o il rosso, con un suono diverso (due toni bassi), vogliono dire: guarda lo schermo. Può anche aprirsi una finestra («Pezzo sconosciuto», «Smista»): la lettura si registra quando hai risposto.
+3. Poco dopo arriva l'esito: lo schermo verde con il codice vuol dire che la lettura è registrata. Il giallo o il rosso, con un suono diverso (due toni bassi), vogliono dire: guarda lo schermo. Può anche aprirsi una finestra («Pezzo sconosciuto», «Smista»): la lettura si registra quando hai risposto. Se con la finestra aperta premi il tasto Indietro del telefono, la finestra si chiude come con la X («Pezzo sconosciuto» come «Salta», «Smista» come «Annulla») e resti in «Leggi».
 4. La fotocamera si ferma e compare «Leggi il prossimo»: premilo quando inquadri il pezzo successivo.
 
 **Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
@@ -231,7 +231,7 @@ Messaggi possibili (in tutti questi casi scrivi il codice a mano):
 Da sapere:
 - Se tieni ferma la fotocamera sulla stessa etichetta, l'app non la legge due volte e scrive «Codice già letto. Inquadra il pezzo successivo.» È normale. Un codice diverso si legge subito.
 - Se l'app dice «Questo è il codice prodotto: leggi il numero di serie», hai letto il codice del modello (uguale su tutti i pezzi dello stesso tipo). Cerca sull'etichetta il numero di serie del singolo pezzo e leggi quello.
-- Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto», poi leggi il codice prodotto (la fotocamera è subito pronta, anche se non leggi di fila). È sempre un solo pezzo.
+- Se il pezzo ha due codici e vuoi registrare anche il codice prodotto, spunta «Leggi il codice prodotto dopo il seriale»: leggi prima il numero di serie, l'app dice «Ora leggi il codice prodotto» (la scritta resta finché non lo leggi), poi leggi il codice prodotto (la fotocamera è subito pronta, anche se non leggi di fila). È sempre un solo pezzo. Se esci da «Leggi» prima di leggere il codice prodotto, il numero di serie viene registrato lo stesso.
 
 Se qualcosa va storto:
 - «Fotocamera non consentita. Su iPhone: Impostazioni > Safari > Fotocamera (o le impostazioni dell'app installata). Puoi digitare il codice qui sotto.»: dai il permesso della fotocamera, oppure scrivi il codice a mano.
@@ -239,7 +239,7 @@ Se qualcosa va storto:
 
 ### Cosa succede se rileggi un pezzo?
 
-Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si trova già dove sei. Ci sono tre casi. Gli avvisi gialli e rossi restano sullo schermo circa 3 secondi.
+Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si trova già dove sei. Ci sono tre casi. Gli avvisi gialli e rossi restano circa 8 secondi: nei primi 3 coprono la fotocamera, poi diventano una fascia in alto sul video, così puoi già inquadrare il pezzo successivo; la lettura seguente toglie la fascia. Anche i riquadri che compaiono in alto in «Leggi» restano 8 secondi.
 
 1. **L'hai appena letto, nella stessa lettura.** Hai già letto quel pezzo, per la stessa operazione e nello stesso posto, da quando hai aperto la schermata. Compare un avviso giallo, per esempio «… già letto poco fa (alle 10:42)». La lettura **non** viene registrata di nuovo e il contatore non sale. Vale con la fotocamera, la pistola e le cifre a mano. Se hai premuto «Annulla l'ultima» su quel pezzo, puoi rileggerlo normalmente.
 2. **Il pezzo è già qui, nello stesso stato.** Per esempio registri l'arrivo di un pezzo che risulta già arrivato in questo magazzino. Compare un avviso giallo, per esempio «… è già a MAG-NORD-01 · Magazzino Nord dal 04/11/26, 18:10». La lettura viene comunque inviata e non cambia niente. Nell'elenco la riga dice «già qui» e il contatore non la conta come pezzo nuovo.
@@ -247,7 +247,7 @@ Quando leggi un codice, l'app controlla se quel pezzo l'hai già letto o se si t
 
 Da sapere:
 - Senza rete l'app usa i dati che ha già sul telefono, che possono essere vecchi: per questo nei casi 2 e 3 la lettura parte sempre. Solo il caso 1 è sicuro.
-- Se il pezzo appartiene a un'altra ASP, il telefono non lo vede (per riservatezza) e non avvisa: se ne accorge il server, che apre l'anomalia per l'ufficio.
+- Se il pezzo appartiene a un'altra ASP, il telefono non lo vede (per riservatezza) e non avvisa: se ne accorge il server, che apre l'anomalia per l'ufficio. Se provi ad aprire la scheda di quel pezzo, per esempio dalla riga di un reso, vedi «Questo pezzo non è visibile per la tua ASP.»
 - Se il pezzo si trova in un posto che il telefono non conosce, l'avviso scrive «un altro luogo».
 - Se il codice è un codice prodotto o lo hai già letto poco fa, non senti il primo suono e non compare «Letto»: vedi subito l'avviso giallo.
 - Con poco segnale, tra «Letto: …» e l'esito possono passare al massimo due secondi e mezzo: l'app sta controllando il pezzo. Se la risposta del server arriva dopo e la finestra del pezzo è ancora aperta, la finestra si aggiorna: in «Smista» compare la categoria suggerita; «Pezzo sconosciuto» si chiude da solo se il pezzo era già noto, con la riga «Pezzo riconosciuto: il modello c'è già.». Se hai già scelto, la tua scelta resta.
@@ -366,12 +366,12 @@ Se compare «Pezzo sconosciuto», scegli il modello e premi «Conferma», oppure
 I documenti (DDT e BOM) si preparano in «Documenti» con «Nuovo documento». Oltre alle «Righe» scritte a mano, puoi allegare il documento vero e farne leggere le righe all'app.
 
 **Allegare file o foto.**
-1. Nel riquadro «File del documento» premi «Aggiungi file o foto» e scegli PDF, foto (JPEG, PNG, WebP), Excel o CSV. Se non c'è ancora nulla vedi «Nessun file. Puoi aggiungere foto, PDF o l'Excel del documento.»
+1. Nel riquadro «File del documento» premi «Aggiungi file o foto» e scegli PDF, foto (JPEG, PNG, WebP), Excel o CSV. Al computer puoi anche trascinare uno o più file sul riquadro: mentre trascini compare «Rilascia qui i file». Se non c'è ancora nulla vedi «Nessun file. Puoi aggiungere foto, PDF o l'Excel del documento, anche trascinandoli qui.»
 2. I file nuovi mostrano «da salvare» finché non premi «Salva». Le foto vengono rimpicciolite prima di partire.
 3. Tocca il nome di un file per vederlo accanto alle righe; «Apri il file» lo apre da solo (utile sull'iPhone).
 4. Per togliere un file salvato premi la X accanto al nome: vedi «1 file tolto da questa versione (resta nella storia).» con «Annulla» per ripensarci. Il file sparisce dalla versione nuova quando premi «Salva».
 
-Limiti: «Al massimo 10 file per documento.»; ogni file al massimo 5 MB («File troppo grande: massimo 5 MB.»); i file nuovi di un salvataggio insieme al massimo 6 MB («I file nuovi insieme superano 6 MB: salva in due volte o usa foto più leggere.»). Un tipo di file diverso dà «Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.»
+Limiti: «Al massimo 10 file per documento.»; ogni file al massimo 5 MB («File troppo grande: massimo 5 MB.»); i file nuovi di un salvataggio insieme al massimo 6 MB («I file nuovi insieme superano 6 MB: salva in due volte o usa foto più leggere.»). Un tipo di file diverso dà subito, appena lo aggiungi, «Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.»
 
 **Righe da un Excel o CSV.** Quando aggiungi un Excel o un CSV si apre «Colonne dell'Excel»: «Scegli quale colonna contiene ogni dato. La scelta viene ricordata per il prossimo file.» Se vedi «Carico la scelta delle colonne salvata… Le colonne che scegli tu restano.», l'app sta recuperando la scelta dell'ultima volta: puoi già scegliere.
 1. Scegli la colonna del «Seriale», oppure quelle del «Codice materiale» e della «Quantità».
@@ -401,7 +401,7 @@ Se vedi «Esiste già un documento con questo numero per questa ASP.», hai già
 Poi registra l'arrivo:
 1. Scegli il magazzino e premi «Leggi».
 2. Premi «Arrivo».
-3. Nella tendina «DDT» scegli «DDT …» con il numero giusto: la tendina «Materiale» passa da sola a «Materiale nuovo». (Se lasci «Nessun DDT (solo arrivo)» con «Materiale nuovo», i pezzi arrivano ma non vengono confrontati con il DDT.)
+3. Nella tendina «DDT» scegli «DDT …» con il numero giusto: la tendina «Materiale» passa da sola a «Materiale nuovo». (Se lasci «Nessun DDT (solo arrivo)» con «Materiale nuovo», i pezzi arrivano ma non vengono confrontati con il DDT.) Se i DDT sono tanti, scrivi una parte del numero in «Cerca DDT», accanto alla tendina: restano solo quelli che corrispondono (maiuscole, spazi e trattini non contano). Accanto a ogni numero c'è la data in cui il DDT è stato caricato.
 4. Leggi i codici dei pezzi.
 
 I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare». Anche un pezzo che è in un altro DDT aperto del tuo magazzino, che non hai scelto, non apre la finestra, purché quel DDT dica il modello.
