@@ -10,6 +10,7 @@ import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/phot
 import { computeCodeId, normalizeBarcode } from "@/lib/codeId.js";
 import { itemState, judge, type Judgement } from "@/lib/scan/rereading";
 import { useScanLog } from "@/lib/scan/scanLog";
+import { matchingDdts, ddtsToShow } from "@/lib/scan/ddtSearch";
 import { suggestCategory, type SortingRule } from "@shared/sorting";
 import { formatInstant, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -174,6 +175,8 @@ export default function Scan() {
   // §12.2 / P-24 (D-15): the DDT chosen for an arrival of new material (never pre-selected) and the live comparison.
   const [ddts, setDdts] = React.useState<CachedDdt[]>([]);
   const [ddtId, setDdtId] = React.useState("");
+  // P-164: the search in the DDT menu.
+  const [ddtQuery, setDdtQuery] = React.useState("");
   const [ddtExpected, setDdtExpected] = React.useState<Array<{ codeRaw: string; codeId: string }>>([]);
   const [ddtTicks, setDdtTicks] = React.useState<Set<string>>(new Set());
   const [ddtUnexpected, setDdtUnexpected] = React.useState<string[]>([]);
@@ -815,13 +818,18 @@ export default function Scan() {
         </Select>
       )}
       {ddtOffered && (
+        <div className="space-y-1">
+        {/* P-164: the search sits in the row of the menu: a row more would take its height from the video (P-155). */}
         <div className="flex items-center gap-2">
-          <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => { const v = e.target.value; if (v && flow !== "new") changeFlow("new"); setDdtId(v); }} data-testid="scan-ddt-select">
+          <Input aria-label={t("scan.ddt.search")} placeholder={t("scan.ddt.search")} value={ddtQuery} onChange={(e) => setDdtQuery(e.target.value)} className="min-w-0 flex-1" data-testid="scan-ddt-search" />
+          <Select aria-label={t("scan.ddt.label")} value={ddtId} onChange={(e) => { const v = e.target.value; if (v && flow !== "new") changeFlow("new"); setDdtId(v); }} className="min-w-0 flex-1" data-testid="scan-ddt-select">
             <option value="">{t("scan.ddt.none")}</option>
-            {ddts.map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number })}</option>)}
+            {ddtsToShow(ddts, ddtQuery, ddtId).map((d) => <option key={d.id} value={d.id}>{t("scan.ddt.option", { number: d.number, date: d.createdAtMs ? new Date(d.createdAtMs).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "2-digit" }) : "—" })}</option>)}
           </Select>
           {/* §12.2 / P-105: the DDT can also be uploaded from here, as a file or a photo of the paper. */}
           <Link to={`/documents/new?kind=ddt_in&location=${location!.id}`} className="shrink-0 text-sm text-primary hover:underline" data-testid="scan-ddt-upload">{t("scan.ddt.upload")}</Link>
+        </div>
+        {ddtQuery.trim() && !matchingDdts(ddts, ddtQuery).length && <p className="text-sm text-muted" data-testid="scan-ddt-nomatch">{t("scan.ddt.noMatch", { query: ddtQuery.trim() })}</p>}
         </div>
       )}
       {(mode === "classify" || (mode === "arrive_at_warehouse" && flow === "removed")) && (

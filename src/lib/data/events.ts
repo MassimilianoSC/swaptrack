@@ -145,13 +145,14 @@ async function loadInPages(q: Query): Promise<boolean> {
 
 // §12.2 / P-24: the open DDTs of a warehouse (never chosen by themselves: the user picks one); P-78: a DDT created
 // after the cache was loaded is offered too. The aspId filter lets the rules accept the query.
-export interface CachedDdt { id: string; number: string; lines: Array<Record<string, unknown>> }
+export interface CachedDdt { id: string; number: string; lines: Array<Record<string, unknown>>; createdAtMs: number }
 const openDdts = (snap: QuerySnapshot): CachedDdt[] => snap.docs.filter((d) => d.get("status") === "open")
-  .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [] }))
+  .map((d) => ({ id: d.id, number: String(d.get("number") ?? ""), lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [],
+    createdAtMs: (d.get("createdAt") as { toMillis?: () => number } | undefined)?.toMillis?.() ?? 0 }))
   .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
 export async function cachedOpenDdtsForWarehouse(locationId: string, orgId: string, onLate?: (list: CachedDdt[]) => void): Promise<CachedDdt[]> {
   try {
-    const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("locationId", "==", locationId));
+    const q = query(collection(db, "documents"), where("aspId", "==", orgId), where("kind", "==", "ddt_in"), where("locationId", "==", locationId), where("status", "==", "open"));
     return openDdts(await quickDocsLate(q, onLate && ((s) => onLate(openDdts(s)))));
   } catch { return []; }
 }

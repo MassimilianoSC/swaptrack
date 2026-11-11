@@ -366,7 +366,9 @@
     "ddt": {
       "label": "DDT",
       "none": "No DDT (arrival only)",
-      "option": "DDT {{number}}",
+      "option": "DDT {{number}} · {{date}}",
+      "search": "Search DDT",
+      "noMatch": "No DDT with «{{query}}».",
       "title": "Comparison with DDT {{number}}",
       "arrived": "arrived",
       "missing": "missing",

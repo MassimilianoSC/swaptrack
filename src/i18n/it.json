@@ -366,7 +366,9 @@
     "ddt": {
       "label": "DDT",
       "none": "Nessun DDT (solo arrivo)",
-      "option": "DDT {{number}}",
+      "option": "DDT {{number}} · {{date}}",
+      "search": "Cerca DDT",
+      "noMatch": "Nessun DDT con «{{query}}».",
       "title": "Confronto con il DDT {{number}}",
       "arrived": "arrivati",
       "missing": "mancanti",
