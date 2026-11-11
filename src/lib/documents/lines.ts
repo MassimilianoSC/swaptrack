@@ -2,6 +2,7 @@
 // through a column mapping. Pure: the same lines reach saveDocument whether typed, pasted, read from a file or, later,
 // proposed by the automatic reading (extract.ts); they are always confirmed by the user before saving.
 import type { Sheet } from "@/lib/import/readTable";
+import { normalizeBarcode } from "../codeId.js";
 
 export type Direction = "remove" | "install";
 export type DocLine =
@@ -18,14 +19,24 @@ export function carryModels(lines: DocLine[], before: DocLine[]): DocLine[] {
 
 // One row of a box: "SERIAL", "SERIAL MATERIALCODE" or a quantity "#3 MATERIALCODE". A "[remove]" / "[install]"
 // typed by hand is ignored: the direction comes from the box (P-92).
-export function parseLines(text: string, direction?: Direction): DocLine[] {
+// P-169 (tester): "#1 KRD901305/11" was meant as "one piece, serial KRD901305/11", but "#N CODE" is a quantity of a
+// material code. With the catalog's material codes (normalized), "#1 CODE" whose CODE is not one of them is that
+// serial; every other "#N CODE" stays a quantity line. Without the catalog, as before.
+export function parseLines(text: string, direction?: Direction, materialCodes?: ReadonlySet<string>): DocLine[] {
   return text.split("\n").map((s) => s.replace(/\s*\[(remove|install)\]\s*$/, "").trim()).filter(Boolean).map((s): DocLine => {
     const q = s.match(/^#(\d+)(?:\s+(\S+))?$/);
+    if (q && q[2] && Number(q[1]) === 1 && materialCodes && !materialCodes.has(normalizeBarcode(q[2]))) return { kind: "serial", codeRaw: q[2], direction };
     if (q) return { kind: "quantity", quantity: Number(q[1]), materialCode: q[2] ?? null, direction };
     const m = s.match(/^(\S+)\s+(\S+)$/);
     return m ? { kind: "serial", codeRaw: m[1], materialCode: m[2], direction } : { kind: "serial", codeRaw: s, direction };
   });
 }
+
+// P-169: how a box is read, said under it before saving: serial lines and quantity lines (pieces without a serial).
+export const countLines = (lines: DocLine[]) => ({
+  serials: lines.filter((l) => l.kind === "serial").length,
+  quantities: lines.filter((l) => l.kind === "quantity").length,
+});
 
 export const linesToText = (lines: DocLine[]): string => lines.map((l) => l.kind === "serial"
   ? `${l.codeRaw}${l.materialCode ? ` ${l.materialCode}` : ""}`

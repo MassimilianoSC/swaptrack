@@ -33,7 +33,8 @@
         "locations-weak-signal.desk.spec.ts",
         "org-users.desk.spec.ts",
         "server-error-text.desk.spec.ts",
-        "bom-chip.phone.spec.ts"
+        "bom-chip.phone.spec.ts",
+        "doc-lines-serial.desk.spec.ts"
       ]
     },
     {

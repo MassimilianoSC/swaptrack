@@ -6,11 +6,12 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
-import { watchDoc, type Row, type Location } from "@/lib/data/db";
+import { watchDoc, listModels, type Row, type Location } from "@/lib/data/db";
+import { normalizeBarcode } from "@/lib/codeId.js";
 import { useLocationsFor } from "@/lib/data/useLocations";
 import { extractLines } from "@/lib/documents/extract";
 import { readTable, TableReadError, type Sheet } from "@/lib/import/readTable";
-import { parseLines, linesToText, splitByDirection, carryModels, type DocLine } from "@/lib/documents/lines";
+import { parseLines, linesToText, splitByDirection, carryModels, countLines, type DocLine } from "@/lib/documents/lines";
 import { isClientRole } from "@shared/roles";
 import { FilesPanel, type PendingFile } from "@/components/documents/FilesPanel";
 import { ExcelMapping } from "@/components/documents/ExcelMapping";
@@ -47,6 +48,11 @@ export default function DocumentDetail() {
   const [number, setNumber] = React.useState("");
   const [locationId, setLocationId] = React.useState(() => (isNew ? params.get("location") ?? "" : ""));
   const [rawLines, setRawLines] = React.useState("");
+  // P-169: the material codes of the catalog (normalized): "#1 CODE" is a serial when CODE is not one of them.
+  const [materialCodes, setMaterialCodes] = React.useState<Set<string> | undefined>(undefined);
+  React.useEffect(() => {
+    void listModels().then((ms) => setMaterialCodes(new Set(ms.map((m) => normalizeBarcode(m.materialCode ?? "")).filter(Boolean)))).catch(() => undefined);
+  }, []);
   // §11.2 / P-92: the lines of a BOM in two boxes, to remove and to install; every line takes its box's direction.
   // A BOM saved before has lines without direction: they wait in a third box until moved (the server refuses them).
   const [bomLines, setBomLines] = React.useState<{ remove: string; install: string; none: string }>({ remove: "", install: "", none: "" });
@@ -118,7 +124,7 @@ export default function DocumentDetail() {
   const save = async () => {
     if (!number.trim() || !locationId) { toast.error(t("errors.invalid_data")); return; }
     if (kind === "bom" && bomLines.none.trim()) { toast.error(t("errors.bom_direction_required")); return; }
-    const typed = kind === "bom" ? [...parseLines(bomLines.remove, "remove"), ...parseLines(bomLines.install, "install")] : parseLines(rawLines);
+    const typed = kind === "bom" ? [...parseLines(bomLines.remove, "remove", materialCodes), ...parseLines(bomLines.install, "install", materialCodes)] : parseLines(rawLines, undefined, materialCodes);
     const lines = carryModels(typed, (doc?.lines ?? []) as DocLine[]);
     const r = await run(async () => {
       const files = await Promise.all(pending.map(async (p) => ({ base64: await toBase64(p.blob), contentType: p.contentType })));
@@ -157,7 +163,11 @@ export default function DocumentDetail() {
   const siteOrWarehouse = (l: Row<Location>) =>
     kind === "bom" ? l.type === "site" : l.type === "asp_warehouse";
   const box = (label: string, value: string, onChange: (v: string) => void, testId: string, extra = "") => (
-    <Field label={label} htmlFor={testId}><Textarea id={testId} rows={10} value={value} onChange={(e) => onChange(e.target.value)} readOnly={!editable} className={`font-mono text-xs ${extra}`} placeholder={t("documents.linesPlaceholder")} data-testid={testId} /></Field>
+    <Field label={label} htmlFor={testId}>
+      <Textarea id={testId} rows={10} value={value} onChange={(e) => onChange(e.target.value)} readOnly={!editable} className={`font-mono text-xs ${extra}`} placeholder={t("documents.linesPlaceholder")} data-testid={testId} />
+      {/* P-169: how the box is read, before saving (serials and lines without a serial). */}
+      {value.trim() && <p className="mt-1 text-xs text-muted tabular" data-testid={`${testId}-summary`}>{t("documents.linesSummary", countLines(parseLines(value, undefined, materialCodes)))}</p>}
+    </Field>
   );
   return (
     <div className="space-y-6">

@@ -85,6 +85,7 @@
     "version": "Version",
     "lines": "Lines",
     "linesPlaceholder": "One serial per line (also \"serial material-code\"), or a quantity like #3 MC-A",
+    "linesSummary": "Serials: {{serials}} · quantity lines (pieces without a serial): {{quantities}}",
     "markChecked": "Mark checked",
     "compare": "Compare",
     "close": "Close",

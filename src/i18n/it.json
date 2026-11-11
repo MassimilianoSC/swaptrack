@@ -85,6 +85,7 @@
     "version": "Versione",
     "lines": "Righe",
     "linesPlaceholder": "Un seriale per riga (anche «seriale codice-materiale»), oppure una quantità come #3 MC-A",
+    "linesSummary": "Seriali: {{serials}} · righe a quantità (pezzi senza seriale): {{quantities}}",
     "markChecked": "Segna verificato",
     "compare": "Confronta",
     "close": "Chiudi",
