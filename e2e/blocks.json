@@ -25,7 +25,8 @@
         "app-dialogs.desk.spec.ts",
         "signin-progress.desk.spec.ts",
         "scan-button-cover.desk.spec.ts",
-        "back-pages.desk.spec.ts"
+        "back-pages.desk.spec.ts",
+        "back-scan.phone.spec.ts"
       ]
     },
     {
