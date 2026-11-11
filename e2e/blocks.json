@@ -29,7 +29,8 @@
         "back-scan.phone.spec.ts",
         "row-click.desk.spec.ts",
         "back-key-scan.phone.spec.ts",
-        "ddt-search.phone.spec.ts"
+        "ddt-search.phone.spec.ts",
+        "locations-weak-signal.desk.spec.ts"
       ]
     },
     {

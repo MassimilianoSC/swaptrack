@@ -6,7 +6,8 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { loadDocument, type SwDocument } from "@/lib/data/documents";
-import { listLocationsFor, watchDoc, type Row, type Location } from "@/lib/data/db";
+import { watchDoc, type Row, type Location } from "@/lib/data/db";
+import { useLocationsFor } from "@/lib/data/useLocations";
 import { extractLines } from "@/lib/documents/extract";
 import { readTable, type Sheet } from "@/lib/import/readTable";
 import { parseLines, linesToText, splitByDirection, carryModels, type DocLine } from "@/lib/documents/lines";
@@ -39,7 +40,8 @@ export default function DocumentDetail() {
   const { busy, run } = useAction();
   const isNew = id === "new";
   const [doc, setDoc] = React.useState<Row<SwDocument> | null>(null);
-  const [locations, setLocations] = React.useState<Row<Location>[]>([]);
+  // P-166: never an empty menu with a weak signal (the device's copy after a few seconds, asked again).
+  const locations = useLocationsFor(claims?.orgId ? { role: claims.role!, orgId: claims.orgId } : null);
   // A new document can arrive with its kind and place (the arrival screen opens "new DDT" for its warehouse).
   const [kind, setKind] = React.useState<Kind>(() => (isNew && KINDS.includes(params.get("kind") as Kind) ? params.get("kind") as Kind : "ddt_in"));
   const [number, setNumber] = React.useState("");
@@ -64,7 +66,6 @@ export default function DocumentDetail() {
   // D-58 B3: a document that cannot be read says why (no network, does not exist, refused), never "Loading" for ever.
   const [unavailable, setUnavailable] = React.useState<"offline" | "missing" | "error" | null>(null);
 
-  React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
   React.useEffect(() => {
     if (isNew || !id) return;
     setUnavailable(null);

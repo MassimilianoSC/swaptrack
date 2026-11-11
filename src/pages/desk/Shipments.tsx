@@ -6,7 +6,8 @@ import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchShipments, type Shipment } from "@/lib/data/shipments";
-import { listLocationsFor, type Row, type Location } from "@/lib/data/db";
+import type { Row } from "@/lib/data/db";
+import { useLocationsFor } from "@/lib/data/useLocations";
 import { isClientRole } from "@shared/roles";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
@@ -24,13 +25,13 @@ export default function Shipments() {
   const names = useNames();
   const { busy, run } = useAction();
   const [all, setAll] = React.useState<Row<Shipment>[] | null>(null);
-  const [locations, setLocations] = React.useState<Row<Location>[]>([]);
+  // P-166: never an empty menu with a weak signal (the device's copy after a few seconds, asked again).
+  const locations = useLocationsFor(claims?.orgId ? { role: claims.role!, orgId: claims.orgId } : null);
   const [newKind, setNewKind] = React.useState<"return" | "transfer" | null>(null);
   const [fromLoc, setFromLoc] = React.useState("");
   const [toLoc, setToLoc] = React.useState("");
 
   React.useEffect(() => claims?.orgId ? watchShipments({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
-  React.useEffect(() => { if (claims?.orgId) void listLocationsFor({ role: claims.role!, orgId: claims.orgId }).then(setLocations).catch(() => undefined); }, [claims]);
 
   const role = claims?.role ?? "";
   const client = isClientRole(role);
