@@ -232,6 +232,29 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await expect(page).toHaveURL(/\/documents\/new$/);
   });
 
+  // P-171: an Excel whose lines cannot be read said "unsupported file type" (a file of the right type, kept attached).
+  test("Excel che non si riesce a leggere: il messaggio dice perché, non «tipo non ammesso»; il file resta", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    await page.getByTestId("document-files-input").setInputFiles({ name: "rovinato.xlsx", mimeType: XLSX, buffer: Buffer.from("not a zip at all") });
+    await expect(page.getByText(tr("documents.excelUnreadable")).first()).toBeVisible();
+    await expect(page.getByText(tr("errors.unsupported_file_type"))).toHaveCount(0);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+    await expect(page.getByTestId("excel-mapping")).toHaveCount(0);
+  });
+
+  test("la parte dell'app che legge gli Excel non arriva: il messaggio dice di ricaricare l'app", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.route((url) => /exceljs/i.test(url.pathname), (r) => r.abort());
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await newDocument(page, "ddt_in", SEED.nord.warehouse);
+    await page.getByTestId("document-files-input").setInputFiles({ name: "ddt.xlsx", mimeType: XLSX, buffer: await xlsx([["Seriale"], [uniqueCode("X")]]) });
+    await expect(page.getByText(tr("documents.excelLoadFailed")).first()).toBeVisible();
+    await expect(page.getByText(tr("errors.unsupported_file_type"))).toHaveCount(0);
+    await expect(page.getByTestId("document-file")).toHaveCount(1);
+  });
+
   test("file oltre 5 MB: messaggio chiaro, nessun file aggiunto", async ({ page }) => {
     test.setTimeout(120_000);
     await signIn(page, ACCOUNTS.aspWarehouseNord);

@@ -118,6 +118,8 @@
     "filesAdd": "Add file or photo",
     "filesEmpty": "No files. You can add photos, PDFs or the document's Excel, also by dragging them here.",
     "filesDrop": "Drop the files here",
+    "excelUnreadable": "I cannot read the lines of this Excel: check that it is an .xlsx file saved by Excel, or type the lines by hand. The file stays attached.",
+    "excelLoadFailed": "I cannot open the reading of Excel files: reload the app and try again. The file stays attached.",
     "fileNotSaved": "not saved",
     "fileRemove": "Remove {{name}}",
     "fileOpen": "Open the file",

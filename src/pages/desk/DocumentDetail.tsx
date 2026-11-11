@@ -9,7 +9,7 @@ import { loadDocument, type SwDocument } from "@/lib/data/documents";
 import { watchDoc, type Row, type Location } from "@/lib/data/db";
 import { useLocationsFor } from "@/lib/data/useLocations";
 import { extractLines } from "@/lib/documents/extract";
-import { readTable, type Sheet } from "@/lib/import/readTable";
+import { readTable, TableReadError, type Sheet } from "@/lib/import/readTable";
 import { parseLines, linesToText, splitByDirection, carryModels, type DocLine } from "@/lib/documents/lines";
 import { isClientRole } from "@shared/roles";
 import { FilesPanel, type PendingFile } from "@/components/documents/FilesPanel";
@@ -94,7 +94,8 @@ export default function DocumentDetail() {
   // §11.2: an ASP reads and saves its own column mappings; client_admin the client's default.
   const mappingScope = isClientRole(claims?.role ?? "") ? "client" : claims?.orgId ?? "";
 
-  const onExcel = (f: File) => { void readTable(f).then((s) => setSheet(s.headers.length ? s : null)).catch(() => toast.error(t("errors.unsupported_file_type"))); };
+  // P-171: the file is kept; when its lines cannot be read the message says why (it said "unsupported file type").
+  const onExcel = (f: File) => { void readTable(f).then((s) => setSheet(s.headers.length ? s : null)).catch((e) => toast.error(t(e instanceof TableReadError && e.kind === "load" ? "documents.excelLoadFailed" : "documents.excelUnreadable"))); };
   // Lines read from an Excel or proposed by the automatic reading join the boxes (never replacing what is typed) and
   // wait for "Save".
   const applyLines = (lines: DocLine[], to: { from: "excel" | "ai"; skipped: number; warnings: string[] }) => {

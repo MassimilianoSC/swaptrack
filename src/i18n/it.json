@@ -118,6 +118,8 @@
     "filesAdd": "Aggiungi file o foto",
     "filesEmpty": "Nessun file. Puoi aggiungere foto, PDF o l'Excel del documento, anche trascinandoli qui.",
     "filesDrop": "Rilascia qui i file",
+    "excelUnreadable": "Non riesco a leggere le righe di questo Excel: controlla che sia un file .xlsx salvato da Excel, oppure scrivi le righe a mano. Il file resta allegato.",
+    "excelLoadFailed": "Non riesco ad aprire la lettura degli Excel: ricarica l'app e riprova. Il file resta allegato.",
     "fileNotSaved": "da salvare",
     "fileRemove": "Togli {{name}}",
     "fileOpen": "Apri il file",
