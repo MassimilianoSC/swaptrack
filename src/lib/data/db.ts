@@ -94,4 +94,11 @@ export function watchPendingEvents(uid: string, cb: (n: number) => void) {
   return onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.filter((d) => d.metadata.hasPendingWrites).length), () => cb(0));
 }
 
+// P-167: the readings of this user not sent yet, now (the phone's copy, where they wait), not as last watched.
+export async function countPendingEvents(uid: string): Promise<number> {
+  const q = query(collection(db, "events"), where("userId", "==", uid), orderBy("scannedAt", "desc"), limit(500));
+  const s = await getDocsFromCache(q);
+  return s.docs.filter((d) => d.metadata.hasPendingWrites).length;
+}
+
 export const flushPendingWrites = () => waitForPendingWrites(db);

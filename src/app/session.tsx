@@ -1,7 +1,7 @@
 import * as React from "react";
 import i18n from "@/i18n";
 import { onUser, readClaims, signOut, type User, type Claims } from "@/lib/data/auth";
-import { watchDoc, watchProfile, watchPendingEvents, firstFieldLocations, type Row, type UserProfile } from "@/lib/data/db";
+import { watchDoc, watchProfile, watchPendingEvents, countPendingEvents, firstFieldLocations, type Row, type UserProfile } from "@/lib/data/db";
 import { readCacheOwner, writeCacheOwner, countQueuedPhotos } from "@/lib/offline/deviceStore";
 import { clearDevice, requestPersistentStorage, OWNER_PENDING_KEY } from "@/lib/offline/device";
 import { flushQueue } from "@/lib/offline/photoQueue";
@@ -244,13 +244,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (l) sessionStorage.setItem(LOC_KEY, JSON.stringify(l)); else sessionStorage.removeItem(LOC_KEY);
   }, []);
 
+  // P-167: what waits to be sent is counted at the click, and the window that blocks the sign-out shows those numbers
+  // (the photos were counted every 5 s: right after a photo, the window said 0 readings and 0 photos).
   const safeSignOut = React.useCallback(async () => {
     const photos = await countQueuedPhotos().catch(() => 0);
-    if (pending.events > 0 || photos > 0) return "pending" as const;
+    const events = user ? await countPendingEvents(user.uid).catch(() => pending.events) : pending.events;
+    setPending({ events, photos });
+    if (events > 0 || photos > 0) return "pending" as const;
     setLocation(null);
     await signOut();
     return "ok" as const;
-  }, [pending.events, setLocation]);
+  }, [user, pending.events, setLocation]);
 
   const value: SessionValue = {
     phase, failReason, user, claims, profile, branding, authSettings, appSettings, privacy, pending, fieldCacheAt, docsLate, location, setLocation, refreshClaims, safeSignOut,

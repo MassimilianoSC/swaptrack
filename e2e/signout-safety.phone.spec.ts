@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signIn, pickLocation, scanManual, uniqueCode, png, PASSWORD, emulatorCreateUser, emulatorSetClaims, emulatorSetDoc } from "./helpers";
+import { signIn, pickLocation, scanManual, uniqueCode, png, PASSWORD, emulatorCreateUser, emulatorSetClaims, emulatorSetDoc, tr } from "./helpers";
 import { SEED } from "./seed";
 
 // P-87a (D-40, SPEC §4.12): on a shared phone nothing of a user is lost or sent with someone else's account.
@@ -64,6 +64,27 @@ test.describe("Telefono condiviso — uscite e coda delle foto (telefono)", () =
     await expect(page.getByTestId("topbar")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(5000);
     expect(uploads).toEqual([]);
+  });
+
+  // P-167: "Sign out" right after the photo of a reading: blocked (the photo waits), and the window says so. It said
+  // "0 readings, 0 photos": the photos were counted every 5 s, the click counted them at once.
+  test("«Esci» subito dopo la foto di una lettura: non esce e il riquadro conta la foto", async ({ page }) => {
+    test.setTimeout(180_000);
+    const w = await ownWorker();
+    await page.route(STORAGE, (r) => r.abort());
+    await signIn(page, w.email);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=arrive_at_warehouse");
+    await page.getByTestId("scan-flow-select").selectOption("new");
+    await scanManual(page, uniqueCode("S"), { withModel: true });
+    await page.getByTestId("scan-photo-input").setInputFiles({ name: "pezzo.png", mimeType: "image/png", buffer: png(16) });
+    await expect(page.getByText(tr("scan.photoQueued")).first()).toBeVisible();
+    await page.getByTestId("user-menu-trigger").click();
+    await page.getByTestId("user-menu-signout").click();
+    const list = page.getByTestId("signout-pending-list");
+    await expect(list).toBeVisible();
+    await expect(list).toContainText(tr("status.pendingPhotos").replace("{{count}}", "1"));
+    await expect(page.getByTestId("signin-submit-button")).toHaveCount(0);
   });
 
   test("«Esci da tutti i dispositivi» con una foto in coda: non esce e dice cosa manca", async ({ page }) => {
