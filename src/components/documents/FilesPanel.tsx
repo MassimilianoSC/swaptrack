@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Paperclip, ExternalLink, X } from "lucide-react";
+import { Paperclip, ExternalLink, X, FileSpreadsheet } from "lucide-react";
 import { compressImage } from "@/lib/imageCompress.js";
 import { fileBlobUrl } from "@/lib/data/storage";
 import { Button } from "@/components/ui/button";
@@ -135,13 +135,18 @@ export function FilesPanel({ existing, removed, onRemoved, pending, onPending, o
       </div>
       {shown.length === 0 ? <p className="text-sm text-muted">{t("documents.filesEmpty")}</p> : (
         <ul className="flex flex-wrap gap-2 text-xs" data-testid="document-files-list">
-          {shown.map((s) => (
-            <li key={s.key} className={`flex items-center gap-1 rounded border px-2 py-1 ${current?.key === s.key ? "border-primary" : "border-border"}`} data-testid="document-file">
+          {shown.map((s) => {
+            // P-174: an Excel the lines were read from stands out at once (filled, its icon, the name in bold).
+            const excel = EXCEL.test(s.name);
+            return (
+            <li key={s.key} className={`flex items-center gap-1 rounded border px-2 py-1 ${excel ? "border-success bg-success/15 text-sm font-semibold" : current?.key === s.key ? "border-primary" : "border-border"}`} data-testid="document-file" data-excel={excel ? "true" : undefined}>
+              {excel ? <FileSpreadsheet className="h-5 w-5 shrink-0 text-success" aria-hidden /> : <Paperclip className="h-3 w-3 shrink-0 text-muted" aria-hidden />}
               <button type="button" className="font-mono hover:underline" onClick={() => setSelected(s.key)}>{s.name}</button>
               {s.pending && <span className="text-warning">{t("documents.fileNotSaved")}</span>}
               {canAdd && <button type="button" aria-label={t("documents.fileRemove", { name: s.name })} onClick={() => (s.pending ? drop(s.key) : onRemoved([...removed, s.key]))} data-testid="document-file-remove"><X className="h-3 w-3" /></button>}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
       {removed.length > 0 && (
