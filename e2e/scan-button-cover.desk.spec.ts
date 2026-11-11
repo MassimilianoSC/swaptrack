@@ -4,7 +4,9 @@ import { SEED } from "./seed";
 
 // P-161: the floating "Scan" button of the ASP roles sits on the bottom right of the screen; the page keeps room under
 // it. On a computer (from 1024 px) that room was lost and the button covered the last "Open" of a table (seen by the
-// tester in Documents). Own documents of ASP Nord (E2E- numbers), written in the emulator.
+// tester in Documents). Own documents of ASP Nord (E2E- numbers), written in the emulator: enough of them for the table
+// to be longer than the side bar, so that the last row is at the end of the page (with a few rows the page scrolls for
+// the side bar and the last row stays high, far from the button).
 async function ownDocuments(n: number): Promise<void> {
   const now = new Date();
   for (let i = 0; i < n; i++) {
@@ -14,41 +16,42 @@ async function ownDocuments(n: number): Promise<void> {
     });
   }
 }
-// What is under the middle of the last "Open" at the end of the page: "free", or the element that covers it.
-async function underLastOpen(page: Page, width: number): Promise<string> {
-  await page.setViewportSize({ width, height: 900 });
+
+// With the page scrolled to its end: where the last "Open" of the table and the button are, in the window.
+async function atTheEnd(page: Page, width: number, height: number) {
+  await page.setViewportSize({ width, height });
   await page.goto("/documents");
   const opens = page.locator("[data-testid^='documents-row-']");
-  await expect(opens.nth(2)).toBeVisible({ timeout: 45_000 });
+  await expect(opens.nth(19)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByTestId("scan-fab")).toBeVisible();
-  // The window as tall as the page (measured in a low window: the page fills at least the window), so the last row is
-  // as low as it can be, at the end of the page, where the button is.
-  await page.setViewportSize({ width, height: 300 });
-  const height = await page.evaluate(() => document.documentElement.scrollHeight);
-  await page.setViewportSize({ width, height });
-  const last = opens.last();
-  await last.scrollIntoViewIfNeeded();
+  await opens.last().scrollIntoViewIfNeeded();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  return last.evaluate((el) => {
-    const r = el.getBoundingClientRect();
-    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    if (hit && el.contains(hit)) return "free";
-    return hit ? `${hit.tagName} ${hit.getAttribute("data-testid") ?? ""} ${(hit.textContent ?? "").trim().slice(0, 40)}` : "nothing (off screen)";
+  return opens.last().evaluate((el) => {
+    const row = el.closest("tr")!.getBoundingClientRect();
+    const fab = document.querySelector("[data-testid='scan-fab']")!.getBoundingClientRect();
+    const end = document.documentElement.scrollHeight - (row.bottom + window.scrollY);
+    return { scrolls: document.documentElement.scrollHeight > window.innerHeight, rowBottom: Math.round(row.bottom), fabTop: Math.round(fab.top), belowRow: Math.round(end) };
   });
 }
 
 test.describe("Pulsante «Leggi» e ultima riga di una tabella (scrivania)", () => {
-  test("al computer l'ultimo «Apri» dei documenti non è coperto da «Leggi»", async ({ page }) => {
-    test.setTimeout(120_000);
-    await ownDocuments(3);
+  test("al computer, a pagina in fondo, l'ultima riga dei documenti finisce sopra «Leggi»", async ({ page }) => {
+    test.setTimeout(180_000);
+    await ownDocuments(20);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    expect(await underLastOpen(page, 1280)).toBe("free");
+    const m = await atTheEnd(page, 1280, 500);
+    // The page really scrolls and the last row is at its end (not passing by chance on a short page).
+    expect(m.scrolls).toBe(true);
+    expect(m.belowRow).toBeLessThan(200);
+    expect(m.rowBottom).toBeLessThanOrEqual(m.fabTop);
   });
 
-  test("sul telefono (390 px) l'ultimo «Apri» dei documenti resta libero", async ({ page }) => {
-    test.setTimeout(120_000);
-    await ownDocuments(3);
+  test("sul telefono (390 px) l'ultima riga dei documenti resta sopra «Leggi»", async ({ page }) => {
+    test.setTimeout(180_000);
+    await ownDocuments(20);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
-    expect(await underLastOpen(page, 390)).toBe("free");
+    const m = await atTheEnd(page, 390, 700);
+    expect(m.scrolls).toBe(true);
+    expect(m.rowBottom).toBeLessThanOrEqual(m.fabTop);
   });
 });
