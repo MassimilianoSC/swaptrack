@@ -255,6 +255,8 @@ export default function Scan() {
   const [bom, setBom] = React.useState<{ id: string; expected: Array<{ codeRaw: string; codeId: string }>; createdAtMs: number } | null>(null);
   const [bomLines, setBomLines] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [bomTicks, setBomTicks] = React.useState<Set<string>>(new Set());
+  // P-175: the BOM list opened from its summary on the video.
+  const [bomOpen, setBomOpen] = React.useState(false);
   const [bomUnexpected, setBomUnexpected] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -926,6 +928,32 @@ export default function Scan() {
         </div>
         {decoded && <p role="status" className="absolute inset-x-[12%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
+        {/* P-175: the BOM of the site at the top, on the video (no height taken from it, P-155): a summary that opens the
+            list over the video. Hidden while a warning is a band at the top; the message over the whole video covers it. */}
+        {bom && bomDirection && flash?.phase !== "band" && (
+          <>
+            <button type="button" onClick={() => setBomOpen((o) => !o)} aria-expanded={bomOpen} className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-semibold text-white" data-testid="scan-bom-chip">
+              {t("scan.bom.chip", { done: bomTicks.size, total: bom.expected.length })} {bomOpen ? "▴" : "▾"}
+            </button>
+            {bomOpen && (
+              <div className="absolute inset-x-2 top-9 max-h-[70%] overflow-y-auto rounded bg-black/80 p-2 text-white" data-testid="scan-bom-overlay">
+                <p className="mb-1 text-xs">{t(`scan.bom.direction.${bomDirection}`)}</p>
+                {bom.expected.length === 0 ? <p className="text-xs">{t("scan.bom.noLines")}</p> : (
+                  <ul className="space-y-1 font-mono text-xs">
+                    {bom.expected.map((line) => {
+                      const done = bomTicks.has(line.codeId);
+                      return (
+                        <li key={line.codeId} className={cn("flex items-center gap-2", done && "text-success")} data-testid={`scan-bom-overlay-${done ? "done" : "todo"}`}>
+                          <Check className={cn("h-4 w-4 shrink-0", done ? "" : "opacity-30")} aria-hidden /><span className="truncate">{line.codeRaw}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
+        )}
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn(flash.phase === "full" ? "absolute inset-0 flex items-center justify-center text-2xl p-4" : "absolute inset-x-0 top-0 px-3 py-1 text-sm leading-tight",
           "font-mono font-bold text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")}

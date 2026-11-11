@@ -399,6 +399,7 @@
     },
     "bom": {
       "title": "BOM tick list",
+      "chip": "BOM {{done}}/{{total}}",
       "direction": {
         "remove": "Pieces to remove",
         "install": "Pieces to install"

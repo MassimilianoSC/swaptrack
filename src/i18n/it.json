@@ -399,6 +399,7 @@
     },
     "bom": {
       "title": "Lista BOM",
+      "chip": "BOM {{done}}/{{total}}",
       "direction": {
         "remove": "Pezzi da smontare",
         "install": "Pezzi da installare"

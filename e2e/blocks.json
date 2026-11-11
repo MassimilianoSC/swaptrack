@@ -32,7 +32,8 @@
         "ddt-search.phone.spec.ts",
         "locations-weak-signal.desk.spec.ts",
         "org-users.desk.spec.ts",
-        "server-error-text.desk.spec.ts"
+        "server-error-text.desk.spec.ts",
+        "bom-chip.phone.spec.ts"
       ]
     },
     {
