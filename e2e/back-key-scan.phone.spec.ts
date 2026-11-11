@@ -114,8 +114,8 @@ test.describe("Tasto Indietro del telefono nella schermata di lettura (telefono)
     await page.getByTestId("scan-ask-product").check();
     await type(page, a);
     await expect(page.getByTestId("scan-flash")).toContainText(tr("scan.nowProductCode"));
-    // Leaving from the menu (a link inside the app), then Back.
-    await page.evaluate(() => { history.pushState({}, "", "/"); dispatchEvent(new PopStateEvent("popstate")); });
+    // Leaving with a link of the app (the logo at the top: a real click, not a back key), then Back.
+    await page.getByTestId("topbar-logo").click();
     await expect(page.getByTestId("scan-screen")).toHaveCount(0);
     await page.goBack();
     await expect(page.getByTestId("scan-screen")).toBeVisible();

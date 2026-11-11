@@ -682,6 +682,7 @@ export default function Scan() {
   const popping = React.useRef(false);
   const onHoldStep = () => !!(window.history.state as { usr?: { scanHold?: boolean } } | null)?.usr?.scanHold;
   const addHoldStep = () => {
+    if (window.location.pathname !== "/scan") return; // the screen is being left: no step on another page
     held.current = true;
     if (!onHoldStep()) navigateRef.current(window.location.pathname + window.location.search, { state: { scanHold: true } });
   };
