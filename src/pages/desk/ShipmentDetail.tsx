@@ -83,7 +83,8 @@ export default function ShipmentDetail() {
     return call("saveDocument", {
       kind: "ddt_return", number: shipment.ddtNumber || `R-${id.slice(0, 6)}`,
       locationId: shipment.fromLocationId, linesSource: "manual", lines: [],
-      files: [{ base64, contentType: isImage ? "image/jpeg" : file.type }], shipmentId: id,
+      // P-176: the file keeps its name (a photo becomes a JPEG: its name too).
+      files: [{ base64, contentType: isImage ? "image/jpeg" : file.type, name: isImage ? file.name.replace(/\.[^.]+$/, ".jpg") : file.name }], shipmentId: id,
     });
   }, t("documents.attached"));
 
