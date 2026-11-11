@@ -174,7 +174,6 @@
     "hideClosed": "Only open",
     "closed": "Closed",
     "closeNote": "Note (optional):",
-    "hint": "Alerts stay in the app only — never e-mail.",
     "kinds": {
       "ddt_in_difference": "DDT (arrival) difference",
       "ddt_return_difference": "DDT (return) difference",
@@ -870,7 +869,7 @@
     "not_implemented": "Not available yet.",
     "invalid_data": "Some data is missing or invalid.",
     "last_admin": "This is the last active administrator: it cannot be removed or demoted.",
-    "email_exists": "An account with this e-mail already exists.",
+    "email_exists": "This person has already been invited (an account with this e-mail already exists).",
     "organization_inactive": "The organization is not active.",
     "organization_not_found": "Organization not found.",
     "role_not_for_organization": "This role does not belong to this organization.",

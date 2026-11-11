@@ -8,7 +8,7 @@ import { call } from "@/lib/data/call";
 import { watchAlerts, type Alert } from "@/lib/data/documents";
 import { hasNoDifferenceNow, isAlertToWatch } from "@/lib/alertState";
 import type { Row } from "@/lib/data/db";
-import { PageHeader, Card, Badge } from "@/components/ui/card";
+import { PageHeader, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
@@ -81,9 +81,6 @@ export default function Alerts() {
           { key: "close", header: "", render: (a) => canClose && !a.closedAt ? <Button size="sm" variant="ghost" onClick={() => close(a.id)} disabled={pending.has(`close-${a.id}`)} aria-busy={pending.has(`close-${a.id}`) || undefined} data-testid={`alerts-close-${a.id}`}><Lock className="h-4 w-4" />{t("common.close")}</Button> : null },
         ]} />
       )}
-      <Card>
-        <p className="text-xs text-muted">{t("alerts.hint")}</p>
-      </Card>
     </div>
   );
 }

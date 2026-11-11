@@ -32,7 +32,8 @@ export function ConfirmDialog({ open, title, body, confirmLabel, danger, onConfi
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent title={title} description={body}>
-        {children}
+        {/* P-179: a field in the window (a note) never touches the buttons. */}
+        {children && <div className="mb-4">{children}</div>}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose} data-testid="confirm-cancel">{t("common.cancel")}</Button>
           <Button variant={danger ? "danger" : "primary"} disabled={busy} onClick={onConfirm} data-testid="confirm-ok">{confirmLabel}</Button>

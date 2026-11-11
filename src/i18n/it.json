@@ -174,7 +174,6 @@
     "hideClosed": "Solo aperti",
     "closed": "Chiuso",
     "closeNote": "Nota (facoltativa):",
-    "hint": "Gli avvisi stanno nell'app — mai per e-mail.",
     "kinds": {
       "ddt_in_difference": "DDT (arrivo) differenza",
       "ddt_return_difference": "DDT (reso) differenza",
@@ -870,7 +869,7 @@
     "not_implemented": "Non ancora disponibile.",
     "invalid_data": "Alcuni dati mancano o non sono validi.",
     "last_admin": "È l'ultimo amministratore attivo: non può essere rimosso né declassato.",
-    "email_exists": "Esiste già un account con questa e-mail.",
+    "email_exists": "Questa persona è già stata invitata (esiste già un account con questa e-mail).",
     "organization_inactive": "L'organizzazione non è attiva.",
     "organization_not_found": "Organizzazione non trovata.",
     "role_not_for_organization": "Questo ruolo non appartiene a questa organizzazione.",
