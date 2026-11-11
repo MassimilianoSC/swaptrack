@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Send, Trash2, ScanLine, PackageCheck } from "lucide-react";
 import { useSession } from "@/app/session";
@@ -26,7 +26,6 @@ export default function ShipmentDetail() {
   const { claims } = useSession();
   const names = useNames();
   const { busy, run } = useAction();
-  const nav = useNavigate();
   const [shipment, setShipment] = React.useState<Row<Shipment> | null>(null);
   const [lines, setLines] = React.useState<Row<ShipmentLine>[]>([]);
   const [sendOpen, setSendOpen] = React.useState(false);
@@ -92,6 +91,7 @@ export default function ShipmentDetail() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back="/shipments"
         title={title}
         subtitle={`${t(`shipments.statuses.${shipment.status}`)} · ${formatInstant(shipment.createdAt?.toDate?.() ?? null, i18n.language)}`}
         actions={<>
@@ -106,7 +106,6 @@ export default function ShipmentDetail() {
           {canConfirm && <Button variant="secondary" onClick={() => setConfirmOpen(true)} data-testid="shipment-confirm"><PackageCheck className="h-4 w-4" />{t("shipments.confirm")}</Button>}
           {canCancel && <Button variant="danger" onClick={() => setCancelling(true)} disabled={busy} data-testid="shipment-cancel"><Trash2 className="h-4 w-4" />{t("shipments.cancel")}</Button>}
           <ConfirmDialog open={cancelling} danger busy={busy} title={t("shipments.cancel")} body={t("shipments.cancelConfirm")} confirmLabel={t("shipments.cancel")} onConfirm={() => void cancel()} onClose={() => setCancelling(false)} />
-          <Button variant="ghost" onClick={() => nav(-1)} data-testid="shipment-back">{t("common.back")}</Button>
         </>}
       />
       <Card>

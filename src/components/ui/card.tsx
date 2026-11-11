@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { BackButton } from "../BackButton";
 
 export const Card = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("rounded-lg border border-border bg-surface p-5", className)} {...p} />
@@ -18,14 +19,18 @@ export const Badge = ({ tone = "neutral", className, ...p }: React.HTMLAttribute
   <span className={cn("inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium", tones[tone], className)} {...p} />
 );
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
+// back: the parent page of a page not reached from the menu (P-163: a "Back" above the title).
+export function PageHeader({ title, subtitle, actions, back }: { title: string; subtitle?: string; actions?: React.ReactNode; back?: string }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight" data-testid="page-title">{title}</h1>
-        {subtitle && <p className="text-sm text-muted mt-1">{subtitle}</p>}
+    <div className="mb-6">
+      {back && <BackButton fallback={back} />}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight" data-testid="page-title">{title}</h1>
+          {subtitle && <p className="text-sm text-muted mt-1">{subtitle}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

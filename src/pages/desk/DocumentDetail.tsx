@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
 import { ConfirmDialog } from "@/components/dialogs";
 import { Loading, ErrorState } from "@/components/states";
+import { BackButton } from "@/components/BackButton";
 import { formatInstant } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -130,7 +131,7 @@ export default function DocumentDetail() {
     pending.forEach((p) => URL.revokeObjectURL(p.url));
     setPending([]); setRemoved([]); setToConfirm(null);
     if (r.duplicateOf) toast.message(t("documents.duplicateWarning"));
-    if (r.documentId && isNew) nav(`/documents/${r.documentId}`);
+    if (r.documentId && isNew) nav(`/documents/${r.documentId}`, { replace: true }); // P-163: "Back" skips the empty form
     else setReloadKey((k) => k + 1);
   };
   const mark = async () => {
@@ -145,9 +146,11 @@ export default function DocumentDetail() {
   };
   const doCompare = async () => { const r = await run(() => call<Compare>("compareDocument", { documentId: id })); if (r) setCompare(r); };
 
-  if (!isNew && !doc && unavailable === "offline") return <ErrorState message={t("errors.offlineUnavailable")} onRetry={() => setReloadKey((k) => k + 1)} />;
-  if (!isNew && !doc && unavailable === "missing") return <ErrorState message={t("errors.document_not_found")} />;
-  if (!isNew && !doc && unavailable === "error") return <ErrorState message={t("errors.load_failed")} onRetry={() => setReloadKey((k) => k + 1)} />;
+  // P-163: "Back" also when the document cannot be shown.
+  const back = <BackButton fallback="/documents" />;
+  if (!isNew && !doc && unavailable === "offline") return <>{back}<ErrorState message={t("errors.offlineUnavailable")} onRetry={() => setReloadKey((k) => k + 1)} /></>;
+  if (!isNew && !doc && unavailable === "missing") return <>{back}<ErrorState message={t("errors.document_not_found")} /></>;
+  if (!isNew && !doc && unavailable === "error") return <>{back}<ErrorState message={t("errors.load_failed")} onRetry={() => setReloadKey((k) => k + 1)} /></>;
   if (!isNew && !doc) return <Loading />;
   const siteOrWarehouse = (l: Row<Location>) =>
     kind === "bom" ? l.type === "site" : l.type === "asp_warehouse";
@@ -156,7 +159,7 @@ export default function DocumentDetail() {
   );
   return (
     <div className="space-y-6">
-      <PageHeader title={isNew ? t("documents.new") : t("documents.title", { n: doc?.number })}
+      <PageHeader back="/documents" title={isNew ? t("documents.new") : t("documents.title", { n: doc?.number })}
         subtitle={isNew ? t("documents.subtitle") : `${t(`documents.kinds.${doc!.kind}`)} · v${doc!.version} · ${t(`documents.statuses.${doc!.status}`)}`}
         actions={!isNew && <>
           {canWrite && doc!.status !== "closed" && <Button variant="secondary" onClick={save} disabled={busy} data-testid="document-save"><Save className="h-4 w-4" />{t("common.save")}</Button>}

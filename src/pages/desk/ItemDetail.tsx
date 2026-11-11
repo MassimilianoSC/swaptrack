@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loading, Empty, ErrorState } from "@/components/states";
+import { BackButton } from "@/components/BackButton";
 import { toast } from "sonner";
 import { formatInstant } from "@/lib/utils";
 
@@ -116,10 +117,12 @@ export default function ItemDetail() {
   React.useEffect(() => { if (item) { setEditModel(item.modelId ?? ""); setEditCondition(item.condition ?? ""); setForceStatus(item.status); } }, [item]);
 
   // D-58 B3: without network a piece that is not on this device is "not available without network", never "not found".
-  if ((loadError || missing) && !online) return <ErrorState message={t("errors.offlineUnavailable")} />;
-  if (loadError === "forbidden") return <Empty title={t("items.notVisible")} />; // not a failure: no "something went wrong"
-  if (loadError) return <ErrorState message={t("errors.load_failed")} />;
-  if (missing) return <Empty title={t("items.notFound")} />;
+  // P-163: "Back" also when the piece cannot be shown.
+  const back = <BackButton fallback="/items" />;
+  if ((loadError || missing) && !online) return <>{back}<ErrorState message={t("errors.offlineUnavailable")} /></>;
+  if (loadError === "forbidden") return <>{back}<Empty title={t("items.notVisible")} /></>; // not a failure: no "something went wrong"
+  if (loadError) return <>{back}<ErrorState message={t("errors.load_failed")} /></>;
+  if (missing) return <>{back}<Empty title={t("items.notFound")} /></>;
   if (!id || !item || history === null) return <Loading />;
 
   const label = (t: string) => (t ? t : "—");
@@ -163,6 +166,7 @@ export default function ItemDetail() {
   return (
     <div className="space-y-6">
       <PageHeader
+        back="/items"
         title={t("items.title", { id: id.slice(0, 8) })}
         subtitle={item.model ? `${item.model} · ${item.materialCode ?? ""}` : t("items.unknownModel")}
         actions={<>
