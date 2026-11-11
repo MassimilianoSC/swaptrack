@@ -127,7 +127,7 @@ export default function DocumentDetail() {
     const typed = kind === "bom" ? [...parseLines(bomLines.remove, "remove", materialCodes), ...parseLines(bomLines.install, "install", materialCodes)] : parseLines(rawLines, undefined, materialCodes);
     const lines = carryModels(typed, (doc?.lines ?? []) as DocLine[]);
     const r = await run(async () => {
-      const files = await Promise.all(pending.map(async (p) => ({ base64: await toBase64(p.blob), contentType: p.contentType })));
+      const files = await Promise.all(pending.map(async (p) => ({ base64: await toBase64(p.blob), contentType: p.contentType, name: p.name })));
       return call<{ documentId: string; duplicateOf: string | null }>("saveDocument", {
         documentId: isNew ? undefined : id, kind, number: number.trim(), locationId, linesSource, lines,
         files: files.length ? files : undefined,
@@ -195,7 +195,7 @@ export default function DocumentDetail() {
       </Card>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-3">
-          <FilesPanel existing={doc?.files ?? []} removed={removed} onRemoved={setRemoved} pending={pending} onPending={setPending} onExcel={onExcel} canAdd={editable} />
+          <FilesPanel existing={doc?.files ?? []} names={Object.fromEntries((doc?.fileNames ?? []).map((f) => [f.path, f.name]))} removed={removed} onRemoved={setRemoved} pending={pending} onPending={setPending} onExcel={onExcel} canAdd={editable} />
           {sheet && editable && <ExcelMapping sheet={sheet} kind={kind} scope={mappingScope} onApply={applyExcel} onCancel={() => setSheet(null)} />}
           {aiOn && editable && !isNew && readable && (
             <div className="space-y-1">

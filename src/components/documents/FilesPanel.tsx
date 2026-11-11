@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Paperclip, ExternalLink, X, FileSpreadsheet } from "lucide-react";
+import { Paperclip, ExternalLink, X, FileSpreadsheet, Download } from "lucide-react";
 import { compressImage } from "@/lib/imageCompress.js";
 import { fileBlobUrl } from "@/lib/data/storage";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,11 @@ interface Shown { key: string; name: string; contentType: string; url: string | 
 const typeOf = (path: string) => /\.pdf$/i.test(path) ? "application/pdf" : /\.(jpe?g|png|webp)$/i.test(path) ? "image/jpeg" : "application/octet-stream";
 
 // D-47: a saved file can be taken out of the next version (keepFiles); it is never deleted and stays in the history.
-export function FilesPanel({ existing, removed, onRemoved, pending, onPending, onExcel, canAdd }: {
+// P-176: names = the original name of each saved file (by Storage path), shown and used when it is downloaded again.
+export function FilesPanel({ existing, removed, onRemoved, pending, onPending, onExcel, canAdd, names }: {
   existing: string[]; removed: string[]; onRemoved: (paths: string[]) => void;
   pending: PendingFile[]; onPending: (p: PendingFile[]) => void; onExcel: (f: File) => void; canAdd: boolean;
+  names?: Record<string, string>;
 }) {
   const { t } = useTranslation();
   const input = React.useRef<HTMLInputElement>(null);
@@ -54,7 +56,7 @@ export function FilesPanel({ existing, removed, onRemoved, pending, onPending, o
   }, [existingKey]);
 
   const shown: Shown[] = [
-    ...existing.filter((p) => !removed.includes(p)).map((p) => ({ key: p, name: p.split("/").pop() ?? p, contentType: typeOf(p), url: saved[p] ?? null, pending: false })),
+    ...existing.filter((p) => !removed.includes(p)).map((p) => ({ key: p, name: names?.[p] ?? p.split("/").pop() ?? p, contentType: typeOf(p), url: saved[p] ?? null, pending: false })),
     ...pending.map((f) => ({ key: f.id, name: f.name, contentType: f.contentType, url: f.url, pending: true })),
   ];
   const [selected, setSelected] = React.useState<string | null>(null);
@@ -160,7 +162,11 @@ export function FilesPanel({ existing, removed, onRemoved, pending, onPending, o
             ? <img src={current.url} alt={current.name} className="max-h-[70vh] w-full rounded border border-border object-contain" data-testid="document-preview-image" />
             : <iframe src={current.url} title={current.name} className="h-[70vh] w-full rounded border border-border" data-testid="document-preview-pdf" />}
           {/* Safari on iPhone does not show a PDF inside the page: the file opens on its own. */}
-          <a href={current.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" data-testid="document-preview-open"><ExternalLink className="h-4 w-4" />{t("documents.fileOpen")}</a>
+          <div className="flex flex-wrap gap-4">
+            <a href={current.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline" data-testid="document-preview-open"><ExternalLink className="h-4 w-4" />{t("documents.fileOpen")}</a>
+            {/* P-176: saved with the name it had on the user's computer. */}
+            <a href={current.url} download={current.name} className="inline-flex items-center gap-1 text-sm text-primary hover:underline" data-testid="document-preview-download"><Download className="h-4 w-4" />{t("common.download")}</a>
+          </div>
         </div>
       )}
     </div>

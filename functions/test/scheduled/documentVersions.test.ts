@@ -65,3 +65,18 @@ describe("adding and keeping pages (D-47)", () => {
     expect((await load(documentId)).version).toBe(1);
   });
 });
+
+// P-176 (tester): a file downloaded again keeps the name it had on the user's computer. Red before: the name was never
+// sent nor kept (only {version}-{n}.{ext}).
+describe("the original names of the files (P-176)", () => {
+  const base = (number: string) => ({ kind: "ddt_in" as const, number, locationId: WH, linesSource: "manual" as const, lines: [] });
+  const load = async (id: string) => (await env.admin.db.collection("documents").doc(id).get()).data()!;
+
+  it("each file keeps its name across versions; a name is cleaned; a file without a name has none", async () => {
+    const { documentId } = await documents.saveDocument.handler(ctx, { ...base("DDT-NAMES"), files: [{ ...pdf("a"), name: "Bolla BG125.pdf" }, pdf("b")] }) as { documentId: string };
+    await documents.saveDocument.handler(ctx, { ...base("DDT-NAMES"), documentId, files: [{ ...pdf("c"), name: "C:\\Users\\x\\foto\u0007 retro.pdf" }] });
+    const doc = await load(documentId);
+    expect(doc.files).toHaveLength(3);
+    expect(doc.fileNames).toEqual([{ path: doc.files[0], name: "Bolla BG125.pdf" }, { path: doc.files[2], name: "foto retro.pdf" }]);
+  });
+});

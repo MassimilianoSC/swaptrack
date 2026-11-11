@@ -11,6 +11,7 @@ import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
 import { compareDocument, documentAlert, type DocKind, type Line, type EventFact } from "../shared/documents";
 import { getSettings } from "../core/settings";
 import { askModel } from "../core/aiExtract";
+import { cleanFileName } from "../core/fileName";
 import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines, LABEL_RESPONSE_SCHEMA, LABEL_INSTRUCTION, normalizeLabelCodes } from "../core/aiOutput";
 import type { Part } from "@google/genai";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -101,7 +102,8 @@ const lineSchema = z.union([
   z.object({ kind: z.literal("quantity"), materialCode: z.string().optional().nullable(), modelId: z.string().optional().nullable(), quantity: z.number().int().min(1).max(100000), direction: z.enum(["remove", "install"]).optional() }),
 ]);
 
-const fileSchema = z.object({ base64: z.string().max(8_000_000), contentType: z.string().max(100) });
+// P-176: name = the file's name on the user's computer, kept for downloading it again (the Storage path stays ours).
+const fileSchema = z.object({ base64: z.string().max(8_000_000), contentType: z.string().max(100), name: z.string().max(300).optional() });
 
 // Exported for the emulator tests (functions/test), which call the handlers in-process.
 export const documents = {
@@ -144,11 +146,14 @@ export const documents = {
       const kept = d.keepFiles ?? previous;
       if (kept.some((p) => !previous.includes(p)) || kept.length + (d.files?.length ?? 0) > MAX_FILES) fail("invalid-argument", "invalid_data");
       if (d.files && d.files.length) paths = await storeFiles(aspId, d.kind, ref.id, (prev?.version ?? 0) + 1, d.files);
+      // P-176: the original name of every file, kept across versions (history files too): [{ path, name }].
+      const fileNames: Array<{ path: string; name: string }> = Array.isArray(prev?.fileNames) ? [...prev!.fileNames] : [];
+      paths.forEach((path, i) => { const name = cleanFileName(d.files![i].name); if (name) fileNames.push({ path, name }); });
       const history = Array.isArray(prev?.history) ? prev!.history : [];
       if (prev) history.push({ at: Timestamp.now(), by: ctx.uid, lines: prev.lines, files: prev.files });
       await db.runTransaction(async (tx) => {
         tx.set(ref, {
-          kind: d.kind, number: d.number, aspId, locationId: d.locationId, files: [...kept, ...paths],
+          kind: d.kind, number: d.number, aspId, locationId: d.locationId, files: [...kept, ...paths], fileNames,
           lines: normalized, linesSource: d.linesSource, version: (prev?.version ?? 0) + 1,
           status: prev?.status ?? "open", createdAt: prev?.createdAt ?? FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
           history, duplicateOf: dup?.id ?? null, shipmentId: d.shipmentId ?? prev?.shipmentId ?? null,

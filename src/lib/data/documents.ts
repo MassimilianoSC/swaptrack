@@ -8,6 +8,8 @@ export interface SwDocument {
   files: string[]; lines: Array<Record<string, unknown>>; linesSource: "excel" | "manual"; version: number;
   status: "open" | "checked" | "closed"; createdAt: Timestamp; updatedAt: Timestamp; checkedAt?: Timestamp | null; closedAt?: Timestamp | null;
   duplicateOf?: string | null; shipmentId?: string | null;
+  // P-176: the original name of each file (none for files saved before).
+  fileNames?: Array<{ path: string; name: string }>;
 }
 
 // §11.2: the saved column mapping of an Excel document, documentMappings/{kind}_{scope} (scope: an ASP or "client").
