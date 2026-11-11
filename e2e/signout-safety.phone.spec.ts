@@ -71,6 +71,14 @@ test.describe("Telefono condiviso — uscite e coda delle foto (telefono)", () =
   test("«Esci» subito dopo la foto di una lettura: non esce e il riquadro conta la foto", async ({ page }) => {
     test.setTimeout(180_000);
     const w = await ownWorker();
+    // What the window says when it appears (it is updated every 5 s after, so a later look proves nothing).
+    await page.addInitScript(() => {
+      new MutationObserver(() => {
+        const w = window as unknown as { __firstPendingList?: string };
+        const el = document.querySelector("[data-testid='signout-pending-list']");
+        if (el && w.__firstPendingList === undefined) w.__firstPendingList = el.textContent ?? "";
+      }).observe(document, { childList: true, subtree: true, characterData: true });
+    });
     await page.route(STORAGE, (r) => r.abort());
     await signIn(page, w.email);
     await pickLocation(page, SEED.nord.warehouse);
@@ -83,7 +91,8 @@ test.describe("Telefono condiviso — uscite e coda delle foto (telefono)", () =
     await page.getByTestId("user-menu-signout").click();
     const list = page.getByTestId("signout-pending-list");
     await expect(list).toBeVisible();
-    await expect(list).toContainText(tr("status.pendingPhotos").replace("{{count}}", "1"));
+    const first = await page.evaluate(() => (window as unknown as { __firstPendingList?: string }).__firstPendingList ?? "");
+    expect(first).toContain(tr("status.pendingPhotos").replace("{{count}}", "1"));
     await expect(page.getByTestId("signin-submit-button")).toHaveCount(0);
   });
 
