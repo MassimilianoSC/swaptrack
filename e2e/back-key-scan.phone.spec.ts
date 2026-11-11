@@ -40,6 +40,30 @@ test.describe("Tasto Indietro del telefono nella schermata di lettura (telefono)
     expect(windowAfter).toBe(0);
   });
 
+  // Back at the very moment the window appears (the race seen in the run of lot 11: React Router had not applied the
+  // step yet, the window stayed open with its step gone, and the next Back lost the reading). Pressed by the page itself
+  // as soon as the window is in it, so the race happens every time, not only on a loaded machine.
+  test("Indietro nello stesso istante in cui compare la finestra: la finestra si chiude lo stesso e la lettura resta", async ({ page }) => {
+    test.setTimeout(180_000);
+    const code = uniqueCode("BK");
+    await page.addInitScript(() => {
+      new MutationObserver(() => {
+        const w = window as unknown as { __backAtWindow?: boolean };
+        if (w.__backAtWindow && document.querySelector("[data-testid='scan-modelpick-skip']")) { w.__backAtWindow = false; history.back(); }
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await scanAt(page, "arrive_at_warehouse");
+    await page.evaluate(() => { (window as unknown as { __backAtWindow?: boolean }).__backAtWindow = true; });
+    await type(page, code);
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __backAtWindow?: boolean }).__backAtWindow), { timeout: 20_000 }).toBe(false);
+    await page.waitForTimeout(2500);
+    const after = page.url();
+    const windowAfter = await page.getByTestId("scan-modelpick-skip").count();
+    await readToday(page, code, 1);
+    expect(after).toMatch(/\/scan\?/);
+    expect(windowAfter).toBe(0);
+  });
+
   test("seriale in attesa del codice prodotto e Indietro del telefono: il seriale non si perde", async ({ page }) => {
     test.setTimeout(180_000);
     const code = uniqueCode("BK");

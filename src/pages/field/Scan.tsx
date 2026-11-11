@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useSearchParams, useLocation, useNavigate, Link } from "react-router";
+import { useSearchParams, useNavigate, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles, ChevronDown } from "lucide-react";
 import { useSession } from "@/app/session";
@@ -669,11 +669,22 @@ export default function Scan() {
   // was lost. While something is open the history has one more step, with the same address; Back takes it away and the
   // screen closes what is open. Closed in another way, the step is taken away by the screen itself. Before the screen is
   // drawn (layout effect): a window is never seen without its step, or a quick Back would be undone by the step.
+  // The step and the back key are read from the browser itself (history.state, popstate): React Router hands a change of
+  // address to React inside a transition, so the step and a quick Back could reach the screen as no change at all, and
+  // the window stayed open with its step gone (seen in the run of lot 11).
   const holding = windowOpen || !!pendingSerial;
-  const routerLoc = useLocation();
+  const holdingRef = React.useRef(holding);
+  holdingRef.current = holding;
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate;
   const held = React.useRef(false);
   const popping = React.useRef(false);
+  const onHoldStep = () => !!(window.history.state as { usr?: { scanHold?: boolean } } | null)?.usr?.scanHold;
+  const addHoldStep = () => {
+    held.current = true;
+    if (!onHoldStep()) navigateRef.current(window.location.pathname + window.location.search, { state: { scanHold: true } });
+  };
   const releaseByBack = React.useRef<() => void>(() => undefined);
   releaseByBack.current = () => {
     if (modelPickRef.current) { void skipModelPick(); return; }
@@ -683,12 +694,26 @@ export default function Scan() {
     if (p) { setPendingSerial(null); void proceed(p.code, p.source); }
   };
   React.useLayoutEffect(() => {
-    const ours = !!(routerLoc.state as { scanHold?: boolean } | null)?.scanHold;
-    if (popping.current) { if (ours) return; popping.current = false; held.current = false; }
-    if (holding && !held.current) { held.current = true; if (!ours) navigate(routerLoc.pathname + routerLoc.search, { state: { scanHold: true } }); return; }
-    if (!holding && held.current) { held.current = false; if (ours) { popping.current = true; navigate(-1); } return; }
-    if (holding && held.current && !ours) { held.current = false; releaseByBack.current(); }
-  }, [holding, routerLoc.key]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (popping.current) return; // the step is being taken away: the popstate below goes on from there
+    if (holding && !held.current) addHoldStep();
+    else if (!holding && held.current) {
+      held.current = false;
+      if (onHoldStep()) { popping.current = true; navigateRef.current(-1); }
+    }
+  }, [holding]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    const onPop = () => {
+      if (popping.current) {
+        if (onHoldStep()) return;
+        popping.current = false;
+        if (holdingRef.current) addHoldStep(); // something was opened while the step was being taken away
+        return;
+      }
+      if (held.current && !onHoldStep()) { held.current = false; releaseByBack.current(); }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     if (!videoRef.current || !location) return;
@@ -826,7 +851,7 @@ export default function Scan() {
           return (await proceed(p.code, p.source)) !== "asked";
         }} />
         {modes.map((m) => (
-          <Button key={m} variant={m === mode ? "primary" : "secondary"} size="lg" onClick={() => setParams((p) => { p.set("mode", m); return p; }, { replace: true, state: held.current ? routerLoc.state : null })} data-testid={`scan-mode-${m}`}>{t(`scan.modes.${m}`)}</Button>
+          <Button key={m} variant={m === mode ? "primary" : "secondary"} size="lg" onClick={() => setParams((p) => { p.set("mode", m); return p; }, { replace: true, state: held.current ? { scanHold: true } : null })} data-testid={`scan-mode-${m}`}>{t(`scan.modes.${m}`)}</Button>
         ))}
         {role === "asp_technician" && <Button variant="outline" size="lg" onClick={siteDone} data-testid="scan-site-done">{t("scan.siteDoneButton")}</Button>}
       </div>
