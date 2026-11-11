@@ -174,10 +174,14 @@ export async function scanManual(page: Page, code: string, opts: { withModel?: b
   const input = page.getByTestId("scan-manual-input");
   const skip = page.getByTestId("scan-modelpick-skip");
   const flash = page.getByTestId("scan-flash");
-  await expect(flash).toBeHidden(); // a warning of the reading before (3 s, P-157) is not the answer to this one
+  // P-165: a message of the reading before (up to 8 s, D-75) is not the answer to this one: the answer is the message
+  // with a higher number (data-seq) than the one on the screen now.
+  const seqNow = () => page.evaluate(() => Number(document.querySelector("[data-testid='scan-flash']")?.getAttribute("data-seq") ?? 0));
+  const before = await seqNow();
+  const answer = page.locator("[data-testid='scan-flash']").and(page.locator(`:not([data-seq="${before}"])`));
   await input.fill(code);
   await input.press("Enter");
-  await expect(skip.or(flash)).toBeVisible();
+  await expect(skip.or(answer)).toBeVisible();
   if (await skip.isVisible()) {
     if (opts.withModel) {
       await page.getByTestId("scan-modelpick-select").selectOption({ index: 1 });
@@ -186,6 +190,7 @@ export async function scanManual(page: Page, code: string, opts: { withModel?: b
       await skip.click();
     }
   }
+  await expect.poll(seqNow).toBeGreaterThan(before);
   await expect(flash).toContainText(code);
   await expect(flash).toBeHidden();
 }

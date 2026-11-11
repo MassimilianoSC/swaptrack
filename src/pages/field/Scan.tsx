@@ -41,10 +41,14 @@ const BURST_KEY = "swaptrack.burst";
 const BELOW_VIDEO_PX = 164;
 // P-155 (D-72): the longest a reading waits for the server before its outcome (the piece, then the sorting rules).
 const READING_WAIT_MS = 2500;
-// P-157 (D-73): how long a message stays over the video. A warning must be readable by someone who has never seen it;
-// green and the two yellow messages that only say what comes next stay short.
+// P-157 (D-73), P-165 (D-75): how long a message stays over the video. Green 0.9 s. Yellow and red stay 8 s, readable
+// by someone who has never seen them; the camera reads again after 3 s (0.9 s after the two yellow messages that only
+// say what comes next), and from then on the message is a band at the top of the video, the frame free.
 const FLASH_MS = 900;
-const WARNING_MS = 3000;
+const MESSAGE_MS = 8000;
+const CAMERA_AFTER_WARNING_MS = 3000;
+// D-75 (g): the notices of this screen (top) stay 8 s too; the rest of the app keeps the default.
+const TOAST_8S = { duration: 8000 };
 // The camera reads again this long after a reading, and in any case this long after the message over the video has gone.
 const CAMERA_AFTER_READING_MS = 950;
 const CAMERA_AFTER_FLASH_MS = 50;
@@ -102,10 +106,15 @@ export default function Scan() {
   const [camError, setCamError] = React.useState<string | null>(null);
   const [torch, setTorch] = React.useState<boolean | null>(null);
   const [exposure, setExposure] = React.useState<{ min: number; max: number; step: number } | null>(null);
-  const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger" } | null>(null);
-  // P-157 (D-73): one timer for the message over the video (a new message cancels the old one's), and when it ends.
+  // P-165: phase "full" over the whole video, then "band" at its top; hold: until the serial waiting for its product
+  // code is dealt with; seq: one more at every message (the tests wait for the message of their reading by it).
+  const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger"; phase: "full" | "band"; hold: boolean; seq: number } | null>(null);
+  // P-157 (D-73): one timer for the message over the video (a new message cancels the old one's); P-165: one for its
+  // band, and when the camera may read again (no longer when the message ends).
   const flashTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const flashEnds = React.useRef(0);
+  const bandTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cameraFreeAt = React.useRef(0);
+  const flashSeq = React.useRef(0);
   const [muted, setMuted] = React.useState(() => localStorage.getItem("swaptrack.muted") === "1");
   // P-155 (D-72): the code was seen, the phone is still checking it. White, never green: green says "recorded".
   const [decoded, setDecoded] = React.useState<string | null>(null);
@@ -237,7 +246,7 @@ export default function Scan() {
     for (const r of all) {
       if (toldRejected.current.has(r.id)) continue;
       toldRejected.current.add(r.id);
-      toast.error(t("scan.refusedToast", { code: r.codeRaw ?? "" }), { description: t(r.reason === "permission-denied" ? "scan.refusedPermission" : "scan.refusedOther") });
+      toast.error(t("scan.refusedToast", { code: r.codeRaw ?? "" }), { ...TOAST_8S, description: t(r.reason === "permission-denied" ? "scan.refusedPermission" : "scan.refusedOther") });
     }
   }), [t]);
 
@@ -374,8 +383,11 @@ export default function Scan() {
     return () => { aborted = true; };
   }, [bom, bomDirection, mode, today, location]);
 
-  const show = (text: string, tone: "ok" | "warn" | "danger", ms: number = tone === "ok" ? FLASH_MS : WARNING_MS) => {
-    setFlash({ text, tone });
+  // full: how long the message covers the video (the camera reads again then); total: how long it stays, null = until the
+  // serial waiting for its product code is dealt with.
+  const show = (text: string, tone: "ok" | "warn" | "danger", full: number = tone === "ok" ? FLASH_MS : CAMERA_AFTER_WARNING_MS, total: number | null = tone === "ok" ? FLASH_MS : MESSAGE_MS) => {
+    const seq = ++flashSeq.current;
+    setFlash({ text, tone, phase: "full", hold: total === null, seq });
     setDecoded(null);
     log.end(tone === "ok" ? "green" : tone === "warn" ? "yellow" : "red");
     // P-155: a reading already signalled when it was seen is not signalled again when it goes well.
@@ -385,15 +397,19 @@ export default function Scan() {
       navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
     }
     // P-157: a warning has said it: the quiet "already read" does not follow it for the same label.
-    if (ms > FLASH_MS && cameraLast.current) cameraLast.current.told = true;
+    if (full > FLASH_MS && cameraLast.current) cameraLast.current.told = true;
     clearTimeout(flashTimer.current);
-    flashEnds.current = Date.now() + ms;
-    flashTimer.current = setTimeout(() => setFlash(null), ms);
+    clearTimeout(bandTimer.current);
+    cameraFreeAt.current = Date.now() + full;
+    if (total === null || total > full) bandTimer.current = setTimeout(() => setFlash((f) => (f?.seq === seq ? { ...f, phase: "band" } : f)), full);
+    if (total !== null) flashTimer.current = setTimeout(() => setFlash((f) => (f?.seq === seq ? null : f)), total);
   };
+  const clearFlash = () => { clearTimeout(flashTimer.current); clearTimeout(bandTimer.current); setFlash(null); };
   // P-155 (D-72): as soon as the code is seen, before asking the server about the piece. Only for readings the phone
   // cannot already tell will not be recorded; the outcome (green, yellow, red or a window) comes after.
   const firstSignal = (code: string) => {
     firstSignalled.current = true;
+    clearFlash(); // P-165: a new reading takes the band of the one before away
     setDecoded(code);
     beep("first", muted);
     navigator.vibrate?.(40);
@@ -465,7 +481,7 @@ export default function Scan() {
     const payload = buildPayload(choice);
     if (modelId) payload.modelId = modelId;
     if (mode === "return_ship" || mode === "transfer_out") {
-      if (!shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
+      if (!shipmentId) { toast.error(t("errors.shipment_not_found"), TOAST_8S); return; }
     }
     const assisted = source === "manual" ? aiAssist.current : null;
     aiAssist.current = null;
@@ -473,7 +489,7 @@ export default function Scan() {
     const id = await writeEvent({ type: mode, locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source, engine: source === "camera" ? engine : null, codeRaw: code, secondCodeRaw: second, payload });
     if (assisted) {
       setPhotoNum((m) => ({ ...m, [id]: 1 }));
-      void enqueuePhoto(id, claims.orgId, assisted.blob, 1).then(() => { void flushQueue(); }, () => toast.error(t("scan.photoFailed")));
+      void enqueuePhoto(id, claims.orgId, assisted.blob, 1).then(() => { void flushQueue(); }, () => toast.error(t("scan.photoFailed"), TOAST_8S));
     }
     const reread = rereadRef.current;
     rereadRef.current = null;
@@ -483,7 +499,7 @@ export default function Scan() {
     if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectivePhotoFor(id);
     if (source === "camera") cameraLast.current = { code, at: Date.now() };
     if (reread) show(reread.text, reread.kind === "here" ? "warn" : "danger");
-    else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn", FLASH_MS); else show(code, "ok");
+    else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn", FLASH_MS, MESSAGE_MS); else show(code, "ok");
   };
 
   // P-112: the camera pauses at every decode (webEngine.js) and restarts with the flash of the reading (show). Whatever
@@ -511,7 +527,7 @@ export default function Scan() {
       cameraLast.current = { code, at: now, told: repeat && last!.told };
       if (repeat) {
         // P-109: said once, quietly (no beep, no vibration), not at every frame while the phone stays on the label.
-        if (!last!.told) { toast.message(t("scan.alreadyRead"), { id: "scan-already-read" }); cameraLast.current.told = true; }
+        if (!last!.told) { toast.message(t("scan.alreadyRead"), { ...TOAST_8S, id: "scan-already-read" }); cameraLast.current.told = true; }
         restartCamera(() => ctrl.current?.resume(), 300);
         return;
       }
@@ -525,7 +541,7 @@ export default function Scan() {
       // Otherwise it is another piece: the serial is recorded without a product code and the new reading starts over
       // (before, a second serial was taken as the product code and that piece was never recorded).
       if (isProductCode(code, materialCodes)) return proceed(p.code, p.source, code);
-      toast.warning(t("scan.notProductCode", { code }), { id: "scan-not-product-code" });
+      toast.warning(t("scan.notProductCode", { code }), { ...TOAST_8S, id: "scan-not-product-code" });
       const r = await proceed(p.code, p.source);
       if (r === "asked") { afterDialog.current = { code, source }; return "asked"; }
       return handleCode(code, source, true);
@@ -534,7 +550,7 @@ export default function Scan() {
     // D-68 case 1: certain (this phone, this session): not recorded again, the counter does not move.
     const earlier = sessionRef.current.find((r) => r.key === readingKey(code));
     if (earlier) { show(t("scan.readAgain", { code, time: formatInstant(new Date(earlier.at), i18n.language) }), "warn"); return; }
-    if (SHIPMENT_MODES.includes(mode) && !shipmentId) { toast.error(t("errors.shipment_not_found")); return; }
+    if (SHIPMENT_MODES.includes(mode) && !shipmentId) { toast.error(t("errors.shipment_not_found"), TOAST_8S); return; }
     firstSignal(code);
     const waitingSince = Date.now();
     const known = await cachedItemForCode(code, (it) => void onLateItem(code, it), log.usedCopy);
@@ -550,7 +566,7 @@ export default function Scan() {
       setLastPieceBadge(known?.previousFlow === "new" ? "previously_new" : null);
     }
     judgeReading(code, known);
-    if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn", FLASH_MS); return "continue"; }
+    if (productOn) { setPendingSerial({ code, source }); show(t("scan.nowProductCode"), "warn", FLASH_MS, null); return "continue"; }
     return proceed(code, source);
   };
   // The suggested category of a piece (§10), on the rules as loaded (a reading waits for them, P-25, but not forever:
@@ -585,7 +601,7 @@ export default function Scan() {
       modelPickRef.current = null;
       setModelPick(null); setModelPickId("");
       await record(m.code, m.source, m.second);
-      toast.message(t("scan.pieceRecognized"), { id: "scan-piece-recognized" });
+      toast.message(t("scan.pieceRecognized"), { ...TOAST_8S, id: "scan-piece-recognized" });
       if (takeNext()) return;
       if (m.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
     }
@@ -633,7 +649,7 @@ export default function Scan() {
   const clearCameraRestart = () => { clearTimeout(cameraTimer.current); cameraDeferred.current = null; };
   const restartCamera = (go: () => void, minMs: number) => {
     clearCameraRestart();
-    const afterFlash = flashEnds.current - Date.now() + CAMERA_AFTER_FLASH_MS;
+    const afterFlash = cameraFreeAt.current - Date.now() + CAMERA_AFTER_FLASH_MS;
     const longWait = afterFlash > minMs;
     cameraTimer.current = setTimeout(() => {
       // The wait outlasts CAMERA_REPEAT_MS: the label still in view is the same reading, not one more warning.
@@ -644,6 +660,8 @@ export default function Scan() {
   React.useEffect(() => {
     if (!windowOpen && cameraDeferred.current) restartCamera(cameraDeferred.current, CAMERA_AFTER_READING_MS);
   }, [windowOpen]);
+  // P-165: "Now read the product code" stays while the serial waits for it, and goes with it.
+  React.useEffect(() => { if (!pendingSerial) setFlash((f) => (f?.hold ? null : f)); }, [pendingSerial]);
 
   // P-163: the back key of the phone (Android) or of the browser, while a window is open or a serial waits for its
   // product code, does what the window's X does (an unknown piece is recorded without a model, "Sort" is cancelled and
@@ -700,7 +718,7 @@ export default function Scan() {
 
   const takePhoto = () => photoInput.current?.click();
   const readLabel = () => {
-    if (!online) { toast.message(t("scan.aiLabelOffline"), { id: "scan-ai-label-offline" }); manualInput.current?.focus(); return; }
+    if (!online) { toast.message(t("scan.aiLabelOffline"), { ...TOAST_8S, id: "scan-ai-label-offline" }); manualInput.current?.focus(); return; }
     labelInput.current?.click();
   };
   const onLabelFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -712,11 +730,11 @@ export default function Scan() {
       const blob = await compressImage(file).catch(() => { throw Object.assign(new Error("image_unreadable"), { code: "image_unreadable" }); });
       const base64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(blob); });
       const r = await extractLabelCodes(base64);
-      if (!r.codes.length) toast.message(t("scan.aiLabelNone"));
+      if (!r.codes.length) toast.message(t("scan.aiLabelNone"), TOAST_8S);
       else setLabel({ codes: r.codes.map((c) => ({ ...c, value: c.code })), warnings: r.warnings, blob });
     } catch (err) {
       const code = (err as { code?: string }).code ?? (err as Error).message;
-      toast.error(t(`errors.${code}`, { defaultValue: t("errors.unexpected") }));
+      toast.error(t(`errors.${code}`, { defaultValue: t("errors.unexpected") }), TOAST_8S);
     } finally { setLabelBusy(false); }
   };
   const useLabelCode = (value: string) => {
@@ -735,10 +753,10 @@ export default function Scan() {
     try {
       await enqueuePhoto(lastEventId, claims.orgId, file, n);
       if (defectivePhotoFor === lastEventId) setDefectivePhotoFor(null);
-      toast.success(t("scan.photoQueued"));
+      toast.success(t("scan.photoQueued"), TOAST_8S);
       void flushQueue();
     } catch {
-      toast.error(t("scan.photoFailed"));
+      toast.error(t("scan.photoFailed"), TOAST_8S);
     }
   };
   // P-102: the tap records the reading with the chosen sorting; cancelling (button, X, a tap outside, the back key)
@@ -759,7 +777,7 @@ export default function Scan() {
     setPendingSort(null);
     aiAssist.current = null;
     rereadRef.current = null;
-    toast.message(t("scan.notSorted", { code: p.code }), { id: "scan-not-sorted" });
+    toast.message(t("scan.notSorted", { code: p.code }), { ...TOAST_8S, id: "scan-not-sorted" });
     if (takeNext()) return;
     if (p.source === "camera") restartCamera(afterCameraReading, 300);
   };
@@ -784,7 +802,7 @@ export default function Scan() {
     if (takeNext()) return;
     if (p.source === "camera") restartCamera(afterCameraReading, CAMERA_AFTER_READING_MS);
   };
-  const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared")); };
+  const clearLost = async () => { await dropLost(); setLostCount(0); toast.success(t("scan.lostCleared"), TOAST_8S); };
 
   if (!location) return <Empty title={t("location.choose")} action={<Button asChild><Link to="/" data-testid="scan-choose-location">{t("location.choose")}</Link></Button>} />;
   const catLabel = (id: string | null) => sorting.categories.find((c) => c.id === id)?.labels[i18n.language as "it" | "en"] ?? "";
@@ -880,7 +898,9 @@ export default function Scan() {
         {decoded && <p role="status" className="absolute inset-x-[12%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
-        {flash && <div className={cn("absolute inset-0 flex items-center justify-center text-2xl font-mono font-bold p-4 text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")} role="status" data-testid="scan-flash" data-tone={flash.tone}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
+        {flash && <div className={cn(flash.phase === "full" ? "absolute inset-0 flex items-center justify-center text-2xl p-4" : "absolute inset-x-0 top-0 px-3 py-1 text-sm leading-tight",
+          "font-mono font-bold text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")}
+          role="status" data-testid="scan-flash" data-tone={flash.tone} data-phase={flash.phase} data-seq={flash.seq}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
       </div>
       {/* D-55 / P-121: single reading: the camera waits until the worker asks for the next piece. */}
       {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}

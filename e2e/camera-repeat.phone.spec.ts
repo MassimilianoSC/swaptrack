@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, watchFlash, flashLog, toastLog, clearFlashLog } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, watchFlash, flashLog, toastLog, clearFlashLog, flashSpell } from "./helpers";
 import { SEED } from "./seed";
 
 // The camera of the scanning screen with the phone held on a label (criterion 2).
@@ -89,7 +89,7 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
 
   // P-157 (D-73): the yellow says it once: with the label still in view no second yellow (the 3 s rule would be over
   // when the camera restarts) and no quiet "already read" after it.
-  test("etichetta ferma 8 secondi dopo un giallo: un solo giallo, niente popup, contatore fermo", async ({ page }) => {
+  test("etichetta ferma 11 secondi dopo un giallo: un solo giallo, niente popup, contatore fermo", async ({ page }) => {
     test.setTimeout(180_000);
     const code = uniqueCode("C");
     await watchFlash(page);
@@ -99,7 +99,7 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
 
     await frame(page, code);
     await expect(page.getByTestId("scan-flash")).toContainText(readAgainHead(code));
-    await page.waitForTimeout(8000);
+    await page.waitForTimeout(11_000); // P-165: past the end of the band (8 s)
     expect((await flashLog(page)).filter((e) => e.v.startsWith("warn|"))).toHaveLength(1);
     expect(await toastLog(page)).not.toContain(tr("scan.alreadyRead"));
     await expect(page.getByTestId("scan-session-count")).toHaveText("1");
@@ -122,7 +122,7 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await page.getByTestId("scan-manual-submit").click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText(c);
-    await page.waitForTimeout(3500); // past the end of the warning
+    await page.waitForTimeout(3500); // past the camera restart (3 s, P-165: not the end of the message)
     await frame(page, b);
     await page.waitForTimeout(2500);
     await expect(dialog).toContainText(c);
@@ -147,7 +147,7 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await go("/");
     await expect(page.getByTestId("scan-screen")).toHaveCount(0);
     const before = await detects(page);
-    await page.waitForTimeout(4000); // past the end of the warning
+    await page.waitForTimeout(4000); // past the camera restart (3 s, P-165: not the end of the message)
     expect(await detects(page)).toBe(before);
 
     await go("/scan?mode=arrive_at_warehouse");
@@ -155,6 +155,43 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
     await frame(page, b);
     await expect(page.getByTestId("scan-modelpick-select")).toBeVisible({ timeout: 10_000 });
+    await frame(page, null);
+  });
+
+  // P-165 (D-75): the yellow stays 8 s; when the camera reads again (3 s) it becomes a band at the top of the video that
+  // leaves the frame free.
+  test("giallo: alla ripartenza della fotocamera diventa una fascia in alto, il mirino libero, fino a 8 secondi", async ({ page }) => {
+    test.setTimeout(180_000);
+    const code = uniqueCode("C");
+    await watchFlash(page);
+    await arrivalWithCamera(page);
+    await readOnceAndMoveAway(page, code);
+    await clearFlashLog(page);
+    await frame(page, code);
+    const flash = page.getByTestId("scan-flash");
+    await expect(flash).toContainText(readAgainHead(code));
+    await frame(page, null);
+    await expect(flash).toHaveAttribute("data-phase", "band", { timeout: 6000 });
+    const band = (await flash.boundingBox())!;
+    const aim = (await page.getByTestId("scan-aim").boundingBox())!;
+    expect(band.y + band.height).toBeLessThanOrEqual(aim.y);
+    await expect.poll(() => flashSpell(page, "warn"), { timeout: 15_000 }).toBeGreaterThanOrEqual(7500);
+    expect(await flashSpell(page, "warn")).toBeLessThan(9500);
+  });
+
+  // P-165 (D-75 c): a new reading takes the band away (guard: before, the yellow was already gone at 3 s).
+  test("una lettura nuova toglie la fascia del giallo", async ({ page }) => {
+    test.setTimeout(180_000);
+    const [a, b] = [uniqueCode("C"), uniqueCode("C")];
+    await arrivalWithCamera(page);
+    await readOnceAndMoveAway(page, a);
+    await frame(page, a);
+    await expect(page.getByTestId("scan-flash")).toContainText(readAgainHead(a));
+    await frame(page, null);
+    await page.waitForTimeout(3500); // the camera reads again
+    await frame(page, b);
+    await expect(page.getByText(readAgainHead(a))).toHaveCount(0, { timeout: 3000 });
+    await expect(page.getByRole("dialog")).toContainText(b);
     await frame(page, null);
   });
 
