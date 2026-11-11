@@ -16,9 +16,11 @@ async function scanAt(page: Page, mode: string): Promise<void> {
   await page.goto(`/scan?mode=${mode}`);
   if (mode === "arrive_at_warehouse") await page.getByTestId("scan-flow-select").selectOption("new");
 }
-// The readings of today on this phone, seen from a new visit of the screen.
+// The readings of today on this phone. Still in the screen (the back key closed what was open): its list, as it is; out
+// of it (the code before: the back key left the screen): a new visit. Never a reload right after the reading: a reading
+// written a moment before a reload may not be in the phone's copy yet, which no user does.
 async function readToday(page: Page, code: string, n: number): Promise<void> {
-  await page.goto("/scan?mode=arrive_at_warehouse");
+  if (!/\/scan\?/.test(page.url())) await page.goto("/scan?mode=arrive_at_warehouse");
   await expect(page.getByTestId("scan-today-row").filter({ hasText: code })).toHaveCount(n, { timeout: n ? 30_000 : 5_000 });
 }
 
