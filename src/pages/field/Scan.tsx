@@ -766,16 +766,17 @@ export default function Scan() {
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
-      {/* P-163: back where the user came from (from a direct link: the shipment, or Home). A serial waiting for its product
-          code goes on its way first, as when another serial comes (D-66); if that opens a window, the user stays. */}
-      <BackButton fallback={shipmentId ? `/shipments/${shipmentId}` : "/"} onBefore={async () => {
-        const p = pendingSerial;
-        if (!p) return true;
-        setPendingSerial(null);
-        return (await proceed(p.code, p.source)) !== "asked";
-      }} />
       {shipmentId && <p className="text-xs text-primary font-mono" data-testid="scan-shipment-id">{t("scan.shipmentLabel")}: {shipmentId.slice(0, 8)}</p>}
       <div className="flex flex-wrap gap-2">
+        {/* P-163: back where the user came from (from a direct link: the shipment, or Home). A serial waiting for its product
+            code goes on its way first, as when another serial comes (D-66); if that opens a window, the user stays. In the
+            row of the operations, not above it: a row more would take its height from the video (P-155). */}
+        <BackButton iconOnly className="-ml-2 self-center" fallback={shipmentId ? `/shipments/${shipmentId}` : "/"} onBefore={async () => {
+          const p = pendingSerial;
+          if (!p) return true;
+          setPendingSerial(null);
+          return (await proceed(p.code, p.source)) !== "asked";
+        }} />
         {modes.map((m) => (
           <Button key={m} variant={m === mode ? "primary" : "secondary"} size="lg" onClick={() => setParams((p) => { p.set("mode", m); return p; }, { replace: true })} data-testid={`scan-mode-${m}`}>{t(`scan.modes.${m}`)}</Button>
         ))}
