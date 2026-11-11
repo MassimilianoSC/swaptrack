@@ -134,7 +134,7 @@ export default function Items() {
 
       {failed || !items ? <ErrorState message={t("errors.load_failed")} /> : (
         <>
-          <DataTable testId="items-table" rows={items} columns={[
+          <DataTable testId="items-table" rows={items} rowHref={(r) => `/items/${r.id}`} columns={[
             { key: "model", header: t("items.model"), render: (r) => <Link to={`/items/${r.id}`} data-testid={`items-row-link-${r.id}`} className="hover:underline">{r.model ?? "—"}</Link> },
             { key: "material", header: t("items.materialCode"), value: (r) => r.materialCode ?? "—", className: "font-mono" },
             { key: "status", header: t("items.status"), render: (r) => <Badge tone={r.needsModel ? "warning" : "neutral"}>{t(`items.statuses.${r.status}`, { defaultValue: r.status })}</Badge> },

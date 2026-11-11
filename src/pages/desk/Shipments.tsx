@@ -65,7 +65,7 @@ export default function Shipments() {
           {(canTransferWithin || canTransferBetween) && <Button variant="secondary" onClick={() => openCreate("transfer")} data-testid="shipments-new-transfer"><Plus className="h-4 w-4" />{t("shipments.newTransfer")}</Button>}
         </>}
       />
-      <DataTable testId="shipments-table" rows={all} columns={[
+      <DataTable testId="shipments-table" rows={all} rowHref={(s) => `/shipments/${s.id}`} columns={[
         { key: "kind", header: t("shipments.kind"), render: (s) => <Badge>{t(`shipments.kinds.${s.kind}`)}</Badge> },
         { key: "status", header: t("common.status"), render: (s) => <Badge tone={toneFor(s.status) as "warning" | "neutral" | "primary" | "success"}>{t(`shipments.statuses.${s.status}`)}</Badge> },
         { key: "from", header: t("shipments.from"), value: (s) => client || s.fromAspId === claims?.orgId ? names.place(s.fromLocationId) : t("items.anotherOrg") },

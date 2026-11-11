@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Input } from "./ui/form";
 import { Button } from "./ui/button";
@@ -21,11 +22,44 @@ function nodeText(n: React.ReactNode): string {
   return "";
 }
 
+// P-162: what a click on a row leaves to the element it lands on (its own action), not to the row.
+const OWN_ACTION = "a, button, input, select, textarea, label, summary, [role='button'], [role='checkbox'], [role='link'], [contenteditable='true']";
+
 // Desk table: sorting, text filter, pagination (§15).
-export function DataTable<T extends { id: string }>({ rows, columns, testId, toolbar, pageSize = 25, empty }: {
+// P-162: with rowHref, a click anywhere on the row opens its page (Ctrl/Cmd/Shift-click or the middle button: a new tab),
+// like the "Open" link that stays; a click on a control of the row, or that ends a text selection, does not. The row
+// is reached with Tab and opened with Enter. A row whose rowHref gives nothing is a plain row.
+export function DataTable<T extends { id: string }>({ rows, columns, testId, toolbar, pageSize = 25, empty, rowHref }: {
   rows: T[]; columns: Column<T>[]; testId: string; toolbar?: React.ReactNode; pageSize?: number; empty?: React.ReactNode;
+  rowHref?: (row: T) => string | null | undefined;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const ownAction = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    const hit = (e.target as Element).closest?.(OWN_ACTION);
+    return !!hit && e.currentTarget.contains(hit);
+  };
+  const openRow = (href: string, newTab: boolean) => {
+    if (newTab) window.open(href, "_blank", "noopener");
+    else navigate(href);
+  };
+  const rowProps = (href: string): React.HTMLAttributes<HTMLTableRowElement> & { "data-href": string } => ({
+    "data-href": href,
+    tabIndex: 0,
+    onClick: (e) => {
+      if (e.defaultPrevented || ownAction(e)) return;
+      if (window.getSelection()?.toString()) return; // the click that ends a text selection
+      openRow(href, e.ctrlKey || e.metaKey || e.shiftKey);
+    },
+    // The middle button: a new tab, without the browser's scrolling mode.
+    onMouseDown: (e) => { if (e.button === 1 && !ownAction(e)) e.preventDefault(); },
+    onAuxClick: (e) => { if (e.button === 1 && !ownAction(e)) openRow(href, true); },
+    onKeyDown: (e) => {
+      if (e.key !== "Enter" || e.target !== e.currentTarget) return;
+      e.preventDefault();
+      openRow(href, e.ctrlKey || e.metaKey);
+    },
+  });
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [page, setPage] = React.useState(0);
@@ -72,11 +106,15 @@ export function DataTable<T extends { id: string }>({ rows, columns, testId, too
               </tr>
             </thead>
             <tbody>
-              {shown.map((r) => (
-                <tr key={r.id} className="border-t border-border hover:bg-surface-2/50" data-testid={`${testId}-row`}>
-                  {columns.map((c) => <td key={c.key} className={`px-3 py-2 align-middle ${c.className ?? ""}`}>{c.render ? c.render(r) : String(val(c, r) ?? "")}</td>)}
-                </tr>
-              ))}
+              {shown.map((r) => {
+                const href = rowHref?.(r) || null;
+                return (
+                  <tr key={r.id} data-testid={`${testId}-row`} {...(href ? rowProps(href) : {})}
+                    className={`border-t border-border hover:bg-surface-2/50${href ? " cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary" : ""}`}>
+                    {columns.map((c) => <td key={c.key} className={`px-3 py-2 align-middle ${c.className ?? ""}`}>{c.render ? c.render(r) : String(val(c, r) ?? "")}</td>)}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

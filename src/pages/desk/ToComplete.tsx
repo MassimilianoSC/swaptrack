@@ -19,7 +19,7 @@ export default function ToComplete() {
     <div className="space-y-6">
       <PageHeader title={t("items.toComplete")} subtitle={t("items.toCompleteSubtitle")} />
       {items.length === 0 ? <Empty title={t("items.toCompleteEmpty")} /> : (
-        <DataTable testId="to-complete-table" rows={items} columns={[
+        <DataTable testId="to-complete-table" rows={items} rowHref={(r) => `/items/${r.id}`} columns={[
           { key: "code", header: t("items.lastEvent"), value: (r) => r.lastEventId?.slice(0, 8) ?? "—", className: "font-mono text-xs" },
           { key: "status", header: t("items.status"), render: (r) => <Badge>{t(`items.statuses.${r.status}`, { defaultValue: r.status })}</Badge> },
           { key: "loc", header: t("items.location"), value: (r) => r.currentLocationId ?? "—", className: "font-mono text-xs" },

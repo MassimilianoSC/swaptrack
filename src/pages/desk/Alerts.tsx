@@ -70,7 +70,7 @@ export default function Alerts() {
       <PageHeader title={t("nav.alerts")} subtitle={t("alerts.subtitle")}
         actions={<Button variant="ghost" onClick={() => setShowClosed(!showClosed)} data-testid="alerts-toggle-closed">{showClosed ? t("alerts.hideClosed") : t("alerts.showClosed")}</Button>} />
       {list.length === 0 ? <Empty title={t("alerts.empty")} /> : (
-        <DataTable testId="alerts-table" rows={list} columns={[
+        <DataTable testId="alerts-table" rows={list} rowHref={(a) => (link(a) === "#" ? null : link(a))} columns={[
           { key: "kind", header: t("alerts.kind"), render: (a) => <Badge tone={isAlertToWatch(a) ? "warning" : "neutral"}>{t(`alerts.kinds.${a.kind}`, { defaultValue: a.kind })}</Badge> },
           { key: "n", header: t("alerts.count"), value: (a) => hasNoDifferenceNow(a) ? t("alerts.noDifferenceNow") : a.count, className: "tabular",
             render: (a) => hasNoDifferenceNow(a) ? <span className="text-muted" data-testid={`alerts-no-difference-${a.id}`}>{t("alerts.noDifferenceNow")}</span> : <>{a.count}</> },

@@ -25,7 +25,7 @@ export default function Anomalies() {
       <PageHeader title={t("nav.anomalies")} subtitle={t("anomalies.subtitle")}
         actions={<button type="button" onClick={() => setShowResolved(!showResolved)} className="text-sm text-primary hover:underline" data-testid="anomalies-toggle">{showResolved ? t("anomalies.hideResolved") : t("anomalies.showResolved")}</button>} />
       {list.length === 0 ? <Empty title={t("anomalies.empty")} /> : (
-        <DataTable testId="anomalies-table" rows={list} columns={[
+        <DataTable testId="anomalies-table" rows={list} rowHref={(a) => (a.itemId ? `/items/${a.itemId}` : null)} columns={[
           { key: "t", header: t("alerts.kind"), render: (a) => <Badge tone={a.resolution ? "neutral" : "warning"}>{t(`anomalies.types.${a.type}`, { defaultValue: a.type })}</Badge> },
           { key: "loc", header: t("items.location"), value: (a) => names.place(a.locationId) },
           { key: "it", header: t("nav.items"), render: (a) => a.itemId ? <Link to={`/items/${a.itemId}`} className="text-primary hover:underline font-mono text-xs" data-testid={`anomalies-row-item-${a.id}`}>{a.itemId.slice(0, 8)}</Link> : "—" },

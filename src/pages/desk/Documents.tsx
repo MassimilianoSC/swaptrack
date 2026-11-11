@@ -26,7 +26,7 @@ export default function Documents() {
   return (
     <div className="space-y-6">
       <PageHeader title={t("nav.documents")} subtitle={t("documents.subtitle")} actions={canCreate ? <Button asChild><Link to="/documents/new" data-testid="documents-new"><Plus className="h-4 w-4" />{t("documents.new")}</Link></Button> : null} />
-      <DataTable testId="documents-table" rows={all} columns={[
+      <DataTable testId="documents-table" rows={all} rowHref={(r) => `/documents/${r.id}`} columns={[
         { key: "k", header: t("documents.kind"), render: (r) => <Badge>{t(`documents.kinds.${r.kind}`)}</Badge> },
         { key: "n", header: t("documents.number"), value: (r) => r.number, className: "font-mono" },
         { key: "loc", header: t("items.location"), value: (r) => names.place(r.locationId) },
