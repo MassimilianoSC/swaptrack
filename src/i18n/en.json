@@ -604,6 +604,7 @@
     ]
   },
   "users": {
+    "ofOrg": "Users of {{name}}",
     "inviteDone": "Invitation created",
     "linkOnce": "E-mail sending is not configured: copy this link and give it to the person. It is shown only now.",
     "emailSent": "The invitation e-mail has been sent.",
@@ -671,7 +672,9 @@
     "disable": "Disable",
     "enable": "Enable",
     "disableBody": "Disabling {{name}} deactivates all its users.",
-    "enableBody": "{{name}} is enabled again. Its users stay deactivated until you reactivate them."
+    "enableBody": "{{name}} is enabled again. Its users stay deactivated until you reactivate them.",
+    "users": "Users",
+    "userCount": "{{active}} active of {{total}}"
   },
   "locations": {
     "new": "New location",

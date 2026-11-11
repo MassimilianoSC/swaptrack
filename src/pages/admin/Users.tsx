@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { MoreHorizontal, UserPlus } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
@@ -23,11 +24,12 @@ function rolesFor(actorRole: string, orgType: string | undefined) {
   return orgType === "client" ? [...CLIENT_ROLES] : [...ASP_ROLES];
 }
 
-function InviteDialog({ open, onClose, orgs, onDone }: { open: boolean; onClose: () => void; orgs: Row<Organization>[]; onDone: (r: InviteResult) => void }) {
+function InviteDialog({ open, onClose, orgs, onDone, orgId }: { open: boolean; onClose: () => void; orgs: Row<Organization>[]; onDone: (r: InviteResult) => void; orgId?: string }) {
   const { t } = useTranslation();
   const { claims } = useSession();
   const { busy, run } = useAction();
-  const [f, setF] = React.useState({ email: "", firstName: "", lastName: "", language: "it", orgId: claims?.role === "asp_admin" ? claims.orgId! : "", role: "" });
+  // P-180: from the users of one organization, that organization is already chosen (still changeable).
+  const [f, setF] = React.useState({ email: "", firstName: "", lastName: "", language: "it", orgId: claims?.role === "asp_admin" ? claims.orgId! : orgId ?? "", role: "" });
   const org = orgs.find((o) => o.id === f.orgId);
   const roles = rolesFor(claims?.role ?? "", org?.type);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
@@ -112,6 +114,11 @@ export default function UsersPage() {
     ? watchOrganizations(setOrgs)
     : watchDoc<Organization>(`organizations/${claims!.orgId}`, (o) => setOrgs(o ? [o] : []))), [isClientAdmin, claims]);
   const orgName = (id: string) => orgs.find((o) => o.id === id)?.name ?? "—";
+  // P-180: /admin/users?org=… (a row of «Organizations»): the users of that organization only. The client admin only:
+  // the ASP admin's «People» are always its own.
+  const [params] = useSearchParams();
+  const orgFilter = isClientAdmin ? params.get("org") || null : null;
+  const shown = orgFilter && users ? users.filter((u) => u.orgId === orgFilter) : users;
 
   const doAct = async () => {
     const { user, act } = confirm!;
@@ -121,17 +128,18 @@ export default function UsersPage() {
   };
 
   if (error) return <ErrorState message={t("errors.load_failed")} onRetry={() => location.reload()} />;
-  if (!users) return <Loading />;
+  if (!users || !shown) return <Loading />;
   return (
     <div>
-      <PageHeader title={t(isClientAdmin ? "nav.users" : "nav.people")} subtitle={t("users.subtitle")}
+      <PageHeader title={orgFilter ? t("users.ofOrg", { name: orgName(orgFilter) }) : t(isClientAdmin ? "nav.users" : "nav.people")} subtitle={t("users.subtitle")}
+        back={orgFilter ? "/admin/organizations" : undefined}
         actions={<Button onClick={() => setInviting(true)} data-testid="users-invite-button"><UserPlus className="h-4 w-4" /> {t("users.invite")}</Button>} />
-      <DataTable testId="users-table" rows={users}
+      <DataTable testId="users-table" rows={shown}
         empty={<Empty title={t("users.empty")} hint={t("users.emptyHint")} action={<Button onClick={() => setInviting(true)}>{t("users.invite")}</Button>} />}
         columns={[
           { key: "name", header: t("users.name"), value: (u) => `${u.lastName ?? ""} ${u.firstName ?? ""}` },
           { key: "email", header: t("auth.email"), className: "font-mono text-xs" },
-          ...(isClientAdmin ? [{ key: "org", header: t("users.organization"), value: (u: U) => orgName(u.orgId) }] : []),
+          ...(isClientAdmin && !orgFilter ? [{ key: "org", header: t("users.organization"), value: (u: U) => orgName(u.orgId) }] : []),
           { key: "role", header: t("users.role"), value: (u) => t(`roles.${u.role}`) },
           { key: "status", header: t("common.status"), value: (u) => status(u)[0], render: (u) => { const [s, tone] = status(u); return <Badge tone={tone}>{t(`users.status.${s}`)}</Badge>; } },
           // §3.3 (P-117 n.30): the menu only on the rows this admin may manage, as the server decides (canManageUser):
@@ -151,7 +159,7 @@ export default function UsersPage() {
               </MenuContent>
             </Menu>) },
         ]} />
-      <InviteDialog open={inviting} onClose={() => setInviting(false)} orgs={orgs} onDone={setInvite} />
+      <InviteDialog key={orgFilter ?? "all"} open={inviting} onClose={() => setInviting(false)} orgs={orgs} onDone={setInvite} orgId={orgFilter ?? undefined} />
       <InviteResultDialog result={invite} onClose={() => setInvite(null)} />
       <RoleDialog user={roleUser} orgType={orgs.find((o) => o.id === roleUser?.orgId)?.type} onClose={() => setRoleUser(null)} />
       <ConfirmDialog open={!!confirm} busy={busy} danger={confirm?.act !== "reactivate"}

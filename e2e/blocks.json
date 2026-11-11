@@ -30,7 +30,8 @@
         "row-click.desk.spec.ts",
         "back-key-scan.phone.spec.ts",
         "ddt-search.phone.spec.ts",
-        "locations-weak-signal.desk.spec.ts"
+        "locations-weak-signal.desk.spec.ts",
+        "org-users.desk.spec.ts"
       ]
     },
     {

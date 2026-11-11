@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { useAction, useRowAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
-import { watchOrganizations, type Row, type Organization } from "@/lib/data/db";
+import { watchOrganizations, watchUsers, type Row, type Organization } from "@/lib/data/db";
 import { DataTable } from "@/components/DataTable";
 import { Badge, PageHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,20 @@ export default function Organizations() {
   const [invite, setInvite] = React.useState<InviteResult | null>(null);
   const [toggle, setToggle] = React.useState<Row<Organization> | null>(null);
   React.useEffect(() => watchOrganizations(setOrgs, () => setError(true)), []);
+  // P-180: the users of each organization (active / not deleted), counted from the same list the "Users" page reads;
+  // a click on the row opens them (/admin/users?org=…).
+  const [counts, setCounts] = React.useState<Map<string, { active: number; total: number }>>(new Map());
+  React.useEffect(() => watchUsers(null, (users) => {
+    const m = new Map<string, { active: number; total: number }>();
+    for (const u of users) {
+      if (u.deleted) continue;
+      const c = m.get(u.orgId) ?? { active: 0, total: 0 };
+      c.total++; if (u.active) c.active++;
+      m.set(u.orgId, c);
+    }
+    setCounts(m);
+  }), []);
+  const countOf = (id: string) => counts.get(id) ?? { active: 0, total: 0 };
 
   if (error) return <ErrorState message={t("errors.load_failed")} onRetry={() => location.reload()} />;
   if (!orgs) return <Loading />;
@@ -60,7 +74,7 @@ export default function Organizations() {
     <div>
       <PageHeader title={t("nav.organizations")} subtitle={t("orgs.subtitle")}
         actions={<Button onClick={() => setCreating(true)} data-testid="orgs-create-asp-button"><Plus className="h-4 w-4" /> {t("orgs.createAsp")}</Button>} />
-      <DataTable testId="orgs-table" rows={orgs}
+      <DataTable testId="orgs-table" rows={orgs} rowHref={(o) => `/admin/users?org=${encodeURIComponent(o.id)}`}
         empty={<Empty title={t("orgs.empty")} hint={t("orgs.emptyHint")} action={<Button onClick={() => setCreating(true)}>{t("orgs.createAsp")}</Button>} />}
         columns={[
           { key: "name", header: t("orgs.name") },
@@ -70,6 +84,8 @@ export default function Organizations() {
               onChange={(e) => runFor(o.id, () => call("setLanguage", { target: "organization", orgId: o.id, language: e.target.value }), t("common.saved"))}>
               <option value="it">Italiano</option><option value="en">English</option>
             </Select>) },
+          { key: "users", header: t("orgs.users"), className: "tabular", value: (o) => countOf(o.id).total,
+            render: (o) => <span data-testid={`org-users-${o.id}`}>{t("orgs.userCount", countOf(o.id))}</span> },
           { key: "active", header: t("common.status"), value: (o) => (o.active ? 1 : 0), render: (o) => <Badge tone={o.active ? "success" : "danger"}>{t(o.active ? "common.active" : "common.inactive")}</Badge> },
           { key: "actions", header: "", render: (o) => o.type === "asp" && (
             <Button size="sm" variant={o.active ? "danger" : "secondary"} onClick={() => setToggle(o)} data-testid={`org-toggle-${o.id}`}>{t(o.active ? "orgs.disable" : "orgs.enable")}</Button>) },

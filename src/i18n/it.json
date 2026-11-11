@@ -604,6 +604,7 @@
     ]
   },
   "users": {
+    "ofOrg": "Utenti di {{name}}",
     "inviteDone": "Invito creato",
     "linkOnce": "L'invio delle e-mail non è configurato: copia questo link e consegnalo alla persona. Viene mostrato solo ora.",
     "emailSent": "L'e-mail di invito è stata inviata.",
@@ -671,7 +672,9 @@
     "disable": "Disabilita",
     "enable": "Abilita",
     "disableBody": "Disabilitare {{name}} disattiva tutti i suoi utenti.",
-    "enableBody": "{{name}} viene di nuovo abilitata. I suoi utenti restano disattivati finché non li riattivi."
+    "enableBody": "{{name}} viene di nuovo abilitata. I suoi utenti restano disattivati finché non li riattivi.",
+    "users": "Utenti",
+    "userCount": "{{active}} attivi su {{total}}"
   },
   "locations": {
     "new": "Nuovo luogo",
