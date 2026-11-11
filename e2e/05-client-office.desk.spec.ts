@@ -70,21 +70,26 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
   test("export Excel con filtri: ASP Nord nel suo magazzino", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto("/exports");
-    const rowsOf = async (i: number) => Number(await page.getByTestId("exports-table-row").nth(i).locator("td").nth(2).textContent());
-    await page.getByTestId("exports-create").click();
-    await expect(page.getByText(tr("exports.created")).first()).toBeVisible({ timeout: 120_000 });
-    await expect.poll(() => page.getByTestId("exports-table-row").count(), { timeout: 30_000 }).toBeGreaterThan(0);
-    const all = await rowsOf(0);
-    const before = await page.getByTestId("exports-table-row").count();
+    // Every export is told by its id (exports-download-<id>), never by its place in the list: the list is read again
+    // when an export is answered, so an export slow to arrive could be taken for the next one (run of lot 11).
+    const exportIds = () => page.locator("[data-testid^='exports-download-']").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")!.replace("exports-download-", "")));
+    const rowsOf = async (id: string) => Number(await page.getByTestId("exports-table-row").filter({ has: page.getByTestId(`exports-download-${id}`) }).locator("td").nth(2).textContent());
+    const create = async (): Promise<string> => {
+      const before = new Set(await exportIds());
+      await page.getByTestId("exports-create").click();
+      let id = "";
+      await expect.poll(async () => { id = (await exportIds()).find((x) => !before.has(x)) ?? ""; return id; }, { timeout: 150_000 }).not.toBe("");
+      return id;
+    };
+    const all = await rowsOf(await create());
 
     await page.getByTestId("exports-asp").selectOption(SEED.nord.orgId);
     await page.getByTestId("exports-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await page.getByTestId("exports-create").click();
-    await expect.poll(() => page.getByTestId("exports-table-row").count(), { timeout: 120_000 }).toBe(before + 1);
-    const filtered = await rowsOf(0);
+    const filteredId = await create();
+    const filtered = await rowsOf(filteredId);
     expect(filtered).toBeGreaterThan(0);
     expect(filtered).toBeLessThan(all);
-    const download = page.getByTestId("exports-table-row").first().locator("[data-testid^='exports-download-']");
+    const download = page.getByTestId(`exports-download-${filteredId}`);
     const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
     expect((await fileStart(file, 2))).toBe("PK");
   });
