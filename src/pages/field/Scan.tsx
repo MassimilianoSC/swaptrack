@@ -424,6 +424,9 @@ export default function Scan() {
   const [awaitingNext, setAwaitingNext] = React.useState(false);
   const afterCameraReading = () => { if (burstRef.current) ctrl.current?.resume(); else setAwaitingNext(true); };
   const readNext = () => { setAwaitingNext(false); ctrl.current?.resume(); };
+  // P-170: burst turned on while the camera waits for "Read the next" (which burst hides): the camera reads again at
+  // once; before, it stayed paused with no way to restart it but leaving the screen.
+  const changeBurst = (on: boolean) => { setBurst(on); if (on && awaitingNext) readNext(); };
 
   // P-102: a sorting chosen in the confirmation window (one tap) wins over the screen's choices.
   type SortChoice = { categoryId?: string; newClass?: string };
@@ -941,7 +944,7 @@ export default function Scan() {
         <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
         {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
-        <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={setBurst} testId="scan-burst" />
+        <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={changeBurst} testId="scan-burst" />
         <div className="basis-full">
           <Checkbox id="scan-product" label={t("scan.askProduct")} checked={productOn} onChange={setAskProduct} disabled={noCatalog} testId="scan-ask-product" />
           {noCatalog

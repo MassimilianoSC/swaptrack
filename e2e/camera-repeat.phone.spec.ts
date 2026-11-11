@@ -195,6 +195,28 @@ test.describe("Fotocamera — raffica col telefono fermo sul codice (telefono)",
     await frame(page, null);
   });
 
+  // P-170: a reading in single mode (the camera waits for "Read the next"), then burst turned on: the camera reads the
+  // next label by itself. Before, it stayed paused with "Read the next" hidden, until the screen was left.
+  test("una lettura in modalità normale, poi accendo Raffica: la fotocamera legge l'etichetta dopo", async ({ page }) => {
+    test.setTimeout(180_000);
+    const [a, b] = [uniqueCode("R"), uniqueCode("R")];
+    await fakeCamera(page, false);
+    await signIn(page, ACCOUNTS.aspWarehouseNord);
+    await pickLocation(page, SEED.nord.warehouse);
+    await page.goto("/scan?mode=classify");
+    await page.getByTestId("scan-category-select").selectOption("cat_reuse");
+    await expect(page.getByTestId("scan-engine")).toHaveText(tr("scan.engine.native"));
+    await expect(page.getByTestId("scan-burst")).not.toBeChecked();
+    const count = page.getByTestId("scan-session-count");
+    await frame(page, a);
+    await expect(count).toHaveText("1");
+    await expect(page.getByTestId("scan-next")).toBeVisible();
+    await page.getByTestId("scan-burst").check();
+    await frame(page, b);
+    await expect(count).toHaveText("2", { timeout: 10_000 });
+    await frame(page, null);
+  });
+
   // P-102: in "Sort" the confirmation window cancelled with Escape (like the back key) records nothing and the camera
   // reads the next label at once.
   test("Smista: annullare la conferma non ferma la fotocamera", async ({ page }) => {
