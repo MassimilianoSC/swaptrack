@@ -27,7 +27,8 @@
         "scan-button-cover.desk.spec.ts",
         "back-pages.desk.spec.ts",
         "back-scan.phone.spec.ts",
-        "row-click.desk.spec.ts"
+        "row-click.desk.spec.ts",
+        "back-key-scan.phone.spec.ts"
       ]
     },
     {
