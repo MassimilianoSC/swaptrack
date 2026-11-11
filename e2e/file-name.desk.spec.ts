@@ -23,7 +23,7 @@ test.describe("Nome originale dei file dei documenti (scrivania)", () => {
     await page.reload();
     const file = page.getByTestId("document-file").filter({ hasText: name });
     await expect(file).toHaveCount(1, { timeout: 30_000 });
-    await file.getByRole("button", { name }).click();
+    await file.getByRole("button", { name, exact: true }).click(); // not «Remove <name>»
     const download = page.getByTestId("document-preview-download");
     await expect(download).toBeVisible({ timeout: 30_000 });
     const [saved] = await Promise.all([page.waitForEvent("download"), download.click()]);
