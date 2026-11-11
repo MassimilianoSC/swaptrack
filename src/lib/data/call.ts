@@ -3,6 +3,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "./firebase";
 import { OPERATIONS, type OpName } from "@shared/operations";
 import { dropUndefined } from "./dropUndefined";
+import { opErrorCode } from "./opErrorCode";
 
 export class OpError extends Error {
   constructor(public code: string) { super(code); }
@@ -17,11 +18,7 @@ export async function call<T = unknown>(op: OpName, data: unknown = {}): Promise
     const res = await httpsCallable(functions, OPERATIONS[op], { timeout: CALL_TIMEOUT_MS })({ op, data: dropUndefined(data) });
     return res.data as T;
   } catch (e) {
-    const err = e as { code?: string; message?: string };
-    // Server errors carry a code in the message (functions/src/core/errors.ts).
-    const code = err.code === "functions/unavailable" || err.code === "functions/internal" && !navigator.onLine
-      ? "offline"
-      : /^[a-z_]+$/.test(err.message ?? "") ? err.message! : "unexpected";
-    throw new OpError(code);
+    // Server errors carry a code in the message (functions/src/core/errors.ts); P-181: read with opErrorCode.
+    throw new OpError(opErrorCode(e as { code?: string; message?: string }, navigator.onLine));
   }
 }

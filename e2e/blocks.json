@@ -31,7 +31,8 @@
         "back-key-scan.phone.spec.ts",
         "ddt-search.phone.spec.ts",
         "locations-weak-signal.desk.spec.ts",
-        "org-users.desk.spec.ts"
+        "org-users.desk.spec.ts",
+        "server-error-text.desk.spec.ts"
       ]
     },
     {
