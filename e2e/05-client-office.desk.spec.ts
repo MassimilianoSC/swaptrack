@@ -75,6 +75,9 @@ test.describe("Percorso 5 — ufficio cliente (computer)", () => {
     const exportIds = () => page.locator("[data-testid^='exports-download-']").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")!.replace("exports-download-", "")));
     const rowsOf = async (id: string) => Number(await page.getByTestId("exports-table-row").filter({ has: page.getByTestId(`exports-download-${id}`) }).locator("td").nth(2).textContent());
     const create = async (): Promise<string> => {
+      // The button is there only once the list is loaded, and enabled when no export is running: the ids before are
+      // then the ones of the list, not of a page still loading.
+      await expect(page.getByTestId("exports-create")).toBeEnabled({ timeout: 150_000 });
       const before = new Set(await exportIds());
       await page.getByTestId("exports-create").click();
       let id = "";
