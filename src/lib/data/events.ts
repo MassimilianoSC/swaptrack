@@ -43,7 +43,12 @@ export const rejectedScanCount = () => rejected.length;
 
 // R11: only the author's own events of today. `ddtId` (payload) serves the live DDT comparison on the device (§12.2).
 // P-189: shipmentId (payload), for the pieces of an incoming transfer read on this phone.
-export interface MyScan { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null; shipmentId?: string | null }
+// P-188: the model the reading itself gives (picked in the window: payload.modelId; the product code read after the
+// serial: secondCodeRaw), for the quantity lines of the BOM and of the DDT.
+export interface MyScan {
+  id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null; shipmentId?: string | null;
+  modelId?: string | null; secondCodeRaw?: string | null;
+}
 export function watchMyScansToday(uid: string, cb: (rows: MyScan[]) => void) {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const q = query(collection(db, "events"), where("userId", "==", uid), where("scannedAt", ">=", Timestamp.fromDate(start)), orderBy("scannedAt", "desc"));
@@ -51,6 +56,7 @@ export function watchMyScansToday(uid: string, cb: (rows: MyScan[]) => void) {
     id: d.id, type: d.get("type"), codeRaw: d.get("codeRaw"), at: (d.get("scannedAt") as Timestamp).toDate(), pending: d.metadata.hasPendingWrites, voided: d.get("voided"),
     locationId: d.get("locationId"), ddtId: (d.get("payload") as { ddtId?: string } | undefined)?.ddtId ?? null,
     shipmentId: (d.get("payload") as { shipmentId?: string } | undefined)?.shipmentId ?? null,
+    modelId: (d.get("payload") as { modelId?: string } | undefined)?.modelId ?? null, secondCodeRaw: d.get("secondCodeRaw") ?? null,
   }))), () => cb([]));
 }
 
@@ -103,6 +109,19 @@ export async function cachedItemForCode(raw: string, onLate?: (item: Record<stri
     })().catch(() => undefined); // no network: no late answer
   }
   return result;
+}
+
+// P-188: the model of a piece as the phone's copy knows it (never the server: called for every reading of a list). The
+// copy carries the colleagues' work once synced, and this phone's pieces once the server has made them.
+export async function cachedModelOfCode(raw: string): Promise<{ modelId: string | null; materialCode: string | null } | null> {
+  try {
+    const code = await getDocFromCache(doc(db, "codes", await computeCodeId(raw)));
+    const itemId = code.exists() ? (code.get("itemId") as string | undefined) : undefined;
+    if (!itemId) return null;
+    const it = await getDocFromCache(doc(db, "items", itemId));
+    if (!it.exists() || it.get("needsModel")) return null;
+    return { modelId: (it.get("modelId") as string | undefined) ?? null, materialCode: (it.get("materialCode") as string | undefined) ?? null };
+  } catch { return null; }
 }
 
 // b7: one query per collection on the ASP's items and codes (current or pending ASP), at sign-in and resume.

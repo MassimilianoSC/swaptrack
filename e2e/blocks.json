@@ -39,7 +39,8 @@
         "admin-log-text.desk.spec.ts",
         "return-late-confirm.desk.spec.ts",
         "transfer-arrival-list.phone.spec.ts",
-        "exports-reports-tabs.desk.spec.ts"
+        "exports-reports-tabs.desk.spec.ts",
+        "bom-quantities.phone.spec.ts"
       ]
     },
     {

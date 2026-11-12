@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Flashlight, Sun, Undo2, Volume2, VolumeX, Camera, Check, AlertTriangle, Sparkles, ChevronDown } from "lucide-react";
 import { useSession } from "@/app/session";
 import { startScanner } from "@/lib/scanner/engine.js";
-import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type CachedBom, type RejectedScan } from "@/lib/data/events";
+import { writeEvent, watchMyScansToday, isProductCode, cachedItemForCode, cachedModelOfCode, loadSorting, cachedBomForSite, cachedOpenDdtsForWarehouse, watchRejectedScans, type Category, type Source, type MyScan, type CachedDdt, type CachedBom, type RejectedScan } from "@/lib/data/events";
 import { listModels, watchDoc, loadFieldLocations, type Row, type Model, type Location } from "@/lib/data/db";
 import { enqueuePhoto, flushQueue, listLost, dropLost } from "@/lib/offline/photoQueue";
 import { computeCodeId, normalizeBarcode } from "@/lib/codeId.js";
@@ -18,7 +18,8 @@ import { Input, Select, Checkbox, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Empty } from "@/components/states";
 import { BackButton } from "@/components/BackButton";
-import { ExpectedChip, ExpectedSection, type ExpectedListProps } from "@/components/scan/ExpectedList";
+import { ExpectedChip, ExpectedSection, QuantityRow, expectedProgress, type ExpectedListProps, type QuantityItem } from "@/components/scan/ExpectedList";
+import { quantityRows, type QtyReading, type QtyRow } from "@/lib/scan/quantities";
 import { watchLines, type ShipmentLine } from "@/lib/data/shipments";
 import { toast } from "sonner";
 import { useOnline } from "@/app/hooks";
@@ -260,6 +261,33 @@ export default function Scan() {
   const [bomLines, setBomLines] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [bomTicks, setBomTicks] = React.useState<Set<string>>(new Set());
   const [bomUnexpected, setBomUnexpected] = React.useState<string[]>([]);
+  // P-188: the quantity lines of the BOM and of the chosen DDT, counted on this phone's readings (quantities.ts).
+  // D-79: with quantity lines, also the pieces not expected come from the comparison (unexpected; null: none).
+  type QtyState = { rows: QtyRow[]; unexpected: string[] | null };
+  const NO_QTY: QtyState = { rows: [], unexpected: null };
+  const [bomQty, setBomQty] = React.useState<QtyState>(NO_QTY);
+  const [ddtQty, setDdtQty] = React.useState<QtyState>(NO_QTY);
+  const modelsRef = React.useRef(models);
+  modelsRef.current = models;
+  // The model a reading gives: picked in the window, read as a product code after the serial, else the piece as the
+  // phone's copy knows it (none: not counted, as the server's "model unknown").
+  const withModels = async (readings: MyScan[]): Promise<QtyReading[]> => {
+    const out: QtyReading[] = [];
+    for (const s of readings) {
+      const codeId = await computeCodeId(s.codeRaw!);
+      const byId = s.modelId ? modelsRef.current.find((m) => m.id === s.modelId) : undefined;
+      const bySecond = !byId && s.secondCodeRaw ? modelsRef.current.find((m) => normalizeBarcode(m.materialCode) === normalizeBarcode(s.secondCodeRaw!)) : undefined;
+      const model = byId || bySecond ? { modelId: (byId ?? bySecond)!.id, materialCode: (byId ?? bySecond)!.materialCode } : await cachedModelOfCode(s.codeRaw!);
+      out.push({ type: s.type, codeId, codeRaw: s.codeRaw!, modelId: model?.modelId ?? null, materialCode: model?.materialCode ?? null, ddtId: s.ddtId ?? null });
+    }
+    return out;
+  };
+  // Serial lines get their codeId (the comparison matches on it).
+  const withCodeIds = async (lines: Array<Record<string, unknown>>) => Promise.all(lines.map(async (l) => (l.kind === "serial" && l.codeRaw && !l.codeId ? { ...l, codeId: await computeCodeId(l.codeRaw as string) } : l)));
+  const qtyItems = (rows: QtyRow[]): QuantityItem[] => rows.map((q) => {
+    const m = models.find((x) => (q.modelId && x.id === q.modelId) || (q.materialCode && normalizeBarcode(x.materialCode) === normalizeBarcode(q.materialCode)));
+    return { key: q.key, label: [q.materialCode ?? m?.materialCode, m?.model].filter(Boolean).join(" · ") || "—", expected: q.expected, counted: q.counted };
+  });
 
   // P-189: the arrival of a transfer opened from it: its pieces, ticked as they arrive here (this phone's readings at
   // once, offline too; the colleagues' through the server's arrivedAt). Lines from the phone's copy when offline.
@@ -356,10 +384,15 @@ export default function Scan() {
   // warehouse joined with the DDT lines, with the server's rule (§11.3): an arrival counts for the DDT if it carries
   // its ddtId or its code is one of its serial lines; unexpected = carries the ddtId but is not a line.
   React.useEffect(() => {
-    if (!ddtId || !location) { setDdtTicks(new Set()); setDdtUnexpected([]); return; }
+    if (!ddtId || !location) { setDdtTicks(new Set()); setDdtUnexpected([]); setDdtQty(NO_QTY); return; }
     const expectedSet = new Set(ddtExpected.map((e) => e.codeId));
     const relevant = today.filter((s) => !s.voided && s.type === "arrive_at_warehouse" && s.codeRaw && s.locationId === location.id);
     let aborted = false;
+    (async () => {
+      const lines = ddts.find((x) => x.id === ddtId)?.lines ?? [];
+      const qty = lines.some((l) => l.kind === "quantity") ? quantityRows("ddt_in", ddtId, await withCodeIds(lines), await withModels(relevant)) : NO_QTY;
+      if (!aborted) setDdtQty(qty);
+    })();
     (async () => {
       const ticks = new Set<string>();
       const unexpected: string[] = [];
@@ -373,7 +406,7 @@ export default function Scan() {
       setDdtTicks(ticks); setDdtUnexpected(unexpected);
     })();
     return () => { aborted = true; };
-  }, [ddtId, ddtExpected, today, location]);
+  }, [ddtId, ddts, ddtExpected, today, location, models]);
 
   // §12.1: load the BOM of the current site (if any) from the ASP cache; direction filters the lines shown.
   React.useEffect(() => {
@@ -400,11 +433,17 @@ export default function Scan() {
   // §12.1: ticks are computed on the device from the user's own events (local, including pending writes).
   // Joined with the BOM's expected codeIds; anything not expected goes to the unexpected list.
   React.useEffect(() => {
-    if (!bom || !bomDirection || !location) { setBomTicks(new Set()); setBomUnexpected([]); return; }
+    if (!bom || !bomDirection || !location) { setBomTicks(new Set()); setBomUnexpected([]); setBomQty(NO_QTY); return; }
     // P-115 (n.4): only the readings at this site since the BOM exists, like the server's check (bomCheck.ts).
     const relevant = today.filter((s) => !s.voided && s.type === mode && s.codeRaw && s.locationId === location.id && s.at.getTime() >= bom.createdAtMs);
     const expectedSet = new Set(bom.expected.map((e) => e.codeId));
     let aborted = false;
+    (async () => {
+      const lines = bomLines ?? [];
+      const qty = lines.some((l) => l.kind === "quantity" && l.direction === bomDirection)
+        ? quantityRows("bom", bom.id, await withCodeIds(lines), await withModels(relevant), bomDirection) : NO_QTY;
+      if (!aborted) setBomQty(qty);
+    })();
     (async () => {
       const ticks = new Set<string>();
       const unexpected: string[] = [];
@@ -418,7 +457,7 @@ export default function Scan() {
       setBomTicks(ticks); setBomUnexpected(unexpected);
     })();
     return () => { aborted = true; };
-  }, [bom, bomDirection, mode, today, location]);
+  }, [bom, bomLines, bomDirection, mode, today, location, models]);
 
   // full: how long the message covers the video (the camera reads again then); total: how long it stays, null = until the
   // serial waiting for its product code is dealt with.
@@ -500,11 +539,15 @@ export default function Scan() {
   const placeName = (id: string | null) => { const l = id && id === location?.id ? location : places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
   // The lists of the pieces this screen expects (ExpectedList): the site's BOM (§12.1, P-175) and the incoming transfer
   // (P-189).
+  const bomLinesShown = bom ? bom.expected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: bomTicks.has(l.codeId) })) : [];
+  const bomQtyShown = qtyItems(bomQty.rows);
+  const bomUnexpectedShown = bomQty.unexpected ?? bomUnexpected;
+  const bomProgress = expectedProgress(bomLinesShown, bomQtyShown);
   const bomList: ExpectedListProps | null = bom && bomDirection ? {
-    testId: "scan-bom", chip: t("scan.bom.chip", { done: bomTicks.size, total: bom.expected.length }), title: t("scan.bom.title"),
+    testId: "scan-bom", chip: t("scan.bom.chip", { done: bomProgress.done, total: bomProgress.total }), title: t("scan.bom.title"),
     name: bom.number, subtitle: t(`scan.bom.direction.${bomDirection}`), noLines: t("scan.bom.noLines"),
-    lines: bom.expected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: bomTicks.has(l.codeId) })),
-    unexpected: bomUnexpected, unexpectedTitle: t("scan.bom.unexpectedTitle", { count: bomUnexpected.length }),
+    lines: bomLinesShown, quantities: bomQtyShown,
+    unexpected: bomUnexpectedShown, unexpectedTitle: t("scan.bom.unexpectedTitle", { count: bomUnexpectedShown.length }),
   } : null;
   const transferDone = transferLines.filter((l) => l.arrived || transferRead.codeIds.has(l.codeId)).length;
   const transferList: ExpectedListProps | null = transferArrival && shipmentDoc ? {
@@ -895,6 +938,10 @@ export default function Scan() {
   const todayRows = today.filter((s) => s.type !== "void");
   const counted = session.filter((s) => !s.here).length;
   const selectedDdt = ddtApplies ? ddts.find((d) => d.id === ddtId) ?? null : null;
+  // P-188: serials and quantity lines together.
+  const ddtQtyShown = qtyItems(ddtQty.rows);
+  const ddtUnexpectedShown = ddtQty.unexpected ?? ddtUnexpected;
+  const ddtProgress = expectedProgress(ddtExpected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: ddtTicks.has(l.codeId) })), ddtQtyShown);
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
@@ -1037,14 +1084,14 @@ export default function Scan() {
       </section>
       {selectedDdt && (
         <details className="rounded border border-border px-3" data-testid="scan-ddt-section">
-          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-ddt-toggle">{t("scan.ddt.title", { number: selectedDdt.number })} · <span className="tabular" data-testid="scan-ddt-progress">{ddtTicks.size}/{ddtExpected.length}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
+          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-ddt-toggle">{t("scan.ddt.title", { number: selectedDdt.number })} · <span className="tabular" data-testid="scan-ddt-progress">{ddtProgress.done}/{ddtProgress.total}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
           <div className="pb-3">
           <p className="flex flex-wrap gap-4 text-sm tabular">
-            <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtTicks.size}</span> {t("scan.ddt.arrived")}</span>
-            <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtExpected.length - ddtTicks.size}</span> {t("scan.ddt.missing")}</span>
-            <span><span className="text-xl font-bold" data-testid="scan-ddt-unexpected">{ddtUnexpected.length}</span> {t("scan.ddt.unexpected")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtProgress.done}</span> {t("scan.ddt.arrived")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtProgress.total - ddtProgress.done}</span> {t("scan.ddt.missing")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-unexpected">{ddtUnexpectedShown.length}</span> {t("scan.ddt.unexpected")}</span>
           </p>
-          {ddtExpected.length === 0 ? (
+          {ddtExpected.length === 0 && ddtQtyShown.length === 0 ? (
             <p className="text-sm text-muted mt-2">{t("scan.ddt.noLines")}</p>
           ) : (
             <ul className="mt-2 max-h-36 overflow-y-auto space-y-1 text-xs font-mono" data-testid="scan-ddt-lines">
@@ -1057,11 +1104,12 @@ export default function Scan() {
                   </li>
                 );
               })}
+              {ddtQtyShown.map((q) => <QuantityRow key={q.key} q={q} testId="scan-ddt-qty" className="border-b border-border py-1" />)}
             </ul>
           )}
-          {ddtUnexpected.length > 0 && (
+          {ddtUnexpectedShown.length > 0 && (
             <ul className="mt-2 space-y-1 text-xs font-mono text-warning" data-testid="scan-ddt-unexpected-list">
-              {ddtUnexpected.map((c) => <li key={c} className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" aria-hidden /><span className="truncate">{c}</span> {t("scan.ddt.unexpected")}</li>)}
+              {ddtUnexpectedShown.map((c) => <li key={c} className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" aria-hidden /><span className="truncate">{c}</span> {t("scan.ddt.unexpected")}</li>)}
             </ul>
           )}
           </div>
