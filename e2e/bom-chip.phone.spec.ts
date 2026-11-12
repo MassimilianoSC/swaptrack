@@ -6,19 +6,21 @@ import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr } from "./helpers";
 // is a band at the top. Own BOM (E2E- serials) of SITO-00010, a Nord site no other test uses.
 const SITE = "SITO-00010";
 
-async function ownBom(browser: Browser, lines: string): Promise<void> {
+async function ownBom(browser: Browser, lines: string): Promise<string> {
   const { baseURL, locale } = test.info().project.use;
   const ctx = await browser.newContext({ baseURL, locale });
   const admin = await ctx.newPage();
   await signIn(admin, ACCOUNTS.aspAdminNord);
   await admin.goto("/documents/new");
   await admin.getByTestId("document-kind").selectOption("bom");
-  await admin.getByTestId("document-number").fill(uniqueCode("BOMC"));
+  const number = uniqueCode("BOMC");
+  await admin.getByTestId("document-number").fill(number);
   await admin.getByTestId("document-location").selectOption(`loc_${SITE}`);
   await admin.getByTestId("document-lines-remove").fill(lines);
   await admin.getByTestId("document-save-new").click();
   await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
   await ctx.close();
+  return number;
 }
 async function type(page: Page, code: string): Promise<void> {
   await page.getByTestId("scan-manual-input").fill(code);
@@ -29,7 +31,7 @@ test.describe("BOM in alto nella schermata di lettura (telefono)", () => {
   test("il riepilogo sul video apre l'elenco dei pezzi, che si spunta leggendo; sparisce durante la fascia", async ({ page, browser }) => {
     test.setTimeout(240_000);
     const [a, b] = [uniqueCode("BC"), uniqueCode("BC")];
-    await ownBom(browser, `${a} MC400100\n${b} MC400100`);
+    const number = await ownBom(browser, `${a} MC400100\n${b} MC400100`);
     await signIn(page, ACCOUNTS.aspTechnicianNord);
     await pickLocation(page, SITE);
     await page.goto("/scan?mode=remove_at_site");
@@ -43,6 +45,9 @@ test.describe("BOM in alto nella schermata di lettura (telefono)", () => {
     await chip.click();
     const overlay = page.getByTestId("scan-bom-overlay");
     await expect(overlay).toContainText(tr("scan.bom.direction.remove"));
+    // P-185: the BOM is called by its number (it was the id of its document), on the video and in the list below.
+    await expect(overlay).toContainText(number);
+    await expect(page.getByTestId("scan-bom-toggle")).toContainText(number);
     await expect(overlay).toContainText(a);
     await expect(overlay).toContainText(b);
     await expect(page.getByTestId("scan-bom-overlay-done")).toHaveCount(0);

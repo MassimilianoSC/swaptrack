@@ -78,13 +78,15 @@ function tone(c: AudioContext, frequency: number, at: number, length: number) {
   o.start(c.currentTime + at);
   o.stop(c.currentTime + at + length);
 }
-function beep(kind: "first" | "ok" | "warn", muted: boolean) {
+// P-183: "alarm" (red): three falling notes, told apart from the two equal low tones of yellow (they sounded the same).
+function beep(kind: "first" | "ok" | "warn" | "alarm", muted: boolean) {
   if (muted) return;
   const c = audioContext();
   if (!c) return;
   try {
     if (kind === "first") tone(c, 1200, 0, 0.08);
     else if (kind === "ok") tone(c, 1200, 0, 0.12);
+    else if (kind === "alarm") { tone(c, 880, 0, 0.1); tone(c, 660, 0.13, 0.1); tone(c, 440, 0.26, 0.2); }
     else { tone(c, 440, 0, 0.12); tone(c, 440, 0.18, 0.12); }
   } catch { /* no audio */ }
 }
@@ -252,7 +254,7 @@ export default function Scan() {
 
   // §12.1 point 4: BOM tick list for the technician scan screen. Direction derived from mode.
   const bomDirection: "remove" | "install" | null = mode === "remove_at_site" ? "remove" : mode === "install_at_site" ? "install" : null;
-  const [bom, setBom] = React.useState<{ id: string; expected: Array<{ codeRaw: string; codeId: string }>; createdAtMs: number } | null>(null);
+  const [bom, setBom] = React.useState<{ id: string; number: string | null; expected: Array<{ codeRaw: string; codeId: string }>; createdAtMs: number } | null>(null);
   const [bomLines, setBomLines] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [bomTicks, setBomTicks] = React.useState<Set<string>>(new Set());
   // P-175: the BOM list opened from its summary on the video.
@@ -356,7 +358,7 @@ export default function Scan() {
         const cid = l.codeId || (await computeCodeId(l.codeRaw));
         expected.push({ codeRaw: l.codeRaw, codeId: cid });
       }
-      if (!aborted) setBom({ id: b.id, expected, createdAtMs: b.createdAtMs });
+      if (!aborted) setBom({ id: b.id, number: b.number, expected, createdAtMs: b.createdAtMs });
     };
     void cachedBomForSite(location.id, claims.orgId, (b) => void take(b)).then(take);
     return () => { aborted = true; };
@@ -393,7 +395,7 @@ export default function Scan() {
     setDecoded(null);
     log.end(tone === "ok" ? "green" : tone === "warn" ? "yellow" : "red");
     // P-155: a reading already signalled when it was seen is not signalled again when it goes well.
-    if (tone !== "ok") beep("warn", muted);
+    if (tone !== "ok") beep(tone === "danger" ? "alarm" : "warn", muted);
     else if (!firstSignalled.current) {
       beep("ok", muted);
       navigator.vibrate?.(80); // no vibration API on iOS Safari: sound + flash
@@ -937,6 +939,7 @@ export default function Scan() {
             </button>
             {bomOpen && (
               <div className="absolute inset-x-2 top-9 max-h-[70%] overflow-y-auto rounded bg-black/80 p-2 text-white" data-testid="scan-bom-overlay">
+                {bom.number && <p className="truncate font-mono text-xs font-semibold" data-testid="scan-bom-overlay-number">{bom.number}</p>}
                 <p className="mb-1 text-xs">{t(`scan.bom.direction.${bomDirection}`)}</p>
                 {bom.expected.length === 0 ? <p className="text-xs">{t("scan.bom.noLines")}</p> : (
                   <ul className="space-y-1 font-mono text-xs">
@@ -1078,7 +1081,8 @@ export default function Scan() {
         <details data-testid="scan-bom-section" className="rounded border border-border px-3">
           <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-bom-toggle">
             {t("scan.bom.title")} · <span className="tabular" data-testid="scan-bom-count">{bomTicks.size}/{bom.expected.length}</span>
-            <span className="text-xs text-muted font-mono font-normal">{bom.id.slice(0, 8)}</span>
+            {/* P-185: the BOM's number (it showed the document id). */}
+            {bom.number && <span className="min-w-0 truncate text-xs text-muted font-mono font-normal" data-testid="scan-bom-number">{bom.number}</span>}
             <ChevronDown className="ml-auto h-5 w-5" aria-hidden />
           </summary>
           <div className="pb-3">

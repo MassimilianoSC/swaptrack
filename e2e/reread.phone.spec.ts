@@ -66,6 +66,33 @@ test.describe("Rilettura di un pezzo (telefono)", () => {
     await expect(row).toContainText(tr("scan.sent"), { timeout: 60_000 });
   });
 
+  // P-182 (COLLAUDO B15): the step as the tester does it. The technician removes A at a site in "Remove", leaves "Scan"
+  // inside the app (no reload), opens it again from its button, same operation and place, and reads A again.
+  test("tecnico in «Smonta»: uscito e rientrato in Leggi dall'app, la rilettura di A dà «già qui»", async ({ page }) => {
+    test.setTimeout(240_000);
+    const a = uniqueCode("RT");
+    await signIn(page, ACCOUNTS.aspTechnicianNord);
+    await pickLocation(page, SEED.nord.site);
+    await page.getByTestId("scan-fab").click();
+    await page.getByTestId("scan-mode-remove_at_site").click();
+    await scanManual(page, a, { withModel: true });
+    await expect(page.getByTestId("scan-session-row").filter({ hasText: a })).toContainText(tr("scan.sent"), { timeout: 60_000 });
+    await expect.poll(async () => (await emulatorFindOne("codes", { raw: a }))?.itemId ?? null, { timeout: 90_000 }).not.toBeNull();
+
+    await page.getByTestId("topbar-logo").click();
+    await expect(page).not.toHaveURL(/\/scan/);
+    await page.getByTestId("scan-fab").click();
+    await page.getByTestId("scan-mode-remove_at_site").click();
+    await expect(page.getByTestId("scan-session-row")).toHaveCount(0);
+    await type(page, a);
+    const flash = page.getByTestId("scan-flash");
+    await expect(flash).toContainText(head("scan.alreadyHere", a));
+    await expect(flash).toContainText(SEED.nord.site);
+    await expect(flash).toHaveAttribute("data-tone", "warn");
+    await expect(page.getByTestId("scan-session-count")).toHaveText("0");
+    await expect(page.getByTestId("scan-session-row").filter({ hasText: a }).getByTestId("scan-session-here")).toHaveText(tr("scan.alreadyHereRow"));
+  });
+
   // P-157 (D-73), P-165 (D-75): a warning stays 8 s, long enough to be read by someone who has never seen it; green stays
   // short; "to sort later" stays 8 s; "Now read the product code" stays while the serial waits for it.
   test("il giallo resta 8 secondi; il verde resta breve; «Ora leggi il codice prodotto» resta finché serve", async ({ page }) => {

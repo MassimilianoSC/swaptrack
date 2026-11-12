@@ -158,13 +158,14 @@ export async function cachedOpenDdtsForWarehouse(locationId: string, orgId: stri
 }
 
 // §12.1: BOM for a site, open or checked, highest version (server first, briefly, else the cache: P-78).
-export interface CachedBom { id: string; lines: Array<Record<string, unknown>>; createdAtMs: number }
+// P-185: number, the BOM's own name (as written by whoever saved it); the screen showed the document id instead.
+export interface CachedBom { id: string; number: string | null; lines: Array<Record<string, unknown>>; createdAtMs: number }
 const newestBom = (snap: QuerySnapshot): CachedBom | null => {
   const docs = snap.docs.filter((d) => ["open", "checked"].includes(d.get("status") as string));
   if (!docs.length) return null;
   docs.sort((a, b) => (b.get("version") ?? 0) - (a.get("version") ?? 0));
   const d = docs[0];
-  return { id: d.id, lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [], createdAtMs: (d.get("createdAt") as Timestamp | null)?.toMillis?.() ?? 0 };
+  return { id: d.id, number: (d.get("number") as string | undefined) || null, lines: (d.get("lines") as Array<Record<string, unknown>>) ?? [], createdAtMs: (d.get("createdAt") as Timestamp | null)?.toMillis?.() ?? 0 };
 };
 export async function cachedBomForSite(locationId: string, orgId: string, onLate?: (bom: CachedBom | null) => void): Promise<CachedBom | null> {
   try {

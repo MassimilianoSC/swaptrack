@@ -38,6 +38,7 @@ const contexts = (page: Page) => page.evaluate(() => (window as unknown as { __c
 const greens = (page: Page) => page.evaluate(() => (window as unknown as { __greens: string[] }).__greens);
 const SEEN = 1200;
 const LOOK = 440;
+const ALARM = [880, 660, 440];
 const PRODUCT = "MC400100"; // the material code of RX-100 in the seed catalog
 
 const slowServer = (page: Page) => page.route((url) => url.pathname.includes("google.firestore"), async (r) => {
@@ -136,7 +137,8 @@ test.describe("Primo segnale alla lettura (telefono)", () => {
     await type(page, code);
     const flash = page.getByTestId("scan-flash");
     await expect(flash).toHaveAttribute("data-tone", "danger");
-    expect((await tones(page)).slice(from)).toEqual([SEEN, LOOK, LOOK]);
+    // P-183: red has its own sound (three falling notes), not the two equal tones of yellow.
+    expect((await tones(page)).slice(from)).toEqual([SEEN, ...ALARM]);
     await expect(page.getByTestId("scan-session-row")).toHaveCount(0);
     expect(await greens(page)).toEqual(greensBefore);
   });
