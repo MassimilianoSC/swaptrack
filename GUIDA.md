@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit c68ce4e · Testo della guida: sha 3bec31860e3a · Data: 12/11/2026
+App descritta: commit 840e1d2 · Testo della guida: sha be8531a369a2 · Data: 12/11/2026
 
 ## Come usare questa guida
 
@@ -406,11 +406,11 @@ Poi registra l'arrivo:
 
 I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare». Anche un pezzo che è in un altro DDT aperto del tuo magazzino, che non hai scelto, non apre la finestra, purché quel DDT dica il modello.
 
-Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Le righe senza numero di serie del DDT compaiono nella lista come «MC400107 · BB-101 2/3» (letti su attesi) e contano negli «arrivati». Se vedi «Il DDT non ha righe con numero di serie.», il DDT non ha righe da spuntare.
+Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Le righe senza numero di serie del DDT compaiono nella lista come «MC400107 · BB-101 2/3» (letti su attesi) con il loro conteggio; «arrivati» e «mancanti», e il numero della riga, contano solo i pezzi con numero di serie, come in «Documenti». Se vedi «Il DDT non ha righe con numero di serie.», il DDT non ha righe da spuntare.
 
 Infine, controlla e chiudi il confronto:
 1. Apri «Documenti» e premi «Apri» sul DDT.
-2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», sotto ogni numero l'elenco dei codici e, per le quantità, contati/attesi. Un pezzo che ha la sua riga col numero di serie non conta anche nella riga a quantità; i pezzi senza seriale attesi da una riga a quantità non sono «Non attesi» (lo diventano solo quelli in più).
+2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», sotto ogni numero l'elenco dei codici e, per le quantità, una riga come «MC400170 (PSU-110): 0/3» (codice materiale, modello, contati/attesi; nella BOM anche «da smontare» o «da installare»). Un pezzo che ha la sua riga col numero di serie non conta anche nella riga a quantità; i pezzi senza seriale attesi da una riga a quantità non sono «Non attesi» (lo diventano solo quelli in più).
 3. Quando l'arrivo è completo, premi «Segna verificato». Vedi «Segnato verificato».
 
 Da sapere: dopo «Segna verificato» il DDT non compare più nella tendina «DDT» del telefono. Se qualcosa non torna, l'app crea un avviso «DDT (arrivo) differenza» (vedi «Avvisi»).
@@ -631,7 +631,7 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 2. Controlla il «Riepilogo» (pezzi, «Numero DDT») e le «Righe».
 3. Premi «Conferma». Leggi «Togli la spunta ai pezzi mancanti. Aggiungi pezzi in più digitando il codice.»
 4. In «Pezzi attesi» sono tutti spuntati: togli la spunta ai pezzi che **non** sono arrivati.
-5. Se sono arrivati pezzi che non erano nella lista, scrivi il codice in «Pezzi in più» («Scrivi un codice e premi Invio») e premi «Aggiungi». Per togliere un codice aggiunto per errore premi «×».
+5. Se sono arrivati pezzi che non erano nella lista, scrivi il codice in «Pezzi in più» («Scrivi un codice e premi Invio») e premi «Aggiungi». Per togliere un codice aggiunto per errore premi «×». Se scrivi qui il codice di un pezzo che è nella lista del reso, vale come conferma di quel pezzo, non come pezzo in più.
 6. Premi «Conferma». Vedi «Confermata».
 
 Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e il riepilogo dice «Completa: Sì» o «No». Se mancano pezzi o ce ne sono in più, l'app crea l'avviso «DDT (reso) differenza», con i codici, e il reso risulta «Confermata con differenze» (anche nell'elenco delle spedizioni). I pezzi in più si vedono nella scheda, in «Pezzi in più», con «Apri».

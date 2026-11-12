@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit c68ce4e · Guide text: sha 8d1c01c319d9 · Date: 12/11/2026
+App described: commit 840e1d2 · Guide text: sha 338dd40ae9cf · Date: 12/11/2026
 
 ## How to use this guide
 
@@ -406,11 +406,11 @@ Then record the arrival:
 
 The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete». A piece that is in another open DDT of your warehouse, one you did not choose, does not open the window either, as long as that DDT gives the model.
 
-What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). The lines of the DDT without a serial number show in the list as «MC400107 · BB-101 2/3» (scanned out of expected) and count among the «arrived». If you see «The DDT has no serial lines.», the DDT has no lines to tick.
+What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). The lines of the DDT without a serial number show in the list as «MC400107 · BB-101 2/3» (scanned out of expected) with their own count; «arrived» and «missing», and the number of the row, count only the pieces with a serial number, as in «Documents». If you see «The DDT has no serial lines.», the DDT has no lines to tick.
 
 Finally, check and close the comparison:
 1. Open «Documents» and press «Open» on the DDT.
-2. Press «Compare»: you see how many are «Arrived», «Missing», «Unexpected», «Model unknown», under every number the list of the codes and, for the quantities, counted/expected. A piece that has its own serial line does not count also in the quantity line; the pieces without a serial expected by a quantity line are not «Unexpected» (only the extra ones are).
+2. Press «Compare»: you see how many are «Arrived», «Missing», «Unexpected», «Model unknown», under every number the list of the codes and, for the quantities, a row like «MC400170 (PSU-110): 0/3» (material code, model, counted/expected; in the BOM also «to remove» or «to install»). A piece that has its own serial line does not count also in the quantity line; the pieces without a serial expected by a quantity line are not «Unexpected» (only the extra ones are).
 3. When the arrival is complete, press «Mark checked». You see «Marked checked».
 
 Good to know: after «Mark checked» the DDT no longer appears in the «DDT» list of the phone. If something does not match, the app creates an alert «DDT (arrival) difference» (see «Alerts»).
@@ -631,7 +631,7 @@ The list shows only the exports you created. If you see «The data could not be 
 2. Check the «Summary» (pieces, «DDT number») and the «Lines».
 3. Press «Confirm». You read «Untick missing pieces. Add extra pieces by typing their code.»
 4. In «Expected pieces» they are all ticked: untick the pieces that did **not** arrive.
-5. If pieces arrived that were not in the list, write the code in «Extra pieces» («Type a code and press Enter») and press «Add». To take out a code added by mistake press «×».
+5. If pieces arrived that were not in the list, write the code in «Extra pieces» («Type a code and press Enter») and press «Add». To take out a code added by mistake press «×». If you type here the code of a piece that is in the list of the return, it counts as the confirmation of that piece, not as an extra piece.
 6. Press «Confirm». You see «Confirmed».
 
 What you see next: in the page the lines show «Confirmed» or «Missing», and the summary says «Complete: Yes» or «No». If pieces are missing or there are extra ones, the app creates the alert «DDT (return) difference», with the codes, and the return shows «Confirmed with differences» (also in the list of shipments). The extra pieces show in the page, in «Extra pieces», with «Open».
