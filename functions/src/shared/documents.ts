@@ -28,6 +28,48 @@ const readable = (events: EventFact[]) => {
 const quantityKey = (q: Pick<QuantityLine, "materialCode" | "modelId" | "direction">) =>
   `${q.modelId ?? ""}|${q.materialCode ?? ""}|${q.direction ?? ""}`;
 
+// P-191 (D-79): the material code as normalizeBarcode reads it (src/lib/codeId.js, frozen: control characters out,
+// trimmed). A copy, because this file is also bundled in the app and codeId.node.js needs Node's crypto;
+// tests/documents.test.ts compares the two on spaces, dashes, lower case and control characters.
+export function normalizeMaterialCode(raw: string | null | undefined): string {
+  let out = "";
+  for (const ch of String(raw ?? "")) {
+    const c = ch.codePointAt(0) ?? 0;
+    if (c <= 0x1f || c === 0x7f) continue;
+    out += ch;
+  }
+  return out.trim();
+}
+
+// P-191 (D-79): a piece counts for a quantity line when every field the line HAS agrees with the piece: modelId
+// equal, materialCode equal once normalized (a line saved by the app has the material code only, a piece read has
+// both). A line with neither counts nothing. The direction (BOM) is checked by the caller.
+export function quantityLineMatches(q: Pick<QuantityLine, "materialCode" | "modelId">, piece: { materialCode: string | null; modelId: string | null }): boolean {
+  const code = normalizeMaterialCode(q.materialCode);
+  if (!q.modelId && !code) return false;
+  if (q.modelId && q.modelId !== piece.modelId) return false;
+  return !code || code === normalizeMaterialCode(piece.materialCode);
+}
+
+interface QuantityPiece { key: string; code: string; materialCode: string | null; modelId: string | null; direction?: Direction }
+
+// D-79, "a piece is counted once": only pieces that are NOT serial lines of the document reach the quantity lines
+// (P-169: "quantity lines, pieces without a serial"). Pieces are taken in the order of their code as read (then
+// their key), so the server and the phone give the same result; each goes to the first matching line (document
+// order) that still has room, else to the first matching line. counted = the pieces of the line; the first
+// `quantity` of them are absorbed (not unexpected), the ones beyond the quantity stay unexpected.
+function countQuantities(quantities: QuantityLine[], pieces: QuantityPiece[]): { counted: number[]; absorbed: Set<string> } {
+  const order = (a: QuantityPiece, b: QuantityPiece) => (a.code < b.code ? -1 : a.code > b.code ? 1 : a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+  const taken: string[][] = quantities.map(() => []);
+  for (const p of [...pieces].sort(order)) {
+    const matching = quantities.map((_, i) => i).filter((i) => (quantities[i].direction ?? null) === (p.direction ?? null) && quantityLineMatches(quantities[i], p));
+    if (!matching.length) continue;
+    const i = matching.find((j) => taken[j].length < quantities[j].quantity) ?? matching[0];
+    taken[i].push(p.key);
+  }
+  return { counted: taken.map((t) => t.length), absorbed: new Set(taken.flatMap((t, i) => t.slice(0, Math.max(0, quantities[i].quantity)))) };
+}
+
 // §11.3 `ddt_in`: an arrival counts for a DDT only if the event's ddtId is that DDT, or its code is a serial line of that DDT.
 // Never "every arrival at that warehouse since the upload".
 function compareDdtIn(documentId: string, lines: Line[], events: EventFact[]): CompareResult {
@@ -37,20 +79,22 @@ function compareDdtIn(documentId: string, lines: Line[], events: EventFact[]): C
   const linked = events.filter((e) => e.type === "arrive_at_warehouse" && (e.ddtId === documentId || (e.codeId && serialByCodeId.has(e.codeId))));
   const arrivedCodeIds = new Set<string>();
   const arrivedUnknownModel: string[] = [];
-  const arrivedByQuantityKey = new Map<string, number>();
+  const pieces = new Map<string, QuantityPiece>(); // the pieces arrived that are not serial lines (D-79), once each
   for (const ev of linked) {
     if (ev.codeId) arrivedCodeIds.add(ev.codeId);
     if (!ev.itemModelKnown) arrivedUnknownModel.push(ev.codeRaw ?? ev.codeId ?? "");
-    const qk = quantityKey({ materialCode: ev.materialCode, modelId: ev.modelId });
-    arrivedByQuantityKey.set(qk, (arrivedByQuantityKey.get(qk) ?? 0) + 1);
+    if (ev.codeId && !serialByCodeId.has(ev.codeId) && !pieces.has(ev.codeId)) {
+      pieces.set(ev.codeId, { key: ev.codeId, code: ev.codeRaw ?? ev.codeId, materialCode: ev.materialCode, modelId: ev.modelId });
+    }
   }
+  const { counted, absorbed } = countQuantities(quantities, [...pieces.values()]);
   const arrived = serials.filter((s) => arrivedCodeIds.has(s.codeId)).map((s) => s.codeRaw);
   const missing = serials.filter((s) => !arrivedCodeIds.has(s.codeId)).map((s) => s.codeRaw);
   const expectedCodeIds = new Set(serials.map((s) => s.codeId));
-  const unexpected = [...arrivedCodeIds].filter((c) => !expectedCodeIds.has(c)).map(readable(events));
-  const quantitiesOut: QuantityResult[] = quantities.map((q) => ({
+  const unexpected = [...arrivedCodeIds].filter((c) => !expectedCodeIds.has(c) && !absorbed.has(c)).map(readable(events));
+  const quantitiesOut: QuantityResult[] = quantities.map((q, i) => ({
     key: quantityKey(q), materialCode: q.materialCode ?? null, modelId: q.modelId ?? null,
-    expected: q.quantity, counted: arrivedByQuantityKey.get(quantityKey(q)) ?? 0,
+    expected: q.quantity, counted: counted[i],
   }));
   return {
     arrived, missing, unexpected, arrivedModelUnknown: arrivedUnknownModel,
@@ -87,20 +131,17 @@ function compareBom(_documentId: string, lines: Line[], events: EventFact[]): Co
   }
   const arrived = serials.filter((s) => got.has(serialKey(s.codeId, s.direction!))).map((s) => s.codeRaw);
   const missing = serials.filter((s) => !got.has(serialKey(s.codeId, s.direction!))).map((s) => s.codeRaw);
-  const unexpected = [...got.keys()].filter((k) => !expectedSerials.has(k)).map((k) => readable(events)(k.split("|")[1]));
   const arrivedModelUnknown: string[] = [];
   for (const [k, evs] of got) if (expectedSerials.has(k)) for (const ev of evs) if (!ev.itemModelKnown && ev.codeId) arrivedModelUnknown.push(ev.codeRaw ?? ev.codeId);
-  const seenByKey = new Map<string, number>();
-  for (const [k, evs] of got) {
-    const dir = k.split("|")[0] as Direction;
-    for (const ev of evs) {
-      const qk = quantityKey({ materialCode: ev.materialCode, modelId: ev.modelId, direction: dir });
-      seenByKey.set(qk, (seenByKey.get(qk) ?? 0) + 1);
-    }
-  }
-  const quantitiesOut: QuantityResult[] = quantities.map((q) => ({
+  // D-79: the pieces of each direction that are not serial lines, once each (the first event of the piece).
+  const pieces: QuantityPiece[] = [...got].filter(([k]) => !expectedSerials.has(k)).map(([k, evs]) => ({
+    key: k, code: evs[0].codeRaw ?? evs[0].codeId!, materialCode: evs[0].materialCode, modelId: evs[0].modelId, direction: k.split("|")[0] as Direction,
+  }));
+  const { counted, absorbed } = countQuantities(quantities, pieces);
+  const unexpected = [...got.keys()].filter((k) => !expectedSerials.has(k) && !absorbed.has(k)).map((k) => readable(events)(k.split("|")[1]));
+  const quantitiesOut: QuantityResult[] = quantities.map((q, i) => ({
     key: quantityKey(q), materialCode: q.materialCode ?? null, modelId: q.modelId ?? null, direction: q.direction,
-    expected: q.quantity, counted: seenByKey.get(quantityKey(q)) ?? 0,
+    expected: q.quantity, counted: counted[i],
   }));
   return { arrived, missing, unexpected, arrivedModelUnknown, quantities: quantitiesOut,
     totals: { arrived: arrived.length, missing: missing.length, unexpected: unexpected.length, arrivedModelUnknown: arrivedModelUnknown.length } };
