@@ -1,9 +1,8 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useSession } from "@/app/session";
-import { useAction } from "@/app/hooks";
-import { call } from "@/lib/data/call";
-import { listAdminLog, watchUsers, type Row, type AdminLogEntry, type UserProfile } from "@/lib/data/db";
+import { Link } from "react-router";
+import { listAdminLog, watchUsers, watchOrganizations, type Row, type AdminLogEntry, type UserProfile, type Organization } from "@/lib/data/db";
+import { logTarget, logDetails, personName, type LogNames } from "@/lib/adminLogText";
 import { formatInstant } from "@/lib/utils";
 import { DataTable } from "@/components/DataTable";
 import { PageHeader } from "@/components/ui/card";
@@ -17,8 +16,14 @@ export default function AdminLog() {
   const [error, setError] = React.useState(false);
   const load = React.useCallback(() => { setError(false); listAdminLog().then(setRows).catch(() => setError(true)); }, []);
   React.useEffect(load, [load]);
+  const [orgs, setOrgs] = React.useState<Row<Organization>[]>([]);
   React.useEffect(() => watchUsers(null, setUsers), []);
-  const who = (uid: string | null) => { const u = users.find((x) => x.id === uid); return u ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || uid : uid ?? "—"; };
+  React.useEffect(() => watchOrganizations(setOrgs), []);
+  // P-184: names, never ids (src/lib/adminLogText.ts).
+  const names: LogNames = React.useMemo(() => ({
+    user: (uid) => { const u = users.find((x) => x.id === uid); return u ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email || null : null; },
+    org: (id) => orgs.find((o) => o.id === id)?.name ?? null,
+  }), [users, orgs]);
   if (error) return <ErrorState message={t("errors.load_failed")} onRetry={load} />;
   if (!rows) return <Loading />;
   return (
@@ -28,9 +33,12 @@ export default function AdminLog() {
         columns={[
           { key: "at", header: t("adminLog.at"), value: (r) => r.at?.toDate().toISOString() ?? "", render: (r) => formatInstant(r.at?.toDate(), i18n.language) },
           { key: "action", header: t("adminLog.action"), value: (r) => t(`adminLog.actions.${r.action}`, { defaultValue: r.action }) },
-          { key: "actor", header: t("adminLog.actor"), value: (r) => who(r.actor) },
-          { key: "target", header: t("adminLog.target"), value: (r) => (r.target?.startsWith("settings/") || r.target?.startsWith("loc_") || r.target?.startsWith("mdl_") ? r.target : who(r.target)), className: "font-mono text-xs" },
-          { key: "details", header: t("adminLog.details"), value: (r) => (r.details && Object.keys(r.details).length ? JSON.stringify(r.details) : ""), className: "font-mono text-xs" },
+          { key: "actor", header: t("adminLog.actor"), value: (r) => personName(r.actor, t, names) },
+          { key: "target", header: t("adminLog.target"), value: (r) => logTarget(r, t, names),
+            render: (r) => (r.action === "items_merged" && r.target
+              ? <Link to={`/items/${encodeURIComponent(r.target)}`} className="text-primary underline" data-testid="admin-log-piece">{logTarget(r, t, names)}</Link>
+              : logTarget(r, t, names)) },
+          { key: "details", header: t("adminLog.details"), value: (r) => logDetails(r, t, names) },
         ]} />
     </div>
   );

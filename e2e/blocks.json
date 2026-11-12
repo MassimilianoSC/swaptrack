@@ -35,7 +35,8 @@
         "server-error-text.desk.spec.ts",
         "bom-chip.phone.spec.ts",
         "doc-lines-serial.desk.spec.ts",
-        "file-name.desk.spec.ts"
+        "file-name.desk.spec.ts",
+        "admin-log-text.desk.spec.ts"
       ]
     },
     {
