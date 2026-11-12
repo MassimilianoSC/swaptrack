@@ -88,8 +88,14 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
 
     // 6. The missing piece turns up: a second, complete confirmation. No anomaly, the alert has no differences now.
     await page.goto(`/shipments/${shipmentId}`);
-    await page.getByTestId("shipment-confirm").click();
-    await expect(page.getByTestId("confirm-lines-list").locator("li").filter({ hasText: codes[0] }).locator("input[type=checkbox]")).toBeChecked();
+    // P-186 (§9.3): once confirmed, the return is confirmed again for its missing pieces only: the button says so and
+    // the missing piece is offered unticked (it was ticked, and one click gave every missing piece as arrived).
+    const confirmLate = page.getByTestId("shipment-confirm");
+    await expect(confirmLate).toHaveText(tr("shipments.confirmLate"));
+    await confirmLate.click();
+    const missingLine = page.getByTestId("confirm-lines-list").locator("li").filter({ hasText: codes[0] }).locator("input[type=checkbox]");
+    await expect(missingLine).not.toBeChecked();
+    await missingLine.check();
     await page.getByTestId("confirm-save").click();
     await expect(page.getByText(tr("shipments.confirmed")).first()).toBeVisible();
     await expect(page.getByTestId("shipment-lines").locator("li").filter({ hasText: codes[0] })).toContainText(tr("shipments.confirmedLine"), { timeout: 30_000 });
