@@ -1,5 +1,8 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ReportsPanel } from "./Reports";
 import { Download, FileSpreadsheet } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
@@ -18,8 +21,29 @@ import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { useNames } from "@/lib/names";
 
+// P-190 (tester): exports and monthly reports in one page, two tabs; ?tab=reports opens the second one (/reports leads
+// there). Same roles for both (nav.ts).
+export default function ExportsAndReports() {
+  const { t } = useTranslation();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "reports" ? "reports" : "excel";
+  return (
+    <div>
+      <PageHeader title={t("nav.exportsReports")} />
+      <Tabs value={tab} onValueChange={(v) => setParams(v === "reports" ? { tab: "reports" } : {}, { replace: true })}>
+        <TabsList>
+          <TabsTrigger value="excel" data-testid="exports-tab-excel">{t("nav.exports")}</TabsTrigger>
+          <TabsTrigger value="reports" data-testid="exports-tab-reports">{t("nav.reports")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="excel"><ExcelExports /></TabsContent>
+        <TabsContent value="reports"><ReportsPanel /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 // §13.3 Excel export with the filters of the specification (P-81).
-export default function Exports() {
+function ExcelExports() {
   const { t, i18n } = useTranslation();
   const { user, claims } = useSession();
   const names = useNames();
@@ -70,7 +94,7 @@ export default function Exports() {
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">
-      <PageHeader title={t("nav.exports")} subtitle={t("exports.subtitle")} />
+      <p className="text-sm text-muted">{t("exports.subtitle")}</p>
       <Card>
         <div className="grid gap-3 md:grid-cols-3">
           <Field label={t("items.status")} htmlFor="x-s"><Select id="x-s" value={status} onChange={(e) => setStatus(e.target.value)} data-testid="exports-status">

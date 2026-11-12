@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, Building2, Users, MapPin, Boxes, Settings, ScrollText, BookOpen, Tags, Package, Truck, ClipboardList, FileText, Bell, AlertTriangle, LayoutDashboard, FileSpreadsheet, FileBarChart2 } from "lucide-react";
+import { Home, Building2, Users, MapPin, Boxes, Settings, ScrollText, BookOpen, Tags, Package, Truck, ClipboardList, FileText, Bell, AlertTriangle, LayoutDashboard, FileSpreadsheet } from "lucide-react";
 
 export interface NavItem { to: string; label: string; icon: LucideIcon; roles: readonly string[] }
 
@@ -18,8 +18,8 @@ export const NAV: NavItem[] = [
   { to: "/documents", label: "nav.documents", icon: FileText, roles: DESK_ALL },
   { to: "/alerts", label: "nav.alerts", icon: Bell, roles: DESK_ALL },
   { to: "/anomalies", label: "nav.anomalies", icon: AlertTriangle, roles: ["client_admin", "client_office", "asp_admin", "asp_warehouse"] },
-  { to: "/exports", label: "nav.exports", icon: FileSpreadsheet, roles: ["client_admin", "client_office", "asp_admin"] },
-  { to: "/reports", label: "nav.reports", icon: FileBarChart2, roles: ["client_admin", "client_office", "asp_admin"] },
+  // P-190: exports and monthly reports in one page with two tabs (/reports opens the second one).
+  { to: "/exports", label: "nav.exportsReports", icon: FileSpreadsheet, roles: ["client_admin", "client_office", "asp_admin"] },
   { to: "/admin/organizations", label: "nav.organizations", icon: Building2, roles: ["client_admin"] },
   { to: "/admin/users", label: "nav.users", icon: Users, roles: ["client_admin"] },
   { to: "/people", label: "nav.people", icon: Users, roles: ["asp_admin"] },

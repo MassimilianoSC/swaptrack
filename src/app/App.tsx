@@ -35,7 +35,6 @@ import Alerts from "@/pages/desk/Alerts";
 import Anomalies from "@/pages/desk/Anomalies";
 import Dashboard from "@/pages/desk/Dashboard";
 import Exports from "@/pages/desk/Exports";
-import Reports from "@/pages/desk/Reports";
 
 function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
   const { claims } = useSession();
@@ -91,7 +90,8 @@ function Gate() {
         <Route path="alerts" element={<RoleRoute roles={deskRead}><Alerts /></RoleRoute>} />
         <Route path="anomalies" element={<RoleRoute roles={anom}><Anomalies /></RoleRoute>} />
         <Route path="exports" element={<RoleRoute roles={dash}><Exports /></RoleRoute>} />
-        <Route path="reports" element={<RoleRoute roles={dash}><Reports /></RoleRoute>} />
+        {/* P-190: the reports are a tab of the exports page; the old address still leads there. */}
+        <Route path="reports" element={<RoleRoute roles={dash}><Navigate to="/exports?tab=reports" replace /></RoleRoute>} />
         <Route path="people" element={<RoleRoute roles={["asp_admin"]}><UsersPage /></RoleRoute>} />
         <Route path="admin/organizations" element={<RoleRoute roles={ca}><Organizations /></RoleRoute>} />
         <Route path="admin/users" element={<RoleRoute roles={ca}><UsersPage /></RoleRoute>} />

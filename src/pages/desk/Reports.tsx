@@ -10,15 +10,15 @@ import { reportFileName } from "@/lib/fileNames";
 import { toast } from "sonner";
 import { isClientRole } from "@shared/roles";
 import { listOrganizations, getOrganization, type Row, type Organization } from "@/lib/data/db";
-import { PageHeader, Card, Badge } from "@/components/ui/card";
+import { Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, Field } from "@/components/ui/form";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 
-// §13.4 Monthly reports; client roles can generate on demand.
-export default function Reports() {
+// §13.4 Monthly reports; client roles can generate on demand. P-190: a tab of the exports page (Exports.tsx).
+export function ReportsPanel() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const { busy, run } = useAction();
@@ -46,7 +46,7 @@ export default function Reports() {
   if (!list) return <Loading />;
   return (
     <div className="space-y-6">
-      <PageHeader title={t("nav.reports")} subtitle={t("reports.subtitle")} />
+      <p className="text-sm text-muted">{t("reports.subtitle")}</p>
       {client && (
         <Card>
           <div className="grid gap-3 md:grid-cols-4">
