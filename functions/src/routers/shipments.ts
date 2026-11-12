@@ -6,6 +6,8 @@ import { makeRouter, op } from "../core/router";
 import { serverEvent } from "./items";
 import { alertId } from "../shared/alertIds";
 import { upsertAlert, zeroAlertIfOpen } from "../core/alerts";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { computeCodeId } = require("../codeId.node.js");
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 const ASP_WH = ["asp_admin", "asp_warehouse"] as const;
@@ -82,19 +84,29 @@ export const shipments = {
       // P-186, §9.3: a confirmed return is confirmed again "for the missing pieces only". An extra piece then would be a
       // second return_confirm (the same code typed again: a piece already returned) and would change the shipment's
       // difference after the fact.
-      const extra = [...new Set(d.extra.map((c) => c.trim()).filter(Boolean))];
+      const typed = [...new Set(d.extra.map((c) => c.trim()).filter(Boolean))];
+      // P-194: a code typed as extra whose piece IS a line of this return (unticked by mistake, then typed) confirms
+      // that line: it is neither missing nor extra, and gets one return_confirm (its line's).
+      const linesTyped = new Set<string>();
+      const extra: string[] = [];
+      for (const codeRaw of typed) {
+        const itemId = (await db.collection("codes").doc(computeCodeId(codeRaw) as string).get()).get("itemId") as string | undefined;
+        if (itemId && (await ref.collection("lines").doc(itemId).get()).exists) linesTyped.add(itemId);
+        else extra.push(codeRaw);
+      }
       if (s!.status === "confirmed" && extra.length) fail("failed-precondition", "return_extra_after_confirm");
+      const confirmedIds = [...new Set([...d.confirmed, ...linesTyped])];
       const at = Timestamp.now();
       // A second confirmation (late pieces, §9.3), a double click or a retry sends the lines again: a line already
       // confirmed gets no second return_confirm (it would raise event_after_end_of_flow on a returned piece, R5).
-      for (const itemId of d.confirmed) {
+      for (const itemId of confirmedIds) {
         const line = (await ref.collection("lines").doc(itemId).get()).data();
         if (!line || line.confirmedAt || line.confirmedElsewhere) continue;
         await serverEvent(ctx, "return_confirm", s!.toLocationId, null, { shipmentId: d.shipmentId, targetItemId: itemId }, at, line.codeRaw);
         await ref.collection("lines").doc(itemId).update({ confirmedAt: FieldValue.serverTimestamp(), missing: false });
       }
       // Only lines of this shipment can be missing; an unknown id must not create a line.
-      for (const itemId of d.missing) {
+      for (const itemId of d.missing.filter((x) => !linesTyped.has(x))) {
         const line = await ref.collection("lines").doc(itemId).get();
         if (line.exists && !line.get("confirmedAt") && !line.get("confirmedElsewhere")) await line.ref.update({ missing: true });
       }

@@ -125,3 +125,34 @@ describe("a confirmed return: the second confirmation is for the missing pieces 
     });
   });
 });
+
+// P-194 (o3, reading P-186): a return with A, B and C; the client unticks A by mistake and types A among the extra
+// pieces. Red before: A was missing AND extra (a second return_confirm, extra), extraCodes [A] for ever, the return
+// never complete and the alert counting 2; «Confirm missing pieces that arrived» then offered A again. A code typed as
+// extra whose piece is a line of this return confirms that line.
+describe("an extra code that is a line of the same return confirms that line (P-194)", () => {
+  it("A unticked and typed as extra: A confirmed once, nothing missing or extra, the return complete", async () => {
+    const S = `sh_TT_ret194_${RUN}`;
+    await t.db.collection("shipments").doc(S).set({ kind: "return", fromLocationId: LOC.nordWh, fromAspId: NORD, toLocationId: LOC.clientWh, toAspId: null, status: "draft", itemCount: 0, documentId: null });
+    const ids: Record<string, string> = {};
+    const codes = { a: `SN-${RUN}-R194-A`, b: `SN-${RUN}-R194-B`, c: `SN-${RUN}-R194-C` };
+    for (const [n, code] of Object.entries(codes)) {
+      const first = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "removed", categoryId: "cat_t" } }));
+      ids[n] = (await t.db.collection("events").doc(first).get()).get("itemId");
+      await t.fire(ev("return_ship", code, { at: T0 + 1000, payload: { shipmentId: S } }));
+    }
+    await t.db.collection("shipments").doc(S).update({ status: "sent" });
+    await shipments.confirmReturn.handler(ctx, { shipmentId: S, confirmed: [ids.b, ids.c], missing: [ids.a], extra: [` ${codes.a} `] });
+    for (const e of (await t.db.collection("events").where("payload.shipmentId", "==", S).get()).docs) if (!e.get("processedAt")) await t.processEvent(e.id);
+
+    const confirmsOfA = (await t.db.collection("events").where("payload.shipmentId", "==", S).get()).docs
+      .filter((e) => e.get("type") === "return_confirm" && (e.get("itemId") === ids.a || e.get("codeRaw") === codes.a));
+    expect.soft(confirmsOfA.map((e) => !!e.get("payload.extra"))).toEqual([false]);
+    expect.soft((await t.db.collection("items").doc(ids.a).get()).get("status")).toBe("returned");
+    const lineA = (await t.db.collection("shipments").doc(S).collection("lines").doc(ids.a).get()).data()!;
+    expect.soft([!!lineA.confirmedAt, lineA.missing]).toEqual([true, false]);
+    const sh = (await t.db.collection("shipments").doc(S).get()).data()!;
+    expect.soft([sh.confirmedComplete, sh.extraCodes]).toEqual([true, []]);
+    expect.soft((await t.db.collection("alerts").doc(`return-${S}`).get()).exists).toBe(false);
+  });
+});
