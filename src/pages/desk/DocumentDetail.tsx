@@ -162,6 +162,11 @@ export default function DocumentDetail() {
   if (!isNew && !doc) return <Loading />;
   const siteOrWarehouse = (l: Row<Location>) =>
     kind === "bom" ? l.type === "site" : l.type === "asp_warehouse";
+  // P-172 (SPEC §11.2): a saved document stays in its ASP; its place is changed only for another place of that ASP (the
+  // client roles saw every ASP's places and the server refused the save). A new document, or one saved before P-49
+  // without an ASP, any place.
+  const ownAsp = !isNew && doc?.aspId ? doc.aspId : null;
+  const placeAllowed = (l: Row<Location>) => siteOrWarehouse(l) && (!ownAsp || l.aspId === ownAsp);
   const box = (label: string, value: string, onChange: (v: string) => void, testId: string, extra = "") => (
     <Field label={label} htmlFor={testId}>
       <Textarea id={testId} rows={10} value={value} onChange={(e) => onChange(e.target.value)} readOnly={!editable} className={`font-mono text-xs ${extra}`} placeholder={t("documents.linesPlaceholder")} data-testid={testId} />
@@ -189,8 +194,10 @@ export default function DocumentDetail() {
           <Field label={t("documents.number")} htmlFor="d-n"><Input id="d-n" value={number} onChange={(e) => setNumber(e.target.value)} className="font-mono" data-testid="document-number" /></Field>
           <Field label={t("items.location")} htmlFor="d-l"><Select id="d-l" value={locationId} onChange={(e) => setLocationId(e.target.value)} data-testid="document-location">
             <option value="">{t("common.choose")}</option>
-            {locations.filter(siteOrWarehouse).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
-          </Select></Field>
+            {locations.filter(placeAllowed).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
+          </Select>
+          {ownAsp && editable && isClientRole(claims?.role ?? "") && <p className="mt-1 text-xs text-muted" data-testid="document-location-same-asp">{t("documents.locationSameAsp")}</p>}
+          </Field>
         </div>
       </Card>
       <div className="grid gap-6 lg:grid-cols-2">

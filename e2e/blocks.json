@@ -40,7 +40,8 @@
         "return-late-confirm.desk.spec.ts",
         "transfer-arrival-list.phone.spec.ts",
         "exports-reports-tabs.desk.spec.ts",
-        "bom-quantities.phone.spec.ts"
+        "bom-quantities.phone.spec.ts",
+        "document-location-asp.desk.spec.ts"
       ]
     },
     {
