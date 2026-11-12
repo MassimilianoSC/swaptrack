@@ -26,6 +26,7 @@ Stati: **aspetta il committente** · **in corso** · **da fare** · **fatto**. D
 
 | # | Cosa | Chi poi |
 |---|---|---|
+| P-197 | **Prima della presentazione:** rivedere i nomi dei ruoli mostrati nell'app (richiesta del committente, 12/11). «Amministratore cliente» sembra un ruolo secondario, mentre è il ruolo apicale («cliente» = l'operatore telecom, proprietario del materiale; le ASP lavorano per lui). Proposte da scegliere: «Amministratore generale», oppure il nome dell'operatore al posto di «cliente»; da rivedere insieme anche «Ufficio cliente» e «Magazzino cliente». Cambiano solo i testi mostrati (i18n e guide), non i ruoli né la logica | committente; poi o3 + reg |
 | P-158 | Nuova data della presentazione (slittata il 09/11; probabilmente settimana del 16/11, non fissata). La preparazione finale (PRIMA_DELLA_PRESENTAZIONE) si fa il giorno prima di quella data, non il 10/11 | committente; poi o2 + reg |
 | P-2 | Cambiare la password degli account demo prima di condividere l'indirizzo oltre il consulente (oggi è scritta nel README; `memory/test_credentials.md` cancellato con P-3, ma resta nella storia di git) | committente in console; poi reg toglie la password dai documenti |
 | P-4 | Differenze notate rispetto all'app vecchia. Prime tre del 03/11: (1) il luogo lo sceglie solo l'operaio sul telefono, nella vecchia app poteva indicarlo un amministratore: domanda al committente; (2) pulsante «Foto» a volte spento senza spiegazione: P-108; (3) stessa etichetta letta due volte, la seconda ignorata senza avviso: P-109 | committente |
