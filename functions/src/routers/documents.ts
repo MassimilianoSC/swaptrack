@@ -46,6 +46,13 @@ async function ensureCanWrite(ctx: Ctx, kind: DocKind, locationId: string): Prom
   return loc!.aspId as string;
 }
 
+// P-172: a document never moves to a location of another ASP (its history would become readable there). The client
+// admin, who sees every location, is told why (document_other_asp); an ASP role, which may not even read the other
+// ASP's document, keeps the plain refusal.
+function otherAsp(ctx: Ctx): never {
+  return isClientRole(ctx.role) ? fail("failed-precondition", "document_other_asp") : fail("permission-denied", "forbidden");
+}
+
 async function storeFiles(aspId: string, kind: DocKind, documentId: string, version: number, files: Array<{ base64: string; contentType: string }>): Promise<string[]> {
   const paths: string[] = [];
   for (let i = 0; i < files.length; i++) {
@@ -129,7 +136,8 @@ export const documents = {
       const prev = (await ref.get()).data();
       // A new version never moves a document to another ASP or kind: its history would become readable there.
       // Documents saved before P-49 by a client role have aspId null and take the ASP of their location.
-      if (prev && (prev.kind !== d.kind || (prev.aspId != null && prev.aspId !== aspId))) fail("permission-denied", "forbidden");
+      if (prev && prev.kind !== d.kind) fail("permission-denied", "forbidden");
+      if (prev && prev.aspId != null && prev.aspId !== aspId) otherAsp(ctx);
       if (d.shipmentId && (await db.collection("shipments").doc(d.shipmentId).get()).get("fromAspId") !== aspId) fail("permission-denied", "forbidden");
       // A line without direction (DDT lines) gets no direction key: Firestore refuses undefined values.
       const dir = (l: { direction?: "remove" | "install" }) => (l.direction ? { direction: l.direction } : {});
@@ -267,7 +275,7 @@ export const documents = {
       const doc = (await db.collection("documents").doc(d.documentId).get()).data();
       if (!doc) fail("not-found", "document_not_found");
       const aspId = await ensureCanWrite(ctx, doc!.kind as DocKind, doc!.locationId);
-      if (doc!.aspId != null && doc!.aspId !== aspId) fail("permission-denied", "forbidden");
+      if (doc!.aspId != null && doc!.aspId !== aspId) otherAsp(ctx);
       const files: string[] = Array.isArray(doc!.files) ? doc!.files : [];
       const readable = files.filter((p) => AI_FILE_TYPES[p.split(".").pop() ?? ""]);
       if (!readable.length) fail("invalid-argument", "unsupported_file_type");

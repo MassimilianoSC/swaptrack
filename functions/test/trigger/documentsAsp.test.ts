@@ -54,6 +54,19 @@ describe("a document belongs to the ASP of its location (§3.3, §11.2)", () => 
     expect(after).toMatchObject({ aspId: CENTRO, locationId: SITE_C, version: 1 });
   });
 
+  // P-172 (tester): the client admin moved a BOM to a site of another ASP and read «forbidden» («Errore imprevisto»
+  // before P-181). The move stays refused, with a code of its own that says why. Red before: permission-denied, forbidden.
+  it("the client admin moving a document to a location of another ASP is told so (document_other_asp); nothing changes", async () => {
+    const r = await documents.saveDocument.handler(CA(), { kind: "bom", number: `B172-${RUN}`, locationId: SITE, linesSource: "manual", lines: [install(`SN-${RUN}-172`)] }) as { documentId: string };
+    await expect(documents.saveDocument.handler(CA(), { documentId: r.documentId, kind: "bom", number: `B172-${RUN}`, locationId: SITE_C, linesSource: "manual", lines: [] }))
+      .rejects.toMatchObject({ code: "failed-precondition", message: "document_other_asp" });
+    expect((await t.db.collection("documents").doc(r.documentId).get()).data()).toMatchObject({ aspId: NORD, locationId: SITE, version: 1 });
+    // The reading of the files (extractDocument) of a document whose location now belongs to another ASP: the same code.
+    await t.db.collection("documents").doc(r.documentId).update({ locationId: SITE_C });
+    await expect(documents.extractDocument.handler(CA(), { documentId: r.documentId }))
+      .rejects.toMatchObject({ code: "failed-precondition", message: "document_other_asp" });
+  });
+
   it("D-29: a DDT checked again after the missing piece arrived: the open ddt_in alert goes to count 0", async () => {
     const WH = `loc_TT-MAG-DOCDDT-${RUN}`, a = `SN-${RUN}-DDA`, b = `SN-${RUN}-DDB`;
     await t.db.collection("locations").doc(WH).set({ ...loc(`TT-MAG-DOCDDT-${RUN}`, NORD), type: "asp_warehouse" });

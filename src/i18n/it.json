@@ -933,6 +933,7 @@
     "model_not_found": "Modello non trovato.",
     "anomaly_incomplete": "Mancano dati per risolvere automaticamente questa anomalia.",
     "document_not_found": "Documento non trovato.",
+    "document_other_asp": "Un documento non si può spostare su un luogo di un'altra ASP. Caricalo come documento nuovo sul luogo giusto.",
     "file_too_large": "File troppo grande: massimo 5 MB.",
     "unsupported_file_type": "Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.",
     "image_unreadable": "Immagine non leggibile: prova con un'altra foto o con un PDF.",
