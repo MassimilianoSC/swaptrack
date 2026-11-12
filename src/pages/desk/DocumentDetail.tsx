@@ -12,6 +12,7 @@ import { useLocationsFor } from "@/lib/data/useLocations";
 import { extractLines } from "@/lib/documents/extract";
 import { readTable, TableReadError, type Sheet } from "@/lib/import/readTable";
 import { parseLines, linesToText, splitByDirection, carryModels, countLines, type DocLine } from "@/lib/documents/lines";
+import { quantityLabel, catalogIndex } from "@/lib/documents/quantityLabel";
 import { isClientRole } from "@shared/roles";
 import { FilesPanel, type PendingFile } from "@/components/documents/FilesPanel";
 import { ExcelMapping } from "@/components/documents/ExcelMapping";
@@ -50,8 +51,13 @@ export default function DocumentDetail() {
   const [rawLines, setRawLines] = React.useState("");
   // P-169: the material codes of the catalog (normalized): "#1 CODE" is a serial when CODE is not one of them.
   const [materialCodes, setMaterialCodes] = React.useState<Set<string> | undefined>(undefined);
+  // P-192: the same catalog names the quantity lines of «Compare».
+  const [catalog, setCatalog] = React.useState(() => catalogIndex([]));
   React.useEffect(() => {
-    void listModels().then((ms) => setMaterialCodes(new Set(ms.map((m) => normalizeBarcode(m.materialCode ?? "")).filter(Boolean)))).catch(() => undefined);
+    void listModels().then((ms) => {
+      setMaterialCodes(new Set(ms.map((m) => normalizeBarcode(m.materialCode ?? "")).filter(Boolean)));
+      setCatalog(catalogIndex(ms));
+    }).catch(() => undefined);
   }, []);
   // §11.2 / P-92: the lines of a BOM in two boxes, to remove and to install; every line takes its box's direction.
   // A BOM saved before has lines without direction: they wait in a third box until moved (the server refuses them).
@@ -252,7 +258,7 @@ export default function DocumentDetail() {
                 </div>
               ))}
           </div>
-          {compare.quantities.length > 0 && <ul className="mt-3 text-sm" data-testid="document-quantities">{compare.quantities.map((q) => <li key={q.key}>{q.key}: {q.counted}/{q.expected}</li>)}</ul>}
+          {compare.quantities.length > 0 && <ul className="mt-3 text-sm" data-testid="document-quantities">{compare.quantities.map((q) => <li key={q.key} data-testid="document-quantity">{quantityLabel(q, t, catalog)}</li>)}</ul>}
         </Card>
       )}
       {!isNew && doc && (
