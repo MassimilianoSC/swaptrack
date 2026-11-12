@@ -938,10 +938,10 @@ export default function Scan() {
   const todayRows = today.filter((s) => s.type !== "void");
   const counted = session.filter((s) => !s.here).length;
   const selectedDdt = ddtApplies ? ddts.find((d) => d.id === ddtId) ?? null : null;
-  // P-188: serials and quantity lines together.
+  // P-188: the quantity lines, each with its own counted/expected. P-193 (SPEC §11.3): arrived / missing and the count
+  // of the DDT are the serial lines only, as the desk's comparison says them (the phone said 9 missing, the desk 4).
   const ddtQtyShown = qtyItems(ddtQty.rows);
   const ddtUnexpectedShown = ddtQty.unexpected ?? ddtUnexpected;
-  const ddtProgress = expectedProgress(ddtExpected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: ddtTicks.has(l.codeId) })), ddtQtyShown);
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
@@ -1084,11 +1084,11 @@ export default function Scan() {
       </section>
       {selectedDdt && (
         <details className="rounded border border-border px-3" data-testid="scan-ddt-section">
-          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-ddt-toggle">{t("scan.ddt.title", { number: selectedDdt.number })} · <span className="tabular" data-testid="scan-ddt-progress">{ddtProgress.done}/{ddtProgress.total}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
+          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-ddt-toggle">{t("scan.ddt.title", { number: selectedDdt.number })} · <span className="tabular" data-testid="scan-ddt-progress">{ddtTicks.size}/{ddtExpected.length}</span><ChevronDown className="ml-auto h-5 w-5" aria-hidden /></summary>
           <div className="pb-3">
           <p className="flex flex-wrap gap-4 text-sm tabular">
-            <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtProgress.done}</span> {t("scan.ddt.arrived")}</span>
-            <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtProgress.total - ddtProgress.done}</span> {t("scan.ddt.missing")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-arrived">{ddtTicks.size}</span> {t("scan.ddt.arrived")}</span>
+            <span><span className="text-xl font-bold" data-testid="scan-ddt-missing">{ddtExpected.length - ddtTicks.size}</span> {t("scan.ddt.missing")}</span>
             <span><span className="text-xl font-bold" data-testid="scan-ddt-unexpected">{ddtUnexpectedShown.length}</span> {t("scan.ddt.unexpected")}</span>
           </p>
           {ddtExpected.length === 0 && ddtQtyShown.length === 0 ? (

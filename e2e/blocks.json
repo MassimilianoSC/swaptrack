@@ -41,7 +41,8 @@
         "transfer-arrival-list.phone.spec.ts",
         "exports-reports-tabs.desk.spec.ts",
         "bom-quantities.phone.spec.ts",
-        "document-location-asp.desk.spec.ts"
+        "document-location-asp.desk.spec.ts",
+        "ddt-quantities.phone.spec.ts"
       ]
     },
     {
