@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit d3f0efc · Testo della guida: sha db7da71121bd · Data: 11/11/2026
+App descritta: commit c68ce4e · Testo della guida: sha 3bec31860e3a · Data: 12/11/2026
 
 ## Come usare questa guida
 
@@ -204,7 +204,7 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
 2. Appena il codice è riconosciuto, senti un breve suono, il telefono vibra (se lo permette) e il riquadro diventa bianco con «Letto: …». Vuol dire solo che il codice è stato visto.
-3. Poco dopo arriva l'esito: lo schermo verde con il codice vuol dire che la lettura è registrata. Il giallo o il rosso, con un suono diverso (due toni bassi), vogliono dire: guarda lo schermo. Può anche aprirsi una finestra («Pezzo sconosciuto», «Smista»): la lettura si registra quando hai risposto. Se con la finestra aperta premi il tasto Indietro del telefono, la finestra si chiude come con la X («Pezzo sconosciuto» come «Salta», «Smista» come «Annulla») e resti in «Leggi».
+3. Poco dopo arriva l'esito: lo schermo verde con il codice vuol dire che la lettura è registrata. Il giallo (due toni bassi) o il rosso (tre note che scendono) vogliono dire: guarda lo schermo. Può anche aprirsi una finestra («Pezzo sconosciuto», «Smista»): la lettura si registra quando hai risposto. Se con la finestra aperta premi il tasto Indietro del telefono, la finestra si chiude come con la X («Pezzo sconosciuto» come «Salta», «Smista» come «Annulla») e resti in «Leggi».
 4. La fotocamera si ferma e compare «Leggi il prossimo»: premilo quando inquadri il pezzo successivo.
 
 **Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
@@ -281,7 +281,7 @@ I pezzi nuovi arrivano dal magazzino della tua ASP: se un codice non è conosciu
 
 ### Come controllo i pezzi previsti nel sito (la BOM)?
 
-Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la riga «Lista BOM · 3/10» (letti su previsti): toccala per aprire la lista. In alto a destra sul video c'è anche il riepilogo «BOM 3/10 ▾»: toccalo per aprire sopra il video l'elenco dei pezzi da smontare o installare, con la spunta su quelli già letti, e toccalo di nuovo per chiuderlo. Mentre c'è la fascia di un avviso giallo o rosso il riepilogo sparisce per qualche secondo.
+Se per il sito è stata caricata la lista dei pezzi previsti (la BOM), nella schermata «Leggi», più in basso dopo «Le mie letture di oggi», vedi la riga «Lista BOM · 3/10» (letti su previsti): toccala per aprire la lista. In alto a destra sul video c'è anche il riepilogo «BOM 3/10 ▾»: toccalo per aprire sopra il video l'elenco dei pezzi da smontare o installare, con la spunta su quelli già letti, e toccalo di nuovo per chiuderlo. Mentre c'è la fascia di un avviso giallo o rosso il riepilogo sparisce per qualche secondo. La lista porta il numero della BOM (per esempio «BOM-00024»). Le righe senza numero di serie compaiono come «MC400107 · BB-101 2/3» (letti su attesi) e diventano verdi quando sono complete; anche il riepilogo le conta.
 - con «Smonta» vedi i «Pezzi da smontare», con «Installa» i «Pezzi da installare»;
 - ogni pezzo della lista che leggi prende la spunta;
 - se leggi pezzi che non sono nella lista, compaiono sotto, per esempio «2 pezzi non attesi dalla BOM»;
@@ -406,11 +406,11 @@ Poi registra l'arrivo:
 
 I pezzi che sono righe del DDT scelto non aprono la finestra «Pezzo sconosciuto»: il modello lo prende dal DDT. Se il DDT non dice il modello, il pezzo va in «Da completare». Anche un pezzo che è in un altro DDT aperto del tuo magazzino, che non hai scelto, non apre la finestra, purché quel DDT dica il modello.
 
-Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Se vedi «Il DDT non ha righe con numero di serie.», il DDT ha solo quantità e la lista di spunta non c'è.
+Cosa vedi dopo: la riga «Confronto con il DDT … · 3/8» (pezzi del DDT arrivati su attesi); toccala per aprire il riquadro con quanti pezzi sono «arrivati», «mancanti» e «inattesi», e l'elenco dei numeri di serie attesi con la spunta su quelli letti. Questo riquadro conta solo **le tue** letture di oggi in questo magazzino: se un collega legge con un altro telefono, o se l'arrivo dura più giorni, il conto completo è in «Documenti» (vedi sotto). Le righe senza numero di serie del DDT compaiono nella lista come «MC400107 · BB-101 2/3» (letti su attesi) e contano negli «arrivati». Se vedi «Il DDT non ha righe con numero di serie.», il DDT non ha righe da spuntare.
 
 Infine, controlla e chiudi il confronto:
 1. Apri «Documenti» e premi «Apri» sul DDT.
-2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», sotto ogni numero l'elenco dei codici e, per le quantità, contati/attesi.
+2. Premi «Confronta»: vedi quanti sono «Arrivati», «Mancanti», «Non attesi», «Modello sconosciuto», sotto ogni numero l'elenco dei codici e, per le quantità, contati/attesi. Un pezzo che ha la sua riga col numero di serie non conta anche nella riga a quantità; i pezzi senza seriale attesi da una riga a quantità non sono «Non attesi» (lo diventano solo quelli in più).
 3. Quando l'arrivo è completo, premi «Segna verificato». Vedi «Segnato verificato».
 
 Da sapere: dopo «Segna verificato» il DDT non compare più nella tendina «DDT» del telefono. Se qualcosa non torna, l'app crea un avviso «DDT (arrivo) differenza» (vedi «Avvisi»).
@@ -478,7 +478,7 @@ I trasferimenti verso un'altra ASP li crea solo l'Amministratore cliente; tu li 
 
 1. Apri «Spedizioni», cerca il «Trasferimento» nello stato «Inviata» e premi «Apri».
 2. Premi «Leggi i pezzi»: si apre la lettura in «Arrivo», già nel magazzino che riceve.
-3. Leggi i pezzi arrivati.
+3. Leggi i pezzi arrivati. In alto a destra sul video vedi «Attesi 1/3 ▾»: toccalo per aprire l'elenco dei pezzi da ricevere, con la spunta su quelli già letti (anche da un collega). Lo stesso elenco è più in basso, in «Pezzi attesi». I pezzi letti che non sono nel trasferimento compaiono in «… pezzi non in questo trasferimento».
 
 Cosa vedi dopo: nella scheda del trasferimento ogni riga arrivata mostra «Arrivato». Dopo l'arrivo il pezzo passa alla tua ASP. Quando sono arrivati tutti i pezzi, il trasferimento passa a «Ricevuta» (con la data nel «Riepilogo») e «Leggi i pezzi» sparisce. Se dopo alcuni giorni (7, salvo diversa impostazione) mancano ancora righe, compare l'avviso «Trasferimento in ritardo» all'ASP che ha spedito.
 
@@ -513,7 +513,7 @@ Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici
 
 **Chi sei.** Gestisci la tua ASP: inviti e gestisci i tecnici e i magazzinieri, carichi le liste dei siti (BOM), correggi i pezzi della tua ASP, guardi i numeri e scarichi esportazioni e rapporti. Puoi fare anche tutto ciò che fa il Magazzino ASP.
 
-**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni», «Rapporti», «Persone», «Guida». In basso a destra c'è il grande pulsante «Leggi» (non compare nella schermata di lettura, dove già sei).
+**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni e rapporti», «Persone», «Guida». In basso a destra c'è il grande pulsante «Leggi» (non compare nella schermata di lettura, dove già sei).
 
 **Cosa non vedi.** Solo i dati della tua ASP. Non vedi le altre ASP, né i loro pezzi (salvo quelli che stanno arrivando a te).
 
@@ -568,7 +568,7 @@ Ogni nuovo salvataggio dello stesso documento crea una nuova versione (la vedi a
 ### Come chiudo un documento?
 
 1. Apri il documento da «Documenti».
-2. Premi «Chiudi»: si apre la finestra «Chiudere il documento?». Premi «Conferma». Vedi «Chiuso».
+2. Premi «Chiudi»: si apre la finestra «Chiudere il documento?». Premi «Chiudi». Vedi «Chiuso».
 
 Un documento chiuso non si modifica più. Chiudere un documento non chiude gli avvisi collegati.
 
@@ -600,7 +600,7 @@ I numeri si aggiornano dopo le letture e ogni notte: una lettura appena inviata 
 
 ### Come scarico un export?
 
-1. Apri «Esportazioni».
+1. Apri «Esportazioni e rapporti», scheda «Esportazioni».
 2. Scegli i filtri che ti servono (tutti facoltativi): «Stato», «Modello», «Sito o magazzino», «Categoria di smistamento», «Letti dal», «Letti fino al». Le date si riferiscono all'ultima lettura di ogni pezzo.
 3. Premi «Crea esportazione». Vedi «Esportazione creata» e una nuova riga nell'elenco, con le «Righe» prodotte.
 4. Premi «Scarica» su quella riga: scarichi un file Excel. Il nome del file contiene la data e l'ora dell'esportazione.
@@ -611,7 +611,7 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 
 ### Come scarico un rapporto mensile?
 
-1. Apri «Rapporti».
+1. Apri «Esportazioni e rapporti», scheda «Rapporti».
 2. Ogni mese, il giorno 1, l'app prepara da sola il rapporto del mese precedente per la tua ASP.
 3. Sulla riga del mese premi «PDF» o «XLSX». Il nome del file contiene il mese e il nome della tua ASP.
 
@@ -634,7 +634,9 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 5. Se sono arrivati pezzi che non erano nella lista, scrivi il codice in «Pezzi in più» («Scrivi un codice e premi Invio») e premi «Aggiungi». Per togliere un codice aggiunto per errore premi «×».
 6. Premi «Conferma». Vedi «Confermata».
 
-Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e il riepilogo dice «Completa: Sì» o «No». Se mancano pezzi o ce ne sono in più, l'app crea l'avviso «DDT (reso) differenza».
+Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e il riepilogo dice «Completa: Sì» o «No». Se mancano pezzi o ce ne sono in più, l'app crea l'avviso «DDT (reso) differenza», con i codici, e il reso risulta «Confermata con differenze» (anche nell'elenco delle spedizioni). I pezzi in più si vedono nella scheda, in «Pezzi in più», con «Apri».
+
+**Se un pezzo mancante arriva dopo.** Apri il reso e premi «Conferma i mancanti arrivati» (c'è finché restano pezzi mancanti). La finestra mostra solo i pezzi mancanti, senza spunta: «Spunta i pezzi mancanti che sono arrivati. I pezzi già confermati e quelli in più non si cambiano.» Spunta quelli arrivati e premi «Conferma i mancanti arrivati». Dopo la prima conferma non si possono più aggiungere pezzi in più.
 
 **Pezzi arrivati dopo.** Se un pezzo mancante arriva più tardi, riapri lo stesso reso, premi di nuovo «Conferma» e aggiungilo. I pezzi già confermati non vengono contati due volte.
 
@@ -667,7 +669,7 @@ Per vedere il reso a cui si riferisce l'avviso, tocca l'«Oggetto»: si apre la 
 
 **Chi sei.** Lavori negli uffici del cliente: segui l'avanzamento dello swap su tutte le ASP, controlli differenze e anomalie, prepari esportazioni e rapporti. Puoi consultare quasi tutto, ma non modifichi pezzi, documenti o spedizioni.
 
-**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni», «Rapporti», «Guida».
+**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni e rapporti», «Guida».
 
 **Cosa vedi.** I pezzi, le spedizioni, i documenti, gli avvisi e le anomalie di tutte le ASP. Non vedi chi ha fatto le singole letture.
 
@@ -701,7 +703,7 @@ Come in [Come scarico un export?](#come-scarico-un-export) dell'Amministratore A
 ### Come preparo e scarico un rapporto mensile?
 
 Il giorno 1 di ogni mese l'app prepara da sola il rapporto del mese precedente. Per farne uno a richiesta:
-1. Apri «Rapporti».
+1. Apri «Esportazioni e rapporti», scheda «Rapporti».
 2. Nella tendina «Ambito» scegli «Tutte le ASP (cliente)» oppure una sola ASP. Scegli «Anno» e «Mese».
 3. Premi «Genera». Vedi «Rapporto generato» e una nuova riga nell'elenco. Ogni «Genera» crea un rapporto nuovo: quelli fatti prima restano nell'elenco.
 4. Premi «PDF» o «XLSX» sulla riga. Il nome del file contiene il mese e l'ambito (il cliente o il nome dell'ASP).
@@ -714,13 +716,15 @@ Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel m
 
 **Chi sei.** Gestisci tutta l'installazione: crei le ASP, inviti gli utenti, prepari siti, magazzini, catalogo dei modelli e categorie di smistamento, scegli le impostazioni. Puoi correggere i pezzi di tutte le ASP, creare trasferimenti tra ASP e confermare i resi.
 
-**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni», «Rapporti», «Organizzazioni», «Utenti», «Siti e magazzini», «Catalogo modelli», «Smistamento», «Impostazioni», «Registro amministrativo», «Guida».
+**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni e rapporti», «Organizzazioni», «Utenti», «Siti e magazzini», «Catalogo modelli», «Smistamento», «Impostazioni», «Registro amministrativo», «Guida».
 
 Funzionano come per gli altri ruoli, e non le ripetiamo:
 - cruscotto, esportazioni e rapporti: vedi [Ufficio cliente](#ufficio-cliente);
 - conferma dei resi: vedi [Come confermo un reso?](#come-confermo-un-reso);
 - pezzi, documenti (DDT e BOM, con file e lettura automatica), correzioni dei pezzi, chiusura di documenti e avvisi: vedi [Amministratore ASP](#amministratore-asp) e [Magazzino ASP](#magazzino-asp). In più, nella «Forzatura d'ufficio» puoi cambiare anche l'ASP del pezzo: in «Cambia ASP (solo Amministratore cliente)» scegli il nome dell'ASP, oppure lascia «Stessa ASP»;
 - verifica in due passaggi: vedi [Amministratore ASP](#amministratore-asp).
+
+Luogo di un documento: su un documento già salvato la tendina «Luogo» offre solo i luoghi della sua ASP, con la riga «Il luogo si può cambiare con un altro della stessa ASP: un documento resta nella sua ASP.» Se un documento è stato caricato sul luogo di un'ASP sbagliata, chiudilo («Chiudi», poi «Chiudi» nella finestra) e caricalo come documento nuovo sul luogo giusto. Se la BOM sbagliata aveva già fatto nascere un avviso, chiudilo da «Avvisi». Una BOM nuova conta solo le letture fatte dopo il suo caricamento: caricala prima che il tecnico legga i pezzi.
 
 ### Come preparo l'installazione la prima volta?
 
@@ -830,7 +834,7 @@ Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salv
 
 ### Come leggo il registro amministrativo?
 
-Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», «Azione», «Da», «Oggetto», «Dettagli». Oltre alla gestione di utenti, ASP, luoghi, modelli e impostazioni, trovi anche «Documento salvato», «Pezzi uniti», «Luogo di una lettura corretto» e «Anomalia risolta». Il registro non si modifica e non si cancella. Non registra le letture dei tecnici e dei magazzinieri.
+Apri «Registro amministrativo»: per ogni azione di gestione vedi «Quando», «Azione», «Da», «Oggetto», «Dettagli». Oltre alla gestione di utenti, ASP, luoghi, modelli e impostazioni, trovi anche «Documento salvato», «Pezzi uniti», «Luogo di una lettura corretto» e «Anomalia risolta». Il registro non si modifica e non si cancella. Non registra le letture dei tecnici e dei magazzinieri. Oggetto e dettagli sono scritti a parole, per esempio «BOM n. 111» e «Versione 2»; una persona eliminata compare come «Utente non più presente»; per i pezzi uniti c'è «Apri il pezzo».
 
 ---
 

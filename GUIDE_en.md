@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit d3f0efc · Guide text: sha cb9019f0c69f · Date: 11/11/2026
+App described: commit c68ce4e · Guide text: sha 8d1c01c319d9 · Date: 12/11/2026
 
 ## How to use this guide
 
@@ -204,7 +204,7 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 **With the camera.**
 1. Frame the code inside the colored box.
 2. As soon as the code is recognised, you hear a short sound, the phone vibrates (if it can) and the box turns white with «Read: …». It only means that the code has been seen.
-3. Shortly after comes the outcome: the green screen with the code means that the reading is recorded. Yellow or red, with a different sound (two low tones), mean: look at the screen. A window may also open («Unknown piece», «Sort»): the reading is recorded when you have answered. If you press the phone's Back button while the window is open, the window closes as with the X («Unknown piece» as «Skip», «Sort» as «Cancel») and you stay in «Scan».
+3. Shortly after comes the outcome: the green screen with the code means that the reading is recorded. Yellow (two low tones) or red (three falling notes) mean: look at the screen. A window may also open («Unknown piece», «Sort»): the reading is recorded when you have answered. If you press the phone's Back button while the window is open, the window closes as with the X («Unknown piece» as «Skip», «Sort» as «Cancel») and you stay in «Scan».
 4. The camera stops and «Read the next» appears: press it when you frame the next piece.
 
 **Reading in a row.** If you have to read many pieces one after another, tick «Burst (the camera restarts by itself after every reading)»: after less than a second you can read the next piece without pressing anything. The phone remembers the choice for the next times too.
@@ -281,7 +281,7 @@ The new pieces come from the warehouse of your ASP: if a code is not known, the 
 
 ### How do I check the pieces expected at the site (the BOM)?
 
-If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the row «BOM tick list · 3/10» (scanned out of expected): tap it to open the list. At the top right of the video there is also the summary «BOM 3/10 ▾»: tap it to open over the video the list of the pieces to remove or install, with a tick on those already scanned, and tap it again to close it. While the band of a yellow or red warning is shown, the summary disappears for a few seconds.
+If the list of the expected pieces (the BOM) has been uploaded for the site, in the «Scan» screen, further down after «My scans of today», you see the row «BOM tick list · 3/10» (scanned out of expected): tap it to open the list. At the top right of the video there is also the summary «BOM 3/10 ▾»: tap it to open over the video the list of the pieces to remove or install, with a tick on those already scanned, and tap it again to close it. While the band of a yellow or red warning is shown, the summary disappears for a few seconds. The list carries the number of the BOM (for example «BOM-00024»). The lines without a serial number show as «MC400107 · BB-101 2/3» (scanned out of expected) and turn green when complete; the summary counts them too.
 - with «Remove» you see the «Pieces to remove», with «Install» the «Pieces to install»;
 - every piece of the list that you scan gets a tick;
 - if you scan pieces that are not in the list, they appear below, for example «2 pieces not expected by the BOM»;
@@ -406,11 +406,11 @@ Then record the arrival:
 
 The pieces that are lines of the chosen DDT do not open the «Unknown piece» window: the model is taken from the DDT. If the DDT does not give the model, the piece goes to «To complete». A piece that is in another open DDT of your warehouse, one you did not choose, does not open the window either, as long as that DDT gives the model.
 
-What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). If you see «The DDT has no serial lines.», the DDT has only quantities and there is no tick list.
+What you see next: the row «Comparison with DDT … · 3/8» (pieces of the DDT arrived out of expected); tap it to open the box with how many pieces are «arrived», «missing» and «unexpected», and the list of the expected serial numbers with a tick on those scanned. This box counts only **your** scans of today in this warehouse: if a colleague scans with another phone, or if the arrival lasts several days, the complete count is in «Documents» (see below). The lines of the DDT without a serial number show in the list as «MC400107 · BB-101 2/3» (scanned out of expected) and count among the «arrived». If you see «The DDT has no serial lines.», the DDT has no lines to tick.
 
 Finally, check and close the comparison:
 1. Open «Documents» and press «Open» on the DDT.
-2. Press «Compare»: you see how many are «Arrived», «Missing», «Unexpected», «Model unknown», under every number the list of the codes and, for the quantities, counted/expected.
+2. Press «Compare»: you see how many are «Arrived», «Missing», «Unexpected», «Model unknown», under every number the list of the codes and, for the quantities, counted/expected. A piece that has its own serial line does not count also in the quantity line; the pieces without a serial expected by a quantity line are not «Unexpected» (only the extra ones are).
 3. When the arrival is complete, press «Mark checked». You see «Marked checked».
 
 Good to know: after «Mark checked» the DDT no longer appears in the «DDT» list of the phone. If something does not match, the app creates an alert «DDT (arrival) difference» (see «Alerts»).
@@ -478,7 +478,7 @@ Transfers towards another ASP are created only by the Client administrator; you 
 
 1. Open «Shipments», look for the «Transfer» in the state «Sent» and press «Open».
 2. Press «Scan pieces»: scanning opens in «Arrival», already in the receiving warehouse.
-3. Scan the pieces that arrived.
+3. Scan the pieces that arrived. At the top right of the video you see «Expected 1/3 ▾»: tap it to open the list of the pieces to receive, with a tick on those already scanned (also by a colleague). The same list is further down, in «Expected pieces». The scanned pieces that are not in the transfer show in «… pieces not in this transfer».
 
 What you see next: in the page of the transfer every arrived line shows «Arrived». After the arrival the piece passes to your ASP. When all the pieces have arrived, the transfer becomes «Received» (with the date in the «Summary») and «Scan pieces» disappears. If after some days (7, unless set otherwise) lines are still missing, the alert «Transfer difference» appears to the ASP that sent it.
 
@@ -513,7 +513,7 @@ On the page of the piece you find: «State» (status, location, last scan), «Co
 
 **Who you are.** You manage your ASP: you invite and manage the technicians and the warehouse staff, you upload the lists of the sites (BOMs), you correct the pieces of your ASP, you look at the numbers and download exports and reports. You can also do everything the ASP warehouse does.
 
-**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports», «Reports», «People», «Guide». At the bottom right there is the big «Scan» button (it does not appear in the scanning screen, where you already are).
+**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports and reports», «People», «Guide». At the bottom right there is the big «Scan» button (it does not appear in the scanning screen, where you already are).
 
 **What you do not see.** Only the data of your ASP. You do not see the other ASPs, nor their pieces (except those that are coming to you).
 
@@ -568,7 +568,7 @@ Every new save of the same document creates a new version (you see it next to th
 ### How do I close a document?
 
 1. Open the document from «Documents».
-2. Press «Close»: the window «Close the document?» opens. Press «Confirm». You see «Closed».
+2. Press «Close»: the window «Close the document?» opens. Press «Close». You see «Closed».
 
 A closed document can no longer be changed. Closing a document does not close the linked alerts.
 
@@ -600,7 +600,7 @@ The numbers are updated after the scans and every night: a scan that has just be
 
 ### How do I download an export?
 
-1. Open «Exports».
+1. Open «Exports and reports», tab «Exports».
 2. Choose the filters you need (all optional): «Status», «Model», «Site or warehouse», «Sorting category», «Scanned from», «Scanned until». The dates refer to the last scan of every piece.
 3. Press «Create export». You see «Export created» and a new row in the list, with the «Rows» produced.
 4. Press «Download» on that row: you download an Excel file. The name of the file contains the date and time of the export.
@@ -611,7 +611,7 @@ The list shows only the exports you created. If you see «The data could not be 
 
 ### How do I download a monthly report?
 
-1. Open «Reports».
+1. Open «Exports and reports», tab «Reports».
 2. Every month, on day 1, the app prepares by itself the report of the previous month for your ASP.
 3. On the row of the month press «PDF» or «XLSX». The name of the file contains the month and the name of your ASP.
 
@@ -634,7 +634,9 @@ The list shows only the exports you created. If you see «The data could not be 
 5. If pieces arrived that were not in the list, write the code in «Extra pieces» («Type a code and press Enter») and press «Add». To take out a code added by mistake press «×».
 6. Press «Confirm». You see «Confirmed».
 
-What you see next: in the page the lines show «Confirmed» or «Missing», and the summary says «Complete: Yes» or «No». If pieces are missing or there are extra ones, the app creates the alert «DDT (return) difference».
+What you see next: in the page the lines show «Confirmed» or «Missing», and the summary says «Complete: Yes» or «No». If pieces are missing or there are extra ones, the app creates the alert «DDT (return) difference», with the codes, and the return shows «Confirmed with differences» (also in the list of shipments). The extra pieces show in the page, in «Extra pieces», with «Open».
+
+**If a missing piece arrives later.** Open the return and press «Confirm missing pieces that arrived» (it is there while pieces are still missing). The window shows only the missing pieces, not ticked: «Tick the missing pieces that have arrived. Pieces already confirmed and extra pieces cannot be changed.» Tick those that arrived and press «Confirm missing pieces that arrived». After the first confirmation no extra pieces can be added.
 
 **Pieces arrived later.** If a missing piece arrives later, reopen the same return, press «Confirm» again and add it. The pieces already confirmed are not counted twice.
 
@@ -667,7 +669,7 @@ To see the return the alert refers to, tap the «Object»: the page of the retur
 
 **Who you are.** You work in the client's offices: you follow the progress of the swap across all ASPs, you check differences and anomalies, you prepare exports and reports. You can look at almost everything, but you do not change pieces, documents or shipments.
 
-**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports», «Reports», «Guide».
+**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports and reports», «Guide».
 
 **What you see.** The pieces, the shipments, the documents, the alerts and the anomalies of all ASPs. You do not see who made the single scans.
 
@@ -701,7 +703,7 @@ As in [How do I download an export?](#how-do-i-download-an-export) of the ASP ad
 ### How do I prepare and download a monthly report?
 
 On day 1 of every month the app prepares by itself the report of the previous month. To make one on request:
-1. Open «Reports».
+1. Open «Exports and reports», tab «Reports».
 2. In the «Scope» list choose «All ASPs (client)» or a single ASP. Choose «Year» and «Month».
 3. Press «Generate». You see «Report generated» and a new row in the list. Every «Generate» creates a new report: those made before stay in the list.
 4. Press «PDF» or «XLSX» on the row. The name of the file contains the month and the scope (the client or the name of the ASP).
@@ -714,13 +716,15 @@ The report contains the pieces arrived, installed, removed, sorted and returned 
 
 **Who you are.** You manage the whole installation: you create the ASPs, invite the users, prepare sites, warehouses, the catalog of models and the sorting categories, choose the settings. You can correct the pieces of all ASPs, create transfers between ASPs and confirm the returns.
 
-**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports», «Reports», «Organizations», «Users», «Sites and warehouses», «Catalog of models», «Sorting», «Settings», «Admin log», «Guide».
+**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports and reports», «Organizations», «Users», «Sites and warehouses», «Catalog of models», «Sorting», «Settings», «Admin log», «Guide».
 
 They work as for the other roles, and we do not repeat them:
 - dashboard, exports and reports: see [Client office](#client-office);
 - confirming returns: see [How do I confirm a return?](#how-do-i-confirm-a-return);
 - pieces, documents (DDTs and BOMs, with files and automatic reading), corrections of pieces, closing documents and alerts: see [ASP administrator](#asp-administrator) and [ASP warehouse](#asp-warehouse). In addition, in «Office force» you can also change the ASP of the piece: in «Change ASP (Client administrator only)» choose the name of the ASP, or leave «Same ASP»;
 - two-step verification: see [ASP administrator](#asp-administrator).
+
+Location of a document: on a document already saved the «Location» list offers only the locations of its ASP, with the line «The place can be changed to another place of the same ASP: a document stays in its ASP.» If a document was uploaded at the location of the wrong ASP, close it («Close», then «Close» in the window) and upload it as a new document at the right location. If the wrong BOM had already raised an alert, close it from «Alerts». A new BOM counts only the scans made after it was uploaded: upload it before the technician scans the pieces.
 
 ### How do I prepare the installation the first time?
 
@@ -830,7 +834,7 @@ Open «Settings». Every tab has its own «Save»: changing tab does not save. A
 
 ### How do I read the admin log?
 
-Open «Admin log»: for every management action you see «When», «Action», «By», «Target», «Details». Besides the management of users, ASPs, locations, models and settings, you also find «Document saved», «Pieces merged», «Location of a reading corrected» and «Anomaly resolved». The log cannot be changed or deleted. It does not record the scans of technicians and warehouse staff.
+Open «Admin log»: for every management action you see «When», «Action», «By», «Target», «Details». Besides the management of users, ASPs, locations, models and settings, you also find «Document saved», «Pieces merged», «Location of a reading corrected» and «Anomaly resolved». The log cannot be changed or deleted. It does not record the scans of technicians and warehouse staff. Target and details are written in words, for example «BOM no. 111» and «Version 2»; a deleted person shows as «User no longer present»; for merged pieces there is «Open the piece».
 
 ---
 
