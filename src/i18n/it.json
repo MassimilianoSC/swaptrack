@@ -568,6 +568,7 @@
       "anomalies": "Letture che non tornano, da verificare.",
       "exports": "Elenco dei pezzi in Excel, con filtri.",
       "reports": "Resoconto mensile in PDF.",
+      "exportsReports": "Elenco dei pezzi in Excel con filtri, e resoconto mensile in PDF.",
       "sorting": "Categorie e regole di smistamento."
     }
   },

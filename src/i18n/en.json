@@ -568,6 +568,7 @@
       "anomalies": "Readings that do not add up, to check.",
       "exports": "List of pieces in Excel, with filters.",
       "reports": "Monthly report in PDF.",
+      "exportsReports": "List of pieces in Excel with filters, and the monthly report in PDF.",
       "sorting": "Sorting categories and rules."
     }
   },
