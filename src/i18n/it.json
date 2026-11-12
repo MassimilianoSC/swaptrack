@@ -407,6 +407,14 @@
       "noLines": "Nessuna riga per questa direzione.",
       "unexpectedTitle": "{{count}} pezzi non attesi dalla BOM"
     },
+    "transfer": {
+      "title": "Pezzi attesi",
+      "chip": "Attesi {{done}}/{{total}}",
+      "from": "Trasferimento da {{place}}",
+      "subtitle": "Pezzi del trasferimento da ricevere qui",
+      "noLines": "Nessun pezzo in questo trasferimento.",
+      "unexpectedTitle": "{{count}} pezzi non in questo trasferimento"
+    },
     "alreadyRead": "Codice già letto. Inquadra il pezzo successivo.",
     "photoHint": "Leggi un pezzo, poi scatta la foto.",
     "modelSearch": "Cerca modello o codice",

@@ -18,6 +18,8 @@ import { Input, Select, Checkbox, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Empty } from "@/components/states";
 import { BackButton } from "@/components/BackButton";
+import { ExpectedChip, ExpectedSection, type ExpectedListProps } from "@/components/scan/ExpectedList";
+import { watchLines, type ShipmentLine } from "@/lib/data/shipments";
 import { toast } from "sonner";
 import { useOnline } from "@/app/hooks";
 import { compressImage } from "@/lib/imageCompress.js";
@@ -257,9 +259,40 @@ export default function Scan() {
   const [bom, setBom] = React.useState<{ id: string; number: string | null; expected: Array<{ codeRaw: string; codeId: string }>; createdAtMs: number } | null>(null);
   const [bomLines, setBomLines] = React.useState<Array<Record<string, unknown>> | null>(null);
   const [bomTicks, setBomTicks] = React.useState<Set<string>>(new Set());
-  // P-175: the BOM list opened from its summary on the video.
-  const [bomOpen, setBomOpen] = React.useState(false);
   const [bomUnexpected, setBomUnexpected] = React.useState<string[]>([]);
+
+  // P-189: the arrival of a transfer opened from it: its pieces, ticked as they arrive here (this phone's readings at
+  // once, offline too; the colleagues' through the server's arrivedAt). Lines from the phone's copy when offline.
+  const transferArrival = mode === "arrive_at_warehouse" && !!shipmentId && shipmentDoc?.kind === "transfer";
+  const [transferLines, setTransferLines] = React.useState<Array<{ codeRaw: string; codeId: string; arrived: boolean }>>([]);
+  React.useEffect(() => {
+    if (!transferArrival || !shipmentId) { setTransferLines([]); return; }
+    let aborted = false;
+    const take = async (rows: Array<Row<ShipmentLine>>) => {
+      const out: Array<{ codeRaw: string; codeId: string; arrived: boolean }> = [];
+      for (const l of rows) if (l.codeRaw) out.push({ codeRaw: l.codeRaw, codeId: await computeCodeId(l.codeRaw), arrived: !!l.arrivedAt });
+      if (!aborted) setTransferLines(out);
+    };
+    const stop = watchLines(shipmentId, (rows) => void take(rows));
+    return () => { aborted = true; stop(); };
+  }, [transferArrival, shipmentId]);
+  const [transferRead, setTransferRead] = React.useState<{ codeIds: Set<string>; unexpected: string[] }>({ codeIds: new Set(), unexpected: [] });
+  React.useEffect(() => {
+    if (!transferArrival || !location) { setTransferRead({ codeIds: new Set(), unexpected: [] }); return; }
+    const expected = new Set(transferLines.map((l) => l.codeId));
+    const relevant = today.filter((s) => !s.voided && s.type === "arrive_at_warehouse" && s.codeRaw && s.locationId === location.id);
+    let aborted = false;
+    (async () => {
+      const codeIds = new Set<string>();
+      const unexpected: string[] = [];
+      for (const s of relevant) {
+        const cid = await computeCodeId(s.codeRaw!);
+        if (expected.has(cid)) codeIds.add(cid); else if (s.shipmentId === shipmentId && !unexpected.includes(s.codeRaw!)) unexpected.push(s.codeRaw!);
+      }
+      if (!aborted) setTransferRead({ codeIds, unexpected });
+    })();
+    return () => { aborted = true; };
+  }, [transferArrival, transferLines, today, location, shipmentId]);
 
   React.useEffect(() => {
     void listModels().then((m) => { setMaterialCodes(m.map((x) => x.materialCode)); setModels(m); }).catch(() => undefined).finally(() => setCatalogKnown(true));
@@ -465,6 +498,24 @@ export default function Scan() {
   const readingKey = (code: string) => [normalizeBarcode(code), mode, location?.id ?? "", shipmentId ?? "", ddtApplies ? ddtId : ""].join("|");
   // The place of the screen is always known; the others come from the ASP's list (loaded in the background).
   const placeName = (id: string | null) => { const l = id && id === location?.id ? location : places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
+  // The lists of the pieces this screen expects (ExpectedList): the site's BOM (§12.1, P-175) and the incoming transfer
+  // (P-189).
+  const bomList: ExpectedListProps | null = bom && bomDirection ? {
+    testId: "scan-bom", chip: t("scan.bom.chip", { done: bomTicks.size, total: bom.expected.length }), title: t("scan.bom.title"),
+    name: bom.number, subtitle: t(`scan.bom.direction.${bomDirection}`), noLines: t("scan.bom.noLines"),
+    lines: bom.expected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: bomTicks.has(l.codeId) })),
+    unexpected: bomUnexpected, unexpectedTitle: t("scan.bom.unexpectedTitle", { count: bomUnexpected.length }),
+  } : null;
+  const transferDone = transferLines.filter((l) => l.arrived || transferRead.codeIds.has(l.codeId)).length;
+  const transferList: ExpectedListProps | null = transferArrival && shipmentDoc ? {
+    testId: "scan-transfer", chip: t("scan.transfer.chip", { done: transferDone, total: transferLines.length }), title: t("scan.transfer.title"),
+    name: t("scan.transfer.from", { place: placeName((shipmentDoc.fromLocationId as string | undefined) ?? null) }), subtitle: t("scan.transfer.subtitle"),
+    noLines: t("scan.transfer.noLines"),
+    lines: transferLines.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: l.arrived || transferRead.codeIds.has(l.codeId) })),
+    unexpected: transferRead.unexpected, unexpectedTitle: t("scan.transfer.unexpectedTitle", { count: transferRead.unexpected.length }),
+  } : null;
+  // One list on the video: a site has no transfer arrival.
+  const expectedList = bomList ?? transferList;
   // D-68 cases 2 and 3: the reading as the server's state machine would see it, on the piece as the phone knows it.
   const judgeReading = (code: string, it: Record<string, unknown> | null) => {
     rereadRef.current = null;
@@ -931,32 +982,9 @@ export default function Scan() {
         {decoded && <p role="status" className="absolute inset-x-[12%] top-1/2 -translate-y-1/2 truncate rounded bg-black/70 px-2 py-1 text-center font-mono font-bold text-white" data-testid="scan-decoded">{t("scan.decoded", { code: decoded })}</p>}
         <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs text-white" data-testid="scan-engine">{engine ? t(`scan.engine.${engine}`) : t("common.loading")}</span>
         {/* P-175: the BOM of the site at the top, on the video (no height taken from it, P-155): a summary that opens the
-            list over the video. Hidden while a warning is a band at the top; the message over the whole video covers it. */}
-        {bom && bomDirection && flash?.phase !== "band" && (
-          <>
-            <button type="button" onClick={() => setBomOpen((o) => !o)} aria-expanded={bomOpen} className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-xs font-semibold text-white" data-testid="scan-bom-chip">
-              {t("scan.bom.chip", { done: bomTicks.size, total: bom.expected.length })} {bomOpen ? "▴" : "▾"}
-            </button>
-            {bomOpen && (
-              <div className="absolute inset-x-2 top-9 max-h-[70%] overflow-y-auto rounded bg-black/80 p-2 text-white" data-testid="scan-bom-overlay">
-                {bom.number && <p className="truncate font-mono text-xs font-semibold" data-testid="scan-bom-overlay-number">{bom.number}</p>}
-                <p className="mb-1 text-xs">{t(`scan.bom.direction.${bomDirection}`)}</p>
-                {bom.expected.length === 0 ? <p className="text-xs">{t("scan.bom.noLines")}</p> : (
-                  <ul className="space-y-1 font-mono text-xs">
-                    {bom.expected.map((line) => {
-                      const done = bomTicks.has(line.codeId);
-                      return (
-                        <li key={line.codeId} className={cn("flex items-center gap-2", done && "text-success")} data-testid={`scan-bom-overlay-${done ? "done" : "todo"}`}>
-                          <Check className={cn("h-4 w-4 shrink-0", done ? "" : "opacity-30")} aria-hidden /><span className="truncate">{line.codeRaw}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            )}
-          </>
-        )}
+            list over the video. Hidden while a warning is a band at the top; the message over the whole video covers it.
+            P-189: the same for the pieces of an incoming transfer. */}
+        {expectedList && <ExpectedChip key={expectedList.testId} p={expectedList} hidden={flash?.phase === "band"} />}
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
         {flash && <div className={cn(flash.phase === "full" ? "absolute inset-0 flex items-center justify-center text-2xl p-4" : "absolute inset-x-0 top-0 px-3 py-1 text-sm leading-tight",
           "font-mono font-bold text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")}
@@ -1077,45 +1105,9 @@ export default function Scan() {
         </div>
       </details>
 
-      {bom && bomDirection && (
-        <details data-testid="scan-bom-section" className="rounded border border-border px-3">
-          <summary className="flex cursor-pointer list-none items-center gap-2 min-h-touch font-semibold [&::-webkit-details-marker]:hidden" data-testid="scan-bom-toggle">
-            {t("scan.bom.title")} · <span className="tabular" data-testid="scan-bom-count">{bomTicks.size}/{bom.expected.length}</span>
-            {/* P-185: the BOM's number (it showed the document id). */}
-            {bom.number && <span className="min-w-0 truncate text-xs text-muted font-mono font-normal" data-testid="scan-bom-number">{bom.number}</span>}
-            <ChevronDown className="ml-auto h-5 w-5" aria-hidden />
-          </summary>
-          <div className="pb-3">
-          <p className="text-xs text-muted mb-2">{t(`scan.bom.direction.${bomDirection}`)}</p>
-          {bom.expected.length === 0 ? (
-            <p className="text-sm text-muted">{t("scan.bom.noLines")}</p>
-          ) : (
-            <ul className="space-y-1 text-sm" data-testid="scan-bom-lines">
-              {bom.expected.map((line) => {
-                const done = bomTicks.has(line.codeId);
-                return (
-                  <li key={line.codeId} className={cn("flex items-center gap-2 border-b border-border py-1 font-mono text-xs", done && "text-success")} data-testid={`scan-bom-line-${done ? "done" : "todo"}`}>
-                    <Check className={cn("h-4 w-4", done ? "" : "opacity-30")} aria-hidden />
-                    <span className="truncate">{line.codeRaw}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {bomUnexpected.length > 0 && (
-            <>
-              <p className="text-xs text-warning font-semibold mt-3 flex items-center gap-2" data-testid="scan-bom-unexpected-title">
-                <AlertTriangle className="h-4 w-4" aria-hidden />
-                {t("scan.bom.unexpectedTitle", { count: bomUnexpected.length })}
-              </p>
-              <ul className="space-y-1 text-xs font-mono mt-1 text-warning" data-testid="scan-bom-unexpected-list">
-                {bomUnexpected.map((c) => <li key={c} className="truncate">{c}</li>)}
-              </ul>
-            </>
-          )}
-          </div>
-        </details>
-      )}
+      {/* P-185: the BOM is called by its number (it showed the document id). */}
+      {bomList && <ExpectedSection p={bomList} />}
+      {transferList && <ExpectedSection p={transferList} />}
 
       <Dialog open={!!label} onOpenChange={(o) => { if (!o) setLabel(null); }}>
         <DialogContent title={t("scan.aiLabelTitle")} description={t("scan.aiLabelHint")}>

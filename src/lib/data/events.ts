@@ -42,13 +42,15 @@ export function watchRejectedScans(cb: (all: RejectedScan[]) => void): () => voi
 export const rejectedScanCount = () => rejected.length;
 
 // R11: only the author's own events of today. `ddtId` (payload) serves the live DDT comparison on the device (§12.2).
-export interface MyScan { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null }
+// P-189: shipmentId (payload), for the pieces of an incoming transfer read on this phone.
+export interface MyScan { id: string; type: string; codeRaw?: string; at: Date; pending: boolean; voided?: boolean; locationId?: string; ddtId?: string | null; shipmentId?: string | null }
 export function watchMyScansToday(uid: string, cb: (rows: MyScan[]) => void) {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const q = query(collection(db, "events"), where("userId", "==", uid), where("scannedAt", ">=", Timestamp.fromDate(start)), orderBy("scannedAt", "desc"));
   return onSnapshot(q, { includeMetadataChanges: true }, (s) => cb(s.docs.map((d) => ({
     id: d.id, type: d.get("type"), codeRaw: d.get("codeRaw"), at: (d.get("scannedAt") as Timestamp).toDate(), pending: d.metadata.hasPendingWrites, voided: d.get("voided"),
     locationId: d.get("locationId"), ddtId: (d.get("payload") as { ddtId?: string } | undefined)?.ddtId ?? null,
+    shipmentId: (d.get("payload") as { shipmentId?: string } | undefined)?.shipmentId ?? null,
   }))), () => cb([]));
 }
 

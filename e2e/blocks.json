@@ -37,7 +37,8 @@
         "doc-lines-serial.desk.spec.ts",
         "file-name.desk.spec.ts",
         "admin-log-text.desk.spec.ts",
-        "return-late-confirm.desk.spec.ts"
+        "return-late-confirm.desk.spec.ts",
+        "transfer-arrival-list.phone.spec.ts"
       ]
     },
     {

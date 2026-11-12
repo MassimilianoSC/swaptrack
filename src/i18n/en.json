@@ -407,6 +407,14 @@
       "noLines": "No lines for this direction.",
       "unexpectedTitle": "{{count}} pieces not expected by the BOM"
     },
+    "transfer": {
+      "title": "Expected pieces",
+      "chip": "Expected {{done}}/{{total}}",
+      "from": "Transfer from {{place}}",
+      "subtitle": "Pieces of the transfer to receive here",
+      "noLines": "No pieces in this transfer.",
+      "unexpectedTitle": "{{count}} pieces not in this transfer"
+    },
     "alreadyRead": "Code already read. Point at the next piece.",
     "photoHint": "Read a piece, then take the photo.",
     "modelSearch": "Search model or code",
