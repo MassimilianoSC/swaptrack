@@ -75,3 +75,53 @@ describe("confirming a return shipment twice (§9.3, path 4)", () => {
     expect((await t.db.collection("shipments").doc(B).get()).get("confirmedComplete")).toBe(true);
   });
 });
+
+// P-186 (tester, A9): a return confirmed with a missing piece and an extra one. §9.3: the extra piece is confirmed
+// (return_confirm, alert), the shipment is confirmedComplete false, and a second confirmation is for the missing
+// pieces only. Red before: the extra piece typed again in the second confirmation got a second return_confirm, the
+// second confirmation computed «complete» from its own call (true, the extra piece forgotten, the alert zeroed), and
+// the extra pieces were nowhere to be seen (the alert had only the counts).
+describe("a confirmed return: the second confirmation is for the missing pieces only (P-186)", () => {
+  it("an extra piece is refused the second time; «complete» and the alert keep the whole shipment's difference", async () => {
+    const S = `sh_TT_ret186_${RUN}`, extraCode = `SN-${RUN}-R186-X`;
+    await t.db.collection("shipments").doc(S).set({ kind: "return", fromLocationId: LOC.nordWh, fromAspId: NORD, toLocationId: LOC.clientWh, toAspId: null, status: "draft", itemCount: 0, documentId: null });
+    const ids: Record<string, string> = {};
+    for (const [n, code] of [["a", `SN-${RUN}-R186-A`], ["b", `SN-${RUN}-R186-B`], ["x", extraCode]] as const) {
+      const first = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "removed", categoryId: "cat_t" } }));
+      ids[n] = (await t.db.collection("events").doc(first).get()).get("itemId");
+      if (n !== "x") await t.fire(ev("return_ship", code, { at: T0 + 1000, payload: { shipmentId: S } }));
+    }
+    await t.db.collection("shipments").doc(S).update({ status: "sent" });
+    const processOf = async () => {
+      for (const e of (await t.db.collection("events").where("payload.shipmentId", "==", S).get()).docs) if (!e.get("processedAt")) await t.processEvent(e.id);
+    };
+    const extraConfirms = async () => (await t.db.collection("events").where("payload.shipmentId", "==", S).get()).docs.filter((e) => e.get("type") === "return_confirm" && e.get("payload.extra"));
+
+    // Soft checks: on the code before, each defect shows as its own red in one run.
+    // First confirmation: A arrived, B missing, X in more.
+    await shipments.confirmReturn.handler(ctx, { shipmentId: S, confirmed: [ids.a], missing: [ids.b], extra: [extraCode] });
+    await processOf();
+    expect.soft((await t.db.collection("items").doc(ids.x).get()).get("status")).toBe("returned");
+    let sh = (await t.db.collection("shipments").doc(S).get()).data()!;
+    expect.soft([sh.confirmedComplete, sh.extraCodes]).toEqual([false, [extraCode]]);
+    expect.soft((await t.db.collection("alerts").doc(`return-${S}`).get()).data()).toMatchObject({
+      count: 2, detail: { missing: 1, extra: 1, missingCodes: [`SN-${RUN}-R186-B`], unexpectedCodes: [extraCode] },
+    });
+
+    // The same extra piece again: refused, no second return_confirm.
+    const again = await shipments.confirmReturn.handler(ctx, { shipmentId: S, confirmed: [], missing: [ids.b], extra: [extraCode] }).then(() => "accepted", (e: Error) => e.message);
+    expect.soft(again).toBe("return_extra_after_confirm");
+    await processOf();
+    expect.soft(await extraConfirms()).toHaveLength(1);
+
+    // B turns up: confirmed alone. The shipment stays incomplete (X was in more) and the alert keeps X only.
+    await shipments.confirmReturn.handler(ctx, { shipmentId: S, confirmed: [ids.b], missing: [], extra: [] });
+    await processOf();
+    expect.soft((await t.db.collection("items").doc(ids.b).get()).get("status")).toBe("returned");
+    sh = (await t.db.collection("shipments").doc(S).get()).data()!;
+    expect.soft([sh.confirmedComplete, sh.extraCodes]).toEqual([false, [extraCode]]);
+    expect.soft((await t.db.collection("alerts").doc(`return-${S}`).get()).data()).toMatchObject({
+      count: 1, closedAt: null, detail: { missing: 0, extra: 1, missingCodes: [], unexpectedCodes: [extraCode] },
+    });
+  });
+});

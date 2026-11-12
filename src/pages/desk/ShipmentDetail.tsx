@@ -1,11 +1,12 @@
 import * as React from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Send, Trash2, ScanLine, PackageCheck } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchShipment, watchLines, type Shipment, type ShipmentLine } from "@/lib/data/shipments";
+import { searchItemByCode } from "@/lib/data/items";
 import type { Row } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -25,6 +26,7 @@ export default function ShipmentDetail() {
   const { t, i18n } = useTranslation();
   const { claims } = useSession();
   const names = useNames();
+  const nav = useNavigate();
   const { busy, run } = useAction();
   const [shipment, setShipment] = React.useState<Row<Shipment> | null>(null);
   const [lines, setLines] = React.useState<Row<ShipmentLine>[]>([]);
@@ -48,7 +50,15 @@ export default function ShipmentDetail() {
   const canSend = shipment.status === "draft" && (role === "asp_admin" || role === "asp_warehouse") && isOwnSender;
   const canCancel = shipment.status === "draft" && (isOwnSender || role === "client_admin");
   const canScanDraft = canSend;
-  const canConfirm = shipment.kind === "return" && (shipment.status === "sent" || shipment.status === "confirmed") && (role === "client_warehouse" || role === "client_admin");
+  // P-186, §9.3: once confirmed, a return is confirmed again only for its missing pieces that arrived later: the
+  // window then lists the lines still open, none ticked, and no extra pieces (the server refuses them).
+  const openLines = lines.filter((l) => !l.confirmedAt && !l.confirmedElsewhere);
+  const late = shipment.status === "confirmed";
+  const confirmLines = late ? openLines : lines;
+  const extraCodes = (shipment as Shipment & { extraCodes?: string[] }).extraCodes ?? [];
+  const withDifferences = late && shipment.confirmedComplete === false;
+  const canConfirm = shipment.kind === "return" && (shipment.status === "sent" || (late && openLines.length > 0)) && (role === "client_warehouse" || role === "client_admin");
+  const openConfirm = () => { setMissing(new Set(late ? openLines.map((l) => l.id) : [])); setExtra([]); setConfirmOpen(true); };
   const canScanArrival = shipment.kind === "transfer" && shipment.status === "sent" && isOwnReceiver && (role === "asp_admin" || role === "asp_warehouse");
 
   const send = async () => {
@@ -65,9 +75,9 @@ export default function ShipmentDetail() {
   const dropExtra = (c: string) => setExtra((x) => x.filter((v) => v !== c));
   const confirmReturn = async () => {
     // A line confirmed in another return is already decided (the server skips it as well).
-    const confirmed = lines.filter((l) => !missing.has(l.id) && !l.confirmedElsewhere).map((l) => l.id);
+    const confirmed = confirmLines.filter((l) => !missing.has(l.id) && !l.confirmedElsewhere).map((l) => l.id);
     const missingArr = [...missing];
-    await run(() => call("confirmReturn", { shipmentId: id, confirmed, missing: missingArr, extra }), t("shipments.confirmed"));
+    await run(() => call("confirmReturn", { shipmentId: id, confirmed, missing: missingArr, extra: late ? [] : extra }), t("shipments.confirmed"));
     setConfirmOpen(false); setMissing(new Set()); setExtra([]);
   };
 
@@ -94,7 +104,7 @@ export default function ShipmentDetail() {
       <PageHeader
         back="/shipments"
         title={title}
-        subtitle={`${t(`shipments.statuses.${shipment.status}`)} · ${formatInstant(shipment.createdAt?.toDate?.() ?? null, i18n.language)}`}
+        subtitle={`${withDifferences ? t("shipments.confirmedWithDifferences") : t(`shipments.statuses.${shipment.status}`)} · ${formatInstant(shipment.createdAt?.toDate?.() ?? null, i18n.language)}`}
         actions={<>
           {scanTo && <Button asChild><Link to={scanTo} data-testid="shipment-scan"><ScanLine className="h-4 w-4" />{t("shipments.scanPieces")}</Link></Button>}
           {canSend && <Button variant="secondary" onClick={() => setSendOpen(true)} data-testid="shipment-send"><Send className="h-4 w-4" />{t("shipments.send")}</Button>}
@@ -104,7 +114,7 @@ export default function ShipmentDetail() {
               <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="hidden" data-testid="shipment-attach-ddt" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachDdt(f); }} />
             </label>
           )}
-          {canConfirm && <Button variant="secondary" onClick={() => setConfirmOpen(true)} data-testid="shipment-confirm"><PackageCheck className="h-4 w-4" />{t("shipments.confirm")}</Button>}
+          {canConfirm && <Button variant="secondary" onClick={openConfirm} data-testid="shipment-confirm"><PackageCheck className="h-4 w-4" />{t(late ? "shipments.confirmLate" : "shipments.confirm")}</Button>}
           {canCancel && <Button variant="danger" onClick={() => setCancelling(true)} disabled={busy} data-testid="shipment-cancel"><Trash2 className="h-4 w-4" />{t("shipments.cancel")}</Button>}
           <ConfirmDialog open={cancelling} danger busy={busy} title={t("shipments.cancel")} body={t("shipments.cancelConfirm")} confirmLabel={t("shipments.cancel")} onConfirm={() => void cancel()} onClose={() => setCancelling(false)} />
         </>}
@@ -143,6 +153,22 @@ export default function ShipmentDetail() {
           </ul>
         )}
       </Card>
+      {/* P-186: the extra pieces the client found in this return (§9.3: confirmed, with the alert). */}
+      {extraCodes.length > 0 && (
+        <Card>
+          <h2 className="font-semibold mb-3">{t("shipments.extraPieces")}</h2>
+          <ul className="divide-y divide-border text-sm" data-testid="shipment-extra-lines">
+            {extraCodes.map((c) => (
+              <li key={c} className="flex items-center gap-3 py-2">
+                <span className="font-mono truncate flex-1">{c}</span>
+                <Badge tone="warning">{t("shipments.extraLine")}</Badge>
+                <button type="button" className="text-primary hover:underline text-xs" data-testid={`shipment-extra-open-${c}`}
+                  onClick={() => void run(async () => { const it = await searchItemByCode(c); if (!it) throw new Error("item_not_found"); nav(`/items/${it.id}`); })}>{t("common.open")}</button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Dialog open={sendOpen} onOpenChange={(o) => { if (!o) setSendOpen(false); }}>
         <DialogContent title={t("shipments.send")} description={shipment.kind === "return" ? t("shipments.sendReturnHint") : t("shipments.sendTransferHint")}>
@@ -154,11 +180,11 @@ export default function ShipmentDetail() {
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={(o) => { if (!o) setConfirmOpen(false); }}>
-        <DialogContent title={t("shipments.confirm")} description={t("shipments.confirmHint")} className="max-w-2xl">
+        <DialogContent title={t(late ? "shipments.confirmLate" : "shipments.confirm")} description={t(late ? "shipments.confirmLateHint" : "shipments.confirmHint")} className="max-w-2xl">
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             <h3 className="font-semibold text-sm">{t("shipments.linesToTick")}</h3>
             <ul className="divide-y divide-border text-sm" data-testid="confirm-lines-list">
-              {lines.map((l) => (
+              {confirmLines.map((l) => (
                 <li key={l.id} className="flex items-center gap-2 py-2">
                   <input id={`cl-${l.id}`} type="checkbox" className="h-5 w-5 accent-[rgb(var(--primary))]" checked={!missing.has(l.id)} disabled={!!l.confirmedElsewhere} onChange={() => toggleMissing(l.id)} data-testid={`confirm-line-${l.id}`} />
                   <label htmlFor={`cl-${l.id}`} className="font-mono flex-1 truncate">{l.codeRaw}</label>
@@ -167,16 +193,19 @@ export default function ShipmentDetail() {
                 </li>
               ))}
             </ul>
-            <h3 className="font-semibold text-sm mt-4">{t("shipments.extraPieces")}</h3>
-            <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); addExtra(); }}>
-              <Input className="font-mono" value={extraInput} onChange={(e) => setExtraInput(e.target.value)} placeholder={t("shipments.extraPlaceholder")} data-testid="confirm-extra-input" />
-              <Button type="submit" variant="secondary" data-testid="confirm-extra-add">{t("common.add")}</Button>
-            </form>
-            {extra.length > 0 && <ul className="space-y-1 text-sm font-mono" data-testid="confirm-extra-list">
-              {extra.map((c) => <li key={c} className="flex items-center justify-between"><span>{c}</span><Button size="sm" variant="ghost" onClick={() => dropExtra(c)} data-testid={`confirm-extra-remove-${c}`}>×</Button></li>)}
-            </ul>}
+            {!late && <>
+              <h3 className="font-semibold text-sm mt-4">{t("shipments.extraPieces")}</h3>
+              <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); addExtra(); }}>
+                <Input className="font-mono" value={extraInput} onChange={(e) => setExtraInput(e.target.value)} placeholder={t("shipments.extraPlaceholder")} data-testid="confirm-extra-input" />
+                <Button type="submit" variant="secondary" data-testid="confirm-extra-add">{t("common.add")}</Button>
+              </form>
+              {extra.length > 0 && <ul className="space-y-1 text-sm font-mono" data-testid="confirm-extra-list">
+                {extra.map((c) => <li key={c} className="flex items-center justify-between"><span>{c}</span><Button size="sm" variant="ghost" onClick={() => dropExtra(c)} data-testid={`confirm-extra-remove-${c}`}>×</Button></li>)}
+              </ul>}
+            </>}
           </div>
-          <div className="flex justify-end mt-4"><Button onClick={confirmReturn} disabled={busy} data-testid="confirm-save">{t("shipments.confirm")}</Button></div>
+          {/* A late confirmation with nothing ticked would confirm nothing. */}
+          <div className="flex justify-end mt-4"><Button onClick={confirmReturn} disabled={busy || (late && missing.size >= confirmLines.length)} data-testid="confirm-save">{t(late ? "shipments.confirmLate" : "shipments.confirm")}</Button></div>
         </DialogContent>
       </Dialog>
     </div>

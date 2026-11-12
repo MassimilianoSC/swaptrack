@@ -68,7 +68,11 @@ export default function Shipments() {
       />
       <DataTable testId="shipments-table" rows={all} rowHref={(s) => `/shipments/${s.id}`} columns={[
         { key: "kind", header: t("shipments.kind"), render: (s) => <Badge>{t(`shipments.kinds.${s.kind}`)}</Badge> },
-        { key: "status", header: t("common.status"), render: (s) => <Badge tone={toneFor(s.status) as "warning" | "neutral" | "primary" | "success"}>{t(`shipments.statuses.${s.status}`)}</Badge> },
+        // P-186: a return confirmed with missing or extra pieces says so (confirmedComplete false, §9.3).
+        { key: "status", header: t("common.status"), value: (s) => (s.status === "confirmed" && s.confirmedComplete === false ? t("shipments.confirmedWithDifferences") : t(`shipments.statuses.${s.status}`)),
+          render: (s) => (s.status === "confirmed" && s.confirmedComplete === false
+            ? <Badge tone="warning" data-testid={`shipment-status-${s.id}`}>{t("shipments.confirmedWithDifferences")}</Badge>
+            : <Badge tone={toneFor(s.status) as "warning" | "neutral" | "primary" | "success"} data-testid={`shipment-status-${s.id}`}>{t(`shipments.statuses.${s.status}`)}</Badge>) },
         { key: "from", header: t("shipments.from"), value: (s) => client || s.fromAspId === claims?.orgId ? names.place(s.fromLocationId) : t("items.anotherOrg") },
         { key: "to", header: t("shipments.to"), value: (s) => client || s.toAspId === claims?.orgId || s.kind === "return" ? names.place(s.toLocationId) : t("items.anotherOrg") },
         { key: "n", header: t("shipments.lineCount"), value: (s) => s.itemCount ?? 0 },

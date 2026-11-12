@@ -79,6 +79,11 @@ export const shipments = {
       const s = (await ref.get()).data();
       if (!s || s.kind !== "return") fail("not-found", "shipment_not_found");
       if (s!.status !== "sent" && s!.status !== "confirmed") fail("failed-precondition", "shipment_not_sent");
+      // P-186, §9.3: a confirmed return is confirmed again "for the missing pieces only". An extra piece then would be a
+      // second return_confirm (the same code typed again: a piece already returned) and would change the shipment's
+      // difference after the fact.
+      const extra = [...new Set(d.extra.map((c) => c.trim()).filter(Boolean))];
+      if (s!.status === "confirmed" && extra.length) fail("failed-precondition", "return_extra_after_confirm");
       const at = Timestamp.now();
       // A second confirmation (late pieces, §9.3), a double click or a retry sends the lines again: a line already
       // confirmed gets no second return_confirm (it would raise event_after_end_of_flow on a returned piece, R5).
@@ -89,18 +94,23 @@ export const shipments = {
         await ref.collection("lines").doc(itemId).update({ confirmedAt: FieldValue.serverTimestamp(), missing: false });
       }
       // Only lines of this shipment can be missing; an unknown id must not create a line.
-      let missing = 0;
       for (const itemId of d.missing) {
         const line = await ref.collection("lines").doc(itemId).get();
-        if (line.exists && !line.get("confirmedAt") && !line.get("confirmedElsewhere")) { await line.ref.update({ missing: true }); missing++; }
+        if (line.exists && !line.get("confirmedAt") && !line.get("confirmedElsewhere")) await line.ref.update({ missing: true });
       }
-      for (const codeRaw of d.extra) await serverEvent(ctx, "return_confirm", s!.toLocationId, null, { shipmentId: d.shipmentId, extra: true }, at, codeRaw);
-      const complete = missing === 0 && d.extra.length === 0;
-      await ref.update({ status: "confirmed", confirmedAt: FieldValue.serverTimestamp(), confirmedComplete: complete });
+      for (const codeRaw of extra) await serverEvent(ctx, "return_confirm", s!.toLocationId, null, { shipmentId: d.shipmentId, extra: true }, at, codeRaw);
+      // P-186: the difference of the whole shipment, not of this call: the lines still not arrived (a later
+      // confirmation of the missing pieces leaves the extra pieces of the first one in place) and every extra piece,
+      // kept on the shipment (extraCodes) so the client sees which pieces they were.
+      const open = (await ref.collection("lines").get()).docs.filter((l) => !l.get("confirmedAt") && !l.get("confirmedElsewhere"));
+      const missingCodes = open.map((l) => String(l.get("codeRaw") ?? l.id));
+      const extraCodes = [...new Set([...((s!.extraCodes as string[] | undefined) ?? []), ...extra])];
+      const complete = open.length === 0 && extraCodes.length === 0;
+      await ref.update({ status: "confirmed", confirmedAt: FieldValue.serverTimestamp(), confirmedComplete: complete, extraCodes });
       if (!complete) {
         await upsertAlert(alertId.returnShipment(d.shipmentId), {
           kind: "ddt_return_difference", aspId: s!.fromAspId, locationId: s!.toLocationId, documentId: s!.documentId ?? null, shipmentId: d.shipmentId,
-          detail: { missing, extra: d.extra.length }, count: missing + d.extra.length,
+          detail: { missing: open.length, extra: extraCodes.length, missingCodes, unexpectedCodes: extraCodes }, count: open.length + extraCodes.length,
         });
       } else {
         await zeroAlertIfOpen(alertId.returnShipment(d.shipmentId), { missing: 0, extra: 0 });
