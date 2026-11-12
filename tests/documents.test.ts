@@ -199,7 +199,8 @@ describe("the demo DDTs: each piece counted once (D-79)", () => {
     const events = ["NS-E4", "NS-E2", "NS-E1", "NS-E3"].map((c) => fact(c, M[10]));
     const r = compareDocument("ddt_in", "DDT1", [qty(M[10], 2)], events);
     expect([r.quantities[0].counted, r.unexpected.sort()]).toEqual([4, ["NS-E3", "NS-E4"]]);
-    expect(documentAlert(r).count).toBe(2 + 2); // two unexpected, and the quantity line off by two
+    // P-195: the two pieces beyond the quantity are the two unexpected ones, counted once (this case expected 2 + 2).
+    expect(documentAlert(r).count).toBe(2);
   });
   it("a piece read twice counts once", () => {
     const events = [fact("NS-F1", M[10]), fact("NS-F1", M[10])];
@@ -211,5 +212,27 @@ describe("the demo DDTs: each piece counted once (D-79)", () => {
     const events = [bomFact("remove_at_site", "TD26R13001", M[0]), bomFact("install_at_site", "NS-G1", M[11]), bomFact("install_at_site", "NS-G2", M[11]), bomFact("remove_at_site", "NS-G3", M[11])];
     const r = compareDocument("bom", "BOM1", lines, events);
     expect([r.quantities[0].counted, r.unexpected]).toEqual([2, ["NS-G3"]]);
+  });
+});
+
+// P-195 (o3, reading P-191): «#2 MC400100» and three RX-100 arrived: counted 3, the third piece is unexpected, and the
+// alert counted it twice (unexpected 1 + |2 − 3| 1). D-79, a piece is counted once: in the alert a quantity line
+// counts only what is missing, max(0, expected − counted); the pieces beyond are the unexpected ones. The desk still
+// shows «3/2». The same in a BOM.
+describe("the alert counts a piece beyond a quantity line once (P-195)", () => {
+  const M = seedModels();
+  const fact = (type: string, codeRaw: string, ddtId: string | null) =>
+    ev(type, codeRaw, ddtId, { codeRaw, materialCode: M[0].materialCode, modelId: `mdl_${M[0].materialCode}` });
+  it("ddt_in: «#2» and three pieces: counted 3, one unexpected, alert count 1", () => {
+    const r = compareDocument("ddt_in", "DDT1", [q(2, M[0].materialCode)], ["P1", "P2", "P3"].map((c) => fact("arrive_at_warehouse", c, "DDT1")));
+    expect([r.quantities[0].counted, r.unexpected, documentAlert(r).count]).toEqual([3, ["P3"], 1]);
+  });
+  it("ddt_in: «#3» and one piece: the two missing ones still count", () => {
+    const r = compareDocument("ddt_in", "DDT1", [q(3, M[0].materialCode)], [fact("arrive_at_warehouse", "P1", "DDT1")]);
+    expect([r.quantities[0].counted, r.unexpected, documentAlert(r).count]).toEqual([1, [], 2]);
+  });
+  it("bom: «install 1» and two installed: alert count 1", () => {
+    const r = compareDocument("bom", "BOM1", [q(1, M[0].materialCode, "install")], ["I1", "I2"].map((c) => fact("install_at_site", c, null)));
+    expect([r.quantities[0].counted, r.unexpected, documentAlert(r).count]).toEqual([2, ["I2"], 1]);
   });
 });

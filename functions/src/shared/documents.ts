@@ -160,10 +160,12 @@ export const ALERT_LIST_MAX = 50;
 // The differences that make a document alert (§11.4) and the detail it shows. P-114 n.15: with the field policy
 // "accept silently" (§14, settings/fieldPolicy), pieces found at a BOM's site but not in the BOM are neither counted
 // nor listed; missing pieces still are.
+// P-195 (D-79, a piece is counted once): a quantity line adds only what is missing, max(0, expected - counted);
+// the pieces beyond its quantity are already the unexpected ones.
 export function documentAlert(r: CompareResult, opts: { silentUnexpected?: boolean } = {}) {
   const detail = alertDetail(r);
   const shown = opts.silentUnexpected ? { ...detail, unexpected: 0, unexpectedCodes: [] as string[] } : detail;
-  const count = r.totals.missing + shown.unexpected + r.totals.arrivedModelUnknown + r.quantities.reduce((n, q) => n + Math.abs(q.expected - q.counted), 0);
+  const count = r.totals.missing + shown.unexpected + r.totals.arrivedModelUnknown + r.quantities.reduce((n, q) => n + Math.max(0, q.expected - q.counted), 0);
   return { count, detail: shown };
 }
 export function alertDetail(r: CompareResult) {
