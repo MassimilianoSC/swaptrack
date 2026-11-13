@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit ef0af0b · Guide text: sha c0b427d8469b · Date: 13/11/2026
+App described: commit 1c0c108 · Guide text: sha d8b49a720b27 · Date: 13/11/2026
 
 ## How to use this guide
 
@@ -62,7 +62,7 @@ Most frequent messages:
 
 1. On the «Sign in» page press «Forgot your password?».
 2. Write your «Work e-mail» and press «Send the link».
-3. You always see the same message: «If the address belongs to an active account, you will receive an e-mail with a link to reset the password.» This message does not confirm that the e-mail was sent.
+3. You always see the same message: «If the address belongs to an active account, you will receive an e-mail with a link to reset the password.» This message does not confirm that the e-mail was sent. Without network, instead, you see «You are offline: this action needs the network.»
 4. Open the link in the e-mail: «Choose a new password» opens. Go on as for the first sign-in (steps 3–5).
 
 If the e-mail does not arrive after a few minutes, check the spam folder and then ask the administrator.
@@ -111,7 +111,7 @@ Installing it is important: this way it opens like an app and works without netw
 
 **Android**
 1. Open the SwapTrack address in the browser.
-2. At the top the strip «Install SwapTrack on this device: it opens like an app and works offline too.» appears with «Install the app»: press it and confirm in the browser window. If you do not want to do it now, press «Later»: the strip disappears for 7 days, and «Install the app» stays at the bottom of the menu anyway.
+2. At the top the strip «Install SwapTrack on this device: it opens like an app and works offline too.» (instead of «SwapTrack» you see the name the Client administrator gave the app) appears with «Install the app»: press it and confirm in the browser window. If you do not want to do it now, press «Later»: the strip disappears for 7 days, and «Install the app» stays at the bottom of the menu anyway.
 3. Use Chrome. If «Install the app» does not appear, open the Chrome menu (the three dots at the top right) and choose "Install app" or "Add to Home screen" (the names may differ slightly with the phone's language).
 4. Open SwapTrack from the icon on the phone, not from the browser.
 
@@ -209,7 +209,7 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 
 **Reading in a row.** If you have to read many pieces one after another, tick «Burst (the camera restarts by itself after every reading)»: after less than a second you can read the next piece without pressing anything. The phone remembers the choice for the next times too.
 
-Helps: «Torch» turns the light on (if the phone has one); the «Sun» slider darkens the image when there is too much light; the speaker icon («Sound on/off») turns the sound off or on.
+Helps: «Torch» turns the light on (if the phone has one; the button stays highlighted while it is on); the «Sun» slider darkens the image when there is too much light; the speaker icon («Sound on/off») turns the sound off or on.
 
 **With a scanner gun or a ring scanner.** Tap the field «Scanner gun / ring: read here» and scan: the scanner writes the code and sends it by itself.
 
@@ -347,7 +347,7 @@ Scanning the codes (camera, reading in a row, scanner gun, by hand, label photo,
 2. Search with «Search by code or name» and tap your warehouse.
 3. The warehouse stays chosen until you close the app. To change it press «Change location».
 
-Always check the chosen warehouse (at the top) before scanning: every scan is recorded there.
+Always check the chosen warehouse (at the top; on the phone, at the top of the ☰ menu) before scanning: every scan is recorded there.
 
 ### How do I record the arrival of removed material?
 
@@ -431,7 +431,7 @@ If «installed new material» appears next to the suggested category, that piece
 
 **Defective or leftover new material.** In the window tap «Defective» or «Leftover». For many pieces in a row, choose «Defective» or «Leftover» in the second list («Removed material (category)»), then scan the pieces. If with this fixed choice you scan a removed piece, the app does not record it and says so in red: «… is removed material: “Defective” and “Leftover” are only for new material. Not recorded: choose a category.»
 
-**Photo of defective pieces.** If the Client administrator has made the photo of defective pieces mandatory, choosing «Defective» in the list you see «A photo is required for defective pieces (setting).», and after every defective piece the app writes «Photo required for the defective piece: take it now.»: press «Photo» next to the message and take the picture.
+**Photo of defective pieces.** If the Client administrator has made the photo of defective pieces mandatory, choosing «Defective» in the list you see «A photo is required for defective pieces (setting).», and after every defective piece the box «Photo required for the defective piece: take it now.» appears with the list of the defective pieces still without a photo: press «Photo» next to the code and take the picture. The piece stays in the list until it has its photo, even if you scan other pieces meanwhile.
 
 If something goes wrong:
 - You applied the wrong category: press «Undo last» and scan the piece again choosing the right category.
@@ -443,11 +443,11 @@ If something goes wrong:
 3. Press «Scan pieces»: scanning opens in the «Return shipment» mode, already in the warehouse the return leaves from (you see it at the top).
 4. Scan the codes of the pieces you put in the return. Every piece becomes «In return» and appears among the «Lines» of the return.
 5. Go back to the page of the return (from «Shipments», «Open»). Check «Lines» and «Pieces».
-6. If you want, keep a copy of the DDT with «Attach DDT file» (PDF or photo). You see «DDT file attached». The file becomes a «DDT (return)» document in «Documents»: after the client's confirmation, its «Compare» compares the pieces of the return with those the client confirmed.
-7. Press «Send», write the «DDT number» («Enter the DDT number, then send.») and press «Send». You see «Shipment sent».
+6. If you want, keep a copy of the DDT with «Attach DDT file» (PDF or photo). If the return has no DDT number yet, the app asks for it first: «Before attaching the file write the DDT number: the document and the return will have the same number.» You see «DDT file attached». Files attached later are added to the same document. The file becomes a «DDT (return)» document in «Documents»: after the client's confirmation, its «Compare» compares the pieces of the return with those the client confirmed.
+7. Press «Send», write the «DDT number» («Enter the DDT number, then send.») and press «Send». If you already wrote it when attaching the file, the number is already filled in; if you change it, it changes in the document too. You see «Shipment sent».
 
 Good to know:
-- The return is always scanned with «Scan pieces» from the page of the return: «Return shipment» and «Transfer out» appear in the «Scan» screen only when you come to it from a shipment.
+- The return is always scanned with «Scan pieces» from the page of the return: opened from a shipment, the «Scan» screen offers only the operation of that shipment: «Return shipment» for a return, «Transfer out» for an outgoing transfer, «Arrival» for an incoming transfer.
 - Scanning the same piece twice in the same return does not count it twice.
 - To take out a piece scanned by mistake, press «Undo last» at once.
 
@@ -521,7 +521,7 @@ On the page of the piece you find: «State» (status, location, last scan), «Co
 
 On the phone the app has the "field" look (as for the warehouse staff); on the computer it has the office look.
 
-If the Client administrator has turned on the **two-step verification**, at the first sign-in the app asks you to set up an authenticator app on your phone: press «Set up the authenticator app», add the key (or press «Open in the authenticator app»), write the «6-digit code» and press «Confirm»; then sign out and sign in again. If you see «Sign in again to use two-step verification.», sign out and sign in again.
+If the Client administrator has turned on the **two-step verification**, at the first sign-in the app asks you to set up an authenticator app on your phone: press «Set up the authenticator app», follow the explanation on the screen to add the key (it is copied with «Copy»; on the phone you can press «On the phone? Open in the authenticator app»), write the «6-digit code» and press «Confirm»: the app signs you out, and you sign in again with the password and the app's code. On this screen «Sign out» is always available. If you see «Sign in again to use two-step verification.», sign out and sign in again.
 
 ### How do I invite a person?
 
@@ -588,6 +588,8 @@ Open the piece (from «Items» or from «Anomalies»). Besides «Edit» (see [Ho
 - **«Correct location»** (the pin icon next to a scan, in the «History»): for a scan recorded at the wrong place. You see the «Previous location»; in «New place» write part of the code or of the name and tap the right place; write the «Reason» and press «Save». You can choose only among the active places you see.
 - **«Reveal author»** (icon next to a scan): shows who made that scan, if the data is still available («Author not available.» otherwise). Every request is recorded and you can make at most 20 per hour: use it only when really needed.
 
+- **«Close»** on an open anomaly, in the «Anomalies» section of the piece's page: «Close the anomaly» opens («The anomaly moves to the resolved ones. The reading and the piece do not change.»); write a «Note (optional)» and confirm. You see «Anomaly closed» and, next to the anomaly, «resolved». You can close only the anomalies of your ASP; on the «Anomalies» page the closed ones are shown again with «Show resolved too».
+
 All the corrections stay in the history of the piece.
 
 ### How do I read the dashboard?
@@ -632,7 +634,7 @@ The list shows only the exports you created. If you see «The data could not be 
 3. Press «Confirm». You read «Untick missing pieces. Add extra pieces by typing their code.»
 4. In «Expected pieces» they are all ticked: untick the pieces that did **not** arrive.
 5. If pieces arrived that were not in the list, write the code in «Extra pieces» («Type a code and press Enter») and press «Add». To take out a code added by mistake press «×». If you type here the code of a piece that is in the list of the return, it counts as the confirmation of that piece, not as an extra piece.
-6. Press «Confirm». You see «Confirmed».
+6. Press «Confirm». You see «Confirmed». If the confirmation fails (for example without network), the window stays open with your choices: try again when there is network.
 
 What you see next: in the page the lines show «Confirmed» or «Missing», and the summary says «Complete: Yes» or «No». If pieces are missing or there are extra ones, the app creates the alert «DDT (return) difference», with the codes, and the return shows «Confirmed with differences» (also in the list of shipments). The extra pieces show in the page, in «Extra pieces», with «Open».
 
@@ -659,7 +661,7 @@ To see the return the alert refers to, tap the «Object»: the page of the retur
 
 1. Open «Items».
 2. Write the full code in «Search by code» and press «Search».
-3. On the page you see status, location and codes of the piece. Instead of the history you see «The history of the piece is not available for your role.»
+3. On the page you see status, location, codes and photos of the piece. In the «History» you see only the return steps: «For the client warehouse: the return steps only (sent in a return, confirmed at the client warehouse).»
 
 ---
 
@@ -706,7 +708,7 @@ On day 1 of every month the app prepares by itself the report of the previous mo
 3. Press «Generate». You see «Report generated» and a new row in the list. Every «Generate» creates a new report: those made before stay in the list.
 4. Press «PDF» or «XLSX» on the row. The name of the file contains the month and the scope (the client or the name of the ASP).
 
-The report contains the pieces arrived, installed, removed, sorted and returned in the month, the material waiting at the end of the month, the alerts, the main models and sites. It contains no names of people. For the material waiting at the end of the month the report writes when the numbers date from: those taken by the app on day 1 of the following month or, if they are missing, those computed when you generate the report.
+The report contains the pieces arrived, installed, removed, sorted and returned in the month (the month starts at midnight of day 1, Italian time), the material waiting at the end of the month, the alerts, the main models and sites. It contains no names of people. For the material waiting at the end of the month the report writes when the numbers date from: those taken by the app on day 1 of the following month or, if they are missing, those computed when you generate the report.
 
 ---
 
@@ -741,7 +743,7 @@ Recommended order:
 3. In «First administrator» write «First name», «Last name», «Work e-mail» and choose the «Language».
 4. Confirm with «New ASP». You see «ASP created» and then the outcome of the invitation (e-mail sent or link to copy, as in [How do I invite a person?](#how-do-i-invite-a-person) of the ASP administrator).
 
-If you see «This person has already been invited (an account with this e-mail already exists).», the invitation did not leave: before trying again check in «Organizations» whether the ASP already appears, and use another e-mail for the first administrator.
+If you see «This person has already been invited (an account with this e-mail already exists).», the ASP is not created: try again with another e-mail for the first administrator.
 
 **Report language**: change it from the list on the row of the ASP; it is saved at once. The «Users» column says how many people each organization has (for example «2 active of 3»): a click on the row opens «Users of …» with only its people, and from there «Invite user» already has the organization chosen; «Back» returns to «Organizations».
 
@@ -773,7 +775,7 @@ Code and type cannot be changed after creation. A location is not deleted: it is
 
 1. In «Sites and warehouses» (or «Catalog of models») press «Import».
 2. «Choose an Excel or CSV file». The first row of the file must contain the titles of the columns. You see «Rows: …».
-3. In «Map the columns» say, for every field, the column of the file. Those with the asterisk are mandatory: for locations «Code», «Name», «Type»; for models «Material code», «Model». For the type of the locations the file must use: «Type values: site, asp_warehouse, client_warehouse.» The app remembers the mapping for the next time.
+3. In «Map the columns» say, for every field, the column of the file. Those with the asterisk are mandatory: for locations «Code», «Name», «Type»; for models «Material code», «Model». For the type of the locations the file must use: «Type values: Site, ASP warehouse, Client warehouse.» The app remembers the mapping for the next time.
 4. Press «Preview»: you see how many rows are «New», «Changed», «Unchanged», «With errors», any «Unknown ASP names» and the list «Row» / «Problems».
 5. Press «Import … rows». You see «Import completed». Rows with errors are skipped, the others written.
 6. At the end the app tells you if there are active locations or models that were not in the file («… active records are not in the file. Select those to deactivate.»). Tick those to deactivate and press «Deactivate …», or leave everything as it is.
@@ -817,6 +819,8 @@ If an ASP scans a piece that belongs to another ASP without a transfer, the anom
 2. In the «Anomalies» section press «Accept move» («Writes an office correction one instant before the scanning arrival; the piece becomes owned by the scanning ASP.»).
 3. Write a reason if you want and press «Confirm».
 
+You close the other anomalies with «Close» on the piece's page, as in [How do I correct a piece?](#how-do-i-correct-a-piece) of the ASP administrator, but for all the ASPs.
+
 ### How do I use the settings?
 
 Open «Settings». Every tab has its own «Save»: changing tab does not save. After saving you see «Saved».
@@ -825,7 +829,7 @@ Open «Settings». Every tab has its own «Save»: changing tab does not save. A
 - **«Sign-in»**: «Google sign-in», «Microsoft sign-in (company account)», «Two-step verification for administrators», «Sign out desktop sessions after inactivity» with the «Inactivity minutes» (from 5 to 480; it applies only to computers, and it does not sign out if there are scans waiting to be sent). Google, Microsoft and the two-step verification need a technical preparation of the sign-in service: turn them on only after talking with whoever installed SwapTrack.
 - **«App»**: «Minimum version» (empty = no block; if you write it, whoever has an older version must update). «Invitations are sent by e-mail (Firebase Authentication)»: tick it to send invitations by e-mail; if it is off, or if the e-mail does not leave, the invitation shows you the link to copy. «Forgot your password?» is always sent by e-mail.
 - **«Privacy»**: «Notice text (Italian)» and «Notice text (English)». Changing a text, everybody will have to accept it again. «Ask everybody to accept again (new version)» asks for it even without changing the text. «Remove the author from old events» with «After how many days» (from 30 to 3650): removes from old scans the record of who made them.
-- **«Thresholds»**: «Days before stale_material» (after how many days stuck material raises the alert «Stale material»; default 30) and «Days before transfer_difference» (after how many days an incomplete transfer raises «Transfer difference»; default 7).
+- **«Thresholds»**: «Days before the "Stale material" alert» (default 30) and «Days before the "Transfer difference" alert» (default 7).
 - **«Photos»**: «Photo mandatory for defective pieces». If you tick it, when a warehouse worker sorts a piece as «Defective» the app asks for the photo at once (see [How do I sort removed material?](#how-do-i-sort-removed-material)).
 - **«Field rules»**: «A piece found at a site but not in the BOM». Choose «Accept and create an alert» (the starting choice) or «Accept silently (no alert)». In both cases the scan is accepted; only whether the «BOM difference» alert is raised for those pieces changes.
 - **«Features»**: «Automatic reading of documents and damaged label codes (AI)». «Proposes the lines of DDTs and BOMs by reading photos and PDFs, and the codes of damaged labels from their photo. Lines and codes are saved only after the check of whoever uploads the document or scans the piece.» If you turn it on, «Read automatically» appears in the documents and «Photograph the label» in the «Scan» screen; they need the network. Every person can make at most 20 automatic readings a day (documents and labels together); this number cannot be changed from this page.

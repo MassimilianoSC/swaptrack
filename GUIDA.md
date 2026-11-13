@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit ef0af0b · Testo della guida: sha df308f30e02e · Data: 13/11/2026
+App descritta: commit 1c0c108 · Testo della guida: sha d8ee0b0679f3 · Data: 13/11/2026
 
 ## Come usare questa guida
 
@@ -62,7 +62,7 @@ Messaggi più frequenti:
 
 1. Nella pagina «Accedi» premi «Password dimenticata?».
 2. Scrivi la tua «E-mail di lavoro» e premi «Invia il link».
-3. Vedi sempre lo stesso messaggio: «Se l'indirizzo appartiene a un account attivo, riceverai un'e-mail con un link per reimpostare la password.» Questo messaggio non conferma che l'e-mail sia partita.
+3. Vedi sempre lo stesso messaggio: «Se l'indirizzo appartiene a un account attivo, riceverai un'e-mail con un link per reimpostare la password.» Questo messaggio non conferma che l'e-mail sia partita. Senza rete, invece, vedi «Sei offline: questa azione richiede la rete.»
 4. Apri il link dell'e-mail: si apre «Scegli una nuova password». Continua come nel primo accesso (passi 3–5).
 
 Se l'e-mail non arriva dopo qualche minuto, controlla la posta indesiderata e poi chiedi all'amministratore.
@@ -111,7 +111,7 @@ Installarla è importante: così si apre come un'app e lavora anche senza rete.
 
 **Android**
 1. Apri l'indirizzo di SwapTrack nel browser.
-2. In alto compare la striscia «Installa SwapTrack sul dispositivo: si apre come un'app e funziona anche senza rete.» con «Installa l'app»: premilo e conferma nella finestra del browser. Se non vuoi farlo adesso, premi «Più tardi»: la striscia sparisce per 7 giorni, e «Installa l'app» resta comunque in fondo al menu.
+2. In alto compare la striscia «Installa SwapTrack sul dispositivo: si apre come un'app e funziona anche senza rete.» (al posto di «SwapTrack» c'è il nome che l'Amministratore cliente ha dato all'app) con «Installa l'app»: premilo e conferma nella finestra del browser. Se non vuoi farlo adesso, premi «Più tardi»: la striscia sparisce per 7 giorni, e «Installa l'app» resta comunque in fondo al menu.
 3. Usa Chrome. Se «Installa l'app» non compare, apri il menu di Chrome (i tre puntini in alto a destra) e scegli «Installa app» oppure «Aggiungi a schermata Home».
 4. Apri SwapTrack dall'icona sul telefono, non dal browser.
 
@@ -209,7 +209,7 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 
 **Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
 
-Aiuti: «Torcia» accende la luce (se il telefono la ha); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante («Suono sì/no») spegne o accende il suono.
+Aiuti: «Torcia» accende la luce (se il telefono la ha; il pulsante resta evidenziato finché è accesa); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante («Suono sì/no») spegne o accende il suono.
 
 **Con una pistola o un anello lettore.** Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo.
 
@@ -347,7 +347,7 @@ La lettura dei codici (fotocamera, lettura di fila, pistola, a mano, foto dell'e
 2. Cerca con «Cerca per codice o nome» e tocca il tuo magazzino.
 3. Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi «Cambia luogo».
 
-Controlla sempre il magazzino scelto (in alto) prima di leggere: ogni lettura viene registrata lì.
+Controlla sempre il magazzino scelto (in alto; sul telefono, in cima al menu ☰) prima di leggere: ogni lettura viene registrata lì.
 
 ### Come registro l'arrivo di materiale smontato?
 
@@ -431,7 +431,7 @@ Se accanto alla categoria suggerita compare «nuovo installato», quel pezzo era
 
 **Materiale nuovo difettoso o avanzato.** Nella finestra tocca «Difettoso» o «Avanzo». Per tanti pezzi di fila, scegli «Difettoso» o «Avanzo» nella seconda tendina («Materiale smontato (categoria)»), poi leggi i pezzi. Se con questa scelta fissa leggi un pezzo smontato, l'app non lo registra e lo dice in rosso: «… è materiale smontato: «Difettoso» e «Avanzo» valgono solo per il materiale nuovo. Non registrato: scegli una categoria.»
 
-**Foto dei difettosi.** Se l'Amministratore cliente ha reso obbligatoria la foto dei pezzi difettosi, scegliendo «Difettoso» nella tendina vedi «La foto è obbligatoria per i pezzi difettosi (impostazione).», e dopo ogni pezzo difettoso l'app scrive «Foto obbligatoria per il difettoso: scattala ora.»: premi «Foto» accanto al messaggio e scatta.
+**Foto dei difettosi.** Se l'Amministratore cliente ha reso obbligatoria la foto dei pezzi difettosi, scegliendo «Difettoso» nella tendina vedi «La foto è obbligatoria per i pezzi difettosi (impostazione).», e dopo ogni pezzo difettoso compare il riquadro «Foto obbligatoria per il difettoso: scattala ora.» con l'elenco dei difettosi ancora senza foto: premi «Foto» accanto al codice e scatta. Il pezzo resta nell'elenco finché non ha la sua foto, anche se intanto leggi altri pezzi.
 
 Se qualcosa va storto:
 - Hai applicato la categoria sbagliata: premi «Annulla l'ultima» e rileggi il pezzo scegliendo la categoria giusta.
@@ -443,11 +443,11 @@ Se qualcosa va storto:
 3. Premi «Leggi i pezzi»: si apre la lettura in modalità «Spedizione reso», già nel magazzino di partenza del reso (lo vedi in alto).
 4. Leggi i codici dei pezzi che metti nel reso. Ogni pezzo diventa «In reso» e compare tra le «Righe» del reso.
 5. Torna alla scheda del reso (da «Spedizioni», «Apri»). Controlla «Righe» e «Pezzi».
-6. Se vuoi, conserva una copia del DDT con «Allega file DDT» (PDF o foto). Vedi «File DDT allegato». Il file diventa un documento «DDT (reso)» in «Documenti»: dopo la conferma del cliente, il suo «Confronta» mette a confronto i pezzi del reso con quelli che il cliente ha confermato.
-7. Premi «Invia», scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi «Invia». Vedi «Spedizione inviata».
+6. Se vuoi, conserva una copia del DDT con «Allega file DDT» (PDF o foto). Se il reso non ha ancora un numero DDT, l'app lo chiede prima: «Prima di allegare il file scrivi il numero del DDT: il documento e il reso avranno lo stesso numero.» Vedi «File DDT allegato». I file allegati dopo si aggiungono allo stesso documento. Il file diventa un documento «DDT (reso)» in «Documenti»: dopo la conferma del cliente, il suo «Confronta» mette a confronto i pezzi del reso con quelli che il cliente ha confermato.
+7. Premi «Invia», scrivi il «Numero DDT» («Inserisci il numero DDT, poi invia.») e premi «Invia». Se l'hai già scritto allegando il file, il numero è già riempito; se lo cambi, cambia anche nel documento. Vedi «Spedizione inviata».
 
 Da sapere:
-- Il reso si legge sempre con «Leggi i pezzi» dalla scheda del reso: «Spedizione reso» e «Trasferimento» compaiono nella schermata «Leggi» solo quando ci arrivi da una spedizione.
+- Il reso si legge sempre con «Leggi i pezzi» dalla scheda del reso: aperta da una spedizione, la schermata «Leggi» offre solo l'operazione di quella spedizione: «Spedizione reso» per un reso, «Trasferimento» per un trasferimento in partenza, «Arrivo» per un trasferimento in arrivo.
 - Leggere due volte lo stesso pezzo nello stesso reso non lo conta due volte.
 - Per togliere un pezzo letto per errore, premi subito «Annulla l'ultima».
 
@@ -521,7 +521,7 @@ Nella scheda del pezzo trovi: «Stato» (stato, luogo, ultima lettura), «Codici
 
 Sul telefono l'app ha l'aspetto «da campo» (come per i magazzinieri); sul computer ha l'aspetto da ufficio.
 
-Se l'Amministratore cliente ha attivato la **verifica in due passaggi**, al primo accesso l'app chiede di configurare un'app di autenticazione sul telefono: premi «Configura l'app di autenticazione», aggiungi la chiave (o premi «Apri nell'app di autenticazione»), scrivi il «Codice di 6 cifre» e premi «Conferma»; poi esci e rientra. Se vedi «Accedi di nuovo per usare la verifica in due passaggi.», esci e rientra.
+Se l'Amministratore cliente ha attivato la **verifica in due passaggi**, al primo accesso l'app chiede di configurare un'app di autenticazione sul telefono: premi «Configura l'app di autenticazione», segui la spiegazione sullo schermo per aggiungere la chiave (si copia con «Copia»; sul telefono puoi premere «Sei sul telefono? Apri nell'app di autenticazione»), scrivi il «Codice di 6 cifre» e premi «Conferma»: l'app ti fa uscire, e rientri con la password e il codice dell'app. In questa schermata «Esci» è sempre disponibile. Se vedi «Accedi di nuovo per usare la verifica in due passaggi.», esci e rientra.
 
 ### Come invito una persona?
 
@@ -588,6 +588,8 @@ Apri il pezzo (da «Pezzi» o da «Anomalie»). Oltre a «Modifica» (vedi [Come
 - **«Correggi luogo»** (l'icona del segnaposto accanto a una lettura, nella «Cronologia»): per una lettura registrata nel luogo sbagliato. Vedi il «Luogo precedente»; in «Nuovo luogo» scrivi una parte del codice o del nome e tocca il luogo giusto; scrivi il «Motivo» e premi «Salva». Puoi scegliere solo tra i luoghi attivi che vedi.
 - **«Mostra autore»** (icona accanto a una lettura): mostra chi ha fatto quella lettura, se il dato è ancora disponibile («Autore non disponibile.» altrimenti). Ogni richiesta viene registrata e ne puoi fare al massimo 20 all'ora: usala solo quando serve davvero.
 
+- **«Chiudi»** su un'anomalia aperta, nella sezione «Anomalie» della pagina del pezzo: si apre «Chiudi l'anomalia» («L'anomalia passa tra le risolte. La lettura e il pezzo non cambiano.»); scrivi una «Nota (facoltativa)» e conferma. Vedi «Anomalia chiusa» e, accanto all'anomalia, «risolta». Puoi chiudere solo le anomalie della tua ASP; nella pagina «Anomalie» quelle chiuse si rivedono con «Mostra anche le risolte».
+
 Tutte le correzioni restano nella storia del pezzo.
 
 ### Come leggo il cruscotto?
@@ -632,7 +634,7 @@ L'elenco mostra solo le esportazioni create da te. Se vedi «Non è stato possib
 3. Premi «Conferma». Leggi «Togli la spunta ai pezzi mancanti. Aggiungi pezzi in più digitando il codice.»
 4. In «Pezzi attesi» sono tutti spuntati: togli la spunta ai pezzi che **non** sono arrivati.
 5. Se sono arrivati pezzi che non erano nella lista, scrivi il codice in «Pezzi in più» («Scrivi un codice e premi Invio») e premi «Aggiungi». Per togliere un codice aggiunto per errore premi «×». Se scrivi qui il codice di un pezzo che è nella lista del reso, vale come conferma di quel pezzo, non come pezzo in più.
-6. Premi «Conferma». Vedi «Confermata».
+6. Premi «Conferma». Vedi «Confermata». Se la conferma non riesce (per esempio senza rete), la finestra resta aperta con le tue scelte: riprova quando c'è la rete.
 
 Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e il riepilogo dice «Completa: Sì» o «No». Se mancano pezzi o ce ne sono in più, l'app crea l'avviso «DDT (reso) differenza», con i codici, e il reso risulta «Confermata con differenze» (anche nell'elenco delle spedizioni). I pezzi in più si vedono nella scheda, in «Pezzi in più», con «Apri».
 
@@ -659,7 +661,7 @@ Per vedere il reso a cui si riferisce l'avviso, tocca l'«Oggetto»: si apre la 
 
 1. Apri «Pezzi».
 2. Scrivi il codice completo in «Cerca per codice» e premi «Cerca».
-3. Nella scheda vedi stato, luogo e codici del pezzo. Al posto della cronologia vedi «La storia del pezzo non è disponibile per il tuo ruolo.»
+3. Nella scheda vedi stato, luogo, codici e foto del pezzo. Nella «Cronologia» vedi solo i passaggi dei resi: «Per il magazzino del cliente: solo i passaggi dei resi (spedizione nel reso e conferma al magazzino del cliente).»
 
 ---
 
@@ -706,7 +708,7 @@ Il giorno 1 di ogni mese l'app prepara da sola il rapporto del mese precedente. 
 3. Premi «Genera». Vedi «Rapporto generato» e una nuova riga nell'elenco. Ogni «Genera» crea un rapporto nuovo: quelli fatti prima restano nell'elenco.
 4. Premi «PDF» o «XLSX» sulla riga. Il nome del file contiene il mese e l'ambito (il cliente o il nome dell'ASP).
 
-Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel mese, materiale in attesa a fine mese, avvisi, i modelli e i siti principali. Non contiene nomi di persone. Per il materiale in attesa a fine mese il rapporto scrive a quando risalgono i numeri: quelli presi dall'app il giorno 1 del mese dopo oppure, se mancano, quelli calcolati nel momento in cui generi il rapporto.
+Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel mese (il mese va da mezzanotte del giorno 1, ora italiana), materiale in attesa a fine mese, avvisi, i modelli e i siti principali. Non contiene nomi di persone. Per il materiale in attesa a fine mese il rapporto scrive a quando risalgono i numeri: quelli presi dall'app il giorno 1 del mese dopo oppure, se mancano, quelli calcolati nel momento in cui generi il rapporto.
 
 ---
 
@@ -741,7 +743,7 @@ Ordine consigliato:
 3. In «Primo amministratore» scrivi «Nome», «Cognome», «E-mail di lavoro» e scegli la «Lingua».
 4. Conferma con «Nuova ASP». Vedi «ASP creata» e poi l'esito dell'invito (e-mail inviata o link da copiare, come in [Come invito una persona?](#come-invito-una-persona) dell'Amministratore ASP).
 
-Se vedi «Questa persona è già stata invitata (esiste già un account con questa e-mail).», l'invito non è partito: prima di riprovare controlla in «Organizzazioni» se l'ASP compare già, e usa un'altra e-mail per il primo amministratore.
+Se vedi «Questa persona è già stata invitata (esiste già un account con questa e-mail).», l'ASP non viene creata: riprova con un'altra e-mail per il primo amministratore.
 
 **Lingua dei report**: cambiala dalla tendina sulla riga dell'ASP; si salva subito. La colonna «Utenti» dice quante persone ha ogni organizzazione (per esempio «2 attivi su 3»): un clic sulla riga apre «Utenti di …» con solo le sue persone, e da lì «Invita utente» ha già l'organizzazione scelta; «Indietro» torna a «Organizzazioni».
 
@@ -773,7 +775,7 @@ Codice e tipo non si cambiano dopo la creazione. Un luogo non si cancella: si di
 
 1. In «Siti e magazzini» (o «Catalogo modelli») premi «Importa».
 2. «Scegli un file Excel o CSV». La prima riga del file deve contenere i titoli delle colonne. Vedi «Righe: …».
-3. In «Associa le colonne» indica, per ogni dato, la colonna del file. Sono obbligatori quelli con l'asterisco: per i luoghi «Codice», «Nome», «Tipo»; per i modelli «Codice materiale», «Modello». Per il tipo dei luoghi il file deve usare: «Valori del tipo: site, asp_warehouse, client_warehouse.» L'app ricorda le associazioni per la volta successiva.
+3. In «Associa le colonne» indica, per ogni dato, la colonna del file. Sono obbligatori quelli con l'asterisco: per i luoghi «Codice», «Nome», «Tipo»; per i modelli «Codice materiale», «Modello». Per il tipo dei luoghi il file deve usare: «Valori del tipo: Sito, Magazzino ASP, Magazzino cliente.» L'app ricorda le associazioni per la volta successiva.
 4. Premi «Anteprima»: vedi quante righe sono «Nuove», «Modificate», «Invariate», «Con errori», gli eventuali «Nomi ASP sconosciuti» e l'elenco «Riga» / «Problemi».
 5. Premi «Importa … righe». Vedi «Importazione completata». Le righe con errori vengono saltate, le altre scritte.
 6. Alla fine l'app ti dice se ci sono luoghi o modelli attivi che non erano nel file («… record attivi non sono nel file. Seleziona quelli da disattivare.»). Spunta quelli da disattivare e premi «Disattiva …», oppure lascia tutto com'è.
@@ -817,6 +819,8 @@ Se un'ASP legge un pezzo che appartiene a un'altra ASP senza trasferimento, nasc
 2. Nella sezione «Anomalie» premi «Accetta spostamento» («Scrive una correzione d'ufficio un istante prima dell'arrivo; il pezzo passa all'ASP che ha scansionato.»).
 3. Scrivi un motivo se vuoi e premi «Conferma».
 
+Le altre anomalie le chiudi con «Chiudi» nella pagina del pezzo, come in [Come correggo un pezzo?](#come-correggo-un-pezzo) dell'Amministratore ASP, ma per tutte le ASP.
+
 ### Come uso le impostazioni?
 
 Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salva. Dopo il salvataggio vedi «Salvato».
@@ -825,7 +829,7 @@ Apri «Impostazioni». Ogni scheda ha il suo «Salva»: cambiare scheda non salv
 - **«Accesso»**: «Accesso con Google», «Accesso con Microsoft (account aziendale)», «Verifica in due passaggi per gli amministratori», «Chiudi le sessioni desktop dopo inattività» con i «Minuti di inattività» (da 5 a 480; vale solo sui computer, e non chiude se ci sono letture da inviare). Google, Microsoft e la verifica in due passaggi richiedono una preparazione tecnica del servizio di accesso: attivali solo dopo averne parlato con chi ha installato SwapTrack.
 - **«App»**: «Versione minima» (vuoto = nessun blocco; se la scrivi, chi ha una versione più vecchia deve aggiornare). «Gli inviti partono per e-mail (Firebase Authentication)»: spuntalo per mandare gli inviti per e-mail; se è spento, o se l'e-mail non parte, l'invito ti mostra il link da copiare. «Password dimenticata?» parte sempre per e-mail.
 - **«Privacy»**: «Testo dell'informativa (italiano)» e «(inglese)». Cambiando un testo, tutti dovranno accettarlo di nuovo. «Chiedi a tutti di accettare di nuovo (nuova versione)» lo richiede anche senza cambiare il testo. «Rimuovi l'autore dagli eventi vecchi» con «Dopo quanti giorni» (da 30 a 3650): toglie dalle letture vecchie l'indicazione di chi le ha fatte.
-- **«Soglie»**: «Giorni per stale_material» (dopo quanti giorni il materiale fermo genera l'avviso «Materiale fermo»; predefinito 30) e «Giorni per transfer_difference» (dopo quanti giorni un trasferimento incompleto genera «Trasferimento in ritardo»; predefinito 7).
+- **«Soglie»**: «Giorni prima dell'avviso «Materiale fermo»» (predefinito 30) e «Giorni prima dell'avviso «Trasferimento in ritardo»» (predefinito 7).
 - **«Foto»**: «Foto obbligatoria per i pezzi difettosi». Se la spunti, quando un magazziniere smista un pezzo come «Difettoso» l'app gli chiede subito la foto (vedi [Come smisto il materiale smontato?](#come-smisto-il-materiale-smontato)).
 - **«Regole campo»**: «Un pezzo trovato al sito ma non in BOM». Scegli «Accetta e crea un avviso» (è la scelta di partenza) oppure «Accetta in silenzio (senza avviso)». In tutti e due i casi la lettura viene accettata; cambia solo se nasce l'avviso «BOM differenza» per quei pezzi.
 - **«Funzioni»**: «Lettura automatica documenti e codici delle etichette rovinate (AI)». «Propone le righe di DDT e BOM leggendo foto e PDF, e i codici delle etichette rovinate dalla loro foto. Le righe e i codici si salvano solo dopo il controllo di chi carica il documento o legge il pezzo.» Se la accendi, compaiono «Leggi automaticamente» nei documenti e «Fotografa l'etichetta» nella schermata «Leggi»; per usarle serve la rete. Ogni persona può fare al massimo 20 letture automatiche al giorno (documenti ed etichette insieme); questo numero non si cambia da questa pagina.
