@@ -36,6 +36,7 @@ I file completi sono in `swaptrack-guida/CENSIMENTO_RUOLI_APP_1311.md` e `CENSIM
 - L'importazione dei luoghi può cambiare il tipo di un luogo esistente, che la modifica a mano rifiuta (catalog.ts:88-96).
 - Un luogo si può assegnare a un'ASP disabilitata (catalog.ts:113-116).
 - La tendina «Luogo» dei documenti mostra anche i luoghi disattivati (da verificare con la specifica).
+- Foto obbligatoria del difettoso: dal lotto 14 l'app non la dimentica più (P-201), ma il server non controlla l'impostazione. Da valutare se serve anche il controllo sul server.
 
 **App (o3)**
 - «Ho finito in questo sito»: nessuna conferma, non si annulla, e ogni tocco fa partire di nuovo il controllo della BOM (Scan.tsx:844, 962).
