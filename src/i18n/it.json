@@ -220,7 +220,8 @@
       "code_id_mismatch": "Id codice divergente",
       "malformed_event": "Evento malformato",
       "void_not_allowed": "Annullamento non permesso",
-      "returned_piece_reappeared": "Pezzo reso riapparso"
+      "returned_piece_reappeared": "Pezzo reso riapparso",
+      "shipment_kind_mismatch": "Spedizione di un altro tipo"
     },
     "subtitle": "Letture che non tornano con lo stato del pezzo.",
     "showResolved": "Mostra anche le risolte",

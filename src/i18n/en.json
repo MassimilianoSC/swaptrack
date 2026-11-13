@@ -220,7 +220,8 @@
       "code_id_mismatch": "Code id mismatch",
       "malformed_event": "Malformed event",
       "void_not_allowed": "Void not allowed",
-      "returned_piece_reappeared": "Returned piece reappeared"
+      "returned_piece_reappeared": "Returned piece reappeared",
+      "shipment_kind_mismatch": "Shipment of another kind"
     },
     "subtitle": "Readings that do not match the state of the piece.",
     "showResolved": "Show resolved too",

@@ -18,7 +18,7 @@ export interface MachineEvent {
 }
 
 export type Anomaly = "unknown_code_where_known_expected" | "code_of_another_asp" | "forbidden_transition" | "moved_without_transfer"
-  | "event_after_end_of_flow" | "returned_piece_reappeared";
+  | "event_after_end_of_flow" | "returned_piece_reappeared" | "shipment_kind_mismatch";
 
 export interface Result { state: ItemState | null; anomaly?: Anomaly }
 
@@ -65,7 +65,22 @@ function create(e: MachineEvent): Result {
 
 const pending = (e: MachineEvent) => (e.shipment?.toAspId && e.shipment.toAspId !== e.shipment.fromAspId ? e.shipment.toAspId : null);
 
+// P-206 / D-80: the kind of shipment each reading belongs to. A reading with the id of a shipment of the other kind is
+// never refused (§8.1, R6): a transfer or a return does not take the piece into it (the piece stays as it was) and an
+// arrival is an arrival without that shipment; both open shipment_kind_mismatch.
+const SHIPMENT_KIND: Record<string, ShipmentInfo["kind"]> = { transfer_out: "transfer", arrive_at_warehouse: "transfer", return_ship: "return" };
+
 export function applyEvent(prev: ItemState | null, e: MachineEvent): Result {
+  const want = SHIPMENT_KIND[e.type];
+  if (want && e.shipment && e.shipment.kind !== want) {
+    if (e.type !== "arrive_at_warehouse") return { state: prev, anomaly: "shipment_kind_mismatch" };
+    const r = applyKnownShipment(prev, { ...e, shipment: null });
+    return { ...r, anomaly: r.anomaly && r.anomaly !== "moved_without_transfer" ? r.anomaly : "shipment_kind_mismatch" };
+  }
+  return applyKnownShipment(prev, e);
+}
+
+function applyKnownShipment(prev: ItemState | null, e: MachineEvent): Result {
   if (!prev) return create(e);
   const s: ItemState = { ...prev, lastEventId: e.id, lastScannedAt: e.at };
   const to = (status: Status, extra: Partial<ItemState> = {}): Result => ({

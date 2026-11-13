@@ -53,3 +53,26 @@ describe("shipment lines and itemCount (§9.3, §8.2)", () => {
     expect(await state(sh, itemId)).toEqual({ itemCount: 1, line: true, status: "in_return" });
   });
 });
+
+// P-206 / D-80: a reading with the id of a shipment of the other kind. Red before: a transfer_out with the id of a
+// return put the piece «in transfer» and a line in the return; an arrival with the id of a return wrote arrivedAt in
+// a line of the return. Now the reading stays (never refused), the piece does not enter the shipment, no line is
+// written, and the reading opens shipment_kind_mismatch.
+describe("readings with the id of a shipment of the other kind (P-206)", () => {
+  const mismatchOf = async (eventId: string) =>
+    (await t.db.collection("anomalies").where("eventId", "==", eventId).get()).docs.map((d) => d.get("type"));
+  it("transfer_out into a return: no line, the piece stays sorted, shipment_kind_mismatch", async () => {
+    const ret = await shipment("kind_ret"), code = `SN-${RUN}-K1`;
+    const itemId = await sortedPiece(code);
+    const e = await t.fire(ev("transfer_out", code, { at: T0 + 1000, payload: { shipmentId: ret } }));
+    expect(await state(ret, itemId)).toEqual({ itemCount: 0, line: false, status: "sorted" });
+    expect(await mismatchOf(e)).toEqual(["shipment_kind_mismatch"]);
+  });
+  it("arrival with the id of a return: an arrival without shipment, no arrivedAt line in the return", async () => {
+    const ret = await shipment("kind_arr"), code = `SN-${RUN}-K2`;
+    const first = await t.fire(ev("arrive_at_warehouse", code, { payload: { flow: "new", shipmentId: ret } }));
+    const itemId = (await t.db.collection("events").doc(first).get()).get("itemId") as string;
+    expect(await state(ret, itemId)).toEqual({ itemCount: 0, line: false, status: "received_at_asp" });
+    expect(await mismatchOf(first)).toEqual(["shipment_kind_mismatch"]);
+  });
+});

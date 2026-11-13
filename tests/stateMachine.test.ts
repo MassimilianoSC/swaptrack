@@ -258,3 +258,40 @@ describe("sorting precedence (§10)", () => {
     expect(conflictingRule(rules, { siteId: "S", modelId: "N", categoryId: "x", active: true })).toBeNull();
   });
 });
+
+// P-206 / D-80 (o3, reading P-198): a «Transfer» or «Arrival» reading with the id of a return, or a «Return» reading
+// with the id of a transfer, was taken as it came: the piece went «in transfer» with a line in the return. A reading
+// is never refused (§8.1, R6): the piece does not enter a shipment of the other kind, and the reading opens
+// shipment_kind_mismatch. An arrival is still an arrival (the piece is there), only without the shipment.
+describe("a reading with the id of a shipment of the other kind (P-206)", () => {
+  const ret = sh({ id: "R1", kind: "return", toAspId: null, toLocationId: "CW" });
+  const received = () => run(ev("arrive_at_warehouse", { payload: { flow: "new" } })).s!;
+  const sorted = () => run(ev("arrive_at_warehouse", { payload: { flow: "removed", categoryId: "C" } })).s!;
+  it("transfer_out with a return: the piece stays as it was, shipment_kind_mismatch", () => {
+    const before = received();
+    const r = applyEvent(before, ev("transfer_out", { shipment: ret }));
+    expect([r.state!.status, r.state!.shipmentId, r.anomaly]).toEqual(["received_at_asp", null, "shipment_kind_mismatch"]);
+  });
+  it("return_ship with a transfer: the piece stays as it was, shipment_kind_mismatch", () => {
+    const before = sorted();
+    const r = applyEvent(before, ev("return_ship", { shipment: sh({ id: "T1" }) }));
+    expect([r.state!.status, r.state!.shipmentId, r.anomaly]).toEqual(["sorted", null, "shipment_kind_mismatch"]);
+  });
+  it("unknown code: nothing is created in a shipment of the other kind", () => {
+    expect(applyEvent(null, ev("transfer_out", { shipment: ret }))).toEqual({ state: null, anomaly: "shipment_kind_mismatch" });
+    expect(applyEvent(null, ev("return_ship", { shipment: sh({ id: "T1" }) }))).toEqual({ state: null, anomaly: "shipment_kind_mismatch" });
+  });
+  it("arrive_at_warehouse with a return: an arrival without shipment, shipment_kind_mismatch", () => {
+    const inTransfer = applyEvent(received(), ev("transfer_out", { shipment: sh({ id: "T1", toLocationId: "W2" }) })).state!;
+    const r = applyEvent(inTransfer, ev("arrive_at_warehouse", { locationId: "W2", shipment: ret, payload: { flow: "new" } }));
+    expect([r.state!.currentLocationId, r.state!.shipmentId, r.anomaly]).toEqual(["W2", null, "shipment_kind_mismatch"]);
+    const fresh = applyEvent(null, ev("arrive_at_warehouse", { shipment: ret, payload: { flow: "new" } }));
+    expect([fresh.state!.status, fresh.anomaly]).toEqual(["received_at_asp", "shipment_kind_mismatch"]);
+  });
+  it("the right kind still works as before", () => {
+    const r = applyEvent(received(), ev("transfer_out", { shipment: sh({ id: "T1" }) }));
+    expect([r.state!.status, r.state!.shipmentId, r.anomaly]).toEqual(["in_transfer", "T1", undefined]);
+    const r2 = applyEvent(sorted(), ev("return_ship", { shipment: ret }));
+    expect([r2.state!.status, r2.state!.shipmentId, r2.anomaly]).toEqual(["in_return", "R1", undefined]);
+  });
+});

@@ -294,12 +294,13 @@ export async function processEvent(id: string): Promise<void> {
         if (newCode) tx.update(newCodeRef, { ...codeFields, active: true, replacedBy: null });
         else tx.set(newCodeRef, { raw: e.codeRaw, norm: normalizeBarcode(e.codeRaw), normVersion: e.normVersion ?? 1, active: true, replacedBy: null, createdAt: FieldValue.serverTimestamp(), relabelEventId: id, ...codeFields });
       }
-      if (sh && sid) {
+      // P-206 / D-80: a reading never enters a shipment of the other kind (a transfer into a return, or the reverse).
+      if (sh && sid && sh.kind === (e.type === "transfer_out" ? "transfer" : "return")) {
         tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { codeRaw: e.codeRaw, model: r.before?.model ?? model?.model ?? null, addedAt: FieldValue.serverTimestamp(), fromAspId: sh.fromAspId, toAspId: sh.toAspId ?? null, kind: sh.kind }, { merge: true });
         // A piece read again into the same shipment is the same line (P-90): counted only at its first reading.
         if ((r.readingsIn.get(sid) ?? 0) <= 1) tx.update(db.collection("shipments").doc(sid), { itemCount: FieldValue.increment(1) });
       }
-      if (sid && e.type === "arrive_at_warehouse") tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { arrivedAt: FieldValue.serverTimestamp() }, { merge: true });
+      if (sid && e.type === "arrive_at_warehouse" && ships.get(sid)?.kind === "transfer") tx.set(db.collection("shipments").doc(sid).collection("lines").doc(itemRef.id), { arrivedAt: FieldValue.serverTimestamp() }, { merge: true });
       // §9.2 (D-30): a piece confirmed at the client as extra of one return shipment while it was in another one:
       // the line of that other shipment is "confirmed elsewhere" (its confirmation then skips it).
       const elsewhere = e.type === "return_confirm" && r.before?.status === "in_return" && r.before.shipmentId && r.before.shipmentId !== sid ? r.before.shipmentId as string : null;
