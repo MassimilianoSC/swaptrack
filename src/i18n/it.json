@@ -96,6 +96,7 @@
     "closed": "Chiuso",
     "updated": "Aggiornato",
     "duplicateOf": "Duplicato di",
+    "duplicateOpen": "l'altro documento n. {{number}}",
     "duplicateWarning": "Esiste già un documento con questo numero per questa ASP.",
     "compareResult": "Confronto",
     "arrived": "Arrivati",
@@ -750,7 +751,7 @@
       "equipmentType": "Tipo di apparato"
     },
     "notMapped": "— non associata —",
-    "typeValues": "Valori del tipo: site, asp_warehouse, client_warehouse.",
+    "typeValues": "Valori del tipo: Sito, Magazzino ASP, Magazzino cliente.",
     "preview": "Anteprima",
     "previewTitle": "Anteprima",
     "status": {
@@ -961,7 +962,7 @@
     "offlineUnavailable": "Non disponibile senza rete: riprova quando sei collegato."
   },
   "items": {
-    "title": "Pezzo {{id}}",
+    "title": "Pezzo {{code}}",
     "subtitle": "Un singolo pezzo fisico.",
     "searchByCode": "Cerca per codice",
     "notFound": "Nessun pezzo ha questo codice.",
@@ -998,16 +999,19 @@
     "editItem": "Modifica pezzo",
     "condition": "Condizione",
     "forceState": "Forzatura d'ufficio",
-    "forceStateHint": "Scrive una correzione d'ufficio (force_state) sul pezzo.",
+    "forceStateHint": "Corregge d'ufficio lo stato del pezzo; la correzione resta nella sua storia.",
     "changeAsp": "Cambia ASP (solo Amministratore cliente)",
     "applyForce": "Applica",
     "merge": "Unisci",
-    "mergeHint": "Unisce un altro pezzo in questo. Codici ed eventi vengono ripuntati; il trigger segue mergedInto.",
+    "mergeHint": "Unisce in questo pezzo un altro pezzo che è lo stesso oggetto: i suoi codici e le sue letture passano a questo.",
     "mergeOtherCode": "Codice del pezzo da unire",
     "mergeInto": "Unisci in questo",
     "mergedInto": "Unito in",
+    "replacedBy": "sostituito da {{code}}",
+    "replaced": "sostituito",
+    "openPiece": "apri il pezzo",
     "correctLocation": "Correggi luogo",
-    "correctLocationHint": "L'evento conserva il luogo originale in `correction`; lo stato del pezzo viene ricalcolato.",
+    "correctLocationHint": "La lettura conserva nella sua storia il luogo di prima; lo stato del pezzo viene ricalcolato.",
     "previousLocation": "Luogo precedente",
     "flows": {
       "new": "Nuovo",

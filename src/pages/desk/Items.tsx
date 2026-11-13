@@ -13,6 +13,7 @@ import { Input, Select, Field } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loading, ErrorState } from "@/components/states";
 import { toast } from "sonner";
+import { useNames } from "@/lib/names";
 
 const FILTER_KEYS = ["status", "asp", "locationId", "modelId"] as const;
 
@@ -52,9 +53,12 @@ export default function Items() {
     if (client) void listOrganizations().then((o) => setAsps(o.filter((x) => x.type === "asp"))).catch(() => undefined);
   }, [claims, client]);
 
+  // P-205: a piece arriving from a place this role does not read (another ASP's warehouse) shows "a place of another
+  // ASP" (names.place), never the place's id.
+  const names = useNames();
   const place = (id: string | null) => {
     const l = id ? locations.find((x) => x.id === id) : null;
-    return l ? `${l.code} · ${l.name}` : id ?? "—";
+    return l ? `${l.code} · ${l.name}` : names.place(id);
   };
   React.useEffect(() => { setPlaceText(filters.locationId ? place(filters.locationId) : ""); }, [filters.locationId, locations]);
 

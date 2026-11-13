@@ -96,6 +96,7 @@
     "closed": "Closed",
     "updated": "Updated",
     "duplicateOf": "Duplicate of",
+    "duplicateOpen": "the other document no. {{number}}",
     "duplicateWarning": "A document with this number already exists for this ASP.",
     "compareResult": "Comparison",
     "arrived": "Arrived",
@@ -750,7 +751,7 @@
       "equipmentType": "Equipment type"
     },
     "notMapped": "— not mapped —",
-    "typeValues": "Type values: site, asp_warehouse, client_warehouse.",
+    "typeValues": "Type values: Site, ASP warehouse, Client warehouse.",
     "preview": "Preview",
     "previewTitle": "Preview",
     "status": {
@@ -961,7 +962,7 @@
     "offlineUnavailable": "Not available without network: try again when you are connected."
   },
   "items": {
-    "title": "Piece {{id}}",
+    "title": "Piece {{code}}",
     "subtitle": "A single physical piece.",
     "searchByCode": "Search by code",
     "notFound": "No piece has this code.",
@@ -998,16 +999,19 @@
     "editItem": "Edit piece",
     "condition": "Condition",
     "forceState": "Office force",
-    "forceStateHint": "Writes an office correction (force_state) to the item.",
+    "forceStateHint": "Corrects the state of the piece by office decision; the correction stays in its history.",
     "changeAsp": "Change ASP (Client administrator only)",
     "applyForce": "Apply correction",
     "merge": "Merge",
-    "mergeHint": "Merge another piece into this one. Codes and events are re-pointed; the trigger follows mergedInto.",
+    "mergeHint": "Merges into this piece another piece that is the same object: its codes and readings move to this one.",
     "mergeOtherCode": "Code of the piece to merge",
     "mergeInto": "Merge into this",
     "mergedInto": "Merged into",
+    "replacedBy": "replaced by {{code}}",
+    "replaced": "replaced",
+    "openPiece": "open the piece",
     "correctLocation": "Correct location",
-    "correctLocationHint": "The event keeps its original location in `correction`; the item state is recomputed.",
+    "correctLocationHint": "The reading keeps its previous location in its history; the state of the piece is recomputed.",
     "previousLocation": "Previous location",
     "flows": {
       "new": "New material",

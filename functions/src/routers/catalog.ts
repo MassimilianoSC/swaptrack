@@ -7,6 +7,7 @@ import { makeRouter, op } from "../core/router";
 import { adminLog } from "../core/adminLog";
 import { diffRow } from "../shared/importDiff";
 import { locationIdFor, modelIdFor } from "../shared/policy";
+import { locationTypeOf } from "../shared/locationType";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { normalizeBarcode, NORM_VERSION } = require("../codeId.node.js");
 
@@ -39,14 +40,16 @@ function validateLocation(r: z.infer<typeof locRow>, asps: Awaited<ReturnType<ty
   const errors: string[] = [];
   if (!r.code) errors.push("missing_code");
   if (!r.name) errors.push("missing_name");
-  if (!(LOCATION_TYPES as readonly string[]).includes(r.type)) errors.push("invalid_type");
+  // P-205: "Sito", "Magazzino ASP", "Magazzino cliente" (and the English names) are read as the internal values.
+  const type = locationTypeOf(r.type);
+  if (!type) errors.push("invalid_type");
   let aspId: string | null = null;
-  if (r.type !== "client_warehouse") {
+  if (type !== "client_warehouse") {
     const key = r.asp.toLowerCase();
     aspId = asps.byName.get(key) ?? (asps.ids.has(r.asp) ? r.asp : null);
     if (!aspId) errors.push("unknown_asp");
   }
-  return { errors, value: { code: r.code, name: r.name, type: r.type, aspId, address: r.address, region: r.region } };
+  return { errors, value: { code: r.code, name: r.name, type: type ?? r.type, aspId, address: r.address, region: r.region } };
 }
 
 async function existingMap(ids: string[], col: string) {

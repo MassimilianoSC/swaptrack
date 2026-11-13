@@ -264,7 +264,7 @@ export default function DocumentDetail() {
       {!isNew && doc && (
         <Card>
           <p className="text-sm text-muted">{t("documents.updated")}: {formatInstant(doc.updatedAt?.toDate?.() ?? null, i18n.language)}</p>
-          {doc.duplicateOf && <p className="text-sm text-warning">{t("documents.duplicateOf")}: <Link to={`/documents/${doc.duplicateOf}`} className="font-mono hover:underline">{doc.duplicateOf.slice(0, 8)}</Link></p>}
+          {doc.duplicateOf && <p className="text-sm text-warning">{t("documents.duplicateOf")}: <Link to={`/documents/${doc.duplicateOf}`} className="hover:underline" data-testid="document-duplicate-of">{t("documents.duplicateOpen", { number: doc.number })}</Link></p>}
         </Card>
       )}
     </div>

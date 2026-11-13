@@ -7,10 +7,13 @@ import type { Row } from "@/lib/data/db";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
 import { Loading, Empty } from "@/components/states";
+import { formatInstant } from "@/lib/utils";
+import { useNames } from "@/lib/names";
 
 // §6.4 / §12.2: pieces without a model (or with required extra fields missing — step 4).
 export default function ToComplete() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const names = useNames();
   const { claims } = useSession();
   const [items, setItems] = React.useState<Row<Item>[] | null>(null);
   React.useEffect(() => claims?.orgId ? watchToComplete({ role: claims.role!, orgId: claims.orgId }, setItems) : undefined, [claims]);
@@ -20,9 +23,10 @@ export default function ToComplete() {
       <PageHeader title={t("items.toComplete")} subtitle={t("items.toCompleteSubtitle")} />
       {items.length === 0 ? <Empty title={t("items.toCompleteEmpty")} /> : (
         <DataTable testId="to-complete-table" rows={items} rowHref={(r) => `/items/${r.id}`} columns={[
-          { key: "code", header: t("items.lastEvent"), value: (r) => r.lastEventId?.slice(0, 8) ?? "—", className: "font-mono text-xs" },
+          // P-205: when the piece was last read and where, not the ids of its last event and of its place.
+          { key: "code", header: t("items.lastScanned"), value: (r) => r.lastScannedAt?.toDate?.().toISOString() ?? "", render: (r) => formatInstant(r.lastScannedAt?.toDate?.() ?? null, i18n.language) },
           { key: "status", header: t("items.status"), render: (r) => <Badge>{t(`items.statuses.${r.status}`, { defaultValue: r.status })}</Badge> },
-          { key: "loc", header: t("items.location"), value: (r) => r.currentLocationId ?? "—", className: "font-mono text-xs" },
+          { key: "loc", header: t("items.location"), value: (r) => names.place(r.currentLocationId) },
           { key: "a", header: "", render: (r) => <Link to={`/items/${r.id}`} className="text-primary hover:underline" data-testid={`to-complete-row-${r.id}`}>{t("common.open")}</Link> },
         ]} />
       )}

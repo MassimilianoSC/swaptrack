@@ -28,7 +28,7 @@ export default function Anomalies() {
         <DataTable testId="anomalies-table" rows={list} rowHref={(a) => (a.itemId ? `/items/${a.itemId}` : null)} columns={[
           { key: "t", header: t("alerts.kind"), render: (a) => <Badge tone={a.resolution ? "neutral" : "warning"}>{t(`anomalies.types.${a.type}`, { defaultValue: a.type })}</Badge> },
           { key: "loc", header: t("items.location"), value: (a) => names.place(a.locationId) },
-          { key: "it", header: t("nav.items"), render: (a) => a.itemId ? <Link to={`/items/${a.itemId}`} className="text-primary hover:underline font-mono text-xs" data-testid={`anomalies-row-item-${a.id}`}>{a.itemId.slice(0, 8)}</Link> : "—" },
+          { key: "it", header: t("nav.items"), render: (a) => a.itemId ? <Link to={`/items/${a.itemId}`} className="text-primary hover:underline text-xs" data-testid={`anomalies-row-item-${a.id}`}>{t("items.openPiece")}</Link> : "—" },
           { key: "at", header: t("anomalies.opened"), value: (a) => formatInstant(a.openedAt?.toDate?.() ?? null, i18n.language) },
           { key: "r", header: "", render: (a) => a.resolution ? <Badge tone="neutral">{t(`anomalies.resolutions.${a.resolution}`, { defaultValue: a.resolution })}</Badge> : null },
         ]} />

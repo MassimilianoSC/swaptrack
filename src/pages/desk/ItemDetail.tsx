@@ -20,6 +20,7 @@ import { Loading, Empty, ErrorState } from "@/components/states";
 import { BackButton } from "@/components/BackButton";
 import { toast } from "sonner";
 import { formatInstant } from "@/lib/utils";
+import { pieceCode, replacedByText } from "@/lib/itemText";
 
 type HistoryEvent = { id: string; type: string; scannedAt: number | null; source: string; locationId: string | null; aspId: string | null; organization: string; voided: boolean; corrected: boolean; payload: Record<string, unknown>;
   locationName?: string | null; organizationName?: string | null; role?: string | null };
@@ -43,6 +44,16 @@ export default function ItemDetail() {
   }, []);
   const [missing, setMissing] = React.useState(false);
   const [codes, setCodes] = React.useState<Row<Code>[]>([]);
+  // P-205: the piece this one was merged into, named by its code (not its id).
+  const [mergedCode, setMergedCode] = React.useState<string | null>(null);
+  const mergedInto = item?.mergedInto ?? null;
+  React.useEffect(() => {
+    setMergedCode(null);
+    if (!mergedInto) return;
+    let alive = true;
+    listCodesOf(mergedInto).then((c) => { if (alive) setMergedCode(pieceCode(c)); }).catch(() => undefined);
+    return () => { alive = false; };
+  }, [mergedInto]);
   const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
@@ -74,7 +85,8 @@ export default function ItemDetail() {
   }, [claims]);
   const fold = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const locMatches = locQuery.trim() ? places.filter((l) => fold(`${l.code} ${l.name}`).includes(fold(locQuery.trim()))).slice(0, 8) : [];
-  const locationLabel = (lid: string | null) => { const l = places.find((x) => x.id === lid); return l ? `${l.code} · ${l.name}` : lid ?? ""; };
+  // P-205: a place not in the list of this page is still named (names.place), never shown as its id.
+  const locationLabel = (lid: string | null) => { const l = places.find((x) => x.id === lid); return l ? `${l.code} · ${l.name}` : lid ? names.place(lid) : ""; };
 
   const role = claims?.role ?? "";
   const canEdit = role === "client_admin" || role === "asp_admin" || role === "asp_warehouse";
@@ -167,7 +179,7 @@ export default function ItemDetail() {
     <div className="space-y-6">
       <PageHeader
         back="/items"
-        title={t("items.title", { id: id.slice(0, 8) })}
+        title={t("items.title", { code: pieceCode(codes) ?? "…" })}
         subtitle={item.model ? `${item.model} · ${item.materialCode ?? ""}` : t("items.unknownModel")}
         actions={<>
           {canEdit && <Button variant="secondary" onClick={() => setEditing(true)} data-testid="item-edit"><Pencil className="h-4 w-4" />{t("common.edit")}</Button>}
@@ -185,14 +197,14 @@ export default function ItemDetail() {
             <dt className="text-muted">{t("items.aspOwner")}</dt><dd data-testid="item-asp">{names.org(item.currentAspId)}{item.pendingAspId && ` → ${names.org(item.pendingAspId)}`}</dd>
             <dt className="text-muted">{t("items.sortingCategory")}</dt><dd data-testid="item-sorting-category">{categoryLabel(item.sortingCategoryId)}</dd>
             <dt className="text-muted">{t("items.lastScanned")}</dt><dd>{formatInstant(item.lastScannedAt?.toDate?.() ?? null, i18n.language)}</dd>
-            {item.mergedInto && (<><dt className="text-muted">{t("items.mergedInto")}</dt><dd className="font-mono text-xs"><Link to={`/items/${item.mergedInto}`} className="hover:underline">{item.mergedInto}</Link></dd></>)}
+            {item.mergedInto && (<><dt className="text-muted">{t("items.mergedInto")}</dt><dd className="font-mono text-xs"><Link to={`/items/${item.mergedInto}`} className="hover:underline" data-testid="item-merged-into">{mergedCode ?? t("items.openPiece")}</Link></dd></>)}
           </dl>
         </Card>
         <Card>
           <h2 className="font-semibold mb-3">{t("items.codes")}</h2>
           {codes.length === 0 ? <p className="text-sm text-muted">—</p> : (
             <ul className="space-y-1 text-sm font-mono" data-testid="item-codes">
-              {codes.map((c) => <li key={c.id} className={c.active ? "" : "text-muted line-through"}>{c.raw} {!c.active && <span className="text-xs">(→ {c.replacedBy})</span>}</li>)}
+              {codes.map((c) => <li key={c.id} className={c.active ? "" : "text-muted line-through"}>{c.raw} {!c.active && <span className="text-xs font-sans">({replacedByText(c, codes, t)})</span>}</li>)}
             </ul>
           )}
         </Card>
