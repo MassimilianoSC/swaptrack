@@ -536,8 +536,10 @@
     "signInAgain": "Accedi di nuovo per usare la verifica in due passaggi.",
     "required": "Gli amministratori devono proteggere l'account con un'app di autenticazione.",
     "start": "Configura l'app di autenticazione",
-    "secretHint": "Aggiungi questa chiave alla tua app di autenticazione, poi inserisci il codice di 6 cifre.",
-    "openApp": "Apri nell'app di autenticazione",
+    "secretHint": "Sul telefono apri l'app di autenticazione (per esempio Google Authenticator o Microsoft Authenticator), scegli di aggiungere un account inserendo una chiave, e scrivi o incolla questa chiave. Poi scrivi qui sotto il codice di 6 cifre che l'app mostra.",
+    "openApp": "Sei sul telefono? Apri nell'app di autenticazione",
+    "afterConfirmHint": "Dopo «Conferma» l'app ti fa uscire: rientra con la password e con il codice dell'app.",
+    "done": "Verifica in due passaggi attiva: rientra con la password e il codice dell'app.",
     "code": "Codice di 6 cifre",
     "confirm": "Conferma"
   },

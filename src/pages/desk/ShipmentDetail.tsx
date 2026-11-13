@@ -5,7 +5,8 @@ import { Send, Trash2, ScanLine, PackageCheck } from "lucide-react";
 import { useSession } from "@/app/session";
 import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
-import { watchShipment, watchLines, type Shipment, type ShipmentLine } from "@/lib/data/shipments";
+import { watchShipment, watchLines, type Shipment, type ShipmentLine, type ShipmentUnavailable } from "@/lib/data/shipments";
+import { BackButton } from "@/components/BackButton";
 import { searchItemByCode } from "@/lib/data/items";
 import type { Row } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/dialogs";
-import { Loading, Empty } from "@/components/states";
+import { Loading, Empty, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { compressImage } from "@/lib/imageCompress.js";
 import { toast } from "sonner";
@@ -42,9 +43,18 @@ export default function ShipmentDetail() {
   const [attachFile, setAttachFile] = React.useState<File | null>(null);
   const [attachNumber, setAttachNumber] = React.useState("");
 
-  React.useEffect(() => id ? watchShipment(id, setShipment) : undefined, [id]);
+  const [unavailable, setUnavailable] = React.useState<ShipmentUnavailable | null>(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
+  React.useEffect(() => {
+    setUnavailable(null);
+    return id ? watchShipment(id, (s) => { setShipment(s); if (s) setUnavailable(null); }, setUnavailable) : undefined;
+  }, [id, reloadKey]);
   React.useEffect(() => id ? watchLines(id, setLines) : undefined, [id]);
 
+  // P-207: a shipment that does not exist, or another ASP's, says so (as a document does), with "Back"; never "Loading…"
+  // for ever.
+  if (!shipment && unavailable === "missing") return <><BackButton fallback="/shipments" /><ErrorState message={t("errors.shipment_not_found")} /></>;
+  if (!shipment && unavailable === "offline") return <><BackButton fallback="/shipments" /><ErrorState message={t("errors.offlineUnavailable")} onRetry={() => setReloadKey((k) => k + 1)} /></>;
   if (!id || !shipment) return <Loading />;
   const role = claims?.role ?? "";
   const isOwnSender = shipment.fromAspId === claims?.orgId;

@@ -536,8 +536,10 @@
     "signInAgain": "Sign in again to use two-step verification.",
     "required": "Administrators must protect their account with an authenticator app.",
     "start": "Set up the authenticator app",
-    "secretHint": "Add this key to your authenticator app, then enter the 6-digit code.",
-    "openApp": "Open in the authenticator app",
+    "secretHint": "On your phone open the authenticator app (for example Google Authenticator or Microsoft Authenticator), choose to add an account by entering a key, and type or paste this key. Then write below the 6-digit code the app shows.",
+    "openApp": "On the phone? Open in the authenticator app",
+    "afterConfirmHint": "After \"Confirm\" the app signs you out: sign in again with the password and the app's code.",
+    "done": "Two-step verification is on: sign in again with the password and the app's code.",
     "code": "6-digit code",
     "confirm": "Confirm"
   },

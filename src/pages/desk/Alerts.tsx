@@ -11,7 +11,7 @@ import type { Row } from "@/lib/data/db";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/DataTable";
-import { Loading, Empty } from "@/components/states";
+import { Loading, Empty, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/dialogs";
 import { Input, Field } from "@/components/ui/form";
@@ -40,13 +40,20 @@ export default function Alerts() {
   // P-127: only the row being marked or closed waits (a hook: before any early return).
   const { pending, runFor } = useRowAction();
   // P-100: the object of an alert by kind and place, never by id.
-  const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
+  const objectLabel = (a: Row<Alert>) => `${t(a.shipmentId ? "alerts.objects.shipment" : a.documentId ? "alerts.objects.document" : "alerts.objects.place")} · ${names.place(a.locationId)}`;
   const [all, setAll] = React.useState<Row<Alert>[] | null>(null);
   const [showClosed, setShowClosed] = React.useState(false);
   // P-151: the alert being closed and its note (before the early return: hooks, React's rule).
   const [closing, setClosing] = React.useState<string | null>(null);
   const [note, setNote] = React.useState("");
-  React.useEffect(() => claims?.orgId ? watchAlerts({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
+  // P-207: a listening that fails says so, with "Retry" (the page stayed on "Loading…" for ever).
+  const [failed, setFailed] = React.useState(false);
+  const [retry, setRetry] = React.useState(0);
+  React.useEffect(() => {
+    setFailed(false);
+    return claims?.orgId ? watchAlerts({ role: claims.role!, orgId: claims.orgId }, (v) => { setFailed(false); setAll(v); }, () => setFailed(true)) : undefined;
+  }, [claims, retry]);
+  if (!all && failed) return <ErrorState message={t("errors.load_failed")} onRetry={() => setRetry((n) => n + 1)} />;
   if (!all) return <Loading />;
   const list = showClosed ? all : all.filter((a) => !a.closedAt);
   const canClose = ["client_admin", "asp_admin", "client_warehouse"].includes(claims?.role ?? "");

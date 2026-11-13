@@ -23,8 +23,15 @@ export const loadShipment = async (id: string): Promise<Row<Shipment> | null> =>
   return s.exists() ? ({ id: s.id, ...(s.data() as Shipment) }) : null;
 };
 
-export function watchShipment(id: string, cb: (v: Row<Shipment> | null) => void) {
-  return onSnapshot(doc(db, "shipments", id), (s) => cb(s.exists() ? ({ id: s.id, ...(s.data() as Shipment) }) : null));
+// P-207: why a shipment is not there: "missing" (no such shipment, or the rules refuse it: another ASP's is never told
+// apart), "offline" (not on this device and no network). The page said "Loading…" for ever.
+export type ShipmentUnavailable = "missing" | "offline";
+export function watchShipment(id: string, cb: (v: Row<Shipment> | null) => void, onUnavailable?: (why: ShipmentUnavailable) => void) {
+  return onSnapshot(doc(db, "shipments", id), (s) => {
+    if (s.exists()) { cb({ id: s.id, ...(s.data() as Shipment) }); return; }
+    cb(null);
+    onUnavailable?.(s.metadata.fromCache && !navigator.onLine ? "offline" : "missing");
+  }, () => { cb(null); onUnavailable?.(navigator.onLine ? "missing" : "offline"); });
 }
 
 export function watchLines(id: string, cb: (v: Row<ShipmentLine>[]) => void) {

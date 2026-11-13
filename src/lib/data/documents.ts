@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, Timestamp } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, Timestamp, type QuerySnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Row } from "./db";
 import { isAlertToWatch } from "@/lib/alertState";
@@ -42,13 +42,16 @@ export interface Alert {
   createdAt: Timestamp; updatedAt: Timestamp; seenAt: Timestamp | null; closedAt: Timestamp | null; closedNote: string | null;
 }
 
-export function watchAlerts(scope: { role: string; orgId: string }, cb: (v: Row<Alert>[]) => void) {
+// P-207: onError, for the page: a listening refused or broken (a missing index, the rules) left it on "Loading…".
+export function watchAlerts(scope: { role: string; orgId: string }, cb: (v: Row<Alert>[]) => void, onError?: (e: Error) => void) {
   const client = scope.role === "client_admin" || scope.role === "client_office";
   const base = collection(db, "alerts");
-  if (client) return onSnapshot(query(base, orderBy("updatedAt", "desc"), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Alert) }))));
+  const rows = (s: QuerySnapshot) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Alert) })));
+  const failed = (e: Error) => onError?.(e);
+  if (client) return onSnapshot(query(base, orderBy("updatedAt", "desc"), limit(500)), rows, failed);
   // §11.4 / §12.4 client_warehouse inbox: return-DDT differences, newest first.
-  if (scope.role === "client_warehouse") return onSnapshot(query(base, where("kind", "==", "ddt_return_difference"), orderBy("updatedAt", "desc"), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Alert) }))));
-  return onSnapshot(query(base, where("aspId", "==", scope.orgId), orderBy("updatedAt", "desc"), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Alert) }))));
+  if (scope.role === "client_warehouse") return onSnapshot(query(base, where("kind", "==", "ddt_return_difference"), orderBy("updatedAt", "desc"), limit(500)), rows, failed);
+  return onSnapshot(query(base, where("aspId", "==", scope.orgId), orderBy("updatedAt", "desc"), limit(500)), rows, failed);
 }
 
 export function watchOpenAlertCount(scope: { role: string; orgId: string }, cb: (n: number) => void) {
@@ -57,13 +60,16 @@ export function watchOpenAlertCount(scope: { role: string; orgId: string }, cb: 
 
 export interface Anomaly { type: string; eventId: string | null; itemId: string | null; locationId: string | null; aspId: string | null; detail: unknown; openedAt: Timestamp; resolution: string | null }
 
-export function watchAnomalies(scope: { role: string; orgId: string }, cb: (v: Row<Anomaly>[]) => void) {
+// P-207 (for P-208): onError, for the page: a listening that fails left it on "Loading…".
+export function watchAnomalies(scope: { role: string; orgId: string }, cb: (v: Row<Anomaly>[]) => void, onError?: (e: Error) => void) {
   const client = scope.role === "client_admin" || scope.role === "client_office";
   const base = collection(db, "anomalies");
-  if (client) return onSnapshot(query(base, orderBy("openedAt", "desc"), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Anomaly) }))));
+  const rows = (s: QuerySnapshot) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Anomaly) })));
+  const failed = (e: Error) => onError?.(e);
+  if (client) return onSnapshot(query(base, orderBy("openedAt", "desc"), limit(500)), rows, failed);
   // §3.3: the client warehouse and technicians do not read anomalies: no subscription (the rules would refuse it).
   if (scope.role === "client_warehouse" || scope.role === "asp_technician") { cb([]); return () => undefined; }
-  return onSnapshot(query(base, where("aspId", "==", scope.orgId), limit(500)), (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Anomaly) }))));
+  return onSnapshot(query(base, where("aspId", "==", scope.orgId), limit(500)), rows, failed);
 }
 
 export interface SwReport { scope: string; month: string; pdfPath: string; xlsxPath: string; createdAt: Timestamp }

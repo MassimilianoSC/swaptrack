@@ -15,14 +15,16 @@ import { InviteResultDialog, ConfirmDialog, type InviteResult } from "@/componen
 function CreateAspDialog({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: (r: InviteResult) => void }) {
   const { t } = useTranslation();
   const { busy, run } = useAction();
-  const [f, setF] = React.useState({ name: "", language: "it", email: "", firstName: "", lastName: "", adminLanguage: "it" });
+  const empty = () => ({ name: "", language: "it", email: "", firstName: "", lastName: "", adminLanguage: "it" });
+  const [f, setF] = React.useState(empty);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = await run(() => call<{ admin: InviteResult }>("createAsp", {
       name: f.name, language: f.language, admin: { email: f.email, firstName: f.firstName, lastName: f.lastName, language: f.adminLanguage },
     }), t("orgs.created"));
-    if (r) { onDone(r.admin); onClose(); }
+    // P-207: the next ASP starts empty (it started with the one just created and its administrator).
+    if (r) { setF(empty()); onDone(r.admin); onClose(); }
   };
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>

@@ -29,14 +29,16 @@ function InviteDialog({ open, onClose, orgs, onDone, orgId }: { open: boolean; o
   const { claims } = useSession();
   const { busy, run } = useAction();
   // P-180: from the users of one organization, that organization is already chosen (still changeable).
-  const [f, setF] = React.useState({ email: "", firstName: "", lastName: "", language: "it", orgId: claims?.role === "asp_admin" ? claims.orgId! : orgId ?? "", role: "" });
+  const empty = () => ({ email: "", firstName: "", lastName: "", language: "it", orgId: claims?.role === "asp_admin" ? claims.orgId! : orgId ?? "", role: "" });
+  const [f, setF] = React.useState(empty);
   const org = orgs.find((o) => o.id === f.orgId);
   const roles = rolesFor(claims?.role ?? "", org?.type);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = await run(() => call<InviteResult>("inviteUser", f));
-    if (r) { onDone(r); onClose(); }
+    // P-207: the next invitation starts empty (it started with the person just invited).
+    if (r) { setF(empty()); onDone(r); onClose(); }
   };
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>

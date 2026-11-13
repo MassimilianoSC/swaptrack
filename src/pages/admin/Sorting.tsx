@@ -12,7 +12,7 @@ import { PageHeader, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Field, Select, Checkbox } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loading } from "@/components/states";
+import { Loading, ErrorState } from "@/components/states";
 
 // §10: sorting categories and rules, configured by client_admin.
 export default function Sorting() {
@@ -22,8 +22,16 @@ export default function Sorting() {
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [cat, setCat] = React.useState<Partial<Category> | null>(null);
   const [rule, setRule] = React.useState<(Partial<SortingRule> & { siteCode?: string }) | null>(null);
-  const load = React.useCallback(() => { void loadSorting().then((d) => setData(d as never)); void listModels().then(setModels); }, []);
+  // P-207: a load that fails says so, with "Retry" (the page stayed on "Loading…" for ever); a list that is only the
+  // device's copy (the server not reached) is not shown as if it were the configuration: the page is for changing it.
+  const [failed, setFailed] = React.useState<"offline" | "error" | null>(null);
+  const load = React.useCallback(() => {
+    setFailed(null);
+    void loadSorting().then((d) => { if (d.fromCache) setFailed(navigator.onLine ? "error" : "offline"); else setData(d as never); }, () => setFailed(navigator.onLine ? "error" : "offline"));
+    void listModels().then(setModels).catch(() => undefined);
+  }, []);
   React.useEffect(load, [load]);
+  if (!data && failed) return <ErrorState message={t(failed === "offline" ? "errors.offlineUnavailable" : "errors.load_failed")} onRetry={load} />;
   if (!data) return <Loading />;
   const label = (id?: string | null) => data.categories.find((c) => c.id === id)?.labels[i18n.language as "it" | "en"] ?? "—";
 

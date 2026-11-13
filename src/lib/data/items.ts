@@ -47,11 +47,12 @@ export function watchItems(scope: { role: string; orgId: string }, filters: Item
 }
 
 // §6.4 / §12.2: "to complete" list — pieces with needsModel: true, warehouse and client roles.
-export function watchToComplete(scope: { role: string; orgId: string }, cb: (v: Row<Item>[]) => void) {
+// P-207 (for P-208): onError, for the page: a listening that fails left it on "Loading…".
+export function watchToComplete(scope: { role: string; orgId: string }, cb: (v: Row<Item>[]) => void, onError?: (e: Error) => void) {
   const base = collection(db, "items");
   const client = scope.role === "client_admin" || scope.role === "client_office" || scope.role === "client_warehouse";
   const q = client ? query(base, where("needsModel", "==", true), limit(500)) : query(base, where("currentAspId", "==", scope.orgId), where("needsModel", "==", true), limit(500));
-  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Item) }))));
+  return onSnapshot(q, (s) => cb(s.docs.map((d) => ({ id: d.id, ...(d.data() as Item) }))), (e) => onError?.(e));
 }
 
 // Lookup an item by any of its codes (serial or replacement label).

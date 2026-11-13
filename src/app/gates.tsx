@@ -13,6 +13,7 @@ import { rejectedScanCount } from "@/lib/data/events";
 import { useAction } from "./hooks";
 import { SignOutBlockedDialog } from "@/components/shell/parts";
 import type { TotpSecret } from "firebase/auth";
+import { toast } from "sonner";
 
 export function FailClosedScreen() {
   const { t } = useTranslation();
@@ -115,10 +116,19 @@ export function PrivacyGate() {
 // §4.14: TOTP enrollment required for admins when the setting is on.
 export function MfaEnrollGate() {
   const { t } = useTranslation();
-  const { user, claims, branding } = useSession();
+  const { user, claims, branding, safeSignOut } = useSession();
   const { busy, run } = useAction();
   const [secret, setSecret] = React.useState<TotpSecret | null>(null);
   const [code, setCode] = React.useState("");
+  // P-207: "Sign out" always there (an administrator without the phone at hand was stuck on this screen), blocked as
+  // anywhere else while readings or photos wait to be sent.
+  const [blocked, setBlocked] = React.useState(false);
+  const leave = (
+    <>
+      <Button variant="secondary" onClick={async () => { if ((await safeSignOut()) === "pending") setBlocked(true); }} data-testid="mfa-signout-button">{t("auth.signOut")}</Button>
+      <SignOutBlockedDialog open={blocked} onOpenChange={setBlocked} />
+    </>
+  );
   if (user && hasMfa(user) && !claims?.secondFactor) {
     return (
       <BlockingScreen testId="mfa-resignin" title={t("mfa.title")} body={t("mfa.signInAgain")}>
@@ -129,14 +139,25 @@ export function MfaEnrollGate() {
   return (
     <BlockingScreen testId="mfa-enroll-gate" title={t("mfa.title")} body={t("mfa.required")}>
       {!secret ? (
-        <Button disabled={busy} onClick={() => run(async () => setSecret(await startTotpEnrollment(user!)))} data-testid="mfa-start-button">{t("mfa.start")}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={busy} onClick={() => run(async () => setSecret(await startTotpEnrollment(user!)))} data-testid="mfa-start-button">{t("mfa.start")}</Button>
+          {leave}
+        </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm">{t("mfa.secretHint")}</p>
-          <code className="block break-all rounded bg-surface p-3 font-mono text-sm" data-testid="mfa-secret">{secret.secretKey}</code>
+          {/* P-207: what to do with the key, said step by step (a computer has nothing to open the link with). */}
+          <p className="text-sm" data-testid="mfa-secret-hint">{t("mfa.secretHint")}</p>
+          <div className="flex items-center gap-2">
+            <code className="block min-w-0 flex-1 break-all rounded bg-surface p-3 font-mono text-sm" data-testid="mfa-secret">{secret.secretKey}</code>
+            <Button variant="secondary" onClick={() => { void navigator.clipboard.writeText(secret.secretKey).then(() => toast.success(t("common.copied")), () => undefined); }} data-testid="mfa-secret-copy">{t("common.copy")}</Button>
+          </div>
           <a className="text-sm underline break-all" href={secret.generateQrCodeUrl(user!.email ?? "", branding.appName)} data-testid="mfa-otpauth-link">{t("mfa.openApp")}</a>
           <Field label={t("mfa.code")} htmlFor="mfa-code"><Input id="mfa-code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} data-testid="mfa-code-input" /></Field>
-          <Button disabled={busy || code.length < 6} onClick={() => run(async () => { await finishTotpEnrollment(user!, secret, code); await signOut(); })} data-testid="mfa-confirm-button">{t("mfa.confirm")}</Button>
+          <p className="text-xs text-muted">{t("mfa.afterConfirmHint")}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={busy || code.length < 6} onClick={() => run(async () => { await finishTotpEnrollment(user!, secret, code); toast.success(t("mfa.done")); await signOut(); })} data-testid="mfa-confirm-button">{t("mfa.confirm")}</Button>
+            {leave}
+          </div>
         </div>
       )}
     </BlockingScreen>
