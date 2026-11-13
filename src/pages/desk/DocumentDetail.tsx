@@ -173,6 +173,13 @@ export default function DocumentDetail() {
   // without an ASP, any place.
   const ownAsp = !isNew && doc?.aspId ? doc.aspId : null;
   const placeAllowed = (l: Row<Location>) => siteOrWarehouse(l) && (!ownAsp || l.aspId === ownAsp);
+  // P-208: a BOM goes on a site, a DDT on a warehouse. Changing «Type» after choosing the place left a place that the
+  // list no longer showed (and saving put the document on it): the place is cleared when it does not fit the new type.
+  const changeKind = (k: Kind) => {
+    setKind(k);
+    const l = locations.find((x) => x.id === locationId);
+    if (l && (k === "bom" ? l.type !== "site" : l.type !== "asp_warehouse")) setLocationId("");
+  };
   const box = (label: string, value: string, onChange: (v: string) => void, testId: string, extra = "") => (
     <Field label={label} htmlFor={testId}>
       <Textarea id={testId} rows={10} value={value} onChange={(e) => onChange(e.target.value)} readOnly={!editable} className={`font-mono text-xs ${extra}`} placeholder={t("documents.linesPlaceholder")} data-testid={testId} />
@@ -194,11 +201,11 @@ export default function DocumentDetail() {
       />
       <Card>
         <div className="grid gap-3 md:grid-cols-3">
-          <Field label={t("documents.kind")} htmlFor="d-k"><Select id="d-k" value={kind} onChange={(e) => setKind(e.target.value as Kind)} disabled={!isNew} data-testid="document-kind">
+          <Field label={t("documents.kind")} htmlFor="d-k"><Select id="d-k" value={kind} onChange={(e) => changeKind(e.target.value as Kind)} disabled={!isNew} data-testid="document-kind">
             <option value="ddt_in">{t("documents.kinds.ddt_in")}</option><option value="ddt_return">{t("documents.kinds.ddt_return")}</option>{(canUploadBom || !isNew) && <option value="bom">{t("documents.kinds.bom")}</option>}
           </Select></Field>
-          <Field label={t("documents.number")} htmlFor="d-n"><Input id="d-n" value={number} onChange={(e) => setNumber(e.target.value)} className="font-mono" data-testid="document-number" /></Field>
-          <Field label={t("items.location")} htmlFor="d-l"><Select id="d-l" value={locationId} onChange={(e) => setLocationId(e.target.value)} data-testid="document-location">
+          <Field label={t("documents.number")} htmlFor="d-n"><Input id="d-n" value={number} onChange={(e) => setNumber(e.target.value)} readOnly={!editable} className="font-mono" data-testid="document-number" /></Field>
+          <Field label={t("items.location")} htmlFor="d-l"><Select id="d-l" value={locationId} onChange={(e) => setLocationId(e.target.value)} disabled={!editable} data-testid="document-location">
             <option value="">{t("common.choose")}</option>
             {locations.filter(placeAllowed).map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
           </Select>

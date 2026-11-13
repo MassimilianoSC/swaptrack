@@ -10,7 +10,7 @@ import { listModels, listLocationsFor, listOrganizations, type Model, type Locat
 import { loadSorting, type Category } from "@/lib/data/events";
 import { fileBlobUrl } from "@/lib/data/storage";
 import type { Row } from "@/lib/data/db";
-import { isAdminRole } from "@shared/roles";
+import { isAdminRole, isClientRole } from "@shared/roles";
 import { useNames } from "@/lib/names";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,8 @@ export default function ItemDetail() {
     listCodesOf(mergedInto).then((c) => { if (alive) setMergedCode(pieceCode(c)); }).catch(() => undefined);
     return () => { alive = false; };
   }, [mergedInto]);
-  const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | null>(null);
+  // P-208: "unavailable" when the history could not be read (no network, server error): never shown as "no events".
+  const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | "unavailable" | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -100,7 +101,7 @@ export default function ItemDetail() {
     const [c, h, a] = await Promise.all([
       listCodesOf(id),
       // P-116 (n.12): the history is not for the client warehouse (itemHistory refuses it): said, never shown as empty.
-      claims?.role === "client_warehouse" ? Promise.resolve("not_for_role" as const) : call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => []),
+      claims?.role === "client_warehouse" ? Promise.resolve("not_for_role" as const) : call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => "unavailable" as const),
       listAnomaliesOf(id).catch(() => []),
     ]);
     setCodes(c); setHistory(h); setAnomalies(a);
@@ -136,6 +137,9 @@ export default function ItemDetail() {
   if (loadError) return <>{back}<ErrorState message={t("errors.load_failed")} /></>;
   if (missing) return <>{back}<Empty title={t("items.notFound")} /></>;
   if (!id || !item || history === null) return <Loading />;
+  // P-208: an ASP corrects and merges only a piece that is at its ASP now, not one still on its way to it (the server
+  // refuses both: forceState and mergeItems check currentAspId).
+  const ownsNow = isClientRole(role) || item.currentAspId === claims?.orgId;
 
   const label = (t: string) => (t ? t : "—");
   // P-43: the sorting category by its label in the user's language, never the raw id.
@@ -183,8 +187,8 @@ export default function ItemDetail() {
         subtitle={item.model ? `${item.model} · ${item.materialCode ?? ""}` : t("items.unknownModel")}
         actions={<>
           {canEdit && <Button variant="secondary" onClick={() => setEditing(true)} data-testid="item-edit"><Pencil className="h-4 w-4" />{t("common.edit")}</Button>}
-          {canForce && <Button variant="secondary" onClick={() => setForceOpen(true)} data-testid="item-force-state"><Wrench className="h-4 w-4" />{t("items.forceState")}</Button>}
-          {canMerge && <Button variant="secondary" onClick={() => setMergeOpen(true)} data-testid="item-merge"><Shuffle className="h-4 w-4" />{t("items.merge")}</Button>}
+          {canForce && ownsNow && <Button variant="secondary" onClick={() => setForceOpen(true)} data-testid="item-force-state"><Wrench className="h-4 w-4" />{t("items.forceState")}</Button>}
+          {canMerge && ownsNow && <Button variant="secondary" onClick={() => setMergeOpen(true)} data-testid="item-merge"><Shuffle className="h-4 w-4" />{t("items.merge")}</Button>}
         </>}
       />
       <div className="grid gap-4 md:grid-cols-2">
@@ -243,7 +247,13 @@ export default function ItemDetail() {
 
       <Card>
         <h2 className="font-semibold mb-3">{t("items.history")}</h2>
-        {history === "not_for_role" ? <p className="text-sm text-muted" data-testid="item-history-not-for-role">{t("items.historyNotForRole")}</p> : history.length === 0 ? <Empty title={t("items.historyEmpty")} /> : (
+        {history === "not_for_role" ? <p className="text-sm text-muted" data-testid="item-history-not-for-role">{t("items.historyNotForRole")}</p>
+          : history === "unavailable" ? (
+            <div className="flex flex-wrap items-center gap-3" data-testid="item-history-unavailable">
+              <p className="text-sm text-muted">{t("items.historyUnavailable")}</p>
+              <Button size="sm" variant="secondary" onClick={() => void reload().catch(failed)} data-testid="item-history-retry">{t("common.retry")}</Button>
+            </div>
+          ) : history.length === 0 ? <Empty title={t("items.historyEmpty")} /> : (
           <ol className="space-y-2 text-sm" data-testid="item-history">
             {history.map((h) => (
               <li key={h.id} className={`border-l-2 pl-3 ${h.voided ? "border-muted opacity-60" : "border-primary"}`}>
@@ -255,7 +265,7 @@ export default function ItemDetail() {
                   {h.organization === "another" && <Badge tone="neutral">{t("items.anotherOrg")}</Badge>}
                   {h.source === "server" && <Badge tone="neutral">{t("items.serverEvent")}</Badge>}
                   <span className="ml-auto flex gap-1">
-                    {canReveal && isAdminRole(role) && h.source !== "server" && <Button size="sm" variant="ghost" onClick={() => reveal(h.id)} aria-label={t("items.revealAuthor")} data-testid={`item-reveal-${h.id}`}><Eye className="h-4 w-4" /></Button>}
+                    {canReveal && isAdminRole(role) && h.source !== "server" && h.organization !== "another" && <Button size="sm" variant="ghost" onClick={() => reveal(h.id)} aria-label={t("items.revealAuthor")} data-testid={`item-reveal-${h.id}`}><Eye className="h-4 w-4" /></Button>}
                     {canCorrect && h.locationId && <Button size="sm" variant="ghost" onClick={() => { setCorrectOpen(h); setCorrectLoc(""); setLocQuery(""); }} aria-label={t("items.correctLocation")} data-testid={`item-correct-${h.id}`}><MapPin className="h-4 w-4" /></Button>}
                   </span>
                 </div>

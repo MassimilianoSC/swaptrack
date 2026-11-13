@@ -983,6 +983,7 @@
     "codes": "Codes",
     "history": "History",
     "historyEmpty": "No events yet.",
+    "historyUnavailable": "The history of the piece is not available now (for example without network).",
     "photos": "Photos",
     "photosEmpty": "No photos.",
     "photoOpen": "Open photo {{n}}",

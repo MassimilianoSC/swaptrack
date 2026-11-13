@@ -47,7 +47,8 @@
         "return-confirm-error.desk.spec.ts",
         "shipment-attach-ddt.desk.spec.ts",
         "settings-privacy-bump.desk.spec.ts",
-        "p207-states.desk.spec.ts"
+        "p207-states.desk.spec.ts",
+        "desk-load-errors.desk.spec.ts"
       ]
     },
     {

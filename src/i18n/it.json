@@ -983,6 +983,7 @@
     "codes": "Codici",
     "history": "Cronologia",
     "historyEmpty": "Nessun evento.",
+    "historyUnavailable": "La storia del pezzo non è disponibile adesso (per esempio senza rete).",
     "photos": "Foto",
     "photosEmpty": "Nessuna foto.",
     "photoOpen": "Apri la foto {{n}}",
