@@ -10,6 +10,7 @@ import { buildExportXlsx } from "../shared/reportBuilders";
 import { exportRow, inPeriod, capRows, type ExportItem } from "../shared/reportData";
 import { placesByIds, orgNames, categoryLabels } from "../core/lookup";
 import { reportMonth } from "../shared/reportMonth";
+import { RETURN_EVENT_TYPES } from "./items";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -40,10 +41,11 @@ function assertScope(ctx: Ctx, scope: string) {
 // Exported for the emulator tests (functions/test), which call the handlers in-process.
 export const desk = {
   // §13.2 projection: never userId; events of other organizations shown as "another organization" (ASP roles).
-  // R7 (P-62): for ASP roles every filter must be their own (ASP, location, piece); client_warehouse has no event
-  // list (D-31: §3.3 gives it return shipments only, and the app does not use this for it).
+  // R7 (P-62): for ASP roles every filter must be their own (ASP, location, piece). P-211 (§3.3): client_warehouse
+  // reads the readings of return shipments only (return_ship, return_confirm); for it the period is applied on the
+  // result, so its query stays equality-only (no new composite index).
   listEvents: op({
-    roles: ["client_admin", "client_office", "asp_admin", "asp_warehouse"],
+    roles: ["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"],
     rate: [120, 60],
     schema: z.object({
       itemId: z.string().optional(),
@@ -67,12 +69,18 @@ export const desk = {
       else if (d.locationId) q = q.where("locationId", "==", d.locationId);
       else if (d.aspId) q = q.where("aspId", "==", d.aspId);
       else if (!isClientRole(ctx.role)) q = q.where("aspId", "==", ctx.orgId);
-      if (d.from) q = q.where("scannedAt", ">=", Timestamp.fromMillis(d.from));
-      if (d.to) q = q.where("scannedAt", "<=", Timestamp.fromMillis(d.to));
+      const returnsOnly = ctx.role === "client_warehouse";
+      if (returnsOnly) q = q.where("type", "in", RETURN_EVENT_TYPES);
+      else {
+        if (d.from) q = q.where("scannedAt", ">=", Timestamp.fromMillis(d.from));
+        if (d.to) q = q.where("scannedAt", "<=", Timestamp.fromMillis(d.to));
+      }
       const snap = await q.limit(d.max).get();
+      const at = (x: FirebaseFirestore.QueryDocumentSnapshot) => (x.get("scannedAt")?.toMillis?.() ?? 0) as number;
+      const docs = returnsOnly ? snap.docs.filter((x) => (!d.from || at(x) >= d.from) && (!d.to || at(x) <= d.to)) : snap.docs;
       const client = isClientRole(ctx.role);
       return {
-        events: snap.docs.map((x) => {
+        events: docs.map((x) => {
           const e = x.data();
           const own = client || e.aspId === ctx.orgId;
           return {

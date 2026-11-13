@@ -992,6 +992,7 @@
     "history": "Cronologia",
     "historyEmpty": "Nessun evento.",
     "historyUnavailable": "La storia del pezzo non è disponibile adesso (per esempio senza rete).",
+    "historyReturnsOnly": "Per il magazzino del cliente: solo i passaggi dei resi (spedizione nel reso e conferma al magazzino del cliente).",
     "photos": "Foto",
     "photosEmpty": "Nessuna foto.",
     "photoOpen": "Apri la foto {{n}}",

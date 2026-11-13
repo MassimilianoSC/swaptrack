@@ -992,6 +992,7 @@
     "history": "History",
     "historyEmpty": "No events yet.",
     "historyUnavailable": "The history of the piece is not available now (for example without network).",
+    "historyReturnsOnly": "For the client warehouse: the return steps only (sent in a return, confirmed at the client warehouse).",
     "photos": "Photos",
     "photosEmpty": "No photos.",
     "photoOpen": "Open photo {{n}}",

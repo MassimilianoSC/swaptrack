@@ -40,6 +40,13 @@ export async function serverEvent(ctx: Ctx, type: string, locationId: string, as
 }
 
 // id -> one field of the given documents, reading only that field (P-94: the role of a user, never its name).
+// P-211: what «return shipments» means for the client warehouse's history and event lists (SPEC §3.3): the readings
+// that send a piece in a return and the confirmations at the client. Every other role reads them all.
+export const RETURN_EVENT_TYPES = ["return_ship", "return_confirm"];
+export function returnsOnlyFor<T extends { get(field: string): unknown }>(ctx: Ctx, docs: T[]): T[] {
+  return ctx.role === "client_warehouse" ? docs.filter((x) => RETURN_EVENT_TYPES.includes(String(x.get("type")))) : docs;
+}
+
 async function fieldOf(col: string, ids: string[], field: string): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   for (let i = 0; i < ids.length; i += 300) {
@@ -147,12 +154,14 @@ export const items = {
     },
   }),
   // R11: projection without userId; events of other organizations shown as "another organization".
+  // P-211 (SPEC §3.3 «Item history, event lists: client_warehouse — return shipments»): the client warehouse reads
+  // the readings of the return shipments only (sent in a return, confirmed at the client).
   itemHistory: op({
-    roles: ["client_admin", "client_office", "asp_admin", "asp_warehouse"],
+    roles: ["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"],
     schema: z.object({ itemId: z.string() }),
     handler: async (ctx, d) => {
       await loadItem(ctx, d.itemId);
-      const evs = await db.collection("events").where("itemId", "==", d.itemId).get();
+      const evs = { docs: returnsOnlyFor(ctx, (await db.collection("events").where("itemId", "==", d.itemId).get()).docs) };
       const client = isClientRole(ctx.role);
       const isOwn = (e: Doc) => client || e.aspId === ctx.orgId;
       const own = evs.docs.map((x) => x.data()).filter(isOwn);

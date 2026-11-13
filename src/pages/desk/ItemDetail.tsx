@@ -56,7 +56,7 @@ export default function ItemDetail() {
     return () => { alive = false; };
   }, [mergedInto]);
   // P-208: "unavailable" when the history could not be read (no network, server error): never shown as "no events".
-  const [history, setHistory] = React.useState<HistoryEvent[] | "not_for_role" | "unavailable" | null>(null);
+  const [history, setHistory] = React.useState<HistoryEvent[] | "unavailable" | null>(null);
   const [anomalies, setAnomalies] = React.useState<Array<Record<string, unknown> & { id: string }>>([]);
   const [models, setModels] = React.useState<Row<Model>[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -104,8 +104,8 @@ export default function ItemDetail() {
     if (!id) return;
     const [c, h, a] = await Promise.all([
       listCodesOf(id),
-      // P-116 (n.12): the history is not for the client warehouse (itemHistory refuses it): said, never shown as empty.
-      claims?.role === "client_warehouse" ? Promise.resolve("not_for_role" as const) : call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => "unavailable" as const),
+      // P-211: every role that opens the page reads the history; the server gives the client warehouse the return readings.
+      call<{ events: HistoryEvent[] }>("itemHistory", { itemId: id }).then((r) => r.events).catch(() => "unavailable" as const),
       listAnomaliesOf(id).catch(() => []),
     ]);
     setCodes(c); setHistory(h); setAnomalies(a);
@@ -256,8 +256,9 @@ export default function ItemDetail() {
 
       <Card>
         <h2 className="font-semibold mb-3">{t("items.history")}</h2>
-        {history === "not_for_role" ? <p className="text-sm text-muted" data-testid="item-history-not-for-role">{t("items.historyNotForRole")}</p>
-          : history === "unavailable" ? (
+        {/* P-211 (§3.3): the client warehouse reads the readings of the return shipments only, and is told so. */}
+        {role === "client_warehouse" && <p className="mb-3 text-sm text-muted" data-testid="item-history-returns-only">{t("items.historyReturnsOnly")}</p>}
+        {history === "unavailable" ? (
             <div className="flex flex-wrap items-center gap-3" data-testid="item-history-unavailable">
               <p className="text-sm text-muted">{t("items.historyUnavailable")}</p>
               <Button size="sm" variant="secondary" onClick={() => void reload().catch(failed)} data-testid="item-history-retry">{t("common.retry")}</Button>

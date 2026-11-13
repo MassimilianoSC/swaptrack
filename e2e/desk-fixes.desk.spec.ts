@@ -44,11 +44,15 @@ test.describe("Scrivania — solo ciò che il server accetta (P-116)", () => {
     await expect(asp.locator(`option[value="${SEED.nord.orgId}"]`)).not.toHaveText(SEED.nord.orgId);
   });
 
-  test("magazzino cliente: la storia del pezzo dice che non è disponibile per il ruolo", async ({ page }) => {
+  // P-211 (SPEC §3.3 «Item history: client_warehouse — return shipments»): the client warehouse reads the history of
+  // a piece limited to the return steps, and is told so. Red before: «not available for your role», no history.
+  test("magazzino cliente: la storia del pezzo con i soli passaggi dei resi, e la riga che lo dice", async ({ page }) => {
     test.setTimeout(120_000);
     await signIn(page, ACCOUNTS.clientWarehouse);
     await page.goto(`/items/${SEED.nord.itemId}`);
-    await expect(page.getByTestId("item-history-not-for-role")).toHaveText(tr("items.historyNotForRole"));
+    await expect(page.getByTestId("item-history-returns-only")).toHaveText(tr("items.historyReturnsOnly"), { timeout: 30_000 });
+    await expect(page.getByTestId("item-history-not-for-role")).toHaveCount(0);
+    await expect(page.getByTestId("item-history-unavailable")).toHaveCount(0); // the server answered (which readings: itemHistory.test.ts)
   });
 
   test("amministratore cliente: un nuovo trasferimento propone come arrivo solo magazzini di un'altra ASP", async ({ page }) => {
