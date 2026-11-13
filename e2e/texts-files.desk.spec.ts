@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, tr, rawKeysIn, emulatorDoc, emulatorFile } from "./helpers";
+import { ACCOUNTS, signIn, tr, rawKeysIn, emulatorDoc, emulatorFile, uniqueCode } from "./helpers";
 import { SEED } from "./seed";
 import { addExifGps, hasExif, hasGps } from "../tests/fixtures/exifGps";
 
@@ -56,6 +56,9 @@ test.describe("Testi e file (scrivania)", () => {
     const shipmentId = page.url().split("/").pop()!;
 
     await page.getByTestId("shipment-attach-ddt").setInputFiles({ name: "ddt.jpg", mimeType: "image/jpeg", buffer: Buffer.from(photo) });
+    // P-200: a return without a DDT number asks for it before its first file.
+    await page.getByTestId("shipment-attach-number").fill(uniqueCode("DDTF"));
+    await page.getByTestId("shipment-attach-save").click();
     await expect(page.getByText(tr("documents.attached")).first()).toBeVisible({ timeout: 60_000 });
 
     const documentId = (await emulatorDoc(`shipments/${shipmentId}`)).documentId?.stringValue;
