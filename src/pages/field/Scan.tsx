@@ -1069,7 +1069,8 @@ export default function Scan() {
       {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}
       {/* P-134 (D-62 criterion 6): the commands of every piece right under the camera, in the first screen. */}
       <div className="flex flex-wrap gap-2 items-center">
-        {torch !== null && <Button variant="secondary" onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
+        {/* P-209: lit when the torch is on (it looked the same on and off). */}
+        {torch !== null && <Button variant={torch ? "primary" : "secondary"} aria-pressed={torch} onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
         {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
           <input type="range" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
         <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</Button>

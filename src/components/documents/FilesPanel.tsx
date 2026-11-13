@@ -135,7 +135,8 @@ export function FilesPanel({ existing, removed, onRemoved, pending, onPending, o
           </>
         )}
       </div>
-      {shown.length === 0 ? <p className="text-sm text-muted">{t("documents.filesEmpty")}</p> : (
+      {/* P-209: the invitation to add files only to those who can (the office, the client warehouse, a closed document: none). */}
+      {shown.length === 0 ? <p className="text-sm text-muted">{t(canAdd ? "documents.filesEmpty" : "documents.filesNone")}</p> : (
         <ul className="flex flex-wrap gap-2 text-xs" data-testid="document-files-list">
           {shown.map((s) => {
             // P-174: an Excel the lines were read from stands out at once (filled, its icon, the name in bold).

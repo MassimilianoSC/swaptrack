@@ -55,7 +55,8 @@ export function ReportsPanel() {
               {asps.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
             </Select></Field>
             <Field label={t("reports.year")} htmlFor="r-y"><Select id="r-y" value={String(year)} onChange={(e) => setYear(Number(e.target.value))} data-testid="reports-year">
-              {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
+              {/* P-209: from 2024 (the first data) to the current year, not a list written once (it stopped at 2027). */}
+              {Array.from({ length: new Date().getUTCFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((y) => <option key={y} value={y}>{y}</option>)}
             </Select></Field>
             <Field label={t("reports.month")} htmlFor="r-m"><Select id="r-m" value={String(month)} onChange={(e) => setMonth(Number(e.target.value))} data-testid="reports-month">
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}</option>)}

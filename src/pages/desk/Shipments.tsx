@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Plus, Truck, PackageCheck } from "lucide-react";
 import { useSession } from "@/app/session";
@@ -21,6 +21,7 @@ import { useNames } from "@/lib/names";
 // §9.3 / §9.4: shipments list — return + transfer. Create actions depend on role.
 export default function Shipments() {
   const { t, i18n } = useTranslation();
+  const nav = useNavigate();
   const { claims } = useSession();
   const names = useNames();
   const { busy, run } = useAction();
@@ -50,7 +51,8 @@ export default function Shipments() {
   const create = async () => {
     if (!fromLoc || !toLoc) return;
     const r = await run(() => call<{ shipmentId: string }>("createShipment", { kind: newKind, fromLocationId: fromLoc, toLocationId: toLoc }), t("shipments.created"));
-    if (r?.shipmentId) { setNewKind(null); window.location.href = `/shipments/${r.shipmentId}`; }
+    // P-209: inside the app (the whole page was loaded again, and «Shipment created» went with it, never seen).
+    if (r?.shipmentId) { setNewKind(null); nav(`/shipments/${r.shipmentId}`); }
   };
 
   if (!all) return <Loading />;

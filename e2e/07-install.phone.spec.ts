@@ -18,7 +18,8 @@ test.describe("Installazione dell'app (telefono)", () => {
     await signIn(page, ACCOUNTS.aspTechnicianCentro);
     await offerInstall(page);
     const banner = page.getByTestId("install-banner");
-    await expect(banner).toContainText(tr("pwa.installHint"));
+    // P-209: the app's name comes from Settings › Brand ("SwapTrack" in the seed).
+    await expect(banner).toContainText(tr("pwa.installHint").replace("{{name}}", "SwapTrack"));
     await banner.getByTestId("install-banner-later").click();
     await expect(banner).toHaveCount(0);
 

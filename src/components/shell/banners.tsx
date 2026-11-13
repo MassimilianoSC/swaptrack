@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { Share, X, RefreshCw, Download } from "lucide-react";
 import { Button } from "../ui/button";
+import { useSession } from "@/app/session";
 
 // §16: "new version available, reload".
 export function UpdatePrompt() {
@@ -106,6 +107,8 @@ const LATER_KEY = "swaptrack.installLaterUntil";
 const LATER_DAYS = 7;
 export function InstallBanner() {
   const { t } = useTranslation();
+  // P-209: the name of the app as the brand sets it (it was "SwapTrack" always).
+  const { branding } = useSession();
   const prompt = useInstallPrompt();
   const [hiddenUntil, setHiddenUntil] = React.useState(() => { try { return Number(localStorage.getItem(LATER_KEY) ?? 0) || 0; } catch { return 0; } });
   if (!prompt || isStandalone() || Date.now() < hiddenUntil) return null;
@@ -116,7 +119,7 @@ export function InstallBanner() {
   };
   return (
     <div role="note" className="flex flex-wrap items-center gap-3 bg-primary/10 border-b border-border px-4 py-2 text-sm" data-testid="install-banner">
-      <Download className="h-4 w-4" aria-hidden /> <span className="flex-1">{t("pwa.installHint")}</span>
+      <Download className="h-4 w-4" aria-hidden /> <span className="flex-1">{t("pwa.installHint", { name: branding.appName })}</span>
       <InstallAppButton />
       <Button size="sm" variant="ghost" onClick={later} data-testid="install-banner-later"><X className="h-4 w-4" aria-hidden /> {t("pwa.later")}</Button>
     </div>

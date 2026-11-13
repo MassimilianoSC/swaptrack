@@ -32,7 +32,7 @@ export default function Documents() {
         { key: "loc", header: t("items.location"), value: (r) => names.place(r.locationId) },
         { key: "v", header: t("documents.version"), value: (r) => r.version },
         { key: "s", header: t("common.status"), render: (r) => <Badge tone={r.status === "open" ? "warning" : r.status === "checked" ? "primary" : "success"}>{t(`documents.statuses.${r.status}`)}</Badge> },
-        { key: "a", header: t("shipments.created_at"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
+        { key: "a", header: t("documents.createdAt"), value: (r) => formatInstant(r.createdAt?.toDate?.() ?? null, i18n.language) },
         { key: "o", header: "", render: (r) => <Link to={`/documents/${r.id}`} className="text-primary hover:underline" data-testid={`documents-row-${r.id}`}>{t("common.open")}</Link> },
       ]} />
     </div>

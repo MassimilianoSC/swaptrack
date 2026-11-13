@@ -48,7 +48,8 @@
         "shipment-attach-ddt.desk.spec.ts",
         "settings-privacy-bump.desk.spec.ts",
         "p207-states.desk.spec.ts",
-        "desk-load-errors.desk.spec.ts"
+        "desk-load-errors.desk.spec.ts",
+        "p209-minor.desk.spec.ts"
       ]
     },
     {

@@ -7,7 +7,7 @@ import { useAction } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { watchShipment, watchLines, type Shipment, type ShipmentLine, type ShipmentUnavailable } from "@/lib/data/shipments";
 import { BackButton } from "@/components/BackButton";
-import { searchItemByCode } from "@/lib/data/items";
+import { searchItemByCode, LookupUnavailable } from "@/lib/data/items";
 import type { Row } from "@/lib/data/db";
 import { isClientRole } from "@shared/roles";
 import { PageHeader, Card, Badge } from "@/components/ui/card";
@@ -174,7 +174,8 @@ export default function ShipmentDetail() {
       </Card>
       <Card>
         <h2 className="font-semibold mb-3">{t("shipments.lines")}</h2>
-        {lines.length === 0 ? <Empty title={t("shipments.linesEmpty")} /> : (
+        {/* P-209: "read one" only to those who read the pieces of this draft. */}
+        {lines.length === 0 ? <Empty title={t(canScanDraft ? "shipments.linesEmpty" : "shipments.linesNone")} /> : (
           <ul className="divide-y divide-border text-sm" data-testid="shipment-lines">
             {lines.map((l) => (
               <li key={l.id} className="flex items-center gap-3 py-2">
@@ -203,7 +204,12 @@ export default function ShipmentDetail() {
                 <span className="font-mono truncate flex-1">{c}</span>
                 <Badge tone="warning">{t("shipments.extraLine")}</Badge>
                 <button type="button" className="text-primary hover:underline text-xs" data-testid={`shipment-extra-open-${c}`}
-                  onClick={() => void run(async () => { const it = await searchItemByCode(c); if (!it) throw new Error("item_not_found"); nav(`/items/${it.id}`); })}>{t("common.open")}</button>
+                  onClick={() => void run(async () => {
+                    // P-209: without network it says so ("Unexpected error" before).
+                    const it = await searchItemByCode(c).catch((e) => { throw e instanceof LookupUnavailable ? new Error("offlineUnavailable") : e; });
+                    if (!it) throw new Error("item_not_found");
+                    nav(`/items/${it.id}`);
+                  })}>{t("common.open")}</button>
               </li>
             ))}
           </ul>
