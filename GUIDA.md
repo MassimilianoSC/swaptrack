@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 840e1d2 · Testo della guida: sha be8531a369a2 · Data: 12/11/2026
+App descritta: commit ef0af0b · Testo della guida: sha df308f30e02e · Data: 13/11/2026
 
 ## Come usare questa guida
 
@@ -638,8 +638,6 @@ Cosa vedi dopo: nella scheda le righe mostrano «Confermato» o «Mancante», e 
 
 **Se un pezzo mancante arriva dopo.** Apri il reso e premi «Conferma i mancanti arrivati» (c'è finché restano pezzi mancanti). La finestra mostra solo i pezzi mancanti, senza spunta: «Spunta i pezzi mancanti che sono arrivati. I pezzi già confermati e quelli in più non si cambiano.» Spunta quelli arrivati e premi «Conferma i mancanti arrivati». Dopo la prima conferma non si possono più aggiungere pezzi in più.
 
-**Pezzi arrivati dopo.** Se un pezzo mancante arriva più tardi, riapri lo stesso reso, premi di nuovo «Conferma» e aggiungilo. I pezzi già confermati non vengono contati due volte.
-
 **Pezzo trovato in un altro reso.** Se un pezzo segnato mancante viene poi confermato in un altro reso, nella riga del primo reso compare «Confermata in un altro reso», con il collegamento a quel reso.
 
 Se qualcosa va storto: «La spedizione non è stata inviata.»: l'ASP non ha ancora inviato il reso, aspetta. Controlla sempre in «Spedizioni» che il reso compaia come «Confermata».
@@ -655,7 +653,7 @@ Se qualcosa va storto: «La spedizione non è stata inviata.»: l'ASP non ha anc
 2. Premi «Segna visto» quando l'hai guardato.
 3. Quando la differenza è chiarita, premi «Chiudi», scrivi una nota se serve e conferma. Premilo solo quando sei sicuro: non si riapre a mano.
 
-Per vedere il reso a cui si riferisce l'avviso, tocca l'«Oggetto»: si apre la scheda del reso, dove puoi premere «Conferma» per aggiungere i pezzi arrivati dopo.
+Per vedere il reso a cui si riferisce l'avviso, tocca l'«Oggetto»: si apre la scheda del reso, dove puoi premere «Conferma i mancanti arrivati» per confermare i pezzi arrivati dopo.
 
 ### Come cerco un pezzo?
 

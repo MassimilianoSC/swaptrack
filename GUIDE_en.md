@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 840e1d2 · Guide text: sha 338dd40ae9cf · Date: 12/11/2026
+App described: commit ef0af0b · Guide text: sha c0b427d8469b · Date: 13/11/2026
 
 ## How to use this guide
 
@@ -638,8 +638,6 @@ What you see next: in the page the lines show «Confirmed» or «Missing», and 
 
 **If a missing piece arrives later.** Open the return and press «Confirm missing pieces that arrived» (it is there while pieces are still missing). The window shows only the missing pieces, not ticked: «Tick the missing pieces that have arrived. Pieces already confirmed and extra pieces cannot be changed.» Tick those that arrived and press «Confirm missing pieces that arrived». After the first confirmation no extra pieces can be added.
 
-**Pieces arrived later.** If a missing piece arrives later, reopen the same return, press «Confirm» again and add it. The pieces already confirmed are not counted twice.
-
 **Piece found in another return.** If a piece marked missing is then confirmed in another return, the row of the first return shows «Confirmed in another return», with the link to that return.
 
 If something goes wrong: «The shipment is not sent.»: the ASP has not sent the return yet, wait. Always check in «Shipments» that the return appears as «Confirmed».
@@ -655,7 +653,7 @@ If something goes wrong: «The shipment is not sent.»: the ASP has not sent the
 2. Press «Mark seen» when you have looked at it.
 3. When the difference is clear, press «Close», write a note if needed and confirm. Press it only when you are sure: it cannot be reopened by hand.
 
-To see the return the alert refers to, tap the «Object»: the page of the return opens, where you can press «Confirm» to add the pieces that arrived later.
+To see the return the alert refers to, tap the «Object»: the page of the return opens, where you can press «Confirm missing pieces that arrived» to confirm the pieces that arrived later.
 
 ### How do I search for a piece?
 
