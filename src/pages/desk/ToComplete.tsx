@@ -6,7 +6,7 @@ import { watchToComplete, type Item } from "@/lib/data/items";
 import type { Row } from "@/lib/data/db";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
-import { Loading, Empty } from "@/components/states";
+import { Loading, Empty, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { useNames } from "@/lib/names";
 
@@ -16,7 +16,14 @@ export default function ToComplete() {
   const names = useNames();
   const { claims } = useSession();
   const [items, setItems] = React.useState<Row<Item>[] | null>(null);
-  React.useEffect(() => claims?.orgId ? watchToComplete({ role: claims.role!, orgId: claims.orgId }, setItems) : undefined, [claims]);
+  // P-208: a list that cannot be read says so, with «Retry», instead of «Loading…» for ever (as Alerts, P-207).
+  const [failed, setFailed] = React.useState(false);
+  const [retry, setRetry] = React.useState(0);
+  React.useEffect(() => {
+    setFailed(false);
+    return claims?.orgId ? watchToComplete({ role: claims.role!, orgId: claims.orgId }, (v) => { setFailed(false); setItems(v); }, () => setFailed(true)) : undefined;
+  }, [claims, retry]);
+  if (!items && failed) return <ErrorState message={t("errors.load_failed")} onRetry={() => setRetry((n) => n + 1)} />;
   if (!items) return <Loading />;
   return (
     <div className="space-y-6">

@@ -6,7 +6,7 @@ import { watchAnomalies, type Anomaly } from "@/lib/data/documents";
 import type { Row } from "@/lib/data/db";
 import { PageHeader, Badge } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
-import { Loading, Empty } from "@/components/states";
+import { Loading, Empty, ErrorState } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { useNames } from "@/lib/names";
 
@@ -17,7 +17,14 @@ export default function Anomalies() {
   const names = useNames();
   const [all, setAll] = React.useState<Row<Anomaly>[] | null>(null);
   const [showResolved, setShowResolved] = React.useState(false);
-  React.useEffect(() => claims?.orgId ? watchAnomalies({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
+  // P-208: a list that cannot be read says so, with «Retry», instead of «Loading…» for ever (as Alerts, P-207).
+  const [failed, setFailed] = React.useState(false);
+  const [retry, setRetry] = React.useState(0);
+  React.useEffect(() => {
+    setFailed(false);
+    return claims?.orgId ? watchAnomalies({ role: claims.role!, orgId: claims.orgId }, (v) => { setFailed(false); setAll(v); }, () => setFailed(true)) : undefined;
+  }, [claims, retry]);
+  if (!all && failed) return <ErrorState message={t("errors.load_failed")} onRetry={() => setRetry((n) => n + 1)} />;
   if (!all) return <Loading />;
   const list = showResolved ? all : all.filter((a) => !a.resolution);
   return (
