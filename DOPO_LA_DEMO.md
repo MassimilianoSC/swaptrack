@@ -16,6 +16,7 @@ Ordine: prima le funzioni previste dalla specifica che mancano, poi le scelte da
 
 | # | Cosa |
 |---|---|
+| batteria | **Definizione più bassa del video in «Leggi»** (rimedio 3 della domanda del 13/11 sulla batteria): consuma meno, ma a novembre l'abbiamo alzata per leggere da lontano (P-155). Prima una misura sul telefono vero fatta dal tester: batteria carica, 30 minuti in «Leggi», quanta se ne perde, Android e iPhone |
 | P-133 | **Schermata «Leggi» riordinata** secondo i criteri D-62: configurare e lavorare senza distrazioni e ambiguità (preparazione prima della lettura, fotocamera grande, dettaglio in un pannello). Oggi molti comandi, alcuni da scorrere |
 | P-110 | **Luogo indicato da un superiore** (D-48): un responsabile indica all'operaio dove lavorerà. Da progettare: chi assegna, per quanto, se l'operaio può cambiarlo, senza rete, chi la vede |
 | P-138 | **Tempo reale**: quali pagine devono aggiornarsi da sole quando un altro ruolo cambia qualcosa (oggi 19 ascolti in diretta in 12 pagine; il cruscotto legge una volta all'apertura) |
