@@ -40,7 +40,7 @@ Si modificano solo i propri file, nella propria copia di lavoro. Serve un cambio
 - `e2e/` e `playwright.config.ts` (da creare)
 
 **memoria storica**
-- `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`, `README.md`, `GUIDA.md`, `GUIDA.html`, `GUIDE_en.md`, `.gitignore`, `.gitattributes`
+- `CLAUDE.md`, `REGISTRO.md`, `PIANO.md`, `DA_FARE.md`, `DOPO_LA_DEMO.md`, `README.md`, `GUIDA.md`, `GUIDA.html`, `GUIDE_en.md`, `.gitignore`, `.gitattributes`
 
 **Congelati (nessuno li modifica):** `SPEC.md` (gli scostamenti sono decisioni nel REGISTRO, non modifiche alla specifica); `consegna/` e i file consegnati elencati sopra (SPEC R18: la logica non si tocca; si può aggiungere un `.d.ts` accanto); `DECISIONS.md`, `NOT_DONE.md`, `PASSAGGIO_DI_CONSEGNE.md` (storici di Emergent e del passaggio; `memory/`, `test_result.md` e `test_reports/` cancellati il 03/11/2026, P-3: restano nella storia di git).
 
@@ -113,6 +113,7 @@ Prima riga: `[o2] commit <hash> — <titolo>`. Poi: cosa è stato fatto; prove (
 | Obiettivo, criteri, dove siamo, decisioni (D-1, D-2…), commit, stime date | `REGISTRO.md` | memoria storica |
 | Stato dei lavori (da fare / in corso / fatto / aspetta il committente), lotti pubblicati | `PIANO.md` | memoria storica |
 | Dettaglio di ogni voce del piano (cosa, misura, opzioni, stima) | `DA_FARE.md` | memoria storica |
+| Tutto ciò che è rimandato a dopo la presentazione (si aggiunge lì nel momento in cui si rimanda) | `DOPO_LA_DEMO.md` | memoria storica |
 | Regole, ruoli, file, git, comandi | `CLAUDE.md` | memoria storica |
 | Come si avvia, prova, pubblica; installazione nuova; account demo | `README.md` | memoria storica (le sessioni le mandano le righe) |
 | Funzioni esportate, router, collezioni, regole, Storage | `ARCHITECTURE.md` | o2 |
