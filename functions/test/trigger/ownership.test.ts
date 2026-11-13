@@ -44,9 +44,12 @@ describe("desk.listEvents: an ASP lists its own events only (P-63)", () => {
     expect(all.events.every((e) => e.aspId === NORD)).toBe(true);
     expect(all.events.map((e) => e.itemId)).not.toContain(centroItem);
   });
-  it("client_warehouse has no event list (D-31): the role is refused by the router", () => {
-    expect(ops.listEvents.roles).not.toContain("client_warehouse");
-    expect(ops.listEvents.roles).toEqual(expect.arrayContaining(["client_admin", "client_office", "asp_admin", "asp_warehouse"]));
+  // P-211 supersedes D-31: D-31 removed listEvents from client_warehouse because it returned every reading, while SPEC
+  // §3.3 gives it the return shipments only. Now the role has the list, with the return readings only (which ones:
+  // itemHistory.test.ts).
+  it("client_warehouse has a return-only event list (P-211, was D-31)", () => {
+    expect(ops.listEvents.roles).toEqual(expect.arrayContaining(["client_admin", "client_office", "client_warehouse", "asp_admin", "asp_warehouse"]));
+    expect(ops.listEvents.roles).not.toContain("asp_technician");
   });
 });
 
