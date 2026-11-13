@@ -18,6 +18,7 @@ import { Input, Select, Checkbox, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Empty } from "@/components/states";
 import { BackButton } from "@/components/BackButton";
+import { useNames } from "@/lib/names";
 import { ExpectedChip, ExpectedSection, QuantityRow, expectedProgress, type ExpectedListProps, type QuantityItem } from "@/components/scan/ExpectedList";
 import { quantityRows, type QtyReading, type QtyRow } from "@/lib/scan/quantities";
 import { watchLines, type ShipmentLine } from "@/lib/data/shipments";
@@ -99,12 +100,18 @@ function beep(kind: "first" | "ok" | "warn" | "alarm", muted: boolean) {
 export default function Scan() {
   const { t, i18n } = useTranslation();
   const { claims, user, location, setLocation, fieldCacheAt } = useSession();
+  const names = useNames();
   const [params, setParams] = useSearchParams();
   const role = claims?.role ?? "";
   const paramMode = params.get("mode");
   const shipmentId = params.get("shipmentId");
-  const mode = paramMode && (shipmentId || !SHIPMENT_MODES.includes(paramMode)) ? paramMode : MODES[role]?.[0] ?? "";
-  const modes = (MODES[role] ?? []).filter((m) => shipmentId || !SHIPMENT_MODES.includes(m));
+  // P-198: opened from a shipment, the screen does only what that shipment needs (the operation in the address: the
+  // pieces of a return draft, of a transfer draft, or the arrival of a transfer). It offered every operation of the role,
+  // and a reading in another one went out with that shipment's id (the server accepted it: a piece "in transfer" in a
+  // return, an "arrived" line in a return).
+  const shipmentMode = shipmentId && paramMode && MODES[role]?.includes(paramMode) ? paramMode : null;
+  const mode = shipmentMode ?? (paramMode && !shipmentId && !SHIPMENT_MODES.includes(paramMode) ? paramMode : MODES[role]?.[0] ?? "");
+  const modes = shipmentId ? (shipmentMode ? [shipmentMode] : []) : (MODES[role] ?? []).filter((m) => !SHIPMENT_MODES.includes(m));
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const ctrl = React.useRef<ReturnType<typeof startScanner> | null>(null);
   const [engine, setEngine] = React.useState<string | null>(null);
@@ -231,7 +238,10 @@ export default function Scan() {
   const [photoMandatoryDefective, setPhotoMandatoryDefective] = React.useState(false);
   React.useEffect(() => watchDoc<{ mandatoryForDefective?: boolean }>("settings/photos", (v) => setPhotoMandatoryDefective(!!v?.mandatoryForDefective)), []);
   // P-115 (n.23): readings the server refused, shown on their row and said once.
-  const [defectivePhotoFor, setDefectivePhotoFor] = React.useState<string | null>(null);
+  // P-201: every defective of this session still without its photo (the request went away at the next reading); the
+  // photo taken from its own button goes to it, not to the last reading.
+  const [defectiveNoPhoto, setDefectiveNoPhoto] = React.useState<Array<{ id: string; code: string }>>([]);
+  const photoFor = React.useRef<string | null>(null);
   // P-115 (n.28): opened from a shipment, the screen works at the shipment's place (given in the address), never at
   // the place left in the session.
   React.useEffect(() => { if (claims?.orgId) void loadFieldLocations(claims.orgId).then(({ list }) => setPlaces(list)).catch(() => undefined); }, [claims?.orgId]);
@@ -537,6 +547,12 @@ export default function Scan() {
   const readingKey = (code: string) => [normalizeBarcode(code), mode, location?.id ?? "", shipmentId ?? "", ddtApplies ? ddtId : ""].join("|");
   // The place of the screen is always known; the others come from the ASP's list (loaded in the background).
   const placeName = (id: string | null) => { const l = id && id === location?.id ? location : places.find((x) => x.id === id); return l ? `${l.code} · ${l.name}` : t("scan.otherPlace"); };
+  // P-205: a shipment as people know it: its DDT number, else where it goes from and to (another ASP's place: names.ts).
+  const shipmentName = (s: Record<string, unknown>) => {
+    const kind = t(`shipments.kinds.${String(s.kind)}`);
+    if (s.ddtNumber) return t("shipments.titleDdt", { kind, number: String(s.ddtNumber) });
+    return t("shipments.titleRoute", { kind, from: names.place(s.fromLocationId as string), to: names.place(s.toLocationId as string) });
+  };
   // The lists of the pieces this screen expects (ExpectedList): the site's BOM (§12.1, P-175) and the incoming transfer
   // (P-189).
   const bomLinesShown = bom ? bom.expected.map((l) => ({ key: l.codeId, codeRaw: l.codeRaw, done: bomTicks.has(l.codeId) })) : [];
@@ -597,7 +613,7 @@ export default function Scan() {
     setSession((s) => [{ id, code, type: mode, key: readingKey(code), at: Date.now(), here: reread?.kind === "here" }, ...s]);
     setLastEventId(id);
     // §12.2 / P-115 (n.5): a new defective with the setting on asks for its photo until one is queued.
-    if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectivePhotoFor(id);
+    if (mode === "classify" && payload.newClass === "defective" && photoMandatoryDefective) setDefectiveNoPhoto((l) => [...l, { id, code }]);
     if (source === "camera") cameraLast.current = { code, at: Date.now() };
     if (reread) show(reread.text, reread.kind === "here" ? "warn" : "danger");
     else if (sortsOnArrival && !payload.categoryId) show(t("scan.toSortLater", { code }), "warn", FLASH_MS, MESSAGE_MS); else show(code, "ok");
@@ -836,6 +852,7 @@ export default function Scan() {
     if (!last || !location || !user || !claims?.orgId) return;
     await writeEvent({ type: "void", locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source: "manual", engine: null, payload: { targetEventId: last.id } });
     setSession((s) => s.slice(1));
+    setDefectiveNoPhoto((l) => l.filter((d) => d.id !== last.id)); // P-201: an undone defective needs no photo
     // P-115 (n.21): the photo goes with the reading before the undone one, or with none.
     setLastEventId(session[1]?.id ?? null);
     show(t("scan.undone"), "warn");
@@ -843,7 +860,8 @@ export default function Scan() {
 
   const siteDone = () => user && location && claims?.orgId && writeEvent({ type: "site_done", locationId: location.id, aspId: claims.orgId, userId: user.uid, orgId: claims.orgId, source: "manual", engine: null }).then(() => show(t("scan.siteDone"), "ok"));
 
-  const takePhoto = () => photoInput.current?.click();
+  const takePhoto = () => { photoFor.current = null; photoInput.current?.click(); };
+  const takeDefectivePhoto = (eventId: string) => { photoFor.current = eventId; photoInput.current?.click(); };
   const readLabel = () => {
     if (!online) { toast.message(t("scan.aiLabelOffline"), { ...TOAST_8S, id: "scan-ai-label-offline" }); manualInput.current?.focus(); return; }
     labelInput.current?.click();
@@ -874,12 +892,14 @@ export default function Scan() {
   const onPhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !lastEventId || !claims?.orgId) return;
-    const n = (photoNum[lastEventId] ?? 0) + 1;
-    setPhotoNum((m) => ({ ...m, [lastEventId]: n }));
+    const target = photoFor.current ?? lastEventId;
+    photoFor.current = null;
+    if (!file || !target || !claims?.orgId) return;
+    const n = (photoNum[target] ?? 0) + 1;
+    setPhotoNum((m) => ({ ...m, [target]: n }));
     try {
-      await enqueuePhoto(lastEventId, claims.orgId, file, n);
-      if (defectivePhotoFor === lastEventId) setDefectivePhotoFor(null);
+      await enqueuePhoto(target, claims.orgId, file, n);
+      setDefectiveNoPhoto((l) => l.filter((d) => d.id !== target));
       toast.success(t("scan.photoQueued"), TOAST_8S);
       void flushQueue();
     } catch {
@@ -945,7 +965,8 @@ export default function Scan() {
 
   return (
     <div className="space-y-4 max-w-3xl" data-testid="scan-screen">
-      {shipmentId && <p className="text-xs text-primary font-mono" data-testid="scan-shipment-id">{t("scan.shipmentLabel")}: {shipmentId.slice(0, 8)}</p>}
+      {/* P-205: the shipment by its DDT number or its places (it showed 8 letters of its id). */}
+      {shipmentId && <p className="text-xs text-primary" data-testid="scan-shipment-id">{t("scan.shipmentLabel")}: {shipmentDoc ? shipmentName(shipmentDoc) : "…"}</p>}
       <div className="flex flex-wrap gap-2">
         {/* P-163: back where the user came from (from a direct link: the shipment, or Home). A serial waiting for its product
             code goes on its way first, as when another serial comes (D-66); if that opens a window, the user stays. In the
@@ -1002,11 +1023,18 @@ export default function Scan() {
               <option value="">{t("scan.removedMaterial")}</option><option value="defective">{t("scan.defective")}</option><option value="leftover">{t("scan.leftover")}</option>
             </Select>
           )}
-          {needPhotoForDefective && !defectivePhotoFor && <p className="text-xs text-warning" data-testid="scan-defective-photo-hint">{t("scan.defectivePhotoRequired")}</p>}
-          {defectivePhotoFor && defectivePhotoFor === lastEventId && (
-            <div className="flex items-center gap-2 rounded border border-warning p-2 text-sm text-warning" data-testid="scan-defective-photo-needed">
-              <span>{t("scan.defectivePhotoNow")}</span>
-              <Button size="sm" onClick={takePhoto} className="ml-auto" data-testid="scan-defective-photo-take"><Camera className="h-4 w-4" />{t("scan.photo")}</Button>
+          {needPhotoForDefective && !defectiveNoPhoto.length && <p className="text-xs text-warning" data-testid="scan-defective-photo-hint">{t("scan.defectivePhotoRequired")}</p>}
+          {defectiveNoPhoto.length > 0 && (
+            <div className="space-y-1 rounded border border-warning p-2 text-sm text-warning" data-testid="scan-defective-photo-needed">
+              <p>{t("scan.defectivePhotoNow")}</p>
+              <ul className="space-y-1">
+                {defectiveNoPhoto.map((d) => (
+                  <li key={d.id} className="flex items-center gap-2" data-testid="scan-defective-photo-item">
+                    <span className="min-w-0 truncate font-mono">{d.code}</span>
+                    <Button size="sm" onClick={() => takeDefectivePhoto(d.id)} className="ml-auto shrink-0" data-testid="scan-defective-photo-take"><Camera className="h-4 w-4" />{t("scan.photo")}</Button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

@@ -38,6 +38,9 @@ export default function ShipmentDetail() {
   const [extraInput, setExtraInput] = React.useState("");
   // P-151: the app's window, never the browser's confirm (before the early return: a hook, React's rule).
   const [cancelling, setCancelling] = React.useState(false);
+  // P-200: the DDT file waiting for the DDT number (asked before the first file).
+  const [attachFile, setAttachFile] = React.useState<File | null>(null);
+  const [attachNumber, setAttachNumber] = React.useState("");
 
   React.useEffect(() => id ? watchShipment(id, setShipment) : undefined, [id]);
   React.useEffect(() => id ? watchLines(id, setLines) : undefined, [id]);
@@ -64,7 +67,16 @@ export default function ShipmentDetail() {
   const send = async () => {
     const payload: Record<string, unknown> = { shipmentId: id };
     if (shipment.kind === "return") { if (!ddtNumber.trim()) { toast.error(t("errors.ddt_number_required")); return; } payload.ddtNumber = ddtNumber.trim(); }
-    if (await run(() => call("sendShipment", payload), t("shipments.sent"))) setSendOpen(false);
+    // P-200: the DDT document of the return and the shipment always carry the same number: a number changed here makes a
+    // new version of the document first (its files and history kept), then the shipment is sent.
+    const renumber = shipment.kind === "return" && !!shipment.documentId && !!shipment.ddtNumber && payload.ddtNumber !== shipment.ddtNumber;
+    let done = false;
+    await run(async () => {
+      if (renumber) await call("saveDocument", { documentId: shipment.documentId, kind: "ddt_return", number: payload.ddtNumber, locationId: shipment.fromLocationId, linesSource: "manual", lines: [], shipmentId: id });
+      await call("sendShipment", payload);
+      done = true;
+    }, t("shipments.sent"));
+    if (done) setSendOpen(false);
   };
   const cancel = async () => {
     setCancelling(false);
@@ -77,7 +89,11 @@ export default function ShipmentDetail() {
     // A line confirmed in another return is already decided (the server skips it as well).
     const confirmed = confirmLines.filter((l) => !missing.has(l.id) && !l.confirmedElsewhere).map((l) => l.id);
     const missingArr = [...missing];
-    await run(() => call("confirmReturn", { shipmentId: id, confirmed, missing: missingArr, extra: late ? [] : extra }), t("shipments.confirmed"));
+    // P-199: the window closes, and forgets the ticks and the extra pieces, only when the server has confirmed; with an
+    // error (no network, a refusal) it stays as it is, with the message, so the work can be sent again.
+    let done = false;
+    await run(async () => { await call("confirmReturn", { shipmentId: id, confirmed, missing: missingArr, extra: late ? [] : extra }); done = true; }, t("shipments.confirmed"));
+    if (!done) return;
     setConfirmOpen(false); setMissing(new Set()); setExtra([]);
   };
 
@@ -85,20 +101,34 @@ export default function ShipmentDetail() {
   const scanTo = canScanDraft ? `/scan?mode=${shipment.kind === "return" ? "return_ship" : "transfer_out"}&shipmentId=${id}&location=${shipment.fromLocationId}`
     : canScanArrival ? `/scan?mode=arrive_at_warehouse&shipmentId=${id}&location=${shipment.toLocationId}` : null;
 
-  const attachDdt = (file: File) => run(async () => {
+  // P-200: the DDT file of a return goes into one document with the DDT's real number. Without a number yet it is asked
+  // first (it was made up as "R-xxxxxx" and became the shipment's DDT number); a later file is a new version of the same
+  // document (every file made a new document).
+  const attachDdt = (file: File, number: string) => run(async () => {
     // §7.3: a photo is never uploaded as taken: re-encoded (at most 1200 px, JPEG), which also drops EXIF and GPS.
     const isImage = file.type.startsWith("image/");
     const blob = isImage ? await compressImage(file).catch(() => { throw new Error("image_unreadable"); }) : file;
     const base64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = () => rej(new Error("read_failed")); r.readAsDataURL(blob); });
-    return call("saveDocument", {
-      kind: "ddt_return", number: shipment.ddtNumber || `R-${id.slice(0, 6)}`,
-      locationId: shipment.fromLocationId, linesSource: "manual", lines: [],
+    const r = await call("saveDocument", {
+      ...(shipment.documentId ? { documentId: shipment.documentId } : {}),
+      kind: "ddt_return", number, locationId: shipment.fromLocationId, linesSource: "manual", lines: [],
       // P-176: the file keeps its name (a photo becomes a JPEG: its name too).
       files: [{ base64, contentType: isImage ? "image/jpeg" : file.type, name: isImage ? file.name.replace(/\.[^.]+$/, ".jpg") : file.name }], shipmentId: id,
     });
+    setAttachFile(null);
+    return r;
   }, t("documents.attached"));
+  const pickDdtFile = (file: File) => {
+    if (shipment.ddtNumber) { void attachDdt(file, shipment.ddtNumber); return; }
+    setAttachNumber(""); setAttachFile(file);
+  };
 
-  const title = `${t(`shipments.kinds.${shipment.kind}`)} · ${id.slice(0, 8)}`;
+  // P-205: the shipment is called by its DDT number, or by its places (it was called by 8 letters of its id). The other
+  // ASP's place stays "another organization", as in the summary.
+  const fromName = (client || isOwnSender) ? names.place(shipment.fromLocationId) : t("items.anotherOrg");
+  const toName = (client || isOwnReceiver || shipment.kind === "return") ? names.place(shipment.toLocationId) : t("items.anotherOrg");
+  const kindName = t(`shipments.kinds.${shipment.kind}`);
+  const title = shipment.ddtNumber ? t("shipments.titleDdt", { kind: kindName, number: shipment.ddtNumber }) : t("shipments.titleRoute", { kind: kindName, from: fromName, to: toName });
   return (
     <div className="space-y-6">
       <PageHeader
@@ -107,11 +137,11 @@ export default function ShipmentDetail() {
         subtitle={`${withDifferences ? t("shipments.confirmedWithDifferences") : t(`shipments.statuses.${shipment.status}`)} · ${formatInstant(shipment.createdAt?.toDate?.() ?? null, i18n.language)}`}
         actions={<>
           {scanTo && <Button asChild><Link to={scanTo} data-testid="shipment-scan"><ScanLine className="h-4 w-4" />{t("shipments.scanPieces")}</Link></Button>}
-          {canSend && <Button variant="secondary" onClick={() => setSendOpen(true)} data-testid="shipment-send"><Send className="h-4 w-4" />{t("shipments.send")}</Button>}
+          {canSend && <Button variant="secondary" onClick={() => { setDdtNumber(shipment.ddtNumber ?? ""); setSendOpen(true); }} data-testid="shipment-send"><Send className="h-4 w-4" />{t("shipments.send")}</Button>}
           {shipment.kind === "return" && isOwnSender && (shipment.status === "draft" || shipment.status === "sent") && (
             <label className="inline-flex items-center gap-1 rounded border border-border px-3 min-h-touch text-sm cursor-pointer" data-testid="shipment-attach-ddt-wrap">
               {t("documents.attach")}
-              <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="hidden" data-testid="shipment-attach-ddt" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void attachDdt(f); }} />
+              <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" className="hidden" data-testid="shipment-attach-ddt" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) pickDdtFile(f); }} />
             </label>
           )}
           {canConfirm && <Button variant="secondary" onClick={openConfirm} data-testid="shipment-confirm"><PackageCheck className="h-4 w-4" />{t(late ? "shipments.confirmLate" : "shipments.confirm")}</Button>}
@@ -122,8 +152,8 @@ export default function ShipmentDetail() {
       <Card>
         <h2 className="font-semibold mb-3">{t("shipments.summary")}</h2>
         <dl className="grid grid-cols-2 gap-2 text-sm max-w-xl">
-          <dt className="text-muted">{t("shipments.from")}</dt><dd data-testid="shipment-from">{(client || isOwnSender) ? names.place(shipment.fromLocationId) : t("items.anotherOrg")}</dd>
-          <dt className="text-muted">{t("shipments.to")}</dt><dd data-testid="shipment-to">{(client || isOwnReceiver || shipment.kind === "return") ? names.place(shipment.toLocationId) : t("items.anotherOrg")}</dd>
+          <dt className="text-muted">{t("shipments.from")}</dt><dd data-testid="shipment-from">{fromName}</dd>
+          <dt className="text-muted">{t("shipments.to")}</dt><dd data-testid="shipment-to">{toName}</dd>
           <dt className="text-muted">{t("shipments.lineCount")}</dt><dd>{shipment.itemCount ?? lines.length}</dd>
           {shipment.ddtNumber && (<><dt className="text-muted">{t("shipments.ddtNumber")}</dt><dd className="font-mono">{shipment.ddtNumber}</dd></>)}
           {shipment.sentAt && (<><dt className="text-muted">{t("shipments.sentAt")}</dt><dd>{formatInstant(shipment.sentAt.toDate(), i18n.language)}</dd></>)}
@@ -169,6 +199,17 @@ export default function ShipmentDetail() {
           </ul>
         </Card>
       )}
+
+      {/* P-200: the DDT number before the first DDT file of a return. */}
+      <Dialog open={!!attachFile} onOpenChange={(o) => { if (!o) setAttachFile(null); }}>
+        <DialogContent title={t("documents.attach")} description={t("shipments.attachNeedsNumber")}>
+          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (attachFile && attachNumber.trim()) void attachDdt(attachFile, attachNumber.trim()); }}>
+            <Field label={t("shipments.ddtNumber")} htmlFor="a-n"><Input id="a-n" value={attachNumber} onChange={(e) => setAttachNumber(e.target.value)} autoFocus data-testid="shipment-attach-number" /></Field>
+            <p className="text-xs text-muted truncate">{attachFile?.name}</p>
+            <div className="flex justify-end"><Button type="submit" disabled={busy || !attachNumber.trim()} data-testid="shipment-attach-save">{t("documents.attach")}</Button></div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={sendOpen} onOpenChange={(o) => { if (!o) setSendOpen(false); }}>
         <DialogContent title={t("shipments.send")} description={shipment.kind === "return" ? t("shipments.sendReturnHint") : t("shipments.sendTransferHint")}>

@@ -42,7 +42,11 @@
         "exports-reports-tabs.desk.spec.ts",
         "bom-quantities.phone.spec.ts",
         "document-location-asp.desk.spec.ts",
-        "ddt-quantities.phone.spec.ts"
+        "ddt-quantities.phone.spec.ts",
+        "scan-shipment-modes.desk.spec.ts",
+        "return-confirm-error.desk.spec.ts",
+        "shipment-attach-ddt.desk.spec.ts",
+        "settings-privacy-bump.desk.spec.ts"
       ]
     },
     {

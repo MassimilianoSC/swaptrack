@@ -115,7 +115,10 @@ export default function Dashboard() {
         <Card>
           <h2 className="font-semibold mb-3">{t("dashboard.topModels")}</h2>
           <ul className="text-sm" data-testid="dashboard-top-models">
-            {byModel && [...groupByFirst(byModel).entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => <li key={k} className="flex justify-between border-b border-border py-1"><span>{modelLabel(k)}</span><Link to={drill(undefined, { modelId: k })} className="tabular font-bold text-primary hover:underline">{v}</Link></li>)}
+            {/* P-205: the pieces without a model are counted under "none": said in words, and not a link (it led to an empty list). */}
+            {byModel && [...groupByFirst(byModel).entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => <li key={k} className="flex justify-between border-b border-border py-1">{k === "none"
+              ? <><span data-testid="dashboard-model-none">{t("dashboard.noModel")}</span><span className="tabular font-bold">{v}</span></>
+              : <><span>{modelLabel(k)}</span><Link to={drill(undefined, { modelId: k })} className="tabular font-bold text-primary hover:underline">{v}</Link></>}</li>)}
           </ul>
         </Card>
         <Card>

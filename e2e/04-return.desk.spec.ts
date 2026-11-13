@@ -40,7 +40,10 @@ test.describe("Percorso 4 — reso al cliente (scrivania)", () => {
     await expect(page).toHaveURL(/\/shipments\/[^/]+$/, { timeout: 30_000 });
     const shipmentId = page.url().split("/").pop()!;
     // The DDT of the return, attached as a file (P-103: the alert must still open the shipment).
+    // P-200: the DDT number is asked before the first file (it was made up).
     await page.getByTestId("shipment-attach-ddt").setInputFiles({ name: "ddt.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%%EOF\n") });
+    await page.getByTestId("shipment-attach-number").fill(ddtNumber);
+    await page.getByTestId("shipment-attach-save").click();
     await expect(page.getByText(tr("documents.attached")).first()).toBeVisible({ timeout: 60_000 });
 
     // 3. The pieces are scanned into the return; the trigger fills its lines.

@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input, Field, Checkbox, Textarea, Select } from "@/components/ui/form";
 import { Loading } from "@/components/states";
+import { toast } from "sonner";
 
 type D = typeof SETTINGS_DEFAULTS;
 
@@ -96,7 +97,12 @@ function PrivacyTab() {
   const [v, setV] = useSetting("privacy");
   const [bump, setBump] = React.useState(false);
   if (!v) return <Loading />;
-  const save = () => run(() => call("saveSettings", { name: "privacy", value: { texts: v.texts, bumpVersion: bump, retentionEnabled: v.retentionEnabled, retentionDays: v.retentionDays } }), t("common.saved"));
+  // P-202: "ask everyone to accept again" is done by one save: the box goes back off once it is saved (it stayed ticked,
+  // and a second save in the same visit asked everyone again).
+  const save = () => run(async () => {
+    await call("saveSettings", { name: "privacy", value: { texts: v.texts, bumpVersion: bump, retentionEnabled: v.retentionEnabled, retentionDays: v.retentionDays } });
+    setBump(false);
+  }, t("common.saved"));
   return (
     <Card className="space-y-3 max-w-3xl">
       <p className="text-sm" data-testid="settings-privacy-version">{t("privacy.versionLabel", { version: v.version })}</p>
@@ -175,9 +181,14 @@ function ItemFieldsTab() {
   const [v, setV] = useSetting("itemFields");
   const [row, setRow] = React.useState({ key: "", it: "", en: "", type: "text" as "text" | "number" | "choice", required: false, options: "" });
   if (!v) return <Loading />;
+  // P-205: "Add" says why it adds nothing (it did nothing, silently), and a key is never added twice.
   const add = () => {
-    if (!row.key.trim() || !row.it.trim() || !row.en.trim()) return;
-    const fields = [...v.fields, { key: row.key.trim(), labels: { it: row.it, en: row.en }, type: row.type, required: row.required, ...(row.options ? { options: row.options.split(",").map((s) => s.trim()).filter(Boolean) } : {}) }];
+    const key = row.key.trim();
+    const options = row.options.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!key || !row.it.trim() || !row.en.trim()) { toast.error(t("settings.fieldMissing")); return; }
+    if (v.fields.some((f) => f.key === key)) { toast.error(t("settings.fieldDuplicate", { key })); return; }
+    if (row.type === "choice" && !options.length) { toast.error(t("settings.fieldNoOptions")); return; }
+    const fields = [...v.fields, { key, labels: { it: row.it, en: row.en }, type: row.type, required: row.required, ...(options.length ? { options } : {}) }];
     setV({ fields }); setRow({ key: "", it: "", en: "", type: "text", required: false, options: "" });
   };
   const remove = (i: number) => setV({ fields: v.fields.filter((_, j) => j !== i) });
@@ -189,17 +200,17 @@ function ItemFieldsTab() {
           <li key={f.key} className="flex items-center gap-2 border-b border-border py-1">
             <span className="font-mono text-xs">{f.key}</span>
             <span>{f.labels.it} / {f.labels.en}</span>
-            <span className="text-muted text-xs">{f.type}{f.required ? " · required" : ""}</span>
-            <Button size="sm" variant="ghost" className="ml-auto" onClick={() => remove(i)} data-testid={`settings-item-fields-remove-${i}`}>×</Button>
+            <span className="text-muted text-xs">{t(`settings.fieldTypes.${f.type}`, { defaultValue: f.type })}{f.required ? ` · ${t("settings.required")}` : ""}</span>
+            <Button size="sm" variant="ghost" className="ml-auto" onClick={() => remove(i)} aria-label={t("settings.fieldRemove", { name: f.labels.it || f.key })} data-testid={`settings-item-fields-remove-${i}`}>×</Button>
           </li>
         ))}
       </ul>
       <div className="grid gap-2 md:grid-cols-6 items-end">
-        <Field label="key" htmlFor="if-k"><Input id="if-k" className="font-mono" value={row.key} onChange={(e) => setRow({ ...row, key: e.target.value })} data-testid="settings-item-fields-key" /></Field>
-        <Field label="IT" htmlFor="if-it"><Input id="if-it" value={row.it} onChange={(e) => setRow({ ...row, it: e.target.value })} data-testid="settings-item-fields-it" /></Field>
-        <Field label="EN" htmlFor="if-en"><Input id="if-en" value={row.en} onChange={(e) => setRow({ ...row, en: e.target.value })} data-testid="settings-item-fields-en" /></Field>
-        <Field label="type" htmlFor="if-t"><Select id="if-t" value={row.type} onChange={(e) => setRow({ ...row, type: e.target.value as never })} data-testid="settings-item-fields-type"><option value="text">text</option><option value="number">number</option><option value="choice">choice</option></Select></Field>
-        <Field label="options (choice)" htmlFor="if-o"><Input id="if-o" value={row.options} onChange={(e) => setRow({ ...row, options: e.target.value })} placeholder="a,b,c" data-testid="settings-item-fields-options" /></Field>
+        <Field label={t("settings.fieldKey")} htmlFor="if-k"><Input id="if-k" className="font-mono" value={row.key} onChange={(e) => setRow({ ...row, key: e.target.value })} data-testid="settings-item-fields-key" /></Field>
+        <Field label={t("settings.fieldIt")} htmlFor="if-it"><Input id="if-it" value={row.it} onChange={(e) => setRow({ ...row, it: e.target.value })} data-testid="settings-item-fields-it" /></Field>
+        <Field label={t("settings.fieldEn")} htmlFor="if-en"><Input id="if-en" value={row.en} onChange={(e) => setRow({ ...row, en: e.target.value })} data-testid="settings-item-fields-en" /></Field>
+        <Field label={t("settings.fieldType")} htmlFor="if-t"><Select id="if-t" value={row.type} onChange={(e) => setRow({ ...row, type: e.target.value as never })} data-testid="settings-item-fields-type">{(["text", "number", "choice"] as const).map((x) => <option key={x} value={x}>{t(`settings.fieldTypes.${x}`)}</option>)}</Select></Field>
+        <Field label={t("settings.fieldOptions")} htmlFor="if-o"><Input id="if-o" value={row.options} onChange={(e) => setRow({ ...row, options: e.target.value })} placeholder="a,b,c" data-testid="settings-item-fields-options" /></Field>
         <Checkbox id="if-r" label={t("settings.required")} checked={row.required} onChange={(x) => setRow({ ...row, required: x })} testId="settings-item-fields-required" />
       </div>
       <div className="flex justify-between"><Button variant="secondary" onClick={add} data-testid="settings-item-fields-add">{t("common.add")}</Button>

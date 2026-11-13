@@ -109,4 +109,39 @@ test.describe("Letture con i dati giusti (telefono)", () => {
       await setMandatory(false);
     }
   });
+
+  // P-201: the request stays for every defective without its photo: it went away at the next reading. The photo taken
+  // from a defective's own button goes to that one. Same file as the test above: settings/photos is shared (NOTE above).
+  test("foto obbligatoria per i difettosi: la richiesta resta dopo la lettura successiva, una per pezzo", async ({ page }) => {
+    test.setTimeout(300_000);
+    const [a, b] = [uniqueCode("J"), uniqueCode("J")];
+    const setMandatory = (on: boolean) => emulatorPatchSetting("photos", { mandatoryForDefective: on });
+    await setMandatory(true);
+    try {
+      await signIn(page, ACCOUNTS.aspWarehouseNord);
+      await pickLocation(page, SEED.nord.warehouse);
+      await page.goto("/scan?mode=arrive_at_warehouse");
+      await page.getByTestId("scan-flow-select").selectOption("new");
+      await scanManual(page, a, { withModel: true });
+      await scanManual(page, b, { withModel: true });
+      await page.getByTestId("scan-mode-classify").click();
+      await page.getByTestId("scan-newclass-select").selectOption("defective");
+      await scanManual(page, a);
+      await scanManual(page, b);
+      // A was not photographed before B was read: both are asked.
+      const item = (code: string) => page.getByTestId("scan-defective-photo-item").filter({ hasText: code });
+      await expect(item(a)).toHaveCount(1);
+      await expect(item(b)).toHaveCount(1);
+      // A's photo from A's own button: A's request goes, B's stays.
+      await item(a).getByTestId("scan-defective-photo-take").click();
+      await page.getByTestId("scan-photo-input").setInputFiles({ name: "difetto-a.png", mimeType: "image/png", buffer: png(16) });
+      await expect(item(a)).toHaveCount(0);
+      await expect(item(b)).toHaveCount(1);
+      await item(b).getByTestId("scan-defective-photo-take").click();
+      await page.getByTestId("scan-photo-input").setInputFiles({ name: "difetto-b.png", mimeType: "image/png", buffer: png(16) });
+      await expect(page.getByTestId("scan-defective-photo-needed")).toHaveCount(0);
+    } finally {
+      await setMandatory(false);
+    }
+  });
 });
