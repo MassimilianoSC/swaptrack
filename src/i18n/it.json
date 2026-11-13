@@ -203,6 +203,12 @@
   },
   "anomalies": {
     "resolveAcceptMove": "Accetta spostamento",
+    "close": "Chiudi",
+    "closeTitle": "Chiudi l'anomalia",
+    "closeBody": "L'anomalia passa tra le risolte. La lettura e il pezzo non cambiano.",
+    "closeNote": "Nota (facoltativa)",
+    "closed": "Anomalia chiusa",
+    "resolvedLabel": "risolta",
     "resolveHint": "Scrive una correzione d'ufficio un istante prima dell'arrivo; il pezzo passa all'ASP che ha scansionato.",
     "types": {
       "unknown_code_where_known_expected": "Codice sconosciuto",

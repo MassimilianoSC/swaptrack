@@ -16,6 +16,7 @@ import { PageHeader, Card, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/dialogs";
 import { Loading, Empty, ErrorState } from "@/components/states";
 import { BackButton } from "@/components/BackButton";
 import { toast } from "sonner";
@@ -74,6 +75,9 @@ export default function ItemDetail() {
   const [mergeReason, setMergeReason] = React.useState("");
   const [correctOpen, setCorrectOpen] = React.useState<HistoryEvent | null>(null);
   const [correctLoc, setCorrectLoc] = React.useState("");
+  // P-210: the anomaly being closed and its optional note.
+  const [closingAnomaly, setClosingAnomaly] = React.useState<string | null>(null);
+  const [anomalyNote, setAnomalyNote] = React.useState("");
   const [correctReason, setCorrectReason] = React.useState("");
   // P-116: places and ASPs by name, for the location correction and the change of ASP.
   const [places, setPlaces] = React.useState<Row<Location>[]>([]);
@@ -224,6 +228,11 @@ export default function ItemDetail() {
                 {!a.resolution && a.type === "code_of_another_asp" && role === "client_admin" && (
                   <ResolveAnomalyButton anomalyId={a.id} onDone={reload} />
                 )}
+                {/* P-210 (§3.3, §8.3): the client admin closes every anomaly, an ASP admin those of its ASP (as the server). */}
+                {!a.resolution && (role === "client_admin" || (role === "asp_admin" && String(a.aspId ?? "") === claims?.orgId)) && (
+                  <Button size="sm" variant="ghost" onClick={() => { setAnomalyNote(""); setClosingAnomaly(a.id); }} data-testid={`item-anomaly-close-${a.id}`}>{t("anomalies.close")}</Button>
+                )}
+                {!!a.resolution && <span className="text-xs text-muted" data-testid={`item-anomaly-closed-${a.id}`}>{t("anomalies.resolvedLabel")}</span>}
               </li>
             ))}
           </ul>
@@ -280,6 +289,16 @@ export default function ItemDetail() {
           </ol>
         )}
       </Card>
+
+      <ConfirmDialog open={!!closingAnomaly} busy={busy} title={t("anomalies.closeTitle")} body={t("anomalies.closeBody")} confirmLabel={t("anomalies.close")}
+        onClose={() => setClosingAnomaly(null)}
+        onConfirm={() => void (async () => {
+          const id = closingAnomaly;
+          setClosingAnomaly(null);
+          if (id && await run(() => call("resolveAnomaly", { anomalyId: id, action: "dismiss", reason: anomalyNote.trim() }), t("anomalies.closed"))) await reload();
+        })()}>
+        <Field label={t("anomalies.closeNote")} htmlFor="anomaly-note"><Input id="anomaly-note" value={anomalyNote} onChange={(e) => setAnomalyNote(e.target.value)} data-testid="item-anomaly-close-note" /></Field>
+      </ConfirmDialog>
 
       <Dialog open={editing} onOpenChange={(o) => { if (!o) setEditing(false); }}>
         <DialogContent title={t("items.editItem")}>

@@ -203,6 +203,12 @@
   },
   "anomalies": {
     "resolveAcceptMove": "Accept move",
+    "close": "Close",
+    "closeTitle": "Close the anomaly",
+    "closeBody": "The anomaly moves to the resolved ones. The reading and the piece do not change.",
+    "closeNote": "Note (optional)",
+    "closed": "Anomaly closed",
+    "resolvedLabel": "resolved",
     "resolveHint": "Writes an office correction one instant before the scanning arrival; the piece becomes owned by the scanning ASP.",
     "types": {
       "unknown_code_where_known_expected": "Unknown code",

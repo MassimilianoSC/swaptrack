@@ -51,7 +51,8 @@ export const alerts = {
   // one instant before the triggering arrival, so the replay accepts the arrival normally.
   resolveAnomaly: op({
     roles: ["client_admin", "asp_admin"],
-    schema: z.object({ anomalyId: z.string(), action: z.enum(["accept_move", "dismiss"]), reason: z.string().min(1).max(300) }),
+    // P-210: the note is optional, as for alerts (the app closes an anomaly with «Close» and an optional note).
+    schema: z.object({ anomalyId: z.string(), action: z.enum(["accept_move", "dismiss"]), reason: z.string().trim().max(300).default("") }),
     handler: async (ctx, d) => {
       const a = await loadAnomaly(ctx, d.anomalyId);
       if (a.resolution) fail("failed-precondition", "already_resolved");
@@ -79,7 +80,7 @@ export const alerts = {
       }
       await db.collection("anomalies").doc(d.anomalyId).update({
         resolution: d.action === "accept_move" ? "forced" : "manual",
-        resolvedAt: FieldValue.serverTimestamp(), resolvedBy: ctx.uid, resolvedReason: d.reason,
+        resolvedAt: FieldValue.serverTimestamp(), resolvedBy: ctx.uid, resolvedReason: d.reason || null,
       });
       await adminLog(ctx.uid!, "anomaly_resolved", a.id, { type: a.type, action: d.action });
     },
