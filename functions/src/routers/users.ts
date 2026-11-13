@@ -101,10 +101,24 @@ const users = {
     roles: ["client_admin"],
     schema: z.object({ name: z.string().trim().min(1).max(120), language: lang, admin: person }),
     handler: async (ctx, d) => {
+      // P-203: an e-mail already used left an ASP without an admin (the organization was written first). The e-mail is
+      // checked before anything is written; if the account still cannot be created for it (another request in the same
+      // instant), the organization just written is removed again.
+      const used = await auth.getUserByEmail(d.admin.email).then(() => true, (e: { code?: string }) => {
+        if (e?.code === "auth/user-not-found") return false;
+        throw e;
+      });
+      if (used) fail("already-exists", "email_exists");
       const ref = db.collection("organizations").doc();
       await ref.set({ name: d.name, type: "asp", language: d.language, active: true, createdAt: FieldValue.serverTimestamp() });
+      let admin: Awaited<ReturnType<typeof createAccount>>;
+      try {
+        admin = await createAccount(ctx, { ...d.admin, role: "asp_admin", orgId: ref.id });
+      } catch (e) {
+        if ((e as Error).message === "email_exists") await ref.delete();
+        throw e;
+      }
       await adminLog(ctx.uid!, "asp_created", ref.id, { name: d.name });
-      const admin = await createAccount(ctx, { ...d.admin, role: "asp_admin", orgId: ref.id });
       return { orgId: ref.id, admin };
     },
   }),
