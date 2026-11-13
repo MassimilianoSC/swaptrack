@@ -29,7 +29,8 @@ test.describe("Scrivania — solo ciò che il server accetta (P-116)", () => {
     await expect(page.getByTestId("document-save-new")).toHaveCount(0);
     // n.31: the date column says "Created", n.39: the filter finds the kind shown in its badge.
     await page.goto("/documents");
-    await expect(page.getByTestId("documents-table").locator("th")).toContainText([tr("shipments.created_at")]);
+    // P-209: the documents' date column is "Created" in their own words (it borrowed the shipments' one).
+    await expect(page.getByTestId("documents-table").locator("th")).toContainText([tr("documents.createdAt")]);
     await page.getByTestId("documents-table-filter").fill(tr("documents.kinds.ddt_in"));
     await expect.poll(() => page.getByTestId("documents-table-row").count()).toBeGreaterThan(0);
     await signOut(page);
