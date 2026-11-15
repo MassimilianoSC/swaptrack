@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 1c0c108 · Guide text: sha d8b49a720b27 · Date: 13/11/2026
+App described: commit 66034fe · Guide text: sha 0c9e243d0560 · Date: 15/11/2026
 
 ## How to use this guide
 
@@ -190,6 +190,8 @@ Places and organizations always appear with their name (for a place: code and na
 3. Tap the row of the site. «Selected location» appears.
 4. To change it, press «Change location».
 
+If you press «Scan» without choosing the site, the app takes you here with «Choose the site first, then press "Scan".»
+
 The site stays chosen until you close the app. It also works without network, with the list already downloaded. If you see «List not yet updated from the server: this is the copy saved on the phone. It is retried by itself when the network is back.», you can work anyway: the list updates by itself when the network is back.
 
 If something goes wrong:
@@ -211,7 +213,9 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 
 Helps: «Torch» turns the light on (if the phone has one; the button stays highlighted while it is on); the «Sun» slider darkens the image when there is too much light; the speaker icon («Sound on/off») turns the sound off or on.
 
-**With a scanner gun or a ring scanner.** Tap the field «Scanner gun / ring: read here» and scan: the scanner writes the code and sends it by itself.
+**With a scanner gun or a ring scanner.** Tap the field «Scanner gun / ring: read here» and scan: the scanner writes the code and sends it by itself. The scanner must be Bluetooth in keyboard mode («HID»), paired once from the phone's Bluetooth settings. At the first reading with the scanner the camera turns off, to save the battery: «Camera off: you are reading with the scanner gun. The battery lasts longer.»; to turn it on again tap «Turn the camera on again». After a button (for example «Photo») the field is ready again by itself for the next reading.
+
+**Camera off to save the battery.** After a minute without readings the camera turns off: «Camera off after a minute without readings, to save the battery.» Tap «Turn the camera on again» to go on. If you lock the screen or switch to another app, the camera turns off and turns on again by itself when you come back to SwapTrack.
 
 **If the code cannot be read.** Under the field of the scanner gun you find «Can't read the code?» with two ways:
 - **By hand**: write the digits in the field «Type the digits under the barcode» and press «Confirm». It works without network too.
@@ -345,7 +349,7 @@ Scanning the codes (camera, reading in a row, scanner gun, by hand, label photo,
 
 1. Open «Home»: you see «Choose the warehouse».
 2. Search with «Search by code or name» and tap your warehouse.
-3. The warehouse stays chosen until you close the app. To change it press «Change location».
+3. The warehouse stays chosen until you close the app. To change it press «Change location». If you press «Scan» without choosing the warehouse, the app takes you here with «Choose the warehouse first, then press "Scan".»
 
 Always check the chosen warehouse (at the top; on the phone, at the top of the ☰ menu) before scanning: every scan is recorded there.
 

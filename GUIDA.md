@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 1c0c108 · Testo della guida: sha d8ee0b0679f3 · Data: 13/11/2026
+App descritta: commit 66034fe · Testo della guida: sha c884a98f1c76 · Data: 15/11/2026
 
 ## Come usare questa guida
 
@@ -190,6 +190,8 @@ Luoghi e organizzazioni compaiono sempre con il loro nome (per un luogo: codice 
 3. Tocca la riga del sito. Compare «Luogo selezionato».
 4. Per cambiarlo, premi «Cambia luogo».
 
+Se premi «Leggi» senza aver scelto il sito, l'app ti porta qui con «Scegli prima il sito, poi premi «Leggi».»
+
 Il sito resta scelto finché non chiudi l'app. Funziona anche senza rete, con l'elenco già scaricato. Se vedi «Elenco non ancora aggiornato dal server: è quello salvato sul telefono. Riprovo da solo quando torna la rete.», puoi lavorare lo stesso: l'elenco si aggiorna da solo quando torna la rete.
 
 Se qualcosa va storto:
@@ -211,7 +213,9 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 
 Aiuti: «Torcia» accende la luce (se il telefono la ha; il pulsante resta evidenziato finché è accesa); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante («Suono sì/no») spegne o accende il suono.
 
-**Con una pistola o un anello lettore.** Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo.
+**Con una pistola o un anello lettore.** Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo. Il lettore deve essere Bluetooth in modalità tastiera («HID»), abbinato una volta dalle impostazioni Bluetooth del telefono. Alla prima lettura con il lettore la fotocamera si spegne, per risparmiare la batteria: «Fotocamera spenta: stai leggendo con la pistola. Così la batteria dura di più.»; per riaccenderla tocca «Riaccendi la fotocamera». Dopo un pulsante (per esempio «Foto») il campo torna pronto da solo per la lettura successiva.
+
+**Fotocamera spenta per la batteria.** Dopo un minuto senza letture la fotocamera si spegne: «Fotocamera spenta dopo un minuto senza letture, per non scaricare la batteria.» Tocca «Riaccendi la fotocamera» per riprendere. Se blocchi lo schermo o passi a un'altra app, la fotocamera si spegne e si riaccende da sola quando torni in SwapTrack.
 
 **Se il codice non si legge.** Sotto il campo della pistola trovi «Il codice non si legge?» con due strade:
 - **A mano**: scrivi le cifre nel campo «Digita le cifre sotto il codice a barre» e premi «Conferma». Funziona anche senza rete.
@@ -345,7 +349,7 @@ La lettura dei codici (fotocamera, lettura di fila, pistola, a mano, foto dell'e
 
 1. Apri «Home»: vedi «Scegli il magazzino».
 2. Cerca con «Cerca per codice o nome» e tocca il tuo magazzino.
-3. Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi «Cambia luogo».
+3. Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi «Cambia luogo». Se premi «Leggi» senza aver scelto il magazzino, l'app ti porta qui con «Scegli prima il magazzino, poi premi «Leggi».»
 
 Controlla sempre il magazzino scelto (in alto; sul telefono, in cima al menu ☰) prima di leggere: ogni lettura viene registrata lì.
 
