@@ -10,6 +10,7 @@ import { logoUrl } from "@/lib/data/storage";
 import { watchOpenAlertCount } from "@/lib/data/documents";
 import { isAspRole } from "@shared/roles";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { ALERT_READER_ROLES } from "@/lib/alertState";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -198,9 +199,11 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
 
 export function ScanButton() {
   const { t } = useTranslation();
-  const { location } = useSession();
+  const { location, claims } = useSession();
+  // P-215: without a place "Scan" leads to the place picker (the Home) and says why (it went there in silence).
+  const noPlace = () => toast.message(t(claims?.role === "asp_technician" ? "location.chooseSiteFirst" : "location.chooseWarehouseFirst"), { id: "scan-no-place" });
   return (
-    <Link to={location ? "/scan" : "/"} className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-lg bg-primary text-primary-fg px-6 min-h-16 text-lg font-semibold" data-testid="scan-fab">
+    <Link to={location ? "/scan" : "/"} onClick={location ? undefined : noPlace} className="fixed bottom-4 right-4 z-30 inline-flex items-center gap-2 rounded-lg bg-primary text-primary-fg px-6 min-h-16 text-lg font-semibold" data-testid="scan-fab">
       <ScanLine className="h-6 w-6" aria-hidden /> {t("scan.button")}
     </Link>
   );

@@ -325,6 +325,8 @@
     "loadError": "The locations could not be loaded.",
     "pickSite": "Choose the site",
     "pickWarehouse": "Choose the warehouse",
+    "chooseSiteFirst": "Choose the site first, then press \"Scan\".",
+    "chooseWarehouseFirst": "Choose the warehouse first, then press \"Scan\".",
     "offlineInfo": "{{count}} available offline · updated {{when}}",
     "selected": "Selected location",
     "change": "Change location",
@@ -396,6 +398,9 @@
       "upload": "Upload DDT"
     },
     "photoReminder": "Photos: only the piece, never people",
+    "cameraOn": "Turn the camera on again",
+    "cameraOffGun": "Camera off: you are reading with the scanner gun. The battery lasts longer.",
+    "cameraOffIdle": "Camera off after a minute without readings, to save the battery.",
     "photo": "Photo",
     "photoQueued": "Photo queued for upload",
     "photoFailed": "The photo could not be saved on this device.",

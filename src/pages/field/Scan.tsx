@@ -56,6 +56,8 @@ const TOAST_8S = { duration: 8000 };
 // The camera reads again this long after a reading, and in any case this long after the message over the video has gone.
 const CAMERA_AFTER_READING_MS = 950;
 const CAMERA_AFTER_FLASH_MS = 50;
+// P-213: the camera goes off after this long without readings (battery).
+const CAMERA_IDLE_MS = 60_000;
 const VIDEO_MAX_SCREEN_SHARE = 0.58;
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
@@ -118,6 +120,12 @@ export default function Scan() {
   const [camError, setCamError] = React.useState<string | null>(null);
   const [torch, setTorch] = React.useState<boolean | null>(null);
   const [exposure, setExposure] = React.useState<{ min: number; max: number; step: number } | null>(null);
+  // P-212 / P-213 / P-214: why the camera is off ("gun": the gun is being used; "idle": a minute without readings), the
+  // page not seen, a counter of readings (it restarts the minute), and whether a gun has read on this screen.
+  const [cameraOff, setCameraOff] = React.useState<"gun" | "idle" | null>(null);
+  const [pageHidden, setPageHidden] = React.useState(() => document.visibilityState === "hidden");
+  const [readingTick, setReadingTick] = React.useState(0);
+  const gunSeen = React.useRef(false);
   // P-165: phase "full" over the whole video, then "band" at its top; hold: until the serial waiting for its product
   // code is dealt with; seq: one more at every message (the tests wait for the message of their reading by it).
   const [flash, setFlash] = React.useState<{ text: string; tone: "ok" | "warn" | "danger"; phase: "full" | "band"; hold: boolean; seq: number } | null>(null);
@@ -624,6 +632,9 @@ export default function Scan() {
   // an unknown piece is asked it stays paused, and closing that window records the reading (skipModelPick).
   const onCode = async (raw: string, source: Source, again = false) => {
     let r: "asked" | "continue" | void;
+    setReadingTick((n) => n + 1); // P-213: a reading restarts the minute
+    // P-212 (b): a reading from the gun switches the camera off (it is not needed, and it drains the battery).
+    if (source === "wedge" && raw.trim()) { gunSeen.current = true; setCameraOff("gun"); }
     try { r = await handleCode(raw, source, again); }
     catch { cameraLast.current = null; show(t("scan.readingFailed"), "danger"); } // P-155: never a beep and then silence with nothing recorded; P-157: it says "try again", so the label is not "already read"
     finally {
@@ -833,8 +844,14 @@ export default function Scan() {
     return () => window.removeEventListener("popstate", onPop);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // P-212 / P-213 / P-214 (battery): the camera is really switched off (stop: the tracks end, the video is emptied;
+  // pausing stopped only the decoding and the camera stayed on in high definition) when the gun reads, after a minute
+  // without readings, and while the page is not seen (screen locked, another app); on again with a new start, by a
+  // tap or by coming back to the page. engine.js / webEngine.js are untouched (R18).
+  const cameraOn = !cameraOff && !pageHidden;
   React.useEffect(() => {
-    if (!videoRef.current || !location) return;
+    if (!videoRef.current || !location || !cameraOn) return;
+    setAwaitingNext(false);
     const c = startScanner({
       videoEl: videoRef.current,
       onDecode: (text: string) => void onCodeRef.current(text, "camera"),
@@ -844,8 +861,47 @@ export default function Scan() {
       onExposure: (r: { min: number; max: number; step: number }) => setExposure(r),
     });
     ctrl.current = c;
-    return () => { clearCameraRestart(); c.stop(); };
-  }, [location]);
+    return () => { clearCameraRestart(); c.stop(); if (ctrl.current === c) ctrl.current = null; setTorch(null); setExposure(null); };
+  }, [location, cameraOn]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    const onVisibility = () => setPageHidden(document.visibilityState === "hidden");
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+  // P-213: a minute without readings (counted from the last reading or from when the camera came on).
+  // A camera that could not start (no camera, not allowed) has nothing to switch off.
+  React.useEffect(() => {
+    if (!cameraOn || !location || camError) return;
+    const id = setTimeout(() => setCameraOff("idle"), CAMERA_IDLE_MS);
+    return () => clearTimeout(id);
+  }, [cameraOn, location, readingTick, camError]);
+  const cameraBackOn = () => { setCamError(null); setCameraOff(null); };
+
+  // P-212 (a): the gun types into its field: after a button, a tick or a window closed, the field takes the keys again
+  // (after "Photo" the next gun reading was lost). Never taken from a field being typed in, a menu, or an open window;
+  // never scrolling the page.
+  const wedgeInput = React.useRef<HTMLInputElement>(null);
+  const refocusWedge = React.useCallback(() => {
+    window.setTimeout(() => {
+      if (windowOpenRef.current || document.visibilityState === "hidden") return;
+      // On a touch screen only once a gun has read here (an external keyboard is there): the field never takes the
+      // selection from the fingers, and the page is never zoomed or scrolled for it.
+      if (!gunSeen.current && !window.matchMedia("(pointer: fine)").matches) return;
+      const a = document.activeElement as HTMLElement | null;
+      if (!a || a === wedgeInput.current) return;
+      const typing = a instanceof HTMLTextAreaElement || a instanceof HTMLSelectElement || a.isContentEditable
+        || (a instanceof HTMLInputElement && !["checkbox", "radio", "range", "file", "button", "submit", "reset", "color"].includes(a.type));
+      if (typing || a.closest("[role='dialog']")) return;
+      wedgeInput.current?.focus({ preventScroll: true });
+    }, 0);
+  }, []);
+  React.useEffect(() => {
+    const onClick = () => refocusWedge();
+    document.addEventListener("click", onClick);
+    window.addEventListener("focus", onClick); // back from the photo picker or another app
+    return () => { document.removeEventListener("click", onClick); window.removeEventListener("focus", onClick); };
+  }, [refocusWedge]);
+  React.useEffect(() => { if (!windowOpen) refocusWedge(); }, [windowOpen, refocusWedge]);
 
   const undo = async () => {
     const last = session[0];
@@ -1061,6 +1117,13 @@ export default function Scan() {
             P-189: the same for the pieces of an incoming transfer. */}
         {expectedList && <ExpectedChip key={expectedList.testId} p={expectedList} hidden={flash?.phase === "band"} />}
         <p className="absolute bottom-2 left-2 right-2 text-center text-xs text-white bg-black/60 rounded px-2 py-1">{t("scan.photoReminder")}</p>
+        {/* P-212 / P-213: the camera off says why, and one tap anywhere on the video switches it on again. */}
+        {cameraOff && (
+          <button type="button" onClick={cameraBackOn} className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/85 p-4 text-center text-white" data-testid="scan-camera-off" data-reason={cameraOff}>
+            <span className="text-sm">{t(cameraOff === "gun" ? "scan.cameraOffGun" : "scan.cameraOffIdle")}</span>
+            <span className="inline-flex min-h-touch items-center gap-2 rounded-lg bg-primary px-5 text-lg font-semibold text-primary-fg" data-testid="scan-camera-on"><Camera className="h-6 w-6" aria-hidden /> {t("scan.cameraOn")}</span>
+          </button>
+        )}
         {flash && <div className={cn(flash.phase === "full" ? "absolute inset-0 flex items-center justify-center text-2xl p-4" : "absolute inset-x-0 top-0 px-3 py-1 text-sm leading-tight",
           "font-mono font-bold text-center", flash.tone === "ok" ? "bg-success text-black" : flash.tone === "danger" ? "bg-danger text-white" : "bg-warning text-black")}
           role="status" data-testid="scan-flash" data-tone={flash.tone} data-phase={flash.phase} data-seq={flash.seq}>{flash.tone === "ok" ? "✓ " : "! "}{flash.text}</div>}
@@ -1146,7 +1209,7 @@ export default function Scan() {
       )}
       {camError && <p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
       <form onSubmit={(e) => { e.preventDefault(); void onCode(wedge, "wedge"); setWedge(""); }}>
-        <Input inputMode="none" autoFocus aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono" />
+        <Input ref={wedgeInput} inputMode="none" autoFocus aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono" />
       </form>
       {/* P-134 (D-62 criteria 8, 9): one place when the code cannot be read. Without network the label photo is not
           offered (D-49): the digits remain. */}

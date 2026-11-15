@@ -325,6 +325,8 @@
     "loadError": "Non è stato possibile caricare i luoghi.",
     "pickSite": "Scegli il sito",
     "pickWarehouse": "Scegli il magazzino",
+    "chooseSiteFirst": "Scegli prima il sito, poi premi «Leggi».",
+    "chooseWarehouseFirst": "Scegli prima il magazzino, poi premi «Leggi».",
     "offlineInfo": "{{count}} disponibili offline · aggiornati {{when}}",
     "selected": "Luogo selezionato",
     "change": "Cambia luogo",
@@ -396,6 +398,9 @@
       "upload": "Carica DDT"
     },
     "photoReminder": "Foto: solo il pezzo, mai persone",
+    "cameraOn": "Riaccendi la fotocamera",
+    "cameraOffGun": "Fotocamera spenta: stai leggendo con la pistola. Così la batteria dura di più.",
+    "cameraOffIdle": "Fotocamera spenta dopo un minuto senza letture, per non scaricare la batteria.",
     "photo": "Foto",
     "photoQueued": "Foto in coda per l'invio",
     "photoFailed": "La foto non può essere salvata su questo dispositivo.",
