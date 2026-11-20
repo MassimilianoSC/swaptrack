@@ -48,3 +48,17 @@ export function navAreasFor(role: string): NavGroup[] {
   for (const g of groups) g.titled = g.area !== "home" && g.items.length >= 2;
   return groups;
 }
+
+// P-222: the Home cards of a role (all but the Home itself), in sections: a titled area is a section with its title
+// (area set); neighbouring untitled areas share one section without a title (area null).
+export interface HomeSection { key: string; area: NavArea | null; items: NavItem[] }
+export function homeSections(role: string): HomeSection[] {
+  const out: HomeSection[] = [];
+  for (const g of navAreasFor(role).filter((x) => x.area !== "home")) {
+    const last = out[out.length - 1];
+    if (g.titled) out.push({ key: g.area, area: g.area, items: g.items });
+    else if (last && last.area === null) last.items.push(...g.items);
+    else out.push({ key: `other-${g.area}`, area: null, items: [...g.items] });
+  }
+  return out;
+}

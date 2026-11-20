@@ -42,3 +42,21 @@ describe("the menu in areas (P-222)", () => {
     }
   });
 });
+
+// P-222: the Home cards in the same areas (client roles; the ASP roles see the site picker).
+import { homeSections } from "../src/app/nav";
+describe("the Home cards in areas (P-222)", () => {
+  it("client admin: titled sections for the titled areas, the others untitled, in menu order, every card once", () => {
+    const s = homeSections("client_admin");
+    expect(s.map((x) => x.area)).toEqual([null, "operations", null, "check", null, "registry", "config", null]);
+    expect(s.find((x) => x.area === "config")!.items.map((n) => n.label)).toEqual(["nav.sorting", "nav.settings", "nav.adminLog"]);
+    expect(s.flatMap((x) => x.items)).toEqual(NAV.filter((n) => n.roles.includes("client_admin") && n.to !== "/"));
+  });
+  it("client warehouse: Operations titled; Documents, Alerts and Guide share one untitled section", () => {
+    const s = homeSections("client_warehouse");
+    expect(s.map((x) => [x.area, x.items.map((n) => n.label)])).toEqual([
+      ["operations", ["nav.items", "nav.shipments"]],
+      [null, ["nav.documents", "nav.alerts", "nav.guide"]],
+    ]);
+  });
+});

@@ -35,6 +35,18 @@ test.describe("Menu ad aree (scrivania)", () => {
     await expect(drawer.getByTestId("nav-group-registry").getByTestId("nav-admin-users")).toHaveCount(1);
   });
 
+  test("Home dell'amministratore cliente: le schede nelle stesse aree, con i titoli", async ({ page }) => {
+    test.setTimeout(120_000);
+    await signIn(page, ACCOUNTS.clientAdmin);
+    await page.goto("/");
+    for (const [area, card] of [["operations", "items"], ["check", "anomalies"], ["registry", "admin-organizations"], ["config", "admin-settings"]]) {
+      const section = page.getByTestId(`home-area-${area}`);
+      await expect(section.getByRole("heading")).toHaveText(tr(`nav.areas.${area}`), { timeout: 30_000 });
+      await expect(section.getByTestId(`home-card-${card}`)).toHaveCount(1);
+    }
+    await expect(page.getByTestId("home-card-dashboard")).toBeVisible(); // a single-card area, without a title
+  });
+
   test("magazzino ASP: solo le aree con più voci proprie hanno il titolo", async ({ page }) => {
     test.setTimeout(120_000);
     await signIn(page, ACCOUNTS.aspWarehouseNord);
