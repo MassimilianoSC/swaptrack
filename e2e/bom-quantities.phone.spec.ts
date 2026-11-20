@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, fillLines } from "./helpers";
 
 // P-188 (COLLAUDO C9): in "Scan" at a site, the BOM's lines without serial ("#3 MC400107": three pieces of a model) are
 // listed with their quantity and counted as pieces of that model are read (the server's comparison, D-79): a serial
@@ -17,7 +17,7 @@ async function ownBom(browser: Browser, lines: string): Promise<void> {
   await admin.getByTestId("document-kind").selectOption("bom");
   await admin.getByTestId("document-number").fill(uniqueCode("BOMQ"));
   await admin.getByTestId("document-location").selectOption(`loc_${SITE}`);
-  await admin.getByTestId("document-lines-remove").fill(lines);
+  await fillLines(admin, "document-lines-remove", lines);
   await admin.getByTestId("document-save-new").click();
   await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
   await ctx.close();

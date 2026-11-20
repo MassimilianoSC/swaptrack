@@ -251,3 +251,19 @@ export function png(size: number): Buffer {
   for (let y = 0; y < size; y++) raw[y * (1 + size * 3)] = 0; // filter byte of each row
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
+
+// P-223: the lines of a document are a table (Quantity, Article code, Serial number). Every e2e that writes lines goes
+// through here: the rows already there are deleted, then the text is pasted with «Paste lines» (today's text: "SERIAL",
+// "SERIAL CODE", "#3 CODE", one per line). What the table holds is read with toHaveAttribute("data-lines-text", ...).
+export async function fillLines(page: Page, testId: string, text: string | string[]): Promise<void> {
+  const value = Array.isArray(text) ? text.join("\n") : text;
+  const table = page.getByTestId(testId);
+  await expect(table).toBeVisible();
+  const del = table.getByTestId(`${testId}-delete`);
+  while (await del.count()) await del.first().click();
+  if (!value.trim()) return;
+  await table.getByTestId(`${testId}-paste`).click();
+  await table.getByTestId(`${testId}-paste-text`).fill(value);
+  await table.getByTestId(`${testId}-paste-apply`).click();
+  await expect(table.getByTestId(`${testId}-paste-text`)).toHaveCount(0);
+}

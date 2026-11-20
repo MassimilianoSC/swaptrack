@@ -91,3 +91,73 @@ export const distinctValues = (sheet: Sheet, header?: string, max = 20): string[
   if (i < 0) return [];
   return [...new Set(sheet.rows.map((r) => (r[i] ?? "").trim()).filter(Boolean))].slice(0, max);
 };
+
+// P-223 (tester, 20/11): the lines as rows of an editable table: Quantity, Article code (the material code) and Serial
+// number. A row with a serial is one piece (quantity 1, locked); without a serial it is a quantity of an article code.
+// The automatic reading may leave a field it did not recognise empty ("missing": shown empty and highlighted, never
+// filled with a guess). Pure, so a unit test checks the rules and the paste.
+export interface LineRow {
+  id: string;
+  quantity: string;
+  materialCode: string;
+  serial: string;
+  modelId?: string | null;
+  direction?: Direction;
+  missing?: Array<"quantity" | "materialCode">;
+}
+export type RowError = "quantity" | "codeOrSerial" | "serialQuantity";
+
+let rowSeq = 0;
+export const newRow = (direction?: Direction): LineRow => ({ id: `r${++rowSeq}`, quantity: "1", materialCode: "", serial: "", direction });
+
+// A saved or proposed line as a row. The automatic reading gives null for a field it did not recognise (o2, P-223).
+export type ProposedLine = DocLine | { kind: "quantity"; quantity: number | null; materialCode: string | null; modelId?: string | null; direction?: Direction };
+export function rowFromLine(l: ProposedLine): LineRow {
+  const row = newRow(l.direction);
+  if (l.kind === "serial") return { ...row, serial: l.codeRaw, materialCode: l.materialCode ?? "", modelId: l.modelId ?? null };
+  const missing: LineRow["missing"] = [];
+  if (l.quantity == null) missing.push("quantity");
+  if (!l.materialCode && !l.modelId) missing.push("materialCode");
+  return { ...row, quantity: l.quantity == null ? "" : String(l.quantity), materialCode: l.materialCode ?? "", modelId: l.modelId ?? null, ...(missing.length ? { missing } : {}) };
+}
+
+// A row the automatic reading proposed is never "empty": its missing fields must be filled in or the row removed.
+export const rowIsEmpty = (r: LineRow) => !r.missing?.length && !r.serial.trim() && !r.materialCode.trim() && (r.quantity.trim() === "" || r.quantity.trim() === "1");
+
+// The rules of a row (the tester's three messages); an empty row is ignored, never an error.
+export function rowError(r: LineRow): RowError | null {
+  if (rowIsEmpty(r)) return null;
+  const serial = r.serial.trim(), code = r.materialCode.trim(), q = r.quantity.trim();
+  if (!/^\d+$/.test(q) || Number(q) < 1) return "quantity";
+  if (!serial && !code) return "codeOrSerial";
+  if (serial && Number(q) !== 1) return "serialQuantity";
+  return null;
+}
+
+// Rows -> lines (rows with an error are the caller's to stop; empty rows are left out).
+export function linesFromRows(rows: LineRow[], direction?: Direction): DocLine[] {
+  return rows.filter((r) => !rowIsEmpty(r)).map((r): DocLine => {
+    const dir = direction ?? r.direction;
+    const code = r.materialCode.replace(/\s+/g, "") || null;
+    const base = { ...(r.modelId ? { modelId: r.modelId } : {}), ...(dir ? { direction: dir } : {}) };
+    return r.serial.trim()
+      ? { kind: "serial", codeRaw: r.serial.trim().replace(/\s+/g, ""), materialCode: code, ...base }
+      : { kind: "quantity", quantity: Number(r.quantity.trim()), materialCode: code, ...base };
+  });
+}
+
+// §11.2 "paste from clipboard supported": several lines at once. A line with tabs is a row copied from a sheet, in the
+// order of the table (quantity, article code, serial); a line without tabs is today's text ("SERIAL", "SERIAL CODE",
+// "#3 CODE", P-169 for "#1").
+export function rowsFromPaste(text: string, direction?: Direction, materialCodes?: ReadonlySet<string>): LineRow[] {
+  return text.split(/\r?\n/).filter((s) => s.trim()).map((s) => {
+    if (s.includes("\t")) {
+      const [q = "", code = "", serial = ""] = s.split("\t").map((c) => c.trim());
+      return { ...newRow(direction), quantity: serial ? "1" : q || "1", materialCode: code, serial };
+    }
+    return rowFromLine({ ...parseLines(s, direction, materialCodes)[0], ...(direction ? { direction } : {}) });
+  });
+}
+
+// The rows as today's text (for the summary and for the tests: the same text the boxes had).
+export const rowsToText = (rows: LineRow[]) => linesToText(linesFromRows(rows.filter((r) => !rowError(r))));

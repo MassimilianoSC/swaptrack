@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, fillLines } from "./helpers";
 
 // P-175: in "Scan" at a site with a BOM, the BOM is at the top: a summary on the video ("BOM 1/2 ▾") opens the list of
 // the pieces over the video, ticked as they are read; the video is not shorter (scan-video-size). Hidden while a warning
@@ -16,7 +16,7 @@ async function ownBom(browser: Browser, lines: string): Promise<string> {
   const number = uniqueCode("BOMC");
   await admin.getByTestId("document-number").fill(number);
   await admin.getByTestId("document-location").selectOption(`loc_${SITE}`);
-  await admin.getByTestId("document-lines-remove").fill(lines);
+  await fillLines(admin, "document-lines-remove", lines);
   await admin.getByTestId("document-save-new").click();
   await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
   await ctx.close();

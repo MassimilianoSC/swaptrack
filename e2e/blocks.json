@@ -56,7 +56,8 @@
         "scan-opens-top.phone.spec.ts",
         "scan-arrival-choice.phone.spec.ts",
         "nav-areas.desk.spec.ts",
-        "warehouse-home.phone.spec.ts"
+        "warehouse-home.phone.spec.ts",
+        "doc-lines-table.desk.spec.ts"
       ]
     },
     {

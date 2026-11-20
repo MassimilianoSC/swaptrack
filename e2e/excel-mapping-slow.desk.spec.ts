@@ -41,6 +41,6 @@ test.describe("Scelta delle colonne dell'Excel con la rete lenta (scrivania)", (
     await expect(page.getByTestId("excel-map-serial")).toHaveValue("Seriale");
     await expect(page.getByTestId("excel-map-count")).toHaveText(tr("documents.excelCount_other").replace("{{count}}", "2").replace("{{skipped}}", "0"));
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${s1}\n${s2}`);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${s1}\n${s2}`);
   });
 });

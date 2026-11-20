@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, scanManual, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, scanManual, uniqueCode, tr, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 1 (DA_FARE P-6): the ASP technician on the phone, without network. Sign-in, site chosen from the offline
@@ -26,12 +26,12 @@ test.describe("Percorso 1 — tecnico senza rete (telefono)", () => {
     await page.getByTestId("document-number").fill(bomNumber);
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.site}`);
     // §11.2 / P-92: every BOM line says whether the piece is removed or installed; here, the box "To remove".
-    await page.getByTestId("document-lines-remove").fill(codes.join("\n"));
+    await fillLines(page, "document-lines-remove", codes.join("\n"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     const bomId = page.url().split("/").pop()!;
-    await expect(page.getByTestId("document-lines-remove")).toHaveValue(codes.join("\n"));
-    await expect(page.getByTestId("document-lines-install")).toHaveValue("");
+    await expect(page.getByTestId("document-lines-remove")).toHaveAttribute("data-lines-text", codes.join("\n"));
+    await expect(page.getByTestId("document-lines-install")).toHaveAttribute("data-lines-text", "");
     await page.getByTestId("document-save").click(); // version 2: the newest BOM of the site
     await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
     await signOut(page);

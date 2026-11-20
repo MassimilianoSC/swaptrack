@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, uniqueCode, emulatorSetDoc } from "./helpers";
+import { ACCOUNTS, signIn, uniqueCode, emulatorSetDoc, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-163: the pages not reached from the menu have "Back" above the title: to the page the user came from, or to the
@@ -48,7 +48,7 @@ test.describe("Indietro nelle pagine di dettaglio (scrivania)", () => {
     await page.getByTestId("document-kind").selectOption("ddt_in");
     await page.getByTestId("document-number").fill(uniqueCode("DDTB"));
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await page.getByTestId("document-lines").fill(uniqueCode("X"));
+    await fillLines(page, "document-lines", uniqueCode("X"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     await back(page).click();

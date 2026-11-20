@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, collectRows } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, collectRows, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // Demo path 2 (DA_FARE P-6), DDT part (SPEC §12.2, REGISTRO D-15 / P-24): arrival of new material at the ASP
@@ -21,7 +21,7 @@ test.describe("Percorso 2 — arrivo di materiale nuovo con DDT (scrivania)", ()
     await expect(page.getByTestId("document-kind").locator('option[value="bom"]')).toHaveCount(0); // §3.3: BOM not for the warehouse (P-65)
     await page.getByTestId("document-number").fill(ddtNumber);
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await page.getByTestId("document-lines").fill(codes.join("\n"));
+    await fillLines(page, "document-lines", codes.join("\n"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/);
     const docId = page.url().split("/").pop()!;

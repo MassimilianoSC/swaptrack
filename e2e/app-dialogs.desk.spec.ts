@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, uniqueCode, tr, emulatorSetDoc, emulatorRead } from "./helpers";
+import { ACCOUNTS, signIn, uniqueCode, tr, emulatorSetDoc, emulatorRead, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-151: closing a document, cancelling a shipment draft and closing an alert ask in the app's own window, never in
@@ -11,7 +11,7 @@ test.describe("Finestre di conferma dell'app (scrivania)", () => {
     await page.goto("/documents/new");
     await page.getByTestId("document-number").fill(uniqueCode("DDTC"));
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await page.getByTestId("document-lines").fill(uniqueCode("C"));
+    await fillLines(page, "document-lines", uniqueCode("C"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     const id = page.url().split("/").pop()!;

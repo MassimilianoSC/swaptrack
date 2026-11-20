@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, emulatorFindOne, emulatorRead } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, tr, emulatorFindOne, emulatorRead, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // The committente's rule (P-104 extended): in "Remove" and "Arrival" the phone does not ask the model ("Unknown piece")
@@ -18,7 +18,7 @@ async function saveDocument(browser: Browser, kind: "bom" | "ddt_in", place: str
   await admin.getByTestId("document-kind").selectOption(kind);
   await admin.getByTestId("document-number").fill(uniqueCode(kind === "bom" ? "BOMS" : "DDTS"));
   await admin.getByTestId("document-location").selectOption(`loc_${place}`);
-  await admin.getByTestId(kind === "bom" ? "document-lines-remove" : "document-lines").fill(lines);
+  await fillLines(admin, kind === "bom" ? "document-lines-remove" : "document-lines", lines);
   await admin.getByTestId("document-save-new").click();
   await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
   await ctx.close();

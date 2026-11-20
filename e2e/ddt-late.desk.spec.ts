@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // D-58 A3: the open DDTs of the arrival screen come from the server when it answers within 2 s, else from the phone's
@@ -22,7 +22,7 @@ test.describe("Arrivo — DDT nuovo con il server lento (scrivania)", () => {
     await admin.goto("/documents/new");
     await admin.getByTestId("document-number").fill(number);
     await admin.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await admin.getByTestId("document-lines").fill(uniqueCode("X"));
+    await fillLines(admin, "document-lines", uniqueCode("X"));
     await admin.getByTestId("document-save-new").click();
     await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     await other.close();

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, uniqueCode, emulatorFindOne, tr } from "./helpers";
+import { ACCOUNTS, signIn, uniqueCode, emulatorFindOne, tr, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-169 (tester): in a DDT the row "#1 KRD901305/11" (quantity, then serial) became a quantity line of a material code
@@ -16,7 +16,7 @@ test.describe("Righe dei documenti scritte a mano (scrivania)", () => {
     await page.getByTestId("document-kind").selectOption("ddt_in");
     await page.getByTestId("document-number").fill(number);
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`, { timeout: 60_000 });
-    await page.getByTestId("document-lines").fill(`#1 ${serial}\n#3 MC400107`);
+    await fillLines(page, "document-lines", `#1 ${serial}\n#3 MC400107`);
     const summary = tr("documents.linesSummary").replace("{{serials}}", "1").replace("{{quantities}}", "1");
     await expect(page.getByTestId("document-lines-summary")).toHaveText(summary, { timeout: 30_000 });
 
@@ -25,7 +25,7 @@ test.describe("Righe dei documenti scritte a mano (scrivania)", () => {
     const id = page.url().split("/").pop()!;
     // Opened again: the serial as a serial line (no "#1"), the quantity as it was.
     await page.reload();
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${serial}\n#3 MC400107`, { timeout: 30_000 });
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${serial}\n#3 MC400107`, { timeout: 30_000 });
     // The serial is expected by the DDT (a quantity line has no expected code).
     await expect.poll(async () => (await emulatorFindOne("expectedCodes", { documentId: id }))?.documentId ?? null, { timeout: 30_000 }).toBe(id);
   });

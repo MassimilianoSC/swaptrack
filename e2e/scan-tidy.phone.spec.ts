@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, emulatorPatchSetting } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, emulatorPatchSetting, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-134 (D-63, criteria D-62): small fixes of the scanning screen on a 390×844 phone. 1) return shipment and transfer
@@ -64,7 +64,7 @@ test.describe("Schermata di lettura — correzioni P-134 (telefono 390×844)", (
     await admin.goto("/documents/new");
     await admin.getByTestId("document-number").fill(number);
     await admin.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-    await admin.getByTestId("document-lines").fill(`${a}\n${b}`);
+    await fillLines(admin, "document-lines", `${a}\n${b}`);
     await admin.getByTestId("document-save-new").click();
     await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     await other.close();

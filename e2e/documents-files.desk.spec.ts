@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import ExcelJS from "exceljs";
-import { ACCOUNTS, signIn, uniqueCode, tr, emulatorSetDoc, emulatorRead, emulatorFirstId } from "./helpers";
+import { ACCOUNTS, signIn, uniqueCode, tr, emulatorSetDoc, emulatorRead, emulatorFirstId, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-105 (SPEC §11.2, §12.2; D-43, D-47): a DDT or a BOM loaded from an Excel (column mapping, saved and reused) or
@@ -57,9 +57,9 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("excel-map-apply").click();
     // The lines are on screen, to be checked: nothing is saved yet.
     await expect(page.getByTestId("document-lines-to-confirm")).toBeVisible();
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${a} MC-A\n${b}\n#3 MC-B`);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${a} MC-A\n${b}\n#3 MC-B`);
     await saveNew(page);
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${a} MC-A\n${b}\n#3 MC-B`);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${a} MC-A\n${b}\n#3 MC-B`);
     await expect(page.getByTestId("document-file")).toHaveCount(1);
     await expect(page.getByTestId("document-lines-to-confirm")).toHaveCount(0);
 
@@ -69,7 +69,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("document-files-input").setInputFiles({ name: "ddt2.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: await xlsx([header, [c, "MC-A", "", ""]]) });
     await expect(page.getByTestId("excel-map-serial")).toHaveValue("Seriale");
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${c} MC-A`);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${c} MC-A`);
   });
 
   test("BOM da Excel: la colonna dice cosa smontare e cosa installare", async ({ page }) => {
@@ -83,11 +83,11 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("excel-map-removeValue").selectOption("SMONTARE");
     await page.getByTestId("excel-map-installValue").selectOption("INSTALLARE");
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines-remove")).toHaveValue(`${r1}\n${r2}`);
-    await expect(page.getByTestId("document-lines-install")).toHaveValue(i1);
+    await expect(page.getByTestId("document-lines-remove")).toHaveAttribute("data-lines-text", `${r1}\n${r2}`);
+    await expect(page.getByTestId("document-lines-install")).toHaveAttribute("data-lines-text", i1);
     await saveNew(page);
-    await expect(page.getByTestId("document-lines-remove")).toHaveValue(`${r1}\n${r2}`);
-    await expect(page.getByTestId("document-lines-install")).toHaveValue(i1);
+    await expect(page.getByTestId("document-lines-remove")).toHaveAttribute("data-lines-text", `${r1}\n${r2}`);
+    await expect(page.getByTestId("document-lines-install")).toHaveAttribute("data-lines-text", i1);
   });
 
   test("DDT da foto e PDF: anteprima, righe scritte accanto, una pagina aggiunta dopo si somma alle altre", async ({ page }) => {
@@ -108,7 +108,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     ]);
     await expect(page.getByTestId("document-file")).toHaveCount(2);
     await expect(page.getByTestId("document-preview-image")).toBeVisible();
-    await page.getByTestId("document-lines").fill(code);
+    await fillLines(page, "document-lines", code);
     await saveNew(page);
     await expect(page.getByTestId("document-file")).toHaveCount(2);
     await expect(page.getByTestId("document-preview-image")).toHaveJSProperty("complete", true);
@@ -118,7 +118,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("document-save").click();
     await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
     await expect(page.getByTestId("document-file")).toHaveCount(3);
-    await expect(page.getByTestId("document-lines")).toHaveValue(code);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", code);
   });
 
   // Censimento n.38 (P-115): the boxes do not show a line's model (modelId, from an import or the server); saving the
@@ -136,7 +136,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     });
     await signIn(page, ACCOUNTS.aspAdminNord);
     await page.goto(`/documents/${id}`);
-    await expect(page.getByTestId("document-lines")).toHaveValue(code);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", code);
     await page.getByTestId("document-save").click();
     await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
     await expect.poll(async () => ((await emulatorRead(`documents/${id}`)).version as number), { timeout: 30_000 }).toBe(2);
@@ -163,7 +163,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("excel-map-quantity").selectOption("Qtà");
     await page.getByTestId("excel-map-apply").click();
     await expect(page.getByTestId("document-lines-to-confirm")).toBeVisible();
-    await expect(page.getByTestId("document-lines")).toHaveValue(`${a} MC-A\n${b}\n#3 MC-B`);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", `${a} MC-A\n${b}\n#3 MC-B`);
     await expect(page.getByTestId("document-file")).toHaveCount(1);
     await saveNew(page);
     await expect(page.getByTestId("document-file")).toHaveCount(1);
@@ -208,7 +208,7 @@ test.describe("Documenti da file o foto (scrivania)", () => {
     await page.getByTestId("document-files-input").setInputFiles({ name: "ddt.csv", mimeType: "application/vnd.ms-excel", buffer: Buffer.from(`Seriale\n${a}\n`) });
     await page.getByTestId("excel-map-serial").selectOption("Seriale");
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines")).toHaveValue(a);
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", a);
     await saveNew(page);
     await expect(page.getByTestId("document-file")).toHaveCount(1);
   });

@@ -39,7 +39,7 @@ test.describe("Documenti di prova della demo (scrivania)", () => {
     await page.getByTestId("document-files-input").setInputFiles(file("DDT-TD-2026-0412.xlsx"));
     await chooseColumns(page, [["serial", "N. serie"], ["materialCode", "Cod. articolo"], ["quantity", "Q.tà"]], count(10, 0));
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines")).toHaveValue([
+    await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", [
       "TD260412001 MC400100", "TD260412002 MC400107", "TD260412003 MC400114", "TD260412004 MC400121",
       "TD260412005 MC400128", "TD260412006 MC400135", "TD260412007 MC400142", "TD260412008 MC400149", "#3 MC400170", "#2 MC400205",
     ].join("\n"));
@@ -57,9 +57,9 @@ test.describe("Documenti di prova della demo (scrivania)", () => {
     await chooseColumns(page, [["serial", "N. serie"], ["materialCode", "Cod. articolo"], ["quantity", "Q.tà"], ["direction", "Operazione"],
       ["removeValue", "SMONTARE"], ["installValue", "INSTALLARE"]], count(10, 0));
     await page.getByTestId("excel-map-apply").click();
-    await expect(page.getByTestId("document-lines-remove")).toHaveValue(
+    await expect(page.getByTestId("document-lines-remove")).toHaveAttribute("data-lines-text",
       ["TD26R13001 MC400100", "TD26R13002 MC400107", "TD26R13003 MC400114", "TD26R13004 MC400121", "TD26R13005 MC400128"].join("\n"));
-    await expect(page.getByTestId("document-lines-install")).toHaveValue(
+    await expect(page.getByTestId("document-lines-install")).toHaveAttribute("data-lines-text",
       ["TD26I13001 MC400135", "TD26I13002 MC400142", "TD26I13003 MC400149", "TD26I13004 MC400156", "#2 MC400177"].join("\n"));
     await expect(page.getByTestId("document-lines-none")).toHaveCount(0);
     await page.getByTestId("document-save-new").click();

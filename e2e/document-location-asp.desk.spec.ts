@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ACCOUNTS, signIn, uniqueCode, tr } from "./helpers";
+import { ACCOUNTS, signIn, uniqueCode, tr, fillLines } from "./helpers";
 
 // P-172 (SPEC §11.2): a saved document stays in its ASP. The client admin, on a saved BOM of a Nord site, is offered only
 // the Nord sites in "Place" (before: the sites of every ASP, and saving another ASP's site was refused with "You are not
@@ -19,7 +19,7 @@ test.describe("Luogo di un documento salvato (scrivania)", () => {
     await expect(place.locator(option("SITO-00002"))).toHaveCount(1, { timeout: 60_000 });
     await page.getByTestId("document-number").fill(uniqueCode("BOML"));
     await place.selectOption(`loc_${SITE}`);
-    await page.getByTestId("document-lines-remove").fill(uniqueCode("BL"));
+    await fillLines(page, "document-lines-remove", uniqueCode("BL"));
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
 

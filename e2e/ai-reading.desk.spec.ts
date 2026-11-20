@@ -38,20 +38,20 @@ test.describe.serial("Lettura automatica dei documenti (scrivania)", () => {
       await signIn(page, ACCOUNTS.aspWarehouseNord);
       await ddtWithPhoto(page);
       await page.getByTestId("document-ai-read").click();
-      await expect(page.getByTestId("document-lines")).toHaveValue("AI-DEMO-0001\nAI-DEMO-0002", { timeout: 30_000 });
+      await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", "AI-DEMO-0001\nAI-DEMO-0002", { timeout: 30_000 });
       await expect(page.getByTestId("document-lines-to-confirm")).toContainText(tr("documents.aiToConfirm_other").replace("{{count}}", "2"));
       await expect(page.getByTestId("document-ai-warnings")).toHaveCount(0); // demo_extraction is never shown
       // Nothing is saved yet: a reload brings back the saved (empty) lines.
       const url = page.url();
       await page.reload();
-      await expect(page.getByTestId("document-lines")).toHaveValue("");
+      await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", "");
       await page.goto(url);
       await page.getByTestId("document-ai-read").click();
-      await expect(page.getByTestId("document-lines")).toHaveValue("AI-DEMO-0001\nAI-DEMO-0002", { timeout: 30_000 });
+      await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", "AI-DEMO-0001\nAI-DEMO-0002", { timeout: 30_000 });
       await page.getByTestId("document-save").click();
       await expect(page.getByText(tr("common.saved")).last()).toBeVisible();
       await page.reload();
-      await expect(page.getByTestId("document-lines")).toHaveValue("AI-DEMO-0001\nAI-DEMO-0002");
+      await expect(page.getByTestId("document-lines")).toHaveAttribute("data-lines-text", "AI-DEMO-0001\nAI-DEMO-0002");
     } finally {
       await setAi(false);
     }

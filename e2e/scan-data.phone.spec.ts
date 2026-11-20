@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, png, emulatorPatchSetting } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, scanManual, uniqueCode, tr, png, emulatorPatchSetting, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-115 (criterion 2, censimento §11): the readings carry the right data and the user always knows what happened.
@@ -49,7 +49,7 @@ test.describe("Letture con i dati giusti (telefono)", () => {
     await page.getByTestId("document-kind").selectOption("bom");
     await page.getByTestId("document-number").fill(uniqueCode("BOMJ"));
     await page.getByTestId("document-location").selectOption(`loc_${SEED.nord.site3}`); // a site of this test only
-    await page.getByTestId("document-lines-remove").fill(code);
+    await fillLines(page, "document-lines-remove", code);
     await page.getByTestId("document-save-new").click();
     await expect(page).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
     await signOut(page);

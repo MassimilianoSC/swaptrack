@@ -1,5 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
-import { ACCOUNTS, signIn, pickLocation, uniqueCode } from "./helpers";
+import { ACCOUNTS, signIn, pickLocation, uniqueCode, fillLines } from "./helpers";
 import { SEED } from "./seed";
 
 // P-193 (SPEC §11.3): in the arrival with a DDT, "arrived / missing" and the DDT's count are its serial lines only, as
@@ -15,7 +15,7 @@ async function ownDdt(browser: Browser, number: string, lines: string): Promise<
   await admin.goto("/documents/new");
   await admin.getByTestId("document-number").fill(number);
   await admin.getByTestId("document-location").selectOption(`loc_${SEED.nord.warehouse}`);
-  await admin.getByTestId("document-lines").fill(lines);
+  await fillLines(admin, "document-lines", lines);
   await admin.getByTestId("document-save-new").click();
   await expect(admin).toHaveURL(/\/documents\/(?!new)[^/]+$/, { timeout: 30_000 });
   await ctx.close();
