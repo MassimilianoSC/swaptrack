@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 66034fe · Testo della guida: sha c884a98f1c76 · Data: 15/11/2026
+App descritta: commit 0137c84 · Testo della guida: sha ca1b27ce1d24 · Data: 20/11/2026
 
 ## Come usare questa guida
 
@@ -19,7 +19,7 @@ SwapTrack segue i **pezzi** (gli apparati) leggendo il loro codice a barre. Segu
 
 ### Cosa vedi in alto
 
-- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra). Nelle pagine di un pezzo, di un documento e di una spedizione, sopra il titolo c'è «Indietro»: riporta alla pagina da cui sei arrivato, oppure all'elenco se la pagina è stata aperta da un link. Nella schermata «Leggi» c'è la sola freccia, accanto alle operazioni. In fondo al menu, finché l'app non è installata, c'è anche «Installa l'app» (vedi [Come installo l'app sul telefono?](#come-installo-lapp-sul-telefono)).
+- **Il menu delle pagine.** Sul computer è la barra a sinistra (puoi stringerla con «Riduci la barra laterale» e riaprirla con «Espandi la barra laterale»). Sul telefono si apre con «Apri il menu» (le tre righe in alto a sinistra). Le voci sono raggruppate per aree: «Operatività», «Da verificare», «Anagrafiche», «Configurazione» (il titolo compare quando l'area ha almeno due voci); con la barra stretta, tra un'area e l'altra c'è una linea. Anche le schede della Home sono raggruppate così. Nelle pagine di un pezzo, di un documento e di una spedizione, sopra il titolo c'è «Indietro»: riporta alla pagina da cui sei arrivato, oppure all'elenco se la pagina è stata aperta da un link. Nella schermata «Leggi» c'è la sola freccia, accanto alle operazioni. In fondo al menu, finché l'app non è installata, c'è anche «Installa l'app» (vedi [Come installo l'app sul telefono?](#come-installo-lapp-sul-telefono)).
 - **La campanella**: quanti avvisi aperti ci sono (non compare al Tecnico ASP).
 - **La rete**: sul computer vedi «Online» o «Offline»; sul telefono vedi solo l'icona del segnale, barrata quando non c'è rete. Accanto può comparire «3 da inviare»: sono letture o foto che il telefono non ha ancora mandato.
 - **Sul computer, senza rete**, sotto la barra compare la striscia «Sei offline: i dati possono non essere aggiornati.»: quello che vedi può essere vecchio; torna normale quando la rete torna.
@@ -201,7 +201,7 @@ Se qualcosa va storto:
 
 ### Come leggo un codice a barre?
 
-Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; subito sotto ci sono i comandi di ogni pezzo: «Annulla l'ultima», «Foto», il suono, «Raffica» e, se il telefono li ha, «Torcia» e «Sole». Più sotto c'è il campo della pistola e, se il codice non si legge, la riga «Il codice non si legge?».
+Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; subito sotto ci sono i comandi di ogni pezzo: «Annulla l'ultima», «Foto», il suono, «Raffica» e, se il telefono li ha, «Torcia» e «Sole». Sul telefono stanno su due righe, tre per riga. Più sotto c'è il campo della pistola e, se il codice non si legge, la riga «Il codice non si legge?».
 
 **Con la fotocamera.**
 1. Inquadra il codice dentro il riquadro colorato.
@@ -211,7 +211,7 @@ Si legge nella schermata che si apre con «Leggi». In alto c'è la fotocamera; 
 
 **Leggere di fila.** Se devi leggere tanti pezzi uno dopo l'altro, spunta «Raffica (la fotocamera riparte da sola dopo ogni lettura)»: dopo meno di un secondo puoi leggere il pezzo successivo senza premere nulla. Il telefono ricorda la scelta anche le volte successive.
 
-Aiuti: «Torcia» accende la luce (se il telefono la ha; il pulsante resta evidenziato finché è accesa); il cursore «Sole» scurisce l'immagine quando c'è troppa luce; l'icona dell'altoparlante («Suono sì/no») spegne o accende il suono.
+Aiuti: «Torcia» accende la luce (se il telefono la ha; il pulsante resta evidenziato finché è accesa); «Sole» apre un cursore che scurisce l'immagine quando c'è troppa luce; il pulsante «Suono» (o «Muto», quando è spento) spegne o accende il suono.
 
 **Con una pistola o un anello lettore.** Tocca il campo «Pistola / anello: leggi qui» e leggi: il lettore scrive il codice e lo invia da solo. Il lettore deve essere Bluetooth in modalità tastiera («HID»), abbinato una volta dalle impostazioni Bluetooth del telefono. Alla prima lettura con il lettore la fotocamera si spegne, per risparmiare la batteria: «Fotocamera spenta: stai leggendo con la pistola. Così la batteria dura di più.»; per riaccenderla tocca «Riaccendi la fotocamera». Dopo un pulsante (per esempio «Foto») il campo torna pronto da solo per la lettura successiva.
 
@@ -349,7 +349,9 @@ La lettura dei codici (fotocamera, lettura di fila, pistola, a mano, foto dell'e
 
 1. Apri «Home»: vedi «Scegli il magazzino».
 2. Cerca con «Cerca per codice o nome» e tocca il tuo magazzino.
-3. Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi «Cambia luogo». Se premi «Leggi» senza aver scelto il magazzino, l'app ti porta qui con «Scegli prima il magazzino, poi premi «Leggi».»
+3. Il magazzino resta scelto finché non chiudi l'app. Per cambiarlo premi «Cambia magazzino». Se premi «Leggi» senza aver scelto il magazzino, l'app ti porta qui con «Scegli prima il magazzino, poi premi «Leggi».»
+
+**Operazioni di magazzino.** Scelto il magazzino, la Home diventa «Operazioni di magazzino»: vedi il «Magazzino attivo» con «Cambia magazzino» (apre l'elenco; «Resta su …» ti riporta indietro senza cambiare) e quattro operazioni: «Ricevi materiale» (apre «Leggi» in «Arrivo»), «Classifica materiale» (apre «Leggi» in «Smista / classifica»), «Prepara una spedizione» (apre «Spedizioni») e «Ricevi un trasferimento» (apre «Spedizioni» nella vista «In arrivo»).
 
 Controlla sempre il magazzino scelto (in alto; sul telefono, in cima al menu ☰) prima di leggere: ogni lettura viene registrata lì.
 
@@ -358,10 +360,10 @@ Controlla sempre il magazzino scelto (in alto; sul telefono, in cima al menu ☰
 1. Scegli il magazzino e premi «Leggi».
 2. Premi «Arrivo».
 3. Nella tendina «Materiale» lascia «Materiale smontato».
-4. Lascia la categoria su «Solo arrivo (smisto dopo)» se smisterai più tardi.
+4. In «Cosa fare con il materiale smontato» lascia «Solo arrivo (smisto dopo)» se smisterai più tardi.
 5. Leggi i codici dei pezzi arrivati.
 
-**Se vuoi smistare nello stesso passaggio**, spunta «Smista nello stesso passaggio» prima di leggere. Per ogni pezzo l'app usa la categoria suggerita e te la mostra in grande («Suggerita: …»). Se l'app non ha un suggerimento, vedi per esempio «ABC123: nessuna categoria suggerita, da smistare dopo»: il pezzo è registrato come arrivato e lo smisterai dopo. Se vuoi una categoria precisa, sceglila nella tendina prima di leggere.
+**Se vuoi smistare nello stesso passaggio**, scegli «Arrivo e smistamento» prima di leggere: compare la «Categoria», con «Usa la categoria suggerita» come prima scelta. Per ogni pezzo l'app usa la categoria suggerita e te la mostra in grande («Suggerita: …»). Se l'app non ha un suggerimento, vedi per esempio «ABC123: nessuna categoria suggerita, da smistare dopo»: il pezzo è registrato come arrivato e lo smisterai dopo. Se vuoi una categoria precisa, sceglila nella tendina prima di leggere.
 
 Se compare «Pezzo sconosciuto», scegli il modello e premi «Conferma», oppure premi «Salta».
 
@@ -480,7 +482,7 @@ I trasferimenti verso un'altra ASP li crea solo l'Amministratore cliente; tu li 
 
 ### Come registro l'arrivo di un trasferimento?
 
-1. Apri «Spedizioni», cerca il «Trasferimento» nello stato «Inviata» e premi «Apri».
+1. Apri «Spedizioni», cerca il «Trasferimento» nello stato «Inviata» e premi «Apri». In «Spedizioni» la vista «In arrivo» mostra solo i trasferimenti diretti alla tua ASP; dalla Home ci arrivi con «Ricevi un trasferimento».
 2. Premi «Leggi i pezzi»: si apre la lettura in «Arrivo», già nel magazzino che riceve.
 3. Leggi i pezzi arrivati. In alto a destra sul video vedi «Attesi 1/3 ▾»: toccalo per aprire l'elenco dei pezzi da ricevere, con la spunta su quelli già letti (anche da un collega). Lo stesso elenco è più in basso, in «Pezzi attesi». I pezzi letti che non sono nel trasferimento compaiono in «… pezzi non in questo trasferimento».
 
@@ -720,7 +722,7 @@ Il rapporto contiene pezzi arrivati, installati, smontati, smistati e resi nel m
 
 **Chi sei.** Gestisci tutta l'installazione: crei le ASP, inviti gli utenti, prepari siti, magazzini, catalogo dei modelli e categorie di smistamento, scegli le impostazioni. Puoi correggere i pezzi di tutte le ASP, creare trasferimenti tra ASP e confermare i resi.
 
-**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni e rapporti», «Organizzazioni», «Utenti», «Siti e magazzini», «Catalogo modelli», «Smistamento», «Impostazioni», «Registro amministrativo», «Guida».
+**Cosa trovi nel menu.** «Home», «Cruscotto», «Pezzi», «Da completare», «Spedizioni», «Documenti», «Avvisi», «Anomalie», «Esportazioni e rapporti», «Fornitori - ASP», «Utenti», «Siti e magazzini», «Catalogo modelli», «Smistamento», «Impostazioni», «Registro amministrativo», «Guida».
 
 Funzionano come per gli altri ruoli, e non le ripetiamo:
 - cruscotto, esportazioni e rapporti: vedi [Ufficio cliente](#ufficio-cliente);
@@ -734,7 +736,7 @@ Luogo di un documento: su un documento già salvato la tendina «Luogo» offre s
 
 Ordine consigliato:
 1. «Impostazioni»: marchio, accesso, testo dell'informativa privacy.
-2. «Organizzazioni»: crea le ASP con il loro primo amministratore.
+2. «Fornitori - ASP»: crea le ASP con il loro primo amministratore.
 3. «Siti e magazzini»: importa o crea siti, magazzini ASP e magazzini cliente.
 4. «Catalogo modelli»: importa o crea i modelli.
 5. «Smistamento»: categorie e regole.
@@ -742,14 +744,14 @@ Ordine consigliato:
 
 ### Come creo una ASP?
 
-1. Apri «Organizzazioni» e premi «Nuova ASP» («Crea l'organizzazione e invita il suo primo amministratore.»).
+1. Apri «Fornitori - ASP» e premi «Nuova ASP» («Crea il fornitore (ASP) e invita il suo primo amministratore.»).
 2. Scrivi il «Nome» dell'ASP e scegli la «Lingua dei report».
 3. In «Primo amministratore» scrivi «Nome», «Cognome», «E-mail di lavoro» e scegli la «Lingua».
 4. Conferma con «Nuova ASP». Vedi «ASP creata» e poi l'esito dell'invito (e-mail inviata o link da copiare, come in [Come invito una persona?](#come-invito-una-persona) dell'Amministratore ASP).
 
 Se vedi «Questa persona è già stata invitata (esiste già un account con questa e-mail).», l'ASP non viene creata: riprova con un'altra e-mail per il primo amministratore.
 
-**Lingua dei report**: cambiala dalla tendina sulla riga dell'ASP; si salva subito. La colonna «Utenti» dice quante persone ha ogni organizzazione (per esempio «2 attivi su 3»): un clic sulla riga apre «Utenti di …» con solo le sue persone, e da lì «Invita utente» ha già l'organizzazione scelta; «Indietro» torna a «Organizzazioni».
+**Lingua dei report**: cambiala dalla tendina sulla riga dell'ASP; si salva subito. La colonna «Utenti» dice quante persone ha ogni organizzazione (per esempio «2 attivi su 3»): un clic sulla riga apre «Utenti di …» con solo le sue persone, e da lì «Invita utente» ha già l'organizzazione scelta; «Indietro» torna a «Fornitori - ASP».
 
 **Disabilitare un'ASP**: premi «Disabilita» e conferma («Disabilitare … disattiva tutti i suoi utenti.»). «Abilita» la riattiva, ma i suoi utenti restano disattivati finché non li riattivi uno per uno da «Utenti». Un'ASP non si cancella e non si rinomina.
 

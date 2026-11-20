@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 66034fe · Guide text: sha 0c9e243d0560 · Date: 15/11/2026
+App described: commit 0137c84 · Guide text: sha 56dbc5b8b961 · Date: 20/11/2026
 
 ## How to use this guide
 
@@ -19,7 +19,7 @@ SwapTrack follows the **pieces** (the equipment) by reading their barcode. It fo
 
 ### What do you see at the top?
 
-- **The menu of the pages.** On the computer it is the bar on the left (you can narrow it with «Collapse sidebar» and open it again with «Expand sidebar»). On the phone it opens with «Open menu» (the three lines at the top left). In the pages of a piece, a document and a shipment there is «Back» above the title: it takes you to the page you came from, or to the list if the page was opened from a link. In the «Scan» screen there is just the arrow, next to the operations. At the bottom of the menu, until the app is installed, there is also «Install the app» (see [How do I install the app on my phone?](#how-do-i-install-the-app-on-my-phone)).
+- **The menu of the pages.** On the computer it is the bar on the left (you can narrow it with «Collapse sidebar» and open it again with «Expand sidebar»). On the phone it opens with «Open menu» (the three lines at the top left). The items are grouped in areas: «Operations», «To check», «Registry», «Configuration» (the title shows when the area has at least two items); with the narrow bar, there is a line between one area and the next. The Home cards are grouped the same way. In the pages of a piece, a document and a shipment there is «Back» above the title: it takes you to the page you came from, or to the list if the page was opened from a link. In the «Scan» screen there is just the arrow, next to the operations. At the bottom of the menu, until the app is installed, there is also «Install the app» (see [How do I install the app on my phone?](#how-do-i-install-the-app-on-my-phone)).
 - **The bell**: how many open alerts there are (the ASP technician does not see it).
 - **The network**: on the computer you see «Online» or «Offline»; on the phone you see only the signal icon, crossed out when there is no network. Next to it you may see «3 waiting to be sent»: these are scans or photos the phone has not sent yet.
 - **On the computer, without network**, the strip «You are offline: the data may not be up to date.» appears under the bar: what you see may be old; it goes back to normal when the network is back.
@@ -201,7 +201,7 @@ If something goes wrong:
 
 ### How do I read a barcode?
 
-You scan in the screen that opens with «Scan». At the top there is the camera; right below there are the controls for every piece: «Undo last», «Photo», the sound, «Burst» and, if the phone has them, «Torch» and «Sun». Further down there is the field of the scanner gun and, if the code cannot be read, the row «Can't read the code?».
+You scan in the screen that opens with «Scan». At the top there is the camera; right below there are the controls for every piece: «Undo last», «Photo», the sound, «Burst» and, if the phone has them, «Torch» and «Sun». On the phone they are on two rows, three per row. Further down there is the field of the scanner gun and, if the code cannot be read, the row «Can't read the code?».
 
 **With the camera.**
 1. Frame the code inside the colored box.
@@ -211,7 +211,7 @@ You scan in the screen that opens with «Scan». At the top there is the camera;
 
 **Reading in a row.** If you have to read many pieces one after another, tick «Burst (the camera restarts by itself after every reading)»: after less than a second you can read the next piece without pressing anything. The phone remembers the choice for the next times too.
 
-Helps: «Torch» turns the light on (if the phone has one; the button stays highlighted while it is on); the «Sun» slider darkens the image when there is too much light; the speaker icon («Sound on/off») turns the sound off or on.
+Helps: «Torch» turns the light on (if the phone has one; the button stays highlighted while it is on); «Sun» opens a slider that darkens the image when there is too much light; the «Sound» button (or «Muted», when it is off) turns the sound off or on.
 
 **With a scanner gun or a ring scanner.** Tap the field «Scanner gun / ring: read here» and scan: the scanner writes the code and sends it by itself. The scanner must be Bluetooth in keyboard mode («HID»), paired once from the phone's Bluetooth settings. At the first reading with the scanner the camera turns off, to save the battery: «Camera off: you are reading with the scanner gun. The battery lasts longer.»; to turn it on again tap «Turn the camera on again». After a button (for example «Photo») the field is ready again by itself for the next reading.
 
@@ -349,7 +349,9 @@ Scanning the codes (camera, reading in a row, scanner gun, by hand, label photo,
 
 1. Open «Home»: you see «Choose the warehouse».
 2. Search with «Search by code or name» and tap your warehouse.
-3. The warehouse stays chosen until you close the app. To change it press «Change location». If you press «Scan» without choosing the warehouse, the app takes you here with «Choose the warehouse first, then press "Scan".»
+3. The warehouse stays chosen until you close the app. To change it press «Change warehouse». If you press «Scan» without choosing the warehouse, the app takes you here with «Choose the warehouse first, then press "Scan".»
+
+**Warehouse operations.** Once the warehouse is chosen, the Home becomes «Warehouse operations»: you see the «Active warehouse» with «Change warehouse» (it opens the list; «Stay on …» takes you back without changing) and four operations: «Receive material» (opens «Scan» in «Arrival»), «Sort material» (opens «Scan» in «Sort / classify»), «Prepare a shipment» (opens «Shipments») and «Receive a transfer» (opens «Shipments» in the «Incoming» view).
 
 Always check the chosen warehouse (at the top; on the phone, at the top of the ☰ menu) before scanning: every scan is recorded there.
 
@@ -358,10 +360,10 @@ Always check the chosen warehouse (at the top; on the phone, at the top of the �
 1. Choose the warehouse and press «Scan».
 2. Press «Arrival».
 3. In the «Material» list leave «Removed material».
-4. Leave the category on «Arrival only (sort later)» if you will sort later.
+4. In «What to do with the removed material» leave «Arrival only (sort later)» if you will sort later.
 5. Scan the codes of the pieces that arrived.
 
-**If you want to sort in the same pass**, tick «Sort in the same pass» before scanning. For every piece the app uses the suggested category and shows it to you in large letters («Suggested: …»). If the app has no suggestion, you see for example «ABC123: no suggested category, sort later»: the piece is recorded as arrived and you will sort it later. If you want a precise category, choose it in the list before scanning.
+**If you want to sort in the same pass**, choose «Arrival and sorting» before scanning: the «Category» appears, with «Use the suggested category» as the first choice. For every piece the app uses the suggested category and shows it to you in large letters («Suggested: …»). If the app has no suggestion, you see for example «ABC123: no suggested category, sort later»: the piece is recorded as arrived and you will sort it later. If you want a precise category, choose it in the list before scanning.
 
 If «Unknown piece» appears, choose the model and press «Confirm», or press «Skip».
 
@@ -480,7 +482,7 @@ Transfers towards another ASP are created only by the Client administrator; you 
 
 ### How do I record the arrival of a transfer?
 
-1. Open «Shipments», look for the «Transfer» in the state «Sent» and press «Open».
+1. Open «Shipments», look for the «Transfer» in the state «Sent» and press «Open». In «Shipments» the «Incoming» view shows only the transfers sent to your ASP; from the Home you get there with «Receive a transfer».
 2. Press «Scan pieces»: scanning opens in «Arrival», already in the receiving warehouse.
 3. Scan the pieces that arrived. At the top right of the video you see «Expected 1/3 ▾»: tap it to open the list of the pieces to receive, with a tick on those already scanned (also by a colleague). The same list is further down, in «Expected pieces». The scanned pieces that are not in the transfer show in «… pieces not in this transfer».
 
@@ -720,7 +722,7 @@ The report contains the pieces arrived, installed, removed, sorted and returned 
 
 **Who you are.** You manage the whole installation: you create the ASPs, invite the users, prepare sites, warehouses, the catalog of models and the sorting categories, choose the settings. You can correct the pieces of all ASPs, create transfers between ASPs and confirm the returns.
 
-**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports and reports», «Organizations», «Users», «Sites and warehouses», «Catalog of models», «Sorting», «Settings», «Admin log», «Guide».
+**What you find in the menu.** «Home», «Dashboard», «Items», «To complete», «Shipments», «Documents», «Alerts», «Anomalies», «Exports and reports», «Suppliers - ASP», «Users», «Sites and warehouses», «Catalog of models», «Sorting», «Settings», «Admin log», «Guide».
 
 They work as for the other roles, and we do not repeat them:
 - dashboard, exports and reports: see [Client office](#client-office);
@@ -734,7 +736,7 @@ Location of a document: on a document already saved the «Location» list offers
 
 Recommended order:
 1. «Settings»: branding, sign-in, text of the privacy notice.
-2. «Organizations»: create the ASPs with their first administrator.
+2. «Suppliers - ASP»: create the ASPs with their first administrator.
 3. «Sites and warehouses»: import or create sites, ASP warehouses and client warehouses.
 4. «Catalog of models»: import or create the models.
 5. «Sorting»: categories and rules.
@@ -742,14 +744,14 @@ Recommended order:
 
 ### How do I create an ASP?
 
-1. Open «Organizations» and press «New ASP» («Creates the organization and invites its first administrator.»).
+1. Open «Suppliers - ASP» and press «New ASP» («Creates the supplier (ASP) and invites its first administrator.»).
 2. Write the «Name» of the ASP and choose the «Report language».
 3. In «First administrator» write «First name», «Last name», «Work e-mail» and choose the «Language».
 4. Confirm with «New ASP». You see «ASP created» and then the outcome of the invitation (e-mail sent or link to copy, as in [How do I invite a person?](#how-do-i-invite-a-person) of the ASP administrator).
 
 If you see «This person has already been invited (an account with this e-mail already exists).», the ASP is not created: try again with another e-mail for the first administrator.
 
-**Report language**: change it from the list on the row of the ASP; it is saved at once. The «Users» column says how many people each organization has (for example «2 active of 3»): a click on the row opens «Users of …» with only its people, and from there «Invite user» already has the organization chosen; «Back» returns to «Organizations».
+**Report language**: change it from the list on the row of the ASP; it is saved at once. The «Users» column says how many people each organization has (for example «2 active of 3»): a click on the row opens «Users of …» with only its people, and from there «Invite user» already has the organization chosen; «Back» returns to «Suppliers - ASP».
 
 **Disabling an ASP**: press «Disable» and confirm («Disabling … deactivates all its users.»). «Enable» turns it on again, but its users stay deactivated until you reactivate them one by one from «Users». An ASP cannot be deleted or renamed.
 
