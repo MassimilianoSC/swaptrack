@@ -66,13 +66,34 @@ describe("normalizeDocumentLines: the model proposes, the server checks (D-45)",
       { kind: "quantity", materialCode: "MC400107", quantity: 4 },
     ], warnings: [] });
   });
-  it("drops what cannot be used and says so: duplicates, empty codes, bad quantities, unknown kinds", () => {
+  // P-223 (tester): this case expected the two quantity lines with a field not read (quantity 0; no material code)
+  // dropped. Now they stay, with that field empty, for the user to fill in (ai_fields_missing); a line of which
+  // nothing was read, duplicates, empty serials and unknown kinds are still dropped.
+  it("drops what cannot be used and says so: duplicates, empty codes, nothing read, unknown kinds", () => {
     const r = normalizeDocumentLines({ lines: [
       { kind: "serial", codeRaw: "SN-1" }, { kind: "serial", codeRaw: "SN-1" }, { kind: "serial", codeRaw: "  " },
-      { kind: "quantity", materialCode: "MC1", quantity: 0 }, { kind: "quantity", quantity: 3 }, { kind: "pallet" }, "text",
+      { kind: "quantity", materialCode: "MC1", quantity: 0 }, { kind: "quantity", quantity: 3 }, { kind: "quantity" }, { kind: "pallet" }, "text",
     ] }, "ddt_in");
-    expect(r.lines).toEqual([{ kind: "serial", codeRaw: "SN-1", materialCode: null }]);
+    expect(r.lines).toEqual([
+      { kind: "serial", codeRaw: "SN-1", materialCode: null },
+      { kind: "quantity", materialCode: "MC1", quantity: null },
+      { kind: "quantity", materialCode: null, quantity: 3 },
+    ]);
+    expect(r.warnings).toEqual(["ai_lines_dropped", "ai_fields_missing"]);
+  });
+  it("P-223: a field not read stays empty, never filled in; several serials in one field are one line each", () => {
+    const r = normalizeDocumentLines({ lines: [
+      { kind: "serial", codeRaw: "TD260412001, TD260412002;TD260412003\nTD260412004", materialCode: "MC400170" },
+      { kind: "serial", codeRaw: "KRD 901305/11" }, // a space inside a serial: never split there
+      { kind: "serial", codeRaw: "TD260412002" }, // already proposed: dropped
+    ] }, "ddt_in");
+    expect(r.lines).toEqual([
+      ...["TD260412001", "TD260412002", "TD260412003", "TD260412004"].map((codeRaw) => ({ kind: "serial", codeRaw, materialCode: "MC400170" })),
+      { kind: "serial", codeRaw: "KRD 901305/11", materialCode: null },
+    ]);
     expect(r.warnings).toEqual(["ai_lines_dropped"]);
+    expect(documentInstruction("ddt_in")).toContain("never guess");
+    expect(documentInstruction("bom")).toContain("One serial line for each serial number");
   });
   it("direction only for a BOM: kept when clear, otherwise the line stays and the user is warned; ignored for a DDT", () => {
     const bom = normalizeDocumentLines({ lines: [

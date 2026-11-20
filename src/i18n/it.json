@@ -993,6 +993,7 @@
     "unsupported_file_type": "Tipo di file non ammesso: usa PDF, un'immagine (JPEG, PNG, WebP), Excel o CSV.",
     "image_unreadable": "Immagine non leggibile: prova con un'altra foto o con un PDF.",
     "bom_direction_required": "Ogni riga della BOM deve dire se il pezzo va smontato o installato.",
+    "line_without_code": "Inserisci almeno il codice articolo o il numero seriale.",
     "feature_disabled": "La lettura automatica non è attiva.",
     "ai_daily_limit": "Hai raggiunto le letture automatiche di oggi.",
     "ai_unavailable": "Il servizio di lettura automatica non risponde, riprova più tardi.",

@@ -12,6 +12,7 @@ import { compareDocument, documentAlert, type DocKind, type Line, type EventFact
 import { getSettings } from "../core/settings";
 import { askModel } from "../core/aiExtract";
 import { cleanFileName } from "../core/fileName";
+import { lineSchema, quantityOnlyLine } from "../core/documentLines";
 import { DOCUMENT_RESPONSE_SCHEMA, documentInstruction, normalizeDocumentLines, LABEL_RESPONSE_SCHEMA, LABEL_INSTRUCTION, normalizeLabelCodes } from "../core/aiOutput";
 import type { Part } from "@google/genai";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -104,10 +105,6 @@ async function fillModelsForAsp(aspId: string | null, lines: Line[]): Promise<vo
   }
 }
 
-const lineSchema = z.union([
-  z.object({ kind: z.literal("serial"), codeRaw: z.string().trim().min(1).max(300), codeId: z.string().optional(), materialCode: z.string().optional().nullable(), modelId: z.string().optional().nullable(), direction: z.enum(["remove", "install"]).optional() }),
-  z.object({ kind: z.literal("quantity"), materialCode: z.string().optional().nullable(), modelId: z.string().optional().nullable(), quantity: z.number().int().min(1).max(100000), direction: z.enum(["remove", "install"]).optional() }),
-]);
 
 // P-176: name = the file's name on the user's computer, kept for downloading it again (the Storage path stays ours).
 const fileSchema = z.object({ base64: z.string().max(8_000_000), contentType: z.string().max(100), name: z.string().max(300).optional() });
@@ -131,6 +128,8 @@ export const documents = {
     handler: async (ctx, d) => {
       // §11.2 (P-92): every BOM line says whether the piece is removed or installed at the site.
       if (d.kind === "bom" && d.lines.some((l) => !l.direction)) fail("invalid-argument", "bom_direction_required");
+      // §11.2 / P-223: a quantity line names its material code (or model): a line with the quantity only is refused.
+      if (quantityOnlyLine(d.lines) >= 0) fail("invalid-argument", "line_without_code");
       const aspId = await ensureCanWrite(ctx, d.kind, d.locationId);
       const ref = d.documentId ? db.collection("documents").doc(d.documentId) : db.collection("documents").doc();
       const prev = (await ref.get()).data();

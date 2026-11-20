@@ -34,8 +34,9 @@ export function documentInstruction(kind: DocKind): string {
     : "a delivery note (DDT) listing telecom equipment";
   return [
     `You read ${what}. Return only the item lines, as JSON matching the schema.`,
-    "A piece with its own serial number is a serial line: codeRaw is the serial exactly as printed (same letters, digits and symbols; do not correct it), materialCode the article code if printed.",
+    "A piece with its own serial number is a serial line: codeRaw is the serial exactly as printed (same letters, digits and symbols; do not correct it), materialCode the article code if printed. One serial line for each serial number.",
     "Pieces without serial numbers are quantity lines: materialCode and quantity.",
+    "If a field of a line cannot be read, leave that field out: never guess or fill in a value.",
     kind === "bom"
       ? "Every BOM line has direction: remove for pieces to remove or dismantle (smontare, smontaggio, recupero), install for pieces to install (installare, installazione, montaggio). If the section of a line is unclear, leave direction out."
       : "Do not set direction.",
@@ -55,40 +56,53 @@ const rawLine = z.object({
   direction: z.unknown().optional(),
 }).passthrough();
 
-// A proposed line, as saveDocument accepts it (the codeId is computed there, when the user confirms).
+// A proposed line, as saveDocument accepts it (the codeId is computed there, when the user confirms). P-223: a quantity
+// line may come with its material code or its quantity null, when the model could not read it: the page shows the
+// field empty and highlighted, and the line cannot be saved until it is filled in (saveDocument refuses it).
 export type ProposedLine =
   | { kind: "serial"; codeRaw: string; materialCode: string | null; direction?: Direction }
-  | { kind: "quantity"; materialCode: string; quantity: number; direction?: Direction };
+  | { kind: "quantity"; materialCode: string | null; quantity: number | null; direction?: Direction };
 export interface ProposedLines { lines: ProposedLine[]; warnings: string[] }
 
-// The model's answer, checked line by line. Lines that cannot be used are dropped and counted in a warning; a BOM
-// line without a clear direction is kept (the user sets it) and reported. Warnings are codes, translated by the app.
+// P-223: several serials in one field ("SN1, SN2", or one per line) are one line each. Never split on spaces: a serial
+// may contain them.
+const SERIAL_SEPARATORS = /[,;\r\n]+/;
+
+// The model's answer, checked line by line. Lines that cannot be used at all are dropped and counted in a warning;
+// a quantity line with a field not read is kept with that field empty (ai_fields_missing); a BOM line without a clear
+// direction is kept (the user sets it) and reported. Warnings are codes, translated by the app.
 export function normalizeDocumentLines(answer: unknown, kind: DocKind): ProposedLines {
   const list = (answer as { lines?: unknown } | null)?.lines;
   if (!Array.isArray(list)) return { lines: [], warnings: ["ai_no_lines"] };
   const lines: ProposedLine[] = [];
   const seen = new Set<string>();
-  let dropped = 0, undirected = 0;
+  let dropped = 0, undirected = 0, incomplete = 0;
   for (const item of list.slice(0, AI_MAX_LINES)) {
     const p = rawLine.safeParse(item);
     if (!p.success) { dropped++; continue; }
     const direction = kind === "bom" && (p.data.direction === "remove" || p.data.direction === "install") ? p.data.direction : undefined;
-    if (kind === "bom" && !direction) undirected++;
     const materialCode = clean(p.data.materialCode, 120) || null;
     if (p.data.kind === "serial") {
-      const codeRaw = clean(p.data.codeRaw, 300);
-      if (!codeRaw || seen.has(codeRaw)) { dropped++; continue; }
-      seen.add(codeRaw);
-      lines.push({ kind: "serial", codeRaw, materialCode, ...(direction ? { direction } : {}) });
+      const codes = (typeof p.data.codeRaw === "string" ? p.data.codeRaw.split(SERIAL_SEPARATORS) : []).map((c) => clean(c, 300)).filter(Boolean);
+      const fresh = codes.filter((c) => !seen.has(c));
+      if (!fresh.length) { dropped++; continue; }
+      if (kind === "bom" && !direction) undirected++;
+      for (const codeRaw of fresh) {
+        seen.add(codeRaw);
+        lines.push({ kind: "serial", codeRaw, materialCode, ...(direction ? { direction } : {}) });
+      }
     } else {
-      const quantity = typeof p.data.quantity === "number" && Number.isInteger(p.data.quantity) && p.data.quantity >= 1 && p.data.quantity <= 100000 ? p.data.quantity : 0;
-      if (!materialCode || !quantity) { dropped++; continue; }
+      const quantity = typeof p.data.quantity === "number" && Number.isInteger(p.data.quantity) && p.data.quantity >= 1 && p.data.quantity <= 100000 ? p.data.quantity : null;
+      if (!materialCode && !quantity) { dropped++; continue; } // nothing of the line was read
+      if (!materialCode || !quantity) incomplete++;
+      if (kind === "bom" && !direction) undirected++;
       lines.push({ kind: "quantity", materialCode, quantity, ...(direction ? { direction } : {}) });
     }
   }
   const warnings: string[] = [];
   if (list.length > AI_MAX_LINES) warnings.push("ai_too_many_lines");
   if (dropped) warnings.push("ai_lines_dropped");
+  if (incomplete) warnings.push("ai_fields_missing");
   if (undirected) warnings.push("ai_direction_missing");
   if (!lines.length) warnings.push("ai_no_lines");
   return { lines, warnings };

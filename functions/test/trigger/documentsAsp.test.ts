@@ -92,6 +92,23 @@ describe("a document belongs to the ASP of its location (§3.3, §11.2)", () => 
     expect((await t.db.collection("shipments").doc(SH_C).get()).get("documentId")).toBeUndefined();
   });
 
+  // P-223 (tester, SPEC §11.2): a line with the quantity only is refused (line_without_code), new or as a new version,
+  // and nothing is written. Red before: saved, a quantity line no reading could ever count.
+  it("a quantity line without material code or model is refused, nothing saved or changed", async () => {
+    const WH = `loc_TT-MAG-QONLY-${RUN}`;
+    await t.db.collection("locations").doc(WH).set({ ...loc(`TT-MAG-QONLY-${RUN}`, NORD), type: "asp_warehouse" });
+    const nw = ctxOf("asp_warehouse", NORD);
+    const number = `D-QONLY-${RUN}`;
+    await expect(documents.saveDocument.handler(nw, { kind: "ddt_in", number, locationId: WH, linesSource: "manual", lines: [{ kind: "quantity", quantity: 3 }] }))
+      .rejects.toMatchObject({ code: "invalid-argument", message: "line_without_code" });
+    expect((await t.db.collection("documents").where("number", "==", number).get()).empty).toBe(true);
+    // An existing document: a new version with such a line is refused, the saved one stays as it was.
+    const saved = await documents.saveDocument.handler(nw, { kind: "ddt_in", number: `${number}-B`, locationId: WH, linesSource: "manual", lines: [{ kind: "quantity", materialCode: "MC400170", quantity: 3 }] }) as { documentId: string };
+    await expect(documents.saveDocument.handler(nw, { documentId: saved.documentId, kind: "ddt_in", number: `${number}-B`, locationId: WH, linesSource: "manual", lines: [{ kind: "quantity", materialCode: "  ", quantity: 2 }] }))
+      .rejects.toMatchObject({ message: "line_without_code" });
+    expect((await t.db.collection("documents").doc(saved.documentId).get()).data()).toMatchObject({ version: 1, lines: [{ kind: "quantity", materialCode: "MC400170", quantity: 3 }] });
+  });
+
   // P-92: SPEC §11.2 "BOM lines also have a mandatory direction". Red before: a BOM line without direction was saved,
   // and the technician's screen, which keeps only lines with a direction, showed the BOM empty.
   it("a BOM line without direction is refused, nothing saved; DDT lines need none", async () => {

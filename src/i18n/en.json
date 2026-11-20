@@ -993,6 +993,7 @@
     "unsupported_file_type": "File type not allowed: use PDF, an image (JPEG, PNG, WebP), Excel or CSV.",
     "image_unreadable": "Unreadable image: try another photo or a PDF.",
     "bom_direction_required": "Every BOM line must say whether the piece is removed or installed.",
+    "line_without_code": "Enter at least the article code or the serial number.",
     "feature_disabled": "Automatic reading is not enabled.",
     "ai_daily_limit": "You have reached today's automatic readings.",
     "ai_unavailable": "The automatic reading service is not responding, try again later.",
