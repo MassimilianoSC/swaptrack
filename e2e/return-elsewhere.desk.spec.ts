@@ -41,6 +41,8 @@ test.describe("Reso — pezzo confermato in un altro reso (scrivania)", () => {
     await signIn(page, ACCOUNTS.aspWarehouseNord);
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
+    // D-81: sorting in the same pass is chosen first, then its fixed category.
+    await page.getByTestId("scan-sort-now").check();
     await page.getByTestId("scan-category-select").selectOption(SEED.sorting.radioCategoryId);
     for (const c of [a, b]) await scanManual(page, c, { withModel: true });
     for (const c of [a, b]) await expect(todayRow(page, c, "arrive_at_warehouse")).toContainText(tr("scan.sent"), { timeout: 60_000 });

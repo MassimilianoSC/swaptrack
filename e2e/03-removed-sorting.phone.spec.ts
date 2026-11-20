@@ -93,6 +93,8 @@ test.describe("Percorso 3 — arrivo di materiale smontato e smistamento (telefo
     await pickLocation(page, SEED.nord.warehouse);
     await page.goto("/scan?mode=arrive_at_warehouse");
     await expect(page.getByTestId("scan-flow-select")).toHaveValue("removed");
+    // D-81: the category of an arrival only with "Arrival and sorting".
+    await page.getByTestId("scan-sort-now").check();
     await page.getByTestId("scan-category-select").selectOption(SEED.sorting.radioCategoryId);
     await page.getByTestId("scan-flow-select").selectOption("new");
     await scanManual(page, code, { withModel: true });

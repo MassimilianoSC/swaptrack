@@ -52,7 +52,9 @@
         "p209-minor.desk.spec.ts",
         "anomaly-close.desk.spec.ts",
         "scan-camera-power.phone.spec.ts",
-        "scan-gun.desk.spec.ts"
+        "scan-gun.desk.spec.ts",
+        "scan-opens-top.phone.spec.ts",
+        "scan-arrival-choice.phone.spec.ts"
       ]
     },
     {

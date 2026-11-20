@@ -61,6 +61,8 @@ const CAMERA_IDLE_MS = 60_000;
 const VIDEO_MAX_SCREEN_SHARE = 0.58;
 // P-108: the look of a scan button that cannot be used yet (photo before the first reading, undo with nothing to undo).
 const OFF = "disabled:opacity-100 disabled:border-dashed disabled:bg-transparent disabled:text-muted";
+// P-218: a command of the phone's grid: icon above a short word, the word may wrap; one line from 768 px.
+const CMD = "flex-col gap-0.5 whitespace-normal px-1 text-center text-xs leading-tight md:flex-row md:gap-2 md:px-4 md:text-sm";
 
 // P-155: one audio context for the screen, woken by the worker's touches (iOS keeps silent a context no touch started,
 // and a new one per reading was never released). "first": the code was seen; "ok": recorded, when nothing was heard for
@@ -123,6 +125,8 @@ export default function Scan() {
   // P-212 / P-213 / P-214: why the camera is off ("gun": the gun is being used; "idle": a minute without readings), the
   // page not seen, a counter of readings (it restarts the minute), and whether a gun has read on this screen.
   const [cameraOff, setCameraOff] = React.useState<"gun" | "idle" | null>(null);
+  // P-218: the slider of "Sun", opened from its button.
+  const [sunOpen, setSunOpen] = React.useState(false);
   const [pageHidden, setPageHidden] = React.useState(() => document.visibilityState === "hidden");
   const [readingTick, setReadingTick] = React.useState(0);
   const gunSeen = React.useRef(false);
@@ -530,8 +534,9 @@ export default function Scan() {
       payload.flow = flow; if (shipmentId) payload.shipmentId = shipmentId; if (ddtApplies && ddtId) payload.ddtId = ddtId;
       // Sorting in the same pass: the category chosen in the list, otherwise the piece's suggestion; none = arrival only.
       // D-39: only removed material is sorted; an arrival of new material never carries a category.
-      if (flow === "removed") {
-        const sug = sortsOnArrival ? suggestedRef.current : null;
+      // P-220 (D-81): only with "Arrival and sorting" (a category chosen and then "Arrival only" was recorded all the same).
+      if (sortsOnArrival) {
+        const sug = suggestedRef.current;
         if (category || sug) payload.categoryId = category || sug;
         if (sug) payload.suggestedCategoryId = sug;
       }
@@ -902,6 +907,12 @@ export default function Scan() {
     return () => { document.removeEventListener("click", onClick); window.removeEventListener("focus", onClick); };
   }, [refocusWedge]);
   React.useEffect(() => { if (!windowOpen) refocusWedge(); }, [windowOpen, refocusWedge]);
+  // P-217: "Scan" opens at the top of the page, with the gun field selected (without scrolling to it).
+  React.useEffect(() => {
+    if (!location) return;
+    window.scrollTo(0, 0);
+    wedgeInput.current?.focus({ preventScroll: true });
+  }, [location?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const undo = async () => {
     const last = session[0];
@@ -1038,10 +1049,15 @@ export default function Scan() {
         ))}
         {role === "asp_technician" && <Button variant="outline" size="lg" onClick={siteDone} data-testid="scan-site-done">{t("scan.siteDoneButton")}</Button>}
       </div>
+      {/* P-220 (D-81): at the top the operation and the warehouse, in the row of the material menu (a row more would take
+          its height from the video, P-155). */}
       {mode === "arrive_at_warehouse" && (
-        <Select aria-label={t("scan.flow")} value={flow} onChange={(e) => changeFlow(e.target.value)} data-testid="scan-flow-select">
-          <option value="removed">{t("scan.flowRemoved")}</option><option value="new">{t("scan.flowNew")}</option>
-        </Select>
+        <div className="flex items-center gap-2">
+          <span className="shrink-0 text-sm font-semibold" data-testid="scan-mode-at">{t("scan.modeAt", { mode: t(`scan.modes.${mode}`), place: location?.code ?? "" })}</span>
+          <Select aria-label={t("scan.flow")} value={flow} onChange={(e) => changeFlow(e.target.value)} className="min-w-0 flex-1" data-testid="scan-flow-select">
+            <option value="removed">{t("scan.flowRemoved")}</option><option value="new">{t("scan.flowNew")}</option>
+          </Select>
+        </div>
       )}
       {ddtOffered && (
         <div className="space-y-1">
@@ -1062,7 +1078,14 @@ export default function Scan() {
         <div className="space-y-2">
           {/* D-58: no categories on this phone yet (never downloaded and no network): said, never an empty list. */}
           {sorting.fromCache && sorting.categories.length === 0 && <p className="text-sm text-warning" data-testid="scan-sorting-missing">{t("scan.sortingMissing")}</p>}
-          {mode === "arrive_at_warehouse" && <Checkbox id="scan-sort-now" label={t("scan.sortNow")} checked={sortNow} onChange={setSortNow} testId="scan-sort-now" />}
+          {/* P-220 (D-81): one choice, arrival only or arrival and sorting (it was a switch plus a first option of the
+              category menu saying the same thing). */}
+          {mode === "arrive_at_warehouse" && (
+            <div role="radiogroup" aria-label={t("scan.arrivalChoice")} className="grid grid-cols-2 gap-2" data-testid="scan-arrival-choice">
+              <Button type="button" role="radio" aria-checked={!sortNow} variant={!sortNow ? "primary" : "secondary"} onClick={() => { setSortNow(false); setCategory(""); }} className="whitespace-normal leading-tight" data-testid="scan-arrival-only">{t("scan.arrivalOnly")}</Button>
+              <Button type="button" role="radio" aria-checked={sortNow} variant={sortNow ? "primary" : "secondary"} onClick={() => setSortNow(true)} className="whitespace-normal leading-tight" data-testid="scan-sort-now">{t("scan.arrivalAndSort")}</Button>
+            </div>
+          )}
           {suggests && suggested && (
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-3xl font-bold text-primary" data-testid="scan-suggested-category">{t("scan.suggested")}: {catLabel(suggested)}</p>
@@ -1070,10 +1093,13 @@ export default function Scan() {
               {lastPieceBadge === "previously_new" && <span className="rounded bg-warning/15 text-warning text-xs font-semibold px-2 py-1" data-testid="scan-installed-new-material">{t("scan.installedNewMaterial")}</span>}
             </div>
           )}
-          <Select aria-label={t("scan.category")} value={category} onChange={(e) => { setCategory(e.target.value); setNewClass(""); }} data-testid="scan-category-select">
-            <option value="">{mode === "classify" ? t("scan.confirmEachPiece") : suggests ? t("scan.useSuggested") : t("scan.sortLater")}</option>
-            {sorting.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{c.labels[i18n.language as "it" | "en"]}</option>)}
-          </Select>
+          {/* P-220: in "Arrival" the category only with "Arrival and sorting". */}
+          {(mode === "classify" || sortsOnArrival) && (
+            <Select aria-label={t("scan.category")} value={category} onChange={(e) => { setCategory(e.target.value); setNewClass(""); }} data-testid="scan-category-select">
+              <option value="">{mode === "classify" ? t("scan.confirmEachPiece") : t("scan.useSuggested")}</option>
+              {sorting.categories.filter((c) => c.active).map((c) => <option key={c.id} value={c.id}>{c.labels[i18n.language as "it" | "en"]}</option>)}
+            </Select>
+          )}
           {mode === "classify" && (
             <Select aria-label={t("scan.newClass")} value={newClass} onChange={(e) => { setNewClass(e.target.value); setCategory(""); }} data-testid="scan-newclass-select">
               <option value="">{t("scan.removedMaterial")}</option><option value="defective">{t("scan.defective")}</option><option value="leftover">{t("scan.leftover")}</option>
@@ -1131,15 +1157,20 @@ export default function Scan() {
       {/* D-55 / P-121: single reading: the camera waits until the worker asks for the next piece. */}
       {awaitingNext && !burst && <Button size="lg" className="w-full" onClick={readNext} data-testid="scan-next"><Camera className="h-5 w-5" />{t("scan.readNext")}</Button>}
       {/* P-134 (D-62 criterion 6): the commands of every piece right under the camera, in the first screen. */}
-      <div className="flex flex-wrap gap-2 items-center">
+      {/* P-218: on the phone the buttons in a grid of three (two rows at most), 56 px high (gloves, §15) but narrow: the icon
+          above a short word; "Sun" is a button that opens its slider. From 768 px one row, as before. */}
+      <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:items-center" data-testid="scan-commands">
         {/* P-209: lit when the torch is on (it looked the same on and off). */}
-        {torch !== null && <Button variant={torch ? "primary" : "secondary"} aria-pressed={torch} onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
-        {exposure && <label className="flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
-          <input type="range" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
-        <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</Button>
+        {torch !== null && <Button variant={torch ? "primary" : "secondary"} aria-pressed={torch} onClick={async () => { if (await ctrl.current?.setTorch(!torch)) setTorch(!torch); }} className={CMD} data-testid="scan-torch"><Flashlight className="h-5 w-5" /> {t("scan.torch")}</Button>}
+        {exposure && <Button variant={sunOpen ? "primary" : "secondary"} aria-pressed={sunOpen} onClick={() => setSunOpen((o) => !o)} className={CMD} data-testid="scan-sun"><Sun className="h-5 w-5" aria-hidden /> {t("scan.exposure")}</Button>}
+        <Button variant="secondary" onClick={() => { localStorage.setItem("swaptrack.muted", muted ? "0" : "1"); setMuted(!muted); }} aria-label={t("scan.sound")} className={CMD} data-testid="scan-mute">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />} {t(muted ? "scan.soundOff" : "scan.soundOn")}</Button>
         {/* P-108: a button that cannot be used yet looks like one (dashed border, grey), and says why. */}
-        <Button variant="secondary" disabled={!session.length} onClick={undo} className={OFF} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
-        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={OFF} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
+        <Button variant="secondary" disabled={!session.length} onClick={undo} className={cn(OFF, CMD)} data-testid="scan-undo"><Undo2 className="h-5 w-5" /> {t("scan.undo")}</Button>
+        <Button variant="secondary" disabled={!lastEventId} onClick={takePhoto} className={cn(OFF, CMD)} data-testid="scan-photo-button"><Camera className="h-5 w-5" /> {t("scan.photo")}</Button>
+      </div>
+      <div className="flex flex-wrap gap-2 items-center">
+        {exposure && sunOpen && <label className="basis-full flex items-center gap-2 text-sm"><Sun className="h-5 w-5" aria-hidden />{t("scan.exposure")}
+          <input type="range" className="flex-1" min={exposure.min} max={0} step={exposure.step || 0.1} defaultValue={0} onChange={(e) => void ctrl.current?.setExposure(Number(e.target.value))} data-testid="scan-exposure" /></label>}
         {!lastEventId && <p className="basis-full text-xs text-muted" data-testid="scan-photo-hint">{t("scan.photoHint")}</p>}
         <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPhotoFile} data-testid="scan-photo-input" />
         <Checkbox id="scan-burst" label={t("scan.burst")} checked={burst} onChange={changeBurst} testId="scan-burst" />
@@ -1209,7 +1240,9 @@ export default function Scan() {
       )}
       {camError && <p role="alert" className="text-danger text-sm" data-testid="scan-camera-error">{t(`scan.errors.${camError}`)}</p>}
       <form onSubmit={(e) => { e.preventDefault(); void onCode(wedge, "wedge"); setWedge(""); }}>
-        <Input ref={wedgeInput} inputMode="none" autoFocus aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono" />
+        {/* P-217: no autoFocus (the browser scrolled the page down to this field, so "Scan" opened half way down); the
+            field is selected without scrolling when the screen opens. 16 px text: iOS zooms on a smaller field. */}
+        <Input ref={wedgeInput} inputMode="none" aria-label={t("scan.wedge")} placeholder={t("scan.wedge")} value={wedge} onChange={(e) => setWedge(e.target.value)} data-testid="scan-wedge-input" className="font-mono text-base" />
       </form>
       {/* P-134 (D-62 criteria 8, 9): one place when the code cannot be read. Without network the label photo is not
           offered (D-49): the digits remain. */}
