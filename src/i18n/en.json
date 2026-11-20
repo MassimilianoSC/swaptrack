@@ -61,6 +61,7 @@
     "dashboard": "Dashboard",
     "exports": "Exports",
     "exportsReports": "Exports and reports",
+    "areas": { "home": "Home", "dashboard": "Dashboard", "operations": "Operations", "documents": "Documents", "check": "To check", "reports": "Reports", "registry": "Registry", "config": "Configuration", "guide": "Guide" },
     "reports": "Reports"
   },
   "dashboard": {

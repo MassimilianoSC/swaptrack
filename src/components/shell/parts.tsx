@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronsLeft, ChevronsRight, Menu as MenuIcon, ScanLine, Wifi, WifiOff, MapPin, LogOut, User as UserIcon, BookOpen, Languages, Bell } from "lucide-react";
 import { useSession } from "@/app/session";
-import { navFor } from "@/app/nav";
+import { navAreasFor } from "@/app/nav";
 import { useOnline } from "@/app/hooks";
 import { call } from "@/lib/data/call";
 import { logoUrl } from "@/lib/data/storage";
@@ -47,15 +47,26 @@ export function Logo() {
 export function SideNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const { t } = useTranslation();
   const { claims } = useSession();
+  // P-222: the entries in areas. Open: the title of an area with at least two entries for this role; reduced: only a
+  // thin line between areas. The same component is the side bar and the ☰ menu of the phone (AppShell).
   return (
-    <nav aria-label={t("nav.main")} className="flex flex-col gap-1">
-      {navFor(claims?.role ?? "").map((n) => (
-        <NavLink key={n.to} to={n.to} end={n.to === "/"} onClick={onNavigate} title={collapsed ? t(n.label) : undefined}
-          data-testid={`nav-${n.to.replace(/\//g, "-").replace(/^-/, "") || "home"}`}
-          className={({ isActive }) => cn("flex items-center gap-3 rounded px-3 min-h-touch text-sm font-medium hover:bg-surface-2", isActive && "bg-primary/15 border-l-4 border-primary")}>
-          <n.icon className="h-5 w-5 shrink-0" aria-hidden />
-          {!collapsed && <span>{t(n.label)}</span>}
-        </NavLink>
+    <nav aria-label={t("nav.main")} className="flex flex-col gap-1 min-h-0 overflow-y-auto">
+      {navAreasFor(claims?.role ?? "").map((g, i) => (
+        <div key={g.area} className="flex flex-col gap-1" data-testid={`nav-group-${g.area}`}>
+          {i > 0 && (collapsed
+            ? <hr className="my-1 border-border" data-testid="nav-area-sep" />
+            : g.titled
+              ? <p className="mt-3 px-3 text-xs font-semibold uppercase tracking-wide text-muted" data-testid={`nav-area-${g.area}`}>{t(`nav.areas.${g.area}`)}</p>
+              : <div className="mt-2" aria-hidden />)}
+          {g.items.map((n) => (
+            <NavLink key={n.to} to={n.to} end={n.to === "/"} onClick={onNavigate} title={collapsed ? t(n.label) : undefined}
+              data-testid={`nav-${n.to.replace(/\//g, "-").replace(/^-/, "") || "home"}`}
+              className={({ isActive }) => cn("flex items-center gap-3 rounded px-3 min-h-touch text-sm font-medium hover:bg-surface-2", isActive && "bg-primary/15 border-l-4 border-primary")}>
+              <n.icon className="h-5 w-5 shrink-0" aria-hidden />
+              {!collapsed && <span>{t(n.label)}</span>}
+            </NavLink>
+          ))}
+        </div>
       ))}
     </nav>
   );

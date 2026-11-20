@@ -54,7 +54,8 @@
         "scan-camera-power.phone.spec.ts",
         "scan-gun.desk.spec.ts",
         "scan-opens-top.phone.spec.ts",
-        "scan-arrival-choice.phone.spec.ts"
+        "scan-arrival-choice.phone.spec.ts",
+        "nav-areas.desk.spec.ts"
       ]
     },
     {

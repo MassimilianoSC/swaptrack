@@ -61,6 +61,7 @@
     "dashboard": "Cruscotto",
     "exports": "Esportazioni",
     "exportsReports": "Esportazioni e rapporti",
+    "areas": { "home": "Home", "dashboard": "Cruscotto", "operations": "Operatività", "documents": "Documenti", "check": "Da verificare", "reports": "Report", "registry": "Anagrafiche", "config": "Configurazione", "guide": "Guida" },
     "reports": "Rapporti"
   },
   "dashboard": {
