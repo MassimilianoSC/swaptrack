@@ -1,6 +1,7 @@
 import * as React from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Search, MapPin, CheckCircle2 } from "lucide-react";
+import { Search, MapPin, CheckCircle2, PackageOpen, Tags, Truck, Inbox } from "lucide-react";
 import { useSession } from "@/app/session";
 import { loadFieldLocations, firstFieldLocations, type Row, type Location } from "@/lib/data/db";
 import { formatInstant, cn } from "@/lib/utils";
@@ -24,6 +25,8 @@ export default function SitePicker() {
   // P-125: the list on screen is the device's copy (no answer from the server yet): said, and asked again by itself.
   const [stale, setStale] = React.useState(false);
   const [q, setQ] = React.useState("");
+  // P-221: the list of warehouses opened again to change the chosen one.
+  const [changing, setChanging] = React.useState(false);
   const [meta, setMeta] = React.useState<{ count: number; at: number } | null>(() => {
     try { return JSON.parse(localStorage.getItem(META_KEY) ?? "null"); } catch { return null; }
   });
@@ -75,20 +78,55 @@ export default function SitePicker() {
     return (n ? all.filter((l) => l.code.toLowerCase().includes(n) || l.name.toLowerCase().includes(n)) : all).slice(0, 50);
   }, [list, q]);
 
+  const offlineInfo = (
+    <p className="text-sm text-muted tabular" data-testid="site-picker-offline-info" data-updated-at={meta?.at || undefined}>
+      {t("location.offlineInfo", { count: meta?.count ?? list?.length ?? 0, when: formatInstant(meta?.at ? new Date(meta.at) : null, i18n.language) })}
+    </p>
+  );
+  // P-221 (tester, 20/11): the warehouse with a warehouse chosen gets its operations, by the work to do ("Receive
+  // material", not "Scan"); the list of warehouses comes back only to change it ("Change warehouse": the chosen one stays
+  // until another is chosen). The technician keeps the list of sites.
+  if (wanted === "asp_warehouse" && location && !changing) {
+    const ops = [
+      { id: "arrive", to: "/scan?mode=arrive_at_warehouse", icon: PackageOpen },
+      { id: "classify", to: "/scan?mode=classify", icon: Tags },
+      { id: "ship", to: "/shipments", icon: Truck },
+      { id: "incoming", to: "/shipments?view=incoming", icon: Inbox },
+    ];
+    return (
+      <div className="space-y-4 max-w-3xl" data-testid="warehouse-home">
+        <h1 className="text-2xl font-semibold" data-testid="page-title">{t("home.warehouse.title")}</h1>
+        {offlineInfo}
+        <div className="rounded border-2 border-primary p-4 flex items-center gap-3" data-testid="warehouse-home-place">
+          <CheckCircle2 className="h-6 w-6 text-primary" aria-hidden />
+          <div className="flex-1 min-w-0"><p className="text-xs text-muted">{t("home.warehouse.active")}</p><p className="font-semibold truncate"><span className="font-mono">{location.code}</span> · {location.name}</p></div>
+          <Button variant="secondary" onClick={() => setChanging(true)} data-testid="warehouse-home-change">{t("home.warehouse.change")}</Button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {ops.map((o) => (
+            <Link key={o.id} to={o.to} className="flex items-center gap-3 rounded border border-border bg-surface p-4 min-h-touch hover:border-primary" data-testid={`warehouse-op-${o.id}`}>
+              <o.icon className="h-7 w-7 shrink-0 text-primary" aria-hidden />
+              <span><span className="block font-semibold">{t(`home.warehouse.${o.id}`)}</span><span className="block text-sm text-muted">{t(`home.warehouse.${o.id}Hint`)}</span></span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (error) return <ErrorState message={t("location.loadError")} onRetry={load} />;
   if (!list) return <Loading />;
   return (
     <div className="space-y-4 max-w-3xl">
       <h1 className="text-2xl font-semibold" data-testid="page-title">{t(wanted === "site" ? "location.pickSite" : "location.pickWarehouse")}</h1>
+      {changing && location && <Button variant="ghost" onClick={() => setChanging(false)} data-testid="warehouse-home-back">{t("home.warehouse.keep", { code: location.code })}</Button>}
       {stale && (
         <div className="flex items-center gap-2 rounded border border-warning p-2 text-sm text-warning" data-testid="site-picker-stale">
           <span className="flex-1">{t("location.stale")}</span>
           <Button size="sm" variant="secondary" onClick={() => void load(true)} data-testid="site-picker-retry">{t("common.retry")}</Button>
         </div>
       )}
-      <p className="text-sm text-muted tabular" data-testid="site-picker-offline-info" data-updated-at={meta?.at || undefined}>
-        {t("location.offlineInfo", { count: meta?.count ?? list.length, when: formatInstant(meta?.at ? new Date(meta.at) : null, i18n.language) })}
-      </p>
+      {offlineInfo}
       {location && (
         <div className="rounded border-2 border-primary p-4 flex items-center gap-3" data-testid="site-picker-selected">
           <CheckCircle2 className="h-6 w-6 text-primary" aria-hidden />
@@ -104,7 +142,7 @@ export default function SitePicker() {
         <ul className="space-y-2" data-testid="site-picker-results">
           {results.map((l) => (
             <li key={l.id}>
-              <button type="button" onClick={() => setLocation({ id: l.id, code: l.code, name: l.name, type: l.type })} data-testid="site-picker-item"
+              <button type="button" onClick={() => { setLocation({ id: l.id, code: l.code, name: l.name, type: l.type }); setChanging(false); }} data-testid="site-picker-item"
                 className={cn("w-full text-left rounded border border-border bg-surface px-4 min-h-touch py-2 flex items-center gap-3 hover:border-primary", location?.id === l.id && "border-primary")}>
                 <MapPin className="h-5 w-5 shrink-0" aria-hidden />
                 <span className="font-mono font-medium">{l.code}</span>

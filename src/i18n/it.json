@@ -575,6 +575,20 @@
   },
   "home": {
     "welcome": "Benvenuto {{name}}",
+    "warehouse": {
+      "title": "Operazioni di magazzino",
+      "active": "Magazzino attivo",
+      "change": "Cambia magazzino",
+      "keep": "Resta su {{code}}",
+      "arrive": "Ricevi materiale",
+      "arriveHint": "Arrivo di materiale nuovo o smontato, con il DDT.",
+      "classify": "Classifica materiale",
+      "classifyHint": "Smista / classifica i pezzi smontati.",
+      "ship": "Prepara una spedizione",
+      "shipHint": "Resi al cliente e trasferimenti.",
+      "incoming": "Ricevi un trasferimento",
+      "incomingHint": "I trasferimenti in arrivo in questo magazzino."
+    },
     "cards": {
       "organizations": "Le ASP, la loro attivazione e la lingua dei report.",
       "users": "Invita, disattiva e gestisci tutti gli utenti.",
@@ -1106,6 +1120,10 @@
     "confirmLateHint": "Spunta i pezzi mancanti che sono arrivati. I pezzi già confermati e quelli in più non si cambiano.",
     "extraLine": "In più",
     "confirmedWithDifferences": "Confermata con differenze",
+    "view": "Quali spedizioni",
+    "viewAll": "Tutte",
+    "viewIncoming": "In arrivo",
+    "incomingEmpty": "Nessun trasferimento in arrivo.",
     "attachNeedsNumber": "Prima di allegare il file scrivi il numero del DDT: il documento e il reso avranno lo stesso numero.",
     "titleDdt": "{{kind}} · DDT {{number}}",
     "titleRoute": "{{kind}} da {{from}} a {{to}}",

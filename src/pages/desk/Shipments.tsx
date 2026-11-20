@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Plus, Truck, PackageCheck } from "lucide-react";
 import { useSession } from "@/app/session";
@@ -14,7 +14,7 @@ import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Select, Field } from "@/components/ui/form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loading } from "@/components/states";
+import { Loading, Empty } from "@/components/states";
 import { formatInstant } from "@/lib/utils";
 import { useNames } from "@/lib/names";
 
@@ -33,6 +33,8 @@ export default function Shipments() {
   const [toLoc, setToLoc] = React.useState("");
 
   React.useEffect(() => claims?.orgId ? watchShipments({ role: claims.role!, orgId: claims.orgId }, setAll) : undefined, [claims]);
+  const [params, setParams] = useSearchParams();
+  const view = params.get("view");
 
   const role = claims?.role ?? "";
   const client = isClientRole(role);
@@ -56,7 +58,12 @@ export default function Shipments() {
   };
 
   if (!all) return <Loading />;
-  const toneFor = (s: string) => s === "draft" ? "warning" : s === "cancelled" ? "neutral" : s === "sent" ? "primary" : s === "received" || s === "confirmed" ? "success" : "neutral";
+  // P-221: "Incoming" (from the warehouse's Home, "Receive a transfer"): the transfers sent to this ASP and not yet
+  // arrived. Only for the ASP roles (they receive transfers).
+  const incoming = canReturn && view === "incoming";
+  const rows = incoming ? all.filter((s) => s.kind === "transfer" && s.status === "sent" && s.toAspId === claims?.orgId) : all;
+  const setView = (v: "all" | "incoming") => setParams(v === "incoming" ? { view: "incoming" } : {}, { replace: true });
+  const toneFor =(s: string) => s === "draft" ? "warning" : s === "cancelled" ? "neutral" : s === "sent" ? "primary" : s === "received" || s === "confirmed" ? "success" : "neutral";
 
   return (
     <div className="space-y-6">
@@ -68,7 +75,13 @@ export default function Shipments() {
           {(canTransferWithin || canTransferBetween) && <Button variant="secondary" onClick={() => openCreate("transfer")} data-testid="shipments-new-transfer"><Plus className="h-4 w-4" />{t("shipments.newTransfer")}</Button>}
         </>}
       />
-      <DataTable testId="shipments-table" rows={all} rowHref={(s) => `/shipments/${s.id}`} columns={[
+      {canReturn && (
+        <div role="radiogroup" aria-label={t("shipments.view")} className="flex gap-2" data-testid="shipments-view">
+          <Button type="button" role="radio" aria-checked={!incoming} variant={!incoming ? "primary" : "secondary"} onClick={() => setView("all")} data-testid="shipments-view-all">{t("shipments.viewAll")}</Button>
+          <Button type="button" role="radio" aria-checked={incoming} variant={incoming ? "primary" : "secondary"} onClick={() => setView("incoming")} data-testid="shipments-view-incoming">{t("shipments.viewIncoming")}</Button>
+        </div>
+      )}
+      {incoming && rows.length === 0 ? <Empty title={t("shipments.incomingEmpty")} /> : <DataTable testId="shipments-table" rows={rows} rowHref={(s) => `/shipments/${s.id}`} columns={[
         { key: "kind", header: t("shipments.kind"), render: (s) => <Badge>{t(`shipments.kinds.${s.kind}`)}</Badge> },
         // P-186: a return confirmed with missing or extra pieces says so (confirmedComplete false, §9.3).
         { key: "status", header: t("common.status"), value: (s) => (s.status === "confirmed" && s.confirmedComplete === false ? t("shipments.confirmedWithDifferences") : t(`shipments.statuses.${s.status}`)),
@@ -81,7 +94,7 @@ export default function Shipments() {
         { key: "ddt", header: t("shipments.ddtNumber"), value: (s) => s.ddtNumber ?? "—", className: "font-mono text-xs" },
         { key: "at", header: t("shipments.created_at"), value: (s) => formatInstant(s.createdAt?.toDate?.() ?? null, i18n.language) },
         { key: "a", header: "", render: (s) => <Link to={`/shipments/${s.id}`} className="text-primary hover:underline" data-testid={`shipments-row-${s.id}`}><PackageCheck className="inline h-4 w-4" /> {t("common.open")}</Link> },
-      ]} />
+      ]} />}
       <Dialog open={!!newKind} onOpenChange={(o) => { if (!o) setNewKind(null); }}>
         <DialogContent title={newKind === "return" ? t("shipments.newReturn") : t("shipments.newTransfer")} description={t("shipments.createHint")}>
           <div className="space-y-3">

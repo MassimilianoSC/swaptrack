@@ -134,9 +134,15 @@ export async function signIn(page: Page, email: string): Promise<void> {
 // ASP's offline cache may still be loading (the real case, P-78): nothing waits for it.
 export async function pickLocation(page: Page, code: string): Promise<void> {
   await page.goto("/");
-  await page.getByTestId("site-picker-search").fill(code);
+  // P-221: with a warehouse already chosen the warehouse's Home shows its operations: "Change warehouse" opens the list.
+  const search = page.getByTestId("site-picker-search");
+  const change = page.getByTestId("warehouse-home-change");
+  await expect(search.or(change)).toBeVisible({ timeout: 60_000 });
+  if (await change.isVisible()) await change.click();
+  await search.fill(code);
   await page.getByTestId("site-picker-item").filter({ hasText: code }).first().click();
-  await expect(page.getByTestId("site-picker-selected")).toContainText(code);
+  // A technician stays on the list of sites (the chosen one at the top); a warehouse gets its operations.
+  await expect(page.getByTestId("site-picker-selected").or(page.getByTestId("warehouse-home-place"))).toContainText(code);
 }
 
 // P-157: what the scanning screen shows over time, sampled in the page (a wait in the test would measure the test too).

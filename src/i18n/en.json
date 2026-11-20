@@ -575,6 +575,20 @@
   },
   "home": {
     "welcome": "Welcome {{name}}",
+    "warehouse": {
+      "title": "Warehouse operations",
+      "active": "Active warehouse",
+      "change": "Change warehouse",
+      "keep": "Stay on {{code}}",
+      "arrive": "Receive material",
+      "arriveHint": "Arrival of new or removed material, with the DDT.",
+      "classify": "Sort material",
+      "classifyHint": "Sort / classify the removed pieces.",
+      "ship": "Prepare a shipment",
+      "shipHint": "Returns to the client and transfers.",
+      "incoming": "Receive a transfer",
+      "incomingHint": "The transfers on their way to this warehouse."
+    },
     "cards": {
       "organizations": "ASPs, their activation and report language.",
       "users": "Invite, deactivate and manage every user.",
@@ -1106,6 +1120,10 @@
     "confirmLateHint": "Tick the missing pieces that have arrived. Pieces already confirmed and extra pieces cannot be changed.",
     "extraLine": "Extra",
     "confirmedWithDifferences": "Confirmed with differences",
+    "view": "Which shipments",
+    "viewAll": "All",
+    "viewIncoming": "Incoming",
+    "incomingEmpty": "No incoming transfers.",
     "attachNeedsNumber": "Before attaching the file write the DDT number: the document and the return will have the same number.",
     "titleDdt": "{{kind}} · DDT {{number}}",
     "titleRoute": "{{kind}} from {{from}} to {{to}}",
