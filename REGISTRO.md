@@ -4,6 +4,7 @@ Lo scrive la memoria storica. In testa: DOVE SIAMO. Poi: obiettivo e criteri, de
 
 ## DOVE SIAMO
 
+- **20/11/2026: LOTTO 18 COMPLETO su main (app 07c812f)**: tabella delle righe (P-223, server 6f162c7 e app d6befdb) e i 5 difetti della rilettura incrociata di o2 (P-224); guide e COLLAUDO.html (F41–F45, filtro «solo la tabella dei documenti»). Giro in attesa del via. Da pubblicare: hosting:app e functions:documents.
 - **20/11/2026: LOTTI 16 e 17 PUBBLICATI** (d092830: push, build:demo, hosting:app). Main sbloccato. Al tester: COLLAUDO.html (F34–F40, filtro «Mostra»), risalvare BG125, rifare la misura della batteria. Restano delle richieste del 20/11: P-223 (tabella, quando si sa la data) e P-177 (e-mail di invito, console del committente).
 - **20/11/2026: LOTTI 16 e 17 COMPLETI su main (app 0137c84)**: P-217…P-222, guide e COLLAUDO.html (F34–F40). Giro unico in attesa del via. P-223 (tabella) in attesa della data della presentazione.
 - **20/11/2026: documento nuovo del tester** (swaptrack-guida/MODIFICHE_2011/, con indirizzi e-mail veri: fuori da git). Gran parte delle voci già fatta nei lotti 11-15; il «#1» di BG125 resta sbagliato perché salvato prima di P-169 (basta risalvarlo). Nuove: P-217…P-223. **Lotto 16 partito** (P-217, P-218, P-220 a o3; P-219 a o2). Lotti 17 (P-221, P-222) e 18 (P-223, tabella) da valutare col tempo che resta: la presentazione è stata spostata di nuovo, la data si saprà pochi giorni prima. Nomi: memoria storica `swaptrack-ec`, o2 `swaptrack-b6`, o3 `swaptrack-74`.

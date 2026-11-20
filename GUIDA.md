@@ -1,5 +1,5 @@
 # Guida di SwapTrack
-App descritta: commit 0137c84 · Testo della guida: sha ca1b27ce1d24 · Data: 20/11/2026
+App descritta: commit 07c812f · Testo della guida: sha 468604b7cbf7 · Data: 20/11/2026
 
 ## Come usare questa guida
 
@@ -382,12 +382,12 @@ Limiti: «Al massimo 10 file per documento.»; ogni file al massimo 5 MB («File
 **Righe da un Excel o CSV.** Se l'app non riesce a leggere le righe di un Excel lo dice («Non riesco a leggere le righe di questo Excel…», oppure «Non riesco ad aprire la lettura degli Excel: ricarica l'app e riprova…»); il file resta comunque allegato. Quando aggiungi un Excel o un CSV si apre «Colonne dell'Excel»: «Scegli quale colonna contiene ogni dato. La scelta viene ricordata per il prossimo file.» Se vedi «Carico la scelta delle colonne salvata… Le colonne che scegli tu restano.», l'app sta recuperando la scelta dell'ultima volta: puoi già scegliere.
 1. Scegli la colonna del «Seriale», oppure quelle del «Codice materiale» e della «Quantità».
 2. Sotto vedi quante righe sono pronte, per esempio «12 righe pronte, 1 non lette.»
-3. Premi «Usa queste righe». Le righe si aggiungono a quelle già scritte e vedi, per esempio, «12 righe lette dal file (1 non lette): controllale, poi Salva.»
+3. Premi «Usa queste righe». Le righe entrano nella tabella, in fondo, e vedi per esempio «12 righe lette dal file (1 non lette). Controlla i dati estratti confrontandoli con il documento, poi salva.»
 4. Controlla le righe e premi «Salva».
 
 **Lettura automatica.** Il pulsante «Leggi automaticamente» c'è solo se l'Amministratore cliente ha acceso la lettura automatica nelle «Impostazioni» (scheda «Funzioni»), e solo su un documento già salvato con almeno una foto o un PDF. Serve la rete.
 1. Aggiungi le foto o il PDF del documento e premi «Salva». Se ci sono file non ancora salvati vedi «Salva prima i file nuovi, poi usa la lettura automatica.»
-2. Premi «Leggi automaticamente». Le righe proposte si aggiungono a quelle già scritte: vedi per esempio «8 righe proposte dalla lettura automatica: controllale, poi Salva.»
+2. Premi «Leggi automaticamente». Le righe proposte entrano nella tabella, in fondo: vedi per esempio «8 righe proposte dalla lettura automatica. Controlla i dati estratti confrontandoli con il documento, poi salva.» Se l'app non riesce a leggere la quantità o il codice articolo di una riga, lascia la casella vuota e bordata di rosso, con l'avviso «In alcune righe la quantità o il codice articolo non si leggono: le caselle vuote sono evidenziate, compilale guardando il documento.»; se un documento elenca più seriali insieme, ognuno va su una riga sua.
 3. Controlla sempre ogni riga con il documento di carta, correggi ciò che serve e premi «Salva». Finché non salvi, nulla viene registrato.
 
 Avvisi possibili: «Alcune righe non sono state capite e non compaiono: confrontale con il documento.»; «Un file non si può leggere automaticamente (per esempio un Excel): usa la scelta delle colonne.»; «Il documento ha troppe righe: ne è stata letta solo una parte.»; «Nel documento non è stata trovata nessuna riga.» Se vedi «Hai raggiunto le letture automatiche di oggi.» o «Il servizio di lettura automatica non risponde, riprova più tardi.», scrivi le righe a mano o usa l'Excel.
@@ -399,7 +399,7 @@ Prima prepara il DDT nell'app (una volta per ogni DDT):
 2. «Tipo»: «DDT (arrivo)».
 3. «Numero»: il numero scritto sul DDT di carta.
 4. «Luogo»: il tuo magazzino.
-5. «Righe»: un numero di serie per riga, copiato dal DDT (puoi scrivere anche «seriale codice-materiale»: il numero di serie, uno spazio e il codice materiale). Per i pezzi senza numero di serie scrivi una riga di quantità: «#» seguito dalla quantità e dal codice materiale (per esempio `#3 MC-A`). Una riga «#1» seguita da un codice che non è un codice materiale del catalogo vale come numero di serie: «#1 KRD901305/11» è il pezzo con quel seriale. Sotto il riquadro vedi come l'app ha capito le righe, per esempio «Seriali: 4 · righe a quantità (pezzi senza seriale): 1». Puoi anche allegare il DDT e leggerne le righe da un Excel o con la lettura automatica: vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto).
+5. «Righe»: le righe si scrivono in una tabella con tre colonne, «Quantità», «Codice articolo» e «Numero seriale». Un documento nuovo parte con una riga, quantità 1; «Aggiungi riga» ne aggiunge un'altra, il cestino («Elimina riga») la toglie. Per un pezzo con numero di serie scrivi il seriale (e, se lo sai, il codice articolo): la quantità diventa 1 e non si cambia. Per i pezzi senza numero di serie scrivi la quantità e il codice articolo. Una riga con la sola quantità non si salva; le righe completamente vuote si ignorano. Con «Incolla righe» puoi incollare più righe insieme: copiate da un foglio Excel (colonne Quantità, Codice articolo, Numero seriale) oppure una per riga, come «SERIALE», «SERIALE CODICE» o «#3 CODICE»; poi «Aggiungi le righe». Se una riga è sbagliata, dopo «Salva» la casella è bordata di rosso e sotto la riga c'è il motivo: «Inserisci una quantità intera maggiore di zero.», «Inserisci una quantità fino a 100000.» oppure «Inserisci almeno il codice articolo o il numero seriale.»; in alto «Alcune righe non sono corrette: correggile, poi salva.». Sotto la tabella vedi il riepilogo, per esempio «Seriali: 4 · righe a quantità (pezzi senza seriale): 1». Puoi anche allegare il DDT e leggerne le righe da un Excel o con la lettura automatica: vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto).
 6. Premi «Salva». Vedi «Salvato».
 
 Se vedi «Esiste già un documento con questo numero per questa ASP.», hai già inserito quel DDT: controlla in «Documenti» prima di continuare.
@@ -560,12 +560,12 @@ Ogni azione chiede una conferma. Non puoi disattivare, bloccare o eliminare te s
 
 1. Apri «Documenti» e premi «Nuovo documento».
 2. «Tipo»: «BOM». «Numero»: il riferimento della lista. «Luogo»: il sito.
-3. Scrivi i pezzi nei due riquadri «Da smontare» e «Da installare»: un numero di serie per riga (oppure una riga di quantità, come `#3 MC-A`).
+3. Scrivi i pezzi nelle due tabelle «Materiale da installare» e «Materiale da smontare», con le stesse colonne e regole del DDT (vedi [Come registro l'arrivo di materiale nuovo con il DDT?](#come-registro-larrivo-di-materiale-nuovo-con-il-ddt)). Una delle due può restare vuota.
 4. Premi «Salva».
 
-**Da un file.** Puoi allegare la BOM e leggerne le righe (vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto)). Per un Excel o un CSV, in «Colonne dell'Excel» c'è anche «Smontare o installare»: scegli la colonna che lo dice e poi, in «Valore che vuol dire «smontare»» e «Valore che vuol dire «installare»», il valore usato nel file; oppure scegli «Tutte da smontare» o «Tutte da installare». Con la lettura automatica, le righe di cui l'app non capisce la direzione finiscono nel riquadro «Righe senza direzione: spostale in «Da smontare» o «Da installare»», con l'avviso «Alcune righe della BOM non dicono se smontare o installare: spostale nella casella giusta.»
+**Da un file.** Puoi allegare la BOM e leggerne le righe (vedi [Come preparo un documento e allego file o foto?](#come-preparo-un-documento-e-allego-file-o-foto)). Per un Excel o un CSV, in «Colonne dell'Excel» c'è anche «Smontare o installare»: scegli la colonna che lo dice e poi, in «Valore che vuol dire «smontare»» e «Valore che vuol dire «installare»», il valore usato nel file; oppure scegli «Tutte da smontare» o «Tutte da installare». Con la lettura automatica, le righe di cui l'app non capisce la direzione finiscono nella tabella «Materiale da assegnare: indica per ogni riga se è da installare o da smontare», con l'avviso «Alcune righe della BOM non dicono se smontare o installare: assegnale a «Materiale da installare» o «Materiale da smontare».»
 
-**Righe senza direzione.** Anche una BOM salvata in passato può mostrare il riquadro «Righe senza direzione: spostale in «Da smontare» o «Da installare»». Sposta ogni riga nel riquadro giusto: finché ne resta una, «Salva» risponde «Ogni riga della BOM deve dire se il pezzo va smontato o installato.»
+**Righe senza direzione.** Anche una BOM salvata in passato può mostrare la tabella «Materiale da assegnare…». Sotto ogni riga premi «Da installare» o «Da smontare»: finché ne resta una da assegnare, la BOM non si salva.
 
 Cosa succede dopo: quando il tecnico preme «Ho finito in questo sito», e ogni notte, l'app confronta con la BOM i pezzi letti nel sito **dopo** il caricamento della BOM (lo stesso fa «Confronta»). Se qualcosa non torna, compare l'avviso «BOM differenza». Se l'Amministratore cliente ha scelto «Accetta in silenzio (senza avviso)» nelle «Impostazioni», i pezzi letti nel sito ma assenti dalla BOM non fanno nascere l'avviso.
 

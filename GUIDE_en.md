@@ -1,5 +1,5 @@
 # SwapTrack guide
-App described: commit 0137c84 · Guide text: sha 56dbc5b8b961 · Date: 20/11/2026
+App described: commit 07c812f · Guide text: sha f7e94cd94258 · Date: 20/11/2026
 
 ## How to use this guide
 
@@ -382,12 +382,12 @@ Limits: «At most 10 files per document.»; every file at most 5 MB («File too 
 **Lines from an Excel or CSV.** If the app cannot read the lines of an Excel it says so («I cannot read the lines of this Excel…», or «I cannot open the reading of Excel files: reload the app and try again…»); the file stays attached anyway. When you add an Excel or a CSV, «Excel columns» opens: «Choose which column holds each field. The choice is kept for the next file.» If you see «Loading the saved column choice… The columns you choose stay.», the app is fetching the choice of last time: you can already choose.
 1. Choose the column of the «Serial», or those of the «Material code» and of the «Quantity».
 2. Below you see how many lines are ready, for example «12 lines ready, 1 not read.»
-3. Press «Use these lines». The lines are added to those already typed and you see, for example, «12 lines read from the file (1 not read): check them, then Save.»
+3. Press «Use these lines». The lines go into the table, at the bottom, and you see for example «12 lines read from the file (1 not read). Check the extracted data against the document, then save.»
 4. Check the lines and press «Save».
 
 **Automatic reading.** The «Read automatically» button is there only if the Client administrator has turned on the automatic reading in «Settings» (tab «Features»), and only on a document already saved with at least one photo or one PDF. It needs the network.
 1. Add the photos or the PDF of the document and press «Save». If there are files not saved yet you see «Save the new files first, then use the automatic reading.»
-2. Press «Read automatically». The proposed lines are added to those already typed: you see for example «8 lines proposed by the automatic reading: check them, then Save.»
+2. Press «Read automatically». The proposed lines go into the table, at the bottom: you see for example «8 lines proposed by the automatic reading. Check the extracted data against the document, then save.» If the app cannot read the quantity or the article code of a line, it leaves the box empty with a red border, with the warning «In some lines the quantity or the article code cannot be read: the empty boxes are highlighted, fill them in looking at the document.»; if a document lists several serials together, each one goes on its own line.
 3. Always check every line against the paper document, correct what is needed and press «Save». Until you save, nothing is recorded.
 
 Possible warnings: «Some lines were not understood and are missing: compare them with the document.»; «A file cannot be read automatically (for example an Excel): use the column mapping.»; «The document has too many lines: only part of them was read.»; «No line was found in the document.» If you see «You have reached today's automatic readings.» or «The automatic reading service is not responding, try again later.», type the lines by hand or use the Excel.
@@ -399,7 +399,7 @@ First prepare the DDT in the app (once for every DDT):
 2. «Kind»: «DDT (arrival)».
 3. «Number»: the number written on the paper DDT.
 4. «Location»: your warehouse.
-5. «Lines»: one serial number per line, copied from the DDT (you can also write "serial material-code": the serial number, a space and the material code). For the pieces without a serial number write a quantity line: "#" followed by the quantity and the material code (for example `#3 MC-A`). A «#1» line followed by a code that is not a material code of the catalog counts as a serial number: «#1 KRD901305/11» is the piece with that serial. Below the box you see how the app understood the lines, for example «Serials: 4 · quantity lines (pieces without a serial): 1». You can also attach the DDT and read its lines from an Excel or with the automatic reading: see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos).
+5. «Lines»: the lines are written in a table with three columns, «Quantity», «Article code» and «Serial number». A new document starts with one line, quantity 1; «Add line» adds another one, the bin («Delete line») removes it. For a piece with a serial number write the serial (and, if you know it, the article code): the quantity becomes 1 and cannot be changed. For the pieces without a serial number write the quantity and the article code. A line with only the quantity cannot be saved; completely empty lines are ignored. With «Paste lines» you can paste several lines at once: copied from an Excel sheet (columns Quantity, Article code, Serial number) or one per line, like «SERIAL», «SERIAL CODE» or «#3 CODE»; then «Add the lines». If a line is wrong, after «Save» the box has a red border and below the line there is the reason: «Enter a whole quantity greater than zero.», «Enter a quantity up to 100000.» or «Enter at least the article code or the serial number.»; at the top «Some lines are not correct: fix them, then save.». Below the table you see the summary, for example «Serials: 4 · quantity lines (pieces without a serial): 1». You can also attach the DDT and read its lines from an Excel or with the automatic reading: see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos).
 6. Press «Save». You see «Saved».
 
 If you see «A document with this number already exists for this ASP.», you have already entered that DDT: check in «Documents» before going on.
@@ -560,12 +560,12 @@ Every action asks for a confirmation. You cannot deactivate, block or delete you
 
 1. Open «Documents» and press «New document».
 2. «Kind»: «BOM». «Number»: the reference of the list. «Location»: the site.
-3. Write the pieces in the two boxes «To remove» and «To install»: one serial number per line (or a quantity line, like `#3 MC-A`).
+3. Write the pieces in the two tables «Material to install» and «Material to remove», with the same columns and rules as the DDT (see [How do I record the arrival of new material with the DDT?](#how-do-i-record-the-arrival-of-new-material-with-the-ddt)). One of the two can stay empty.
 4. Press «Save».
 
-**From a file.** You can attach the BOM and read its lines (see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos)). For an Excel or a CSV, in «Excel columns» there is also «Remove or install»: choose the column that says it and then, in «Value meaning "remove"» and «Value meaning "install"», the value used in the file; or choose «All to remove» or «All to install». With the automatic reading, the lines whose direction the app does not understand end up in the box «Lines without direction: move them to «To remove» or «To install»», with the warning «Some BOM lines do not say remove or install: move them to the right box.»
+**From a file.** You can attach the BOM and read its lines (see [How do I prepare a document and attach files or photos?](#how-do-i-prepare-a-document-and-attach-files-or-photos)). For an Excel or a CSV, in «Excel columns» there is also «Remove or install»: choose the column that says it and then, in «Value meaning "remove"» and «Value meaning "install"», the value used in the file; or choose «All to remove» or «All to install». With the automatic reading, the lines whose direction the app does not understand end up in the table «Material to assign: say for each line whether it is to install or to remove», with the warning «Some BOM lines do not say remove or install: assign them to «Material to install» or «Material to remove».»
 
-**Lines without direction.** A BOM saved in the past can also show the box «Lines without direction: move them to «To remove» or «To install»». Move every line to the right box: while one is left, «Save» answers «Every BOM line must say whether the piece is removed or installed.»
+**Lines without direction.** A BOM saved in the past can also show the table «Material to assign…». Below every line press «To install» or «To remove»: while one is left to assign, the BOM cannot be saved.
 
 What happens next: when the technician presses «I have finished at this site», and every night, the app compares with the BOM the pieces scanned at the site **after** the BOM was uploaded («Compare» does the same). If something does not match, the alert «BOM difference» appears. If the Client administrator has chosen «Accept silently (no alert)» in «Settings», the pieces scanned at the site but missing from the BOM do not raise the alert.
 
