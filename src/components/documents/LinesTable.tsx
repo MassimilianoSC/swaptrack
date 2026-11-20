@@ -63,7 +63,8 @@ export function LinesTable(p: LinesTableProps) {
           </thead>
           <tbody>
             {p.rows.map((r) => {
-              const err = p.showErrors ? rowError(r) : null;
+              // P-224: a row with a field not read (automatic reading, or a model without code) says why at once.
+              const err = p.showErrors || r.missing?.length ? rowError(r) : null;
               const missQ = r.missing?.includes("quantity"), missC = r.missing?.includes("materialCode");
               const hasSerial = !!r.serial.trim();
               return (
@@ -71,7 +72,7 @@ export function LinesTable(p: LinesTableProps) {
                   <tr data-testid={`${p.testId}-row`} data-error={err ?? undefined}>
                     <td className="py-1 pr-2 align-top">
                       <input aria-label={t("documents.colQuantity")} inputMode="numeric" value={hasSerial ? "1" : r.quantity} disabled={p.readOnly || hasSerial}
-                        onChange={(e) => set(r.id, { quantity: e.target.value }, "quantity")} className={cell(err === "quantity" || err === "serialQuantity" || !!missQ)} data-testid={`${p.testId}-qty`} data-missing={missQ || undefined} />
+                        onChange={(e) => set(r.id, { quantity: e.target.value }, "quantity")} className={cell(err === "quantity" || err === "quantityMax" || err === "serialQuantity" || !!missQ)} data-testid={`${p.testId}-qty`} data-missing={missQ || undefined} />
                     </td>
                     <td className="py-1 pr-2 align-top">
                       <input aria-label={t("documents.colCode")} value={r.materialCode} readOnly={p.readOnly}

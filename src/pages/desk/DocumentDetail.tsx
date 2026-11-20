@@ -11,7 +11,7 @@ import { normalizeBarcode } from "@/lib/codeId.js";
 import { useLocationsFor } from "@/lib/data/useLocations";
 import { extractLines } from "@/lib/documents/extract";
 import { readTable, TableReadError, type Sheet } from "@/lib/import/readTable";
-import { carryModels, newRow, rowFromLine, rowError, rowIsEmpty, linesFromRows, type DocLine, type LineRow, type Direction } from "@/lib/documents/lines";
+import { carryModels, fillCodesFromModels, newRow, rowFromLine, rowError, rowIsEmpty, linesFromRows, type DocLine, type LineRow, type Direction } from "@/lib/documents/lines";
 import { LinesTable } from "@/components/documents/LinesTable";
 import { quantityLabel, catalogIndex } from "@/lib/documents/quantityLabel";
 import { isClientRole } from "@shared/roles";
@@ -69,6 +69,12 @@ export default function DocumentDetail() {
       setCatalog(catalogIndex(ms));
     }).catch(() => undefined);
   }, []);
+  // P-224: a saved quantity line with only its model shows the model's article code, once catalog and lines are there.
+  React.useEffect(() => {
+    const fill = (rs: LineRow[]) => fillCodesFromModels(rs, (id) => catalog.byId.get(id)?.materialCode ?? undefined);
+    setRows(fill);
+    setBomRows((b) => ({ install: fill(b.install), remove: fill(b.remove), none: fill(b.none) }));
+  }, [catalog, doc]);
   // §11.2 / P-92 / P-223: the lines of a BOM in two tables, to install and to remove; every line takes its table's
   // direction. Lines without direction (a BOM saved before P-92, or the automatic reading that could not tell) wait in a
   // third table until each is given one (the server refuses them).

@@ -100,7 +100,7 @@
     "toInstall": "To install",
     "toRemove": "To remove",
     "rowsInvalid": "Some lines are not correct: fix them, then save.",
-    "rowError": {"quantity":"Enter a whole quantity greater than zero.","codeOrSerial":"Enter at least the article code or the serial number.","serialQuantity":"A piece with a serial must have quantity 1."},
+    "rowError": {"quantity":"Enter a whole quantity greater than zero.","quantityMax":"Enter a quantity up to 100000.","codeOrSerial":"Enter at least the article code or the serial number.","serialQuantity":"A piece with a serial must have quantity 1."},
     "linesSummary": "Serials: {{serials}} · quantity lines (pieces without a serial): {{quantities}}",
     "markChecked": "Mark checked",
     "compare": "Compare",

@@ -164,6 +164,40 @@ test.describe("Tabella delle righe dei documenti (scrivania)", () => {
     }
   });
 
+  // P-224 (o2's review): a saved quantity line with only its model (the server accepts it) showed an empty code: with
+  // quantity 1 it vanished on the next save, with more it was red and the document could not be saved again.
+  test("riga a quantità salvata col solo modello: il codice dal catalogo; senza codice nel catalogo resta, in rosso", async ({ page }) => {
+    test.setTimeout(180_000);
+    const L = "document-lines";
+    const id = `e2e-${uniqueCode("DOCM").toLowerCase()}`;
+    const code = String((await emulatorRead("models/mdl_MC400170")).materialCode);
+    const now = new Date();
+    await emulatorSetDoc(`documents/${id}`, {
+      kind: "ddt_in", number: uniqueCode("DDTM"), aspId: SEED.nord.orgId, locationId: `loc_${SEED.nord.warehouse}`, files: [],
+      lines: [{ kind: "quantity", quantity: 2, materialCode: null, modelId: "mdl_MC400170" }, { kind: "quantity", quantity: 1, materialCode: null, modelId: "mdl_E2E_NONE" }],
+      linesSource: "manual", version: 1, status: "open", createdAt: now, updatedAt: now, history: [], duplicateOf: null, shipmentId: null,
+    });
+    await signIn(page, ACCOUNTS.aspAdminNord);
+    await page.goto(`/documents/${id}`);
+    const rows = rowsOf(page, L);
+    await expect(rows).toHaveCount(2, { timeout: 30_000 });
+    await expect(cell(rows.nth(0), L, "code")).toHaveValue(code);
+    await expect(cell(rows.nth(0), L, "code")).not.toHaveClass(RED);
+    // The model the catalog cannot name: kept, red, and it says why before "Save".
+    await expect(cell(rows.nth(1), L, "qty")).toHaveValue("1");
+    await expect(cell(rows.nth(1), L, "code")).toHaveValue("");
+    await expect(cell(rows.nth(1), L, "code")).toHaveClass(RED);
+    await expect(under(rows.nth(1), L)).toHaveText(MSG.codeOrSerial);
+    await page.getByTestId("document-save").click();
+    await expect(under(rows.nth(1), L)).toHaveText(MSG.codeOrSerial);
+    expect(((await emulatorRead(`documents/${id}`)).lines as unknown[]).length).toBe(2);
+    await cell(rows.nth(1), L, "code").fill("MC400107");
+    await page.getByTestId("document-save").click();
+    await expect(page.getByText(tr("common.saved")).last()).toBeVisible({ timeout: 30_000 });
+    const lines = (await emulatorRead(`documents/${id}`)).lines as Array<Record<string, unknown>>;
+    expect(lines.map((l) => [l.quantity, l.materialCode])).toEqual([[2, code], [1, "MC400107"]]);
+  });
+
   test("BOM: «Materiale da installare», «Materiale da smontare» e le righe senza direzione da assegnare", async ({ page }) => {
     test.setTimeout(180_000);
     const id = `e2e-${uniqueCode("BOMT").toLowerCase()}`;

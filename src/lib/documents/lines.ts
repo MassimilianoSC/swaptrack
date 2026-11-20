@@ -78,7 +78,8 @@ export function linesFromSheet(sheet: Sheet, map: LineMapping, withDirection: bo
     if (r.every((c) => !(c ?? "").trim())) continue;
     const serial = cell(r, iSerial), mat = cell(r, iMat), qty = Number(cell(r, iQty).replace(",", "."));
     const direction = directionOf(r);
-    if (serial) lines.push({ kind: "serial", codeRaw: serial.replace(/\s+/g, ""), materialCode: mat ? mat.replace(/\s+/g, "") : null, direction });
+    // P-224: the serial as written (trimmed): its spaces are part of it, as for the scanner (normalizeBarcode, codeId).
+    if (serial) lines.push({ kind: "serial", codeRaw: serial, materialCode: mat ? mat.replace(/\s+/g, "") : null, direction });
     else if (mat && Number.isInteger(qty) && qty > 0) lines.push({ kind: "quantity", quantity: qty, materialCode: mat.replace(/\s+/g, ""), direction });
     else skipped++;
   }
@@ -105,7 +106,7 @@ export interface LineRow {
   direction?: Direction;
   missing?: Array<"quantity" | "materialCode">;
 }
-export type RowError = "quantity" | "codeOrSerial" | "serialQuantity";
+export type RowError = "quantity" | "quantityMax" | "codeOrSerial" | "serialQuantity";
 
 let rowSeq = 0;
 export const newRow = (direction?: Direction): LineRow => ({ id: `r${++rowSeq}`, quantity: "1", materialCode: "", serial: "", direction });
@@ -117,31 +118,51 @@ export function rowFromLine(l: ProposedLine): LineRow {
   if (l.kind === "serial") return { ...row, serial: l.codeRaw, materialCode: l.materialCode ?? "", modelId: l.modelId ?? null };
   const missing: LineRow["missing"] = [];
   if (l.quantity == null) missing.push("quantity");
-  if (!l.materialCode && !l.modelId) missing.push("materialCode");
+  // P-224: a saved quantity line may carry only its model (the server accepts it): the article code comes from the
+  // catalog (fillCodesFromModels); until then, or if the catalog has none, it is flagged, never dropped in silence.
+  if (!l.materialCode?.trim()) missing.push("materialCode");
   return { ...row, quantity: l.quantity == null ? "" : String(l.quantity), materialCode: l.materialCode ?? "", modelId: l.modelId ?? null, ...(missing.length ? { missing } : {}) };
+}
+
+// P-224: the article code of a quantity row that has only a model, from the catalog (codeOf: model id -> its material
+// code). A row the catalog cannot name stays flagged.
+export function fillCodesFromModels(rows: LineRow[], codeOf: (modelId: string) => string | undefined): LineRow[] {
+  return rows.map((r) => {
+    if (r.serial.trim() || r.materialCode.trim() || !r.modelId) return r;
+    const code = codeOf(r.modelId)?.trim();
+    if (!code) return r;
+    const missing = (r.missing ?? []).filter((m) => m !== "materialCode");
+    return { ...r, materialCode: code, missing: missing.length ? missing : undefined };
+  });
 }
 
 // A row the automatic reading proposed is never "empty": its missing fields must be filled in or the row removed.
 export const rowIsEmpty = (r: LineRow) => !r.missing?.length && !r.serial.trim() && !r.materialCode.trim() && (r.quantity.trim() === "" || r.quantity.trim() === "1");
 
-// The rules of a row (the tester's three messages); an empty row is ignored, never an error.
+// P-224: the largest quantity of a line, as the server (functions/src/core/documentLines.ts).
+export const MAX_QUANTITY = 100000;
+
+// The rules of a row (the tester's three messages, and the server's largest quantity); an empty row is ignored.
 export function rowError(r: LineRow): RowError | null {
   if (rowIsEmpty(r)) return null;
   const serial = r.serial.trim(), code = r.materialCode.trim(), q = r.quantity.trim();
   if (!/^\d+$/.test(q) || Number(q) < 1) return "quantity";
+  if (Number(q) > MAX_QUANTITY) return "quantityMax";
   if (!serial && !code) return "codeOrSerial";
   if (serial && Number(q) !== 1) return "serialQuantity";
   return null;
 }
 
-// Rows -> lines (rows with an error are the caller's to stop; empty rows are left out).
+// Rows -> lines (rows with an error are the caller's to stop; empty rows are left out). P-224: the model a line carried
+// is not put back here but by carryModels, only on the lines still the same (a corrected code or serial loses it); the
+// serial is only trimmed (its spaces are part of it, as for the scanner).
 export function linesFromRows(rows: LineRow[], direction?: Direction): DocLine[] {
   return rows.filter((r) => !rowIsEmpty(r)).map((r): DocLine => {
     const dir = direction ?? r.direction;
     const code = r.materialCode.replace(/\s+/g, "") || null;
-    const base = { ...(r.modelId ? { modelId: r.modelId } : {}), ...(dir ? { direction: dir } : {}) };
+    const base = dir ? { direction: dir } : {};
     return r.serial.trim()
-      ? { kind: "serial", codeRaw: r.serial.trim().replace(/\s+/g, ""), materialCode: code, ...base }
+      ? { kind: "serial", codeRaw: r.serial.trim(), materialCode: code, ...base }
       : { kind: "quantity", quantity: Number(r.quantity.trim()), materialCode: code, ...base };
   });
 }
@@ -150,12 +171,13 @@ export function linesFromRows(rows: LineRow[], direction?: Direction): DocLine[]
 // order of the table (quantity, article code, serial); a line without tabs is today's text ("SERIAL", "SERIAL CODE",
 // "#3 CODE", P-169 for "#1").
 export function rowsFromPaste(text: string, direction?: Direction, materialCodes?: ReadonlySet<string>): LineRow[] {
-  return text.split(/\r?\n/).filter((s) => s.trim()).map((s) => {
+  return text.split(/\r?\n/).filter((s) => s.trim()).flatMap((s): LineRow[] => {
     if (s.includes("\t")) {
       const [q = "", code = "", serial = ""] = s.split("\t").map((c) => c.trim());
-      return { ...newRow(direction), quantity: serial ? "1" : q || "1", materialCode: code, serial };
+      return [{ ...newRow(direction), quantity: serial ? "1" : q || "1", materialCode: code, serial }];
     }
-    return rowFromLine({ ...parseLines(s, direction, materialCodes)[0], ...(direction ? { direction } : {}) });
+    // P-224: a line with only "[install]" / "[remove]" is nothing (parseLines gives no line), not a row.
+    return parseLines(s, direction, materialCodes).map((l) => rowFromLine({ ...l, ...(direction ? { direction } : {}) }));
   });
 }
 

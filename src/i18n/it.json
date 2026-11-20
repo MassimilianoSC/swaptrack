@@ -100,7 +100,7 @@
     "toInstall": "Da installare",
     "toRemove": "Da smontare",
     "rowsInvalid": "Alcune righe non sono corrette: correggile, poi salva.",
-    "rowError": {"quantity":"Inserisci una quantità intera maggiore di zero.","codeOrSerial":"Inserisci almeno il codice articolo o il numero seriale.","serialQuantity":"Un pezzo con seriale deve avere quantità 1."},
+    "rowError": {"quantity":"Inserisci una quantità intera maggiore di zero.","quantityMax":"Inserisci una quantità fino a 100000.","codeOrSerial":"Inserisci almeno il codice articolo o il numero seriale.","serialQuantity":"Un pezzo con seriale deve avere quantità 1."},
     "linesSummary": "Seriali: {{serials}} · righe a quantità (pezzi senza seriale): {{quantities}}",
     "markChecked": "Segna verificato",
     "compare": "Confronta",
