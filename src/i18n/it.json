@@ -44,7 +44,7 @@
     "openMenu": "Apri il menu",
     "menu": "Menu",
     "home": "Home",
-    "organizations": "Organizzazioni",
+    "organizations": "Fornitori - ASP",
     "users": "Utenti",
     "people": "Persone",
     "locations": "Siti e magazzini",
@@ -599,7 +599,7 @@
   },
   "guide": {
     "client_admin": [
-      "Prima installazione: Impostazioni, poi Organizzazioni (le ASP e il loro primo amministratore), Siti e magazzini, Catalogo modelli, Smistamento, Utenti.",
+      "Prima installazione: Impostazioni, poi Fornitori - ASP (le ASP e il loro primo amministratore), Siti e magazzini, Catalogo modelli, Smistamento, Utenti.",
       "Importa siti, magazzini e modelli da Excel con «Importa»: prima guarda l'Anteprima.",
       "Crei i trasferimenti tra due ASP da Spedizioni; i resi li confermi come il Magazzino cliente.",
       "Correggi i pezzi dalla loro scheda: Forzatura d'ufficio, Unisci, Accetta spostamento.",
@@ -693,12 +693,12 @@
   "orgs": {
     "created": "ASP creata",
     "createAsp": "Nuova ASP",
-    "createAspHint": "Crea l'organizzazione e invita il suo primo amministratore.",
+    "createAspHint": "Crea il fornitore (ASP) e invita il suo primo amministratore.",
     "name": "Nome",
     "reportLanguage": "Lingua dei report",
     "firstAdmin": "Primo amministratore",
     "subtitle": "Il cliente e le sue ASP.",
-    "empty": "Nessuna organizzazione",
+    "empty": "Nessun fornitore",
     "emptyHint": "Crea la prima ASP.",
     "type": "Tipo",
     "types": {

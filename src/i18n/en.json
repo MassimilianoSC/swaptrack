@@ -44,7 +44,7 @@
     "openMenu": "Open menu",
     "menu": "Menu",
     "home": "Home",
-    "organizations": "Organizations",
+    "organizations": "Suppliers - ASP",
     "users": "Users",
     "people": "People",
     "locations": "Sites and warehouses",
@@ -599,7 +599,7 @@
   },
   "guide": {
     "client_admin": [
-      "First setup: Settings, then Organizations (the ASPs and their first admin), Sites and warehouses, Model catalog, Sorting, Users.",
+      "First setup: Settings, then Suppliers - ASP (the ASPs and their first admin), Sites and warehouses, Model catalog, Sorting, Users.",
       "Import sites, warehouses and models from Excel with «Import»: check the Preview first.",
       "You create transfers between two ASPs from Shipments; you confirm returns like the Client warehouse.",
       "Correct pieces from their page: Office force, Merge, Accept move.",
@@ -693,12 +693,12 @@
   "orgs": {
     "created": "ASP created",
     "createAsp": "New ASP",
-    "createAspHint": "Creates the organization and invites its first administrator.",
+    "createAspHint": "Creates the supplier (ASP) and invites its first administrator.",
     "name": "Name",
     "reportLanguage": "Report language",
     "firstAdmin": "First administrator",
     "subtitle": "The client and its ASPs.",
-    "empty": "No organizations",
+    "empty": "No suppliers",
     "emptyHint": "Create the first ASP.",
     "type": "Type",
     "types": {
